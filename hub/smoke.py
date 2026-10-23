@@ -17,6 +17,10 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  existing=[]
  for used_port in (2053,2096,11111,62789):
   s=socket.socket();s.bind(('127.0.0.1',used_port));s.listen();existing.append(s)
+ logs.mkdir();sentinel=logs/'foreign.log';sentinel.write_text('foreign panel log')
+ assert install(archive,check=False).returncode!=0
+ assert sentinel.read_text()=='foreign panel log' and not prefix.exists() and not data.exists()
+ sentinel.unlink();logs.rmdir();passed('existing foreign log directory is refused without modification')
  install(archive);passed('fresh isolated installation alongside occupied port 2053')
  assert (data/'connect-hub.db').is_file();passed('foreign XUI database/key/port environment is ignored')
  assert not (td/'x-ui').exists()

@@ -6,6 +6,20 @@ archive=root/'dist/connect-hub-linux-amd64.tar.gz'
 def run(*args,check=True):return subprocess.run(args,check=check,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
 def install(path,update=False):
  return run('sudo','bash',str(root/'hub/install.sh'),'--package',str(path),'--sha256',hashlib.sha256(path.read_bytes()).hexdigest(),*(['--update']if update else []),check=False)
+# Simulate a foreign unit outside /etc: the installer must not shadow it.
+foreign=pathlib.Path('/run/systemd/system/connect-hub.service')
+assert run('systemctl','show','connect-hub.service','-p','LoadState','--value',check=False).stdout.strip()=='not-found'
+with tempfile.NamedTemporaryFile(mode='w',suffix='.service') as unit:
+ unit.write('[Service]\nExecStart=/bin/false\n');unit.flush()
+ run('sudo','cp',unit.name,str(foreign))
+ try:
+  run('sudo','systemctl','daemon-reload')
+  refused=install(archive);assert refused.returncode!=0
+  assert not pathlib.Path('/opt/connect-hub').exists()
+  assert run('sudo','cat',str(foreign)).stdout=='[Service]\nExecStart=/bin/false\n'
+  print('PASS: foreign vendor/runtime service is refused without replacement',flush=True)
+ finally:
+  run('sudo','rm','--',str(foreign));run('sudo','systemctl','daemon-reload')
 r=install(archive)
 if r.returncode:raise AssertionError('systemd installation failed: '+r.stderr)
 try:

@@ -19,6 +19,10 @@ for tool in python3 openssl curl sha256sum realpath;do command -v "$tool" >/dev/
 if ((service));then for tool in systemctl useradd;do command -v "$tool" >/dev/null || die "Required tool missing: $tool";done;fi
 [[ $service == 0 || $EUID == 0 ]] || die 'Run as root for systemd installation'
 if ((service)) && ((!update)) && id connect-hub >/dev/null 2>&1;then die 'An existing connect-hub account will not be adopted';fi
+if ((service)) && ((!update));then
+ load_state=$(systemctl show connect-hub.service -p LoadState --value)
+ [[ $load_state == not-found ]] || die 'An existing connect-hub service will not be adopted'
+fi
 [[ -n $package && $checksum =~ ^[a-fA-F0-9]{64}$ ]] || die 'A built Connect Hub package and its SHA-256 are required; see the GitHub Actions build artifacts'
 for dir in "$prefix" "$data" "$logs"; do
  [[ $dir =~ ^/[a-zA-Z0-9_./-]+$ && $dir != / && $dir != /etc && $dir != /opt && $dir != /var && $dir != /var/log && $dir != *..* && ! -L $dir ]] || die 'Use dedicated absolute directories without symlinks'
@@ -34,7 +38,7 @@ if ((service)) && [[ -e /etc/systemd/system/connect-hub.service ]] && ! grep -q 
 if ((update)); then
  [[ -L $prefix/current && -f $data/.connect-hub-owned ]] || die 'No managed Connect Hub installation found; no foreign installation will be adopted'
 else
- [[ ! -e $prefix && ! -e $data ]] || die 'Fresh installation refuses existing destination directories; use --update only for Connect Hub'
+ [[ ! -e $prefix && ! -e $data && ! -e $logs ]] || die 'Fresh installation refuses existing destination directories; use --update only for Connect Hub'
 fi
 printf '%s  %s\n' "$checksum" "$package" | sha256sum --check --status || die 'Package checksum mismatch'
 tmp=$(mktemp -d);trap 'rm -rf -- "$tmp"' EXIT
