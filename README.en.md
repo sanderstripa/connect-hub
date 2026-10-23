@@ -4,6 +4,14 @@
 
 Independent server panel based on [3x-ui](https://github.com/MHSanaei/3x-ui), with its own identity, clean storage and no active advertising blocks. Complete upstream Git ancestry, authorship and GPL-3.0 are retained. **0.1 alpha** is a test release.
 
+## The complete 3x-ui-based panel
+
+The original inbound/outbound and client management, standard protocols,
+subscriptions, routing/DNS, statistics, Xray settings, API, backups and node
+management are retained. Changes are Connect Hub branding, no advertising or
+sponsor blocks, isolated installation and the additional Sudoku protocol.
+Sudoku is not required to use the panel's standard features.
+
 ## Install with one command
 
 On a **Linux amd64 / x86_64 systemd server**, run:
@@ -38,7 +46,8 @@ Updates retain a complete data backup and restore the previous binary/data after
 
 ## Sudoku inbounds and devices
 
-A pinned compatible Sudoku Core is included. From the Inbounds page choose **Sudoku**, or open **Connect Hub** in the sidebar:
+A pinned compatible Sudoku Core is included. In the normal **Inbounds** page,
+select the **Sudoku** tab. All standard protocols remain on the adjacent tab:
 
 1. Create an inbound with a name, client-facing server address and free TCP port.
 2. Add devices, such as Phone and Laptop.

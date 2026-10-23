@@ -1,7 +1,6 @@
 // Connect Hub modifications, 2026-10-23. GPL-3.0.
 import { useCallback, useEffect, useState } from 'react';
 import { Card, ConfigProvider, Layout, Space, Tag, Typography } from 'antd';
-import SudokuInbounds from './SudokuInbounds';
 import AppSidebar from '@/layouts/AppSidebar';
 import { HttpUtil } from '@/utils';
 import { useTheme } from '@/hooks/useTheme';
@@ -58,7 +57,6 @@ export default function HubPage() {
               No warranty.
             </Typography.Paragraph>
             <Space orientation="vertical" size="large" style={{ width: '100%' }}>
-              <SudokuInbounds enabled={!!state?.sudoku.enabled} />
               {[
                 ['Mist', state?.mist],
                 ['Connect Core', state?.connectCore],

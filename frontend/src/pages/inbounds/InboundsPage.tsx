@@ -1,6 +1,5 @@
 import { lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 import {
   Button,
   Card,
@@ -12,6 +11,7 @@ import {
   Row,
   Spin,
   Statistic,
+  Tabs,
   message,
 } from 'antd';
 
@@ -42,6 +42,7 @@ import { useNodesQuery } from '@/api/queries/useNodesQuery';
 import { useHostsQuery } from '@/api/queries/useHostsQuery';
 import { withHostEndpoints } from '@/lib/hosts/host-link';
 import AppSidebar from '@/layouts/AppSidebar';
+import SudokuInbounds from '@/pages/hub/SudokuInbounds';
 const TextModal = lazy(() => import('@/components/feedback/TextModal'));
 import type { TextModalTab } from '@/components/feedback/TextModal';
 const PromptModal = lazy(() => import('@/components/feedback/PromptModal'));
@@ -82,6 +83,13 @@ interface ClientMatchTarget {
 
 export default function InboundsPage() {
   const { t, i18n } = useTranslation();
+  const [protocolView, setProtocolView] = useState('standard');
+  const [sudokuEnabled, setSudokuEnabled] = useState(false);
+  useEffect(() => {
+    void HttpUtil.get<{ sudoku: { enabled: boolean } }>('/panel/hub/api/status').then((r) => {
+      if (r.success && r.obj) setSudokuEnabled(r.obj.sudoku.enabled);
+    });
+  }, []);
   const { isDark, isUltra, antdThemeConfig } = useTheme();
   const { isMobile } = useMediaQuery();
 
@@ -719,100 +727,110 @@ export default function InboundsPage() {
 
         <Layout className="content-shell">
           <Layout.Content id="content-layout" className="content-area">
-            <Link to="../hub">
-              <Button style={{ marginBottom: 16 }}>
-                {i18n.language.startsWith('ru')
-                  ? 'Sudoku: подключения и устройства'
-                  : 'Sudoku inbounds and devices'}
-              </Button>
-            </Link>
-            <Spin
-              spinning={!fetched || !hostsFetched}
-              delay={200}
-              description={t('loading')}
-              size="large"
-            >
-              {!fetched || !hostsFetched ? (
-                <div className="loading-spacer" />
-              ) : fetchError || hostsError ? (
-                <Result
-                  status="error"
-                  title={t('somethingWentWrong')}
-                  subTitle={fetchError || hostsError}
-                  extra={
-                    <Button
-                      type="primary"
-                      onClick={() => {
-                        void refresh();
-                        void refetchHosts();
-                      }}
-                    >
-                      {t('refresh')}
-                    </Button>
-                  }
-                />
-              ) : (
-                <Row gutter={[isMobile ? 8 : 16, 12]}>
-                  <Col span={24}>
-                    <Card size="small" hoverable className="summary-card">
-                      <Row gutter={[16, 12]}>
-                        <Col xs={12} sm={12} md={8}>
-                          <Statistic
-                            title={t('pages.inbounds.totalDownUp')}
-                            value={0}
-                            formatter={() => (
-                              <span>
-                                <ArrowUpOutlined /> {SizeFormatter.sizeFormat(totals.up)}
-                                {' / '}
-                                <ArrowDownOutlined /> {SizeFormatter.sizeFormat(totals.down)}
-                              </span>
-                            )}
-                          />
-                        </Col>
-                        <Col xs={12} sm={12} md={8}>
-                          <Statistic
-                            title={t('pages.inbounds.totalUsage')}
-                            value={SizeFormatter.sizeFormat(totals.up + totals.down)}
-                            prefix={<PieChartOutlined />}
-                          />
-                        </Col>
-                        <Col xs={24} sm={24} md={8}>
-                          <Statistic
-                            title={t('pages.inbounds.inboundCount')}
-                            value={String(dbInbounds.length)}
-                            prefix={<BarsOutlined />}
-                          />
-                        </Col>
-                      </Row>
-                    </Card>
-                  </Col>
+            <Tabs
+              activeKey={protocolView}
+              onChange={setProtocolView}
+              items={[
+                {
+                  key: 'standard',
+                  label: i18n.language.startsWith('ru')
+                    ? 'Основные протоколы'
+                    : 'Standard protocols',
+                },
+                { key: 'sudoku', label: 'Sudoku' },
+              ]}
+            />
+            {protocolView === 'sudoku' ? (
+              <SudokuInbounds enabled={sudokuEnabled} />
+            ) : (
+              <Spin
+                spinning={!fetched || !hostsFetched}
+                delay={200}
+                description={t('loading')}
+                size="large"
+              >
+                {!fetched || !hostsFetched ? (
+                  <div className="loading-spacer" />
+                ) : fetchError || hostsError ? (
+                  <Result
+                    status="error"
+                    title={t('somethingWentWrong')}
+                    subTitle={fetchError || hostsError}
+                    extra={
+                      <Button
+                        type="primary"
+                        onClick={() => {
+                          void refresh();
+                          void refetchHosts();
+                        }}
+                      >
+                        {t('refresh')}
+                      </Button>
+                    }
+                  />
+                ) : (
+                  <Row gutter={[isMobile ? 8 : 16, 12]}>
+                    <Col span={24}>
+                      <Card size="small" hoverable className="summary-card">
+                        <Row gutter={[16, 12]}>
+                          <Col xs={12} sm={12} md={8}>
+                            <Statistic
+                              title={t('pages.inbounds.totalDownUp')}
+                              value={0}
+                              formatter={() => (
+                                <span>
+                                  <ArrowUpOutlined /> {SizeFormatter.sizeFormat(totals.up)}
+                                  {' / '}
+                                  <ArrowDownOutlined /> {SizeFormatter.sizeFormat(totals.down)}
+                                </span>
+                              )}
+                            />
+                          </Col>
+                          <Col xs={12} sm={12} md={8}>
+                            <Statistic
+                              title={t('pages.inbounds.totalUsage')}
+                              value={SizeFormatter.sizeFormat(totals.up + totals.down)}
+                              prefix={<PieChartOutlined />}
+                            />
+                          </Col>
+                          <Col xs={24} sm={24} md={8}>
+                            <Statistic
+                              title={t('pages.inbounds.inboundCount')}
+                              value={String(dbInbounds.length)}
+                              prefix={<BarsOutlined />}
+                            />
+                          </Col>
+                        </Row>
+                      </Card>
+                    </Col>
 
-                  <Col span={24}>
-                    <InboundList
-                      dbInbounds={dbInbounds}
-                      clientCount={clientCount}
-                      onlineClients={onlineClients}
-                      lastOnlineMap={lastOnlineMap}
-                      inboundSpeed={inboundSpeed}
-                      expireDiff={expireDiff}
-                      trafficDiff={trafficDiff}
-                      pageSize={pageSize}
-                      isMobile={isMobile}
-                      subEnable={subSettings.enable}
-                      nodesById={nodesById}
-                      hasActiveNode={showNodeInfo}
-                      hosts={hosts}
-                      onAddInbound={onAddInbound}
-                      onGeneralAction={onGeneralAction}
-                      onRowAction={({ key, dbInbound }) =>
-                        onRowAction({ key, dbInbound: dbInbound as unknown as DBInbound })
-                      }
-                      onBulkDelete={confirmBulkDelete}
-                    />
-                  </Col>
-                </Row>
-              )}
-            </Spin>
+                    <Col span={24}>
+                      <InboundList
+                        dbInbounds={dbInbounds}
+                        clientCount={clientCount}
+                        onlineClients={onlineClients}
+                        lastOnlineMap={lastOnlineMap}
+                        inboundSpeed={inboundSpeed}
+                        expireDiff={expireDiff}
+                        trafficDiff={trafficDiff}
+                        pageSize={pageSize}
+                        isMobile={isMobile}
+                        subEnable={subSettings.enable}
+                        nodesById={nodesById}
+                        hasActiveNode={showNodeInfo}
+                        hosts={hosts}
+                        onAddInbound={onAddInbound}
+                        onGeneralAction={onGeneralAction}
+                        onRowAction={({ key, dbInbound }) =>
+                          onRowAction({ key, dbInbound: dbInbound as unknown as DBInbound })
+                        }
+                        onBulkDelete={confirmBulkDelete}
+                      />
+                    </Col>
+                  </Row>
+                )}
+              </Spin>
+            )}
           </Layout.Content>
         </Layout>
 
