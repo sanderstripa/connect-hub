@@ -1,0 +1,13 @@
+Connect Hub, modified 2026-10-23 by Sander Stripa and contributors.
+Based on 3x-ui by MHSanaei and contributors: https://github.com/MHSanaei/3x-ui
+Upstream revision: 775b2b0b26a699bb5ae361ce3c78b319ab790991 (3.10.2 development tree).
+Original copyright notices and source history are retained. Licensed under
+GNU GPL version 3; see LICENSE. There is no warranty. Source, modifications,
+build and installation instructions: https://github.com/sanderstripa/connect-hub
+Changes: independent identity/storage, advertising removed from active routes,
+isolated installation, reviewed updates, optional integrations and CI.
+Third-party components retain their respective licenses and notices.
+2026-10-24: Sudoku inbound/device management added. Bundled compatible Sudoku
+Core retains its original GPL-3.0-or-later license, authorship and naming notice.
+See SUDOKU-LICENSE and hub/third-party/SUDOKU-SOURCE.md for included source,
+compatibility modifications, provenance and rebuild instructions.

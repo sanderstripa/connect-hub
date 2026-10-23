@@ -1,0 +1,37 @@
+{
+  "xray": {
+    "amd64": {
+      "url": "https://github.com/XTLS/Xray-core/releases/download/v26.10.21/Xray-linux-64.zip",
+      "sha256": "0eec3ed4163c273d8c8bf821f7d219e257921cf584aa3fb970715e458e631978"
+    },
+    "arm64": {
+      "url": "https://github.com/XTLS/Xray-core/releases/download/v26.10.21/Xray-linux-arm64-v8a.zip",
+      "sha256": "d1304946c486d98e6b886e9b931eaaaebb23835b30e217638037b7f2721d4e9c"
+    }
+  },
+  "mtg": {
+    "amd64": {
+      "url": "https://github.com/MHSanaei/mtg-multi/releases/download/v1.16.0/mtg-multi-1.16.0-linux-amd64.tar.gz",
+      "sha256": "b7580e45fe709a4ed625538c4d2d7203b1ecc075619b30f4a3bd6fd1729d84a9"
+    },
+    "arm64": {
+      "url": "https://github.com/MHSanaei/mtg-multi/releases/download/v1.16.0/mtg-multi-1.16.0-linux-arm64.tar.gz",
+      "sha256": "0a23628d3de404b9f1cfdca111541872505b740dfa2c123517d876d1edaa6748"
+    }
+  },
+  "sudoku": {
+    "amd64": {
+      "url": "https://github.com/sanderstripa/sudoku-ui/releases/download/core-v0.7.0/sudoku-core-linux-amd64.tar.gz",
+      "sha256": "deb5519d88fec1e7cdc9c9d68217b05e1603577dbdd6dc4dfa945ab6d91a6446"
+    },
+    "arm64": {
+      "url": "https://github.com/sanderstripa/sudoku-ui/releases/download/core-v0.7.0/sudoku-core-linux-arm64.tar.gz",
+      "sha256": "b50c9d02663b3c4873ada7d19aab0fcd5623b1923b0e745a477334dc50a41cb7"
+    }
+  },
+  "sudokuSource": {
+    "url": "https://codeload.github.com/SUDOKU-ASCII/sudoku/tar.gz/56ce6f1aeea18aa69b9bc1d57557ed312b59e5f5",
+    "sha256": "feba7fd0770b3af2fbc747b9d55d58764ef0470b5fedbabd21fc917e9d56625a",
+    "patchRevision": "a47140ffe8099392c4b14e23e7956f96fbf19dba"
+  }
+}
