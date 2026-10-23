@@ -67,7 +67,7 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
    if outbound.get('tag')=='direct':outbound.setdefault('settings',{}).pop('finalRules',None)
   assert request('panel/api/xray/update',{'xraySetting':json.dumps(template),'outboundTestUrl':f'http://127.0.0.1:{fixture.server_port}/'},csrf)['success']
   inbound_port=port()
-  inbound={'enable':'true','remark':'Hub CI fixture','listen':'127.0.0.1','port':inbound_port,'protocol':'dokodemo-door','settings':json.dumps({'address':'127.0.0.1','port':fixture.server_port,'network':'tcp'}),'streamSettings':json.dumps({'network':'tcp','security':'none'}),'sniffing':'{"enabled":false}','allocate':'{"strategy":"always","refresh":5,"concurrency":3}','expiryTime':0,'total':0,'up':0,'down':0}
+  inbound={'enable':'true','remark':'Hub CI fixture','listen':'127.0.0.1','port':inbound_port,'protocol':'tunnel','settings':json.dumps({'rewriteAddress':'127.0.0.1','rewritePort':fixture.server_port,'allowedNetwork':'tcp','followRedirect':False,'portMap':{}}),'streamSettings':json.dumps({'network':'tcp','security':'none'}),'sniffing':'{"enabled":false}','allocate':'{"strategy":"always","refresh":5,"concurrency":3}','expiryTime':0,'total':0,'up':0,'down':0}
   result=request('panel/api/inbounds/add',inbound,csrf);assert result['success'],result
   items=request('panel/api/inbounds/list')['obj'];created=next(x for x in items if x['remark']=='Hub CI fixture')
   proxy=urllib.request.build_opener(urllib.request.ProxyHandler({}));traffic=False
