@@ -22,6 +22,12 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  assert not (td/'x-ui').exists()
  assert install(archive,check=False).returncode!=0;passed('fresh installer refuses existing state')
  creds=dict(line.split('=',1) for line in (data/'initial-access.txt').read_text().splitlines())
+ # Test-only diagnostics are configured before the core starts, so enabling
+ # them does not itself force a restart and mask a live reconciliation bug.
+ with sqlite3.connect(data/'connect-hub.db') as db:
+  initial_template=json.loads(db.execute("select value from settings where key='xrayTemplateConfig'").fetchone()[0])
+  initial_template['log'].update(error=str(td/'xray-core.log'),loglevel='debug')
+  db.execute("update settings set value=? where key='xrayTemplateConfig'",(json.dumps(initial_template),))
  env.update(XUI_DB_FOLDER=str(data),XUI_LOG_FOLDER=str(logs),XUI_BIN_FOLDER=str(prefix/'current/bin'),XUI_MAIN_FOLDER=str(prefix/'current'),CONNECT_HUB_INTEGRATIONS_DIR=str(data/'integrations'))
  base=creds['URL'];assert urllib.parse.urlparse(base).port!=2053;passed('independent free panel port');jar=http.cookiejar.CookieJar();client=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPCookieProcessor(jar))
  def request(path,payload=None,token=None,raw=False,json_body=False):
@@ -84,8 +90,11 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
   for _ in range(40):
    try:
     if b'connect-hub-real-xray' in proxy.open(f'http://127.0.0.1:{inbound_port}/',timeout=2).read():traffic=True;break
-   except OSError:time.sleep(.25)
+   except OSError as error:last_error=str(error);time.sleep(.25)
   if not traffic:
+   print('Last HTTP error:',locals().get('last_error'),flush=True)
+   if (td/'xray-core.log').exists():print((td/'xray-core.log').read_text()[-16000:],flush=True)
+   if (prefix/'current/bin/config.json').exists():print('Persisted core config:',(prefix/'current/bin/config.json').read_text(),flush=True)
    print((td/'panel.log').read_text()[-12000:],flush=True)
    print('Runtime config:',request('panel/api/server/getConfigJson'),flush=True)
    print('Core status:',request('panel/api/server/status')['obj']['xray'],flush=True)
