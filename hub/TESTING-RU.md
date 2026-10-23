@@ -1,13 +1,20 @@
 # Параллельная проверка Connect Hub
 
+**[Русский README](../README.md) · [English README](../README.en.md)**
+
+Быстрая установка:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | sudo bash
+```
+
 Это ранняя версия 0.1 alpha для проверки. Существующие панели, базы, ключи,
 сертификаты и службы не используются. Реальные VPS при разработке не менялись.
 
 ## В контейнере
 
 Нужны Git, Docker и Docker Compose с доступом к Docker. Выполняйте из отдельной
-папки с исходниками Connect Hub. До слияния PR используйте ветку
-`feat/connect-hub-v0.1` из репозитория `sanderstripa/connect-hub`.
+папки с исходниками Connect Hub из main репозитория `sanderstripa/connect-hub`.
 
 ```bash
 docker compose build --build-arg CONNECT_HUB_REVISION="$(git rev-parse HEAD)"
@@ -37,7 +44,7 @@ tar -xzf connect-hub-linux-amd64.tar.gz connect-hub/hub/install.sh
 sudo bash connect-hub/hub/install.sh --package connect-hub-linux-amd64.tar.gz --sha256 "$(awk '$2=="connect-hub-linux-amd64.tar.gz" {print $1}' SHA256SUMS)"
 ```
 
-Пакет предназначен для Linux amd64. Установщику нужны Python 3.12+, OpenSSL,
+Пакет предназначен для Linux amd64. Установщику нужны Python 3, OpenSSL,
 curl, sha256sum и systemd. Проверен запуск бинарника на Debian 12; полная
 установка и сетевые проверки выполнены на отдельном Ubuntu 24.04 runner в CI.
 ARM64 предусмотрен сборщиком, но не прошёл такую же проверку.
@@ -70,7 +77,9 @@ Xray; запуск при занятых стандартных портах; о
 контейнерная изоляция и перезапуск. Дополнительно проверяется реальный TCP
 Sudoku с совместимым core-v0.7.0 и чтение статуса настоящего Connect Core.
 
-Sudoku по умолчанию выключен и пока управляет одним сервером и одной новой
-клиентской идентичностью. Connect Core alpha только показывает статус: запуск
-VPN и управление устройствами не реализованы. Mist недоступен до подтверждения
-контракта интеграции и лицензии. Настройка: [INTEGRATIONS.md](INTEGRATIONS.md).
+Sudoku Core входит в пакет: создавайте несколько inbound’ов, добавляйте устройства
+и выдавайте каждому отдельный ключ, ссылку, QR и JSON. Есть отключение, включение
+и окончательный отзыв ключа. Включённые inbound’ы и ключи восстанавливаются после
+перезапуска. UDP, подписки и объединённая статистика Sudoku пока не реализованы.
+Connect Core alpha только показывает статус; Mist недоступен.
+Подробности: [INTEGRATIONS.md](INTEGRATIONS.md).

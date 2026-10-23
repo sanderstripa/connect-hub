@@ -4827,7 +4827,7 @@
     },
     {
       "name": "Connect Hub integrations",
-      "description": "Session-authenticated integration controls. All POST requests require CSRF. Optional engines are disabled by default."
+      "description": "Session-authenticated controls. All POST requests require CSRF. Bundled Sudoku is ready for user-created inbounds; experimental Core is opt-in and Mist is unavailable."
     },
     {
       "name": "Inbounds",
@@ -5062,6 +5062,173 @@
                 "example": {
                   "success": true,
                   "obj": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/hub/api/sudoku/inbounds": {
+      "get": {
+        "tags": [
+          "Connect Hub integrations"
+        ],
+        "summary": "List independent Sudoku inbounds and device metadata. No private keys are included.",
+        "operationId": "get_panel_hub_api_sudoku_inbounds",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Connect Hub integrations"
+        ],
+        "summary": "Create a Sudoku inbound. JSON: name, host, port, aead, table. Each inbound has its own fresh master identity and process.",
+        "operationId": "post_panel_hub_api_sudoku_inbounds",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/hub/api/sudoku/inbounds/{id}/{action}": {
+      "post": {
+        "tags": [
+          "Connect Hub integrations"
+        ],
+        "summary": "Actions: start, stop, remove (archive), devices (create a device with JSON name). Started inbounds restart with the panel.",
+        "operationId": "post_panel_hub_api_sudoku_inbounds_id_action",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/hub/api/sudoku/inbounds/{id}/devices/{device}/{action}": {
+      "post": {
+        "tags": [
+          "Connect Hub integrations"
+        ],
+        "summary": "Actions: export (private key, sudoku:// URI and native JSON), enabled, disabled, revoked. Revocation is permanent. Secret exports have Cache-Control: no-store.",
+        "operationId": "post_panel_hub_api_sudoku_inbounds_id_devices_device_action",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "device",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
                 }
               }
             }

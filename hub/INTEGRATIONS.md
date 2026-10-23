@@ -1,54 +1,24 @@
-# Integration boundaries
+# Integration configuration and limits
 
-Added/modified 23 October 2026. All integrations are off by default. No
-configuration, database, certificate or key is read from an existing service.
+Modified 24 October 2026. No existing service configuration, database, certificate or key is imported.
 
 ## Sudoku
 
-This means the transport [SUDOKU-ASCII/sudoku](https://github.com/SUDOKU-ASCII/sudoku),
-not the puzzle. The inspected implementation is
-[sanderstripa/sudoku-ui](https://github.com/sanderstripa/sudoku-ui), including its
-compatible Core patches and `core-v*` releases. Its native server uses `-c`,
-`-keygen`, `Master Public Key` and `Available Private Key`.
+This is the [SUDOKU-ASCII/sudoku](https://github.com/SUDOKU-ASCII/sudoku) transport, not the puzzle. The package includes the checksum-pinned compatible core-v0.7.0 from sanderstripa/sudoku-ui. Original source, compatibility patch and license accompany the package; see [third-party/SUDOKU-SOURCE.md](third-party/SUDOKU-SOURCE.md).
 
-The initial adapter supports a single separately owned TCP server, freshly
-generated server identity and one client private key, ASCII/entropy table modes,
-AEAD, explicit start/stop and persistence of the public profile. A private client
-key is displayed once, never returned by the general status API or written to
-the profile. Save it before leaving the page. Removal requires stopping the
-child and deliberately discarding the old identity. No existing service is
-adopted and no server starts automatically after restart.
+The Sudoku page manages independent TCP inbounds, each with its own master identity, free port, isolated files/control socket and owned child process. Add named devices to an inbound to derive distinct private keys with the compatible Core keygen interface. Authenticated device export provides the private key, a compact sudoku:// URI, QR and downloadable native client JSON. General status/list APIs never return private keys. Exports require CSRF and are marked no-store.
 
-An administrator must place a reviewed, compatible Core binary in a dedicated
-Connect Hub path and create `/etc/connect-hub/integrations.env` (mode 0600):
+Devices can be disabled, re-enabled or permanently revoked. The compatible Core receives the policy on that inbound's Unix socket. If hot policy application is unavailable, only that inbound's child restarts to load the saved policy; this can briefly reconnect its other devices. Other inbounds/services are not restarted. Revoked entries remain as deny-policy tombstones and cannot be re-enabled.
 
-```
-CONNECT_HUB_SUDOKU=1
-CONNECT_HUB_SUDOKU_BINARY=/opt/connect-hub/sidecars/sudoku
-CONNECT_HUB_SUDOKU_SHA256=<SHA-256 of that reviewed binary>
-```
+Enabled inbounds restart with the panel. Their master keys and device credentials are stored in dedicated owner-only directories/files under CONNECT_HUB_INTEGRATIONS_DIR/sudoku-inbounds, normally /etc/connect-hub/integrations/sudoku-inbounds. Backups contain these secrets. Deleting a stopped inbound moves it into a private retained sudoku-archive; no automatic removal occurs.
 
-The native installer sets `CONNECT_HUB_INTEGRATIONS_DIR` to
-`/etc/connect-hub/integrations`. Restart Connect Hub after changing environment
-settings. The Hub screen creates fresh keys and config without hand-editing
-protocol JSON. Verify the Core license and release checksum before placing a
-binary. No automatic Core download, upgrade or firewall change occurs.
+The bundled binary makes Sudoku available immediately, but no listener starts until the administrator creates/starts an inbound. CONNECT_HUB_SUDOKU=0 explicitly disables Sudoku. An administrator can instead set CONNECT_HUB_SUDOKU=1, an absolute CONNECT_HUB_SUDOKU_BINARY and CONNECT_HUB_SUDOKU_SHA256 to use a reviewed compatible binary. Dedicated integration paths are mandatory. Inherited Sudoku statistics/policy/socket environment is overridden with each child's own paths.
 
-This is a first adapter, not parity with Sudoku UI: per-device issuance,
-hot revocation, session/traffic accounting, QR/subscription export, HTTP masking
-and UDP are not implemented. Unit tests use a helper child to prove process
-ownership and configuration handling. The Linux acceptance test additionally
-uses the actual checksum-pinned compatible core-v0.7.0 server and client to
-forward HTTP through TCP/SOCKS to a disposable loopback fixture. This validates
-that specific transport path, not other Core versions, UDP or public-network use.
+Current scope: TCP, chacha20-poly1305 / aes-128-gcm and ASCII/entropy table modes. Sudoku UDP, HTTP masking, subscriptions and unified Xray traffic/session accounting are not implemented. A real acceptance test exercises multiple inbounds/devices, wrong-inbound rejection, disable/enable/revoke and persistence with actual compatible Core clients and servers. It does not establish compatibility with every third-party client or Core revision. Allow the chosen inbound ports deliberately in your own firewall; Docker requires explicit port publication.
 
 ## Connect Core alpha
 
-The inspected [CONNECT Core](https://github.com/sanderstripa/connect-core) is
-CONNECT IP v2 over QUIC DATAGRAM / TLS 1.3 mTLS with a separate protected
-`connect-control` management API. It is not Mist or an Xray transport.
-
-The adapter is read-only and explicitly opt-in:
+CONNECT Core is a separate protected CONNECT IP v2 control plane. This adapter is read-only and opt-in:
 
 ```
 CONNECT_HUB_CORE_ALPHA=1
@@ -56,21 +26,8 @@ CONNECT_HUB_CORE_URL=http://127.0.0.1:17891
 CONNECT_HUB_CORE_TOKEN_FILE=/etc/connect-hub/core-control-token
 ```
 
-Only a numeric loopback endpoint is accepted. Proxies and redirects are disabled.
-Only `GET /v1/status` is requested; the browser receives a small allowlist of
-status/version/session fields, never tokens, device keys or the raw Core state.
-No TUN, routes, DNS, enrollment or server creation is exposed by this adapter.
-Tests cover opt-in, authentication, sanitization and redirect refusal against a
-test API. The Linux acceptance test also boots the pinned real connect-control
-process and reads its stopped/protocol-v2 status without starting TUN or routes.
-This validates status interoperability only; no VPN transport is exposed here.
+Place these in /etc/connect-hub/integrations.env (0600), make the token file readable only by the connect-hub service account, and restart Connect Hub. Only numeric loopback endpoints are accepted; proxies/redirects are disabled. Only GET /v1/status is requested. The browser receives an allowlist of status/version/session fields, never raw state, tokens or device keys. No VPN/TUN startup, routes, DNS, device enrollment or server creation is exposed. The real pinned connect-control process is tested without starting TUN/routes.
 
-## Mist alpha
+## Mist
 
-The current default [Mist repository](https://github.com/sanderstripa/mist)
-contains a project description and assets; implementation is on separate
-hardening branches. A supported panel API and redistribution license have not
-been established for this adapter. Mist is shown as unavailable/disabled and no
-binary is downloaded or executed. This is a declared integration boundary,
-not a claim of working Mist support. Review/pin the relevant implementation and
-license before adding a runtime adapter.
+Mist remains unavailable and disabled. Its implementation branches have not established a verified panel management contract and redistribution license for this adapter. No Mist binary is downloaded or executed. This is an explicit experimental boundary accepted for the present release, not a working transport claim.

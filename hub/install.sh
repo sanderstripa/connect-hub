@@ -44,12 +44,20 @@ printf '%s  %s\n' "$checksum" "$package" | sha256sum --check --status || die 'Pa
 tmp=$(mktemp -d);trap 'rm -rf -- "$tmp"' EXIT
 # Do not extract arbitrary paths or symlinks from an archive supplied to root.
 python3 - "$package" "$tmp" <<'PY'
-import pathlib,sys,tarfile
+import pathlib,shutil,sys,tarfile
 with tarfile.open(sys.argv[1]) as t:
  for m in t.getmembers():
   p=pathlib.PurePosixPath(m.name)
   if p.is_absolute() or '..' in p.parts or not p.parts or p.parts[0]!='connect-hub' or not(m.isfile() or m.isdir()):raise SystemExit('Unsafe package member')
- t.extractall(sys.argv[2],filter='data')
+ # Validated regular files/directories only; no archive links or special modes.
+ # Avoid requiring Python 3.12's extraction-filter API on Debian 12/Ubuntu 22.
+ for m in t.getmembers():
+  dest=pathlib.Path(sys.argv[2]).joinpath(*pathlib.PurePosixPath(m.name).parts)
+  if m.isdir():dest.mkdir(parents=True,exist_ok=True);dest.chmod(0o755)
+  else:
+   dest.parent.mkdir(parents=True,exist_ok=True)
+   with t.extractfile(m) as source,dest.open('wb') as output:shutil.copyfileobj(source,output)
+   dest.chmod(0o755 if m.mode&0o111 else 0o644)
 PY
 [[ -x $tmp/connect-hub/connect-hub && -f $tmp/connect-hub/BUILD.json && -f $tmp/connect-hub/LICENSE ]] || die 'Incomplete package'
 revision=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["revision"])' "$tmp/connect-hub/BUILD.json")

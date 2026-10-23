@@ -1,5 +1,5 @@
 """Real compatible Core: independent inbounds, per-device credentials and revocation."""
-import json,os,pathlib,socket,subprocess,time
+import json,os,pathlib,socket,subprocess,tempfile,time
 
 def run(request,csrf,core,td,fixture_port,passed):
  base='panel/hub/api/sudoku/inbounds'
@@ -20,7 +20,7 @@ def run(request,csrf,core,td,fixture_port,passed):
  assert all(c['key']not in listed for c in (phone_cfg,laptop_cfg,tablet_cfg))
  for i in (a,b):api('/'+i+'/start')
  def check(config,expected=True):
-  cfg={**config,'local_port':port()};directory=pathlib.Path(td)/('client-'+str(cfg['local_port']));directory.mkdir();path=directory/'client.json';path.write_text(json.dumps(cfg))
+  cfg={**config,'local_port':port()};directory=pathlib.Path(tempfile.mkdtemp(prefix='sudoku-client-',dir=td));path=directory/'client.json';path.write_text(json.dumps(cfg))
   env={**os.environ,'SUDOKU_STATS_PATH':str(directory/'stats.json'),'SUDOKU_POLICY_PATH':str(directory/'policy.json'),'SUDOKU_CONTROL_SOCKET':str(directory/'control.sock')}
   log=(directory/'client.log').open('wb');p=subprocess.Popen([str(core),'-c',str(path)],cwd=directory,env=env,stdout=log,stderr=log)
   def recv(s,n):

@@ -1,128 +1,72 @@
 # Connect Hub
 
-Independent server panel based on [3x-ui](https://github.com/MHSanaei/3x-ui),
-preserving its Git history and GPL-3.0 license. First implementation:
-**0.1.0-alpha.1**. This is an early review build, not a production-ready release.
+**[Русский](README.md) · [English](README.en.md)**
 
-The existing Xray panel architecture is retained: inbound/outbound management,
-clients, subscriptions, routing, statistics, API, database backups, multi-node
-features and the upstream protocol engines. Connect Hub adds its own identity,
-separate storage, an advertising-free active UI and explicit integration
-boundaries. No settings, users, keys or certificates are imported from 3x-ui.
+Самостоятельная серверная панель на основе [3x-ui](https://github.com/MHSanaei/3x-ui): своё название, чистая установка, без рекламных блоков. История upstream, авторство и GPL-3.0 сохранены. Версия **0.1 alpha** предназначена для проверки.
 
-## Build and run
+## Установить одной командой
 
-Linux amd64/arm64, Go 1.27.3 with CGO/C compiler, Node 26.12.1/npm 11+, Python
-3.12+, and Git are required. Dependencies are locked in go.sum, package-lock.json
-and hub/dependencies.json. Build natively for the target architecture:
+На сервере **Linux amd64 / x86_64 с systemd** выполните:
 
 ```bash
-cd frontend
-npm ci --ignore-scripts
-npm run build
-cd ..
-python3 hub/package.py
+curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | sudo bash
 ```
 
-CI produces `connect-hub-linux-amd64.tar.gz`, SHA256SUMS and a smoke-test report
-as build artifacts. No release is published automatically. Build revisions,
-upstream revision and sidecar digests are recorded inside BUILD.json. Inputs
-are pinned; byte-identical archive reproducibility has not yet been established.
+Установщик сам скачивает фиксированный проверенный релиз, проверяет SHA-256 и устанавливает панель. Не нужно подставлять IP или контрольную сумму. Требуются bash, curl, Python 3, OpenSSL, tar, sha256sum и systemd; отсутствующие компоненты будут названы до установки. ARM64 этой командой пока не устанавливается.
 
-On a **clean disposable Linux server**, place the package, SHA256SUMS and this
-checkout in the current directory, then install without editing the checksum:
+В конце выводятся адрес, логин и пароль. Посмотреть их повторно:
 
 ```bash
-sha256sum -c SHA256SUMS
-sudo bash hub/install.sh --package connect-hub-linux-amd64.tar.gz --sha256 "$(awk '$2=="connect-hub-linux-amd64.tar.gz" {print $1}' SHA256SUMS)"
+sudo cat /etc/connect-hub/initial-access.txt
 ```
 
-The installer creates only Connect Hub-owned directories and service:
-`/opt/connect-hub`, `/etc/connect-hub`, `/var/log/connect-hub`,
-`connect-hub.service`. It refuses existing target directories on a fresh install.
-The panel initially listens on **127.0.0.1 at a free high port** with random credentials and a
-random URL path, stored in `/etc/connect-hub/initial-access.txt` (mode 0600).
-Use SSH forwarding or configure your own TLS reverse proxy before remote access.
-The service runs as the dedicated unprivileged `connect-hub` account, with a
-read-only system filesystem and private temporary directory. Privileged TUN,
-firewall and host management operations are deliberately unavailable in this
-parallel test installation. Existing panels and their ports are not adopted. Fresh setup allocates separate
-loopback ports for Xray API/metrics and leaves subscription serving disabled.
-You can enable subscriptions in Settings after choosing a free port.
-Set `CONNECT_HUB_PORT` explicitly only if you want a particular unused high port.
-It does not open firewall ports, request certificates, alter DNS/routes, restart
-other services or inspect any existing x-ui/sudoku configuration.
+Панель слушает **127.0.0.1 на свободном порту**. Для браузера на другом компьютере настройте SSH-перенаправление порта, указанного в URL. Откройте полный адрес из URL, включая случайную часть пути. Внешний доступ и HTTPS можно настроить отдельно после проверки.
 
-For an update use the same verified-package command with `--update`. Stop/start
-is limited to `connect-hub.service`; data is copied into a retained backup before
-the new release is activated. A failed service health check restores the prior
-binary/data and retains failed data for inspection. There is no automatic backup
-deletion. The operator must stop a manually launched `--no-service` instance
-before updating it. Panel web self-update is disabled to prevent accidental
-replacement by upstream. Do not use inherited x-ui maintenance scripts.
+## Установка рядом с другими панелями
 
-## Container
+Создаются только свои `/opt/connect-hub`, `/etc/connect-hub`, `/var/log/connect-hub`, пользователь и служба `connect-hub`. Чужие базы, ключи и сертификаты не импортируются. При существующих одноимённых папках, пользователе или чужой службе установка откажется продолжать. Firewall, DNS и маршруты не меняются; чужие службы не перезапускаются. Внутренние порты Xray выбираются отдельно, подписки изначально выключены.
+
+Остановить только Connect Hub:
 
 ```bash
-docker compose build --build-arg CONNECT_HUB_REVISION="$(git rev-parse HEAD)"
-docker compose up -d
-docker compose exec connect-hub cat /etc/connect-hub/initial-access.txt
-docker compose port connect-hub 2053
+sudo systemctl stop connect-hub
 ```
 
-This uses fresh, independent named volumes and a loopback-only published panel
-port selected automatically by Docker. Replace port 2053 in the printed
-container-internal URL with the port shown by `docker compose port`. The project
-uses its own `connect-hub-test` name, drops all Linux capabilities and enables
-no-new-privileges. Add only the inbound TCP/UDP port mappings you deliberately configure.
-No host network, host data mounts or privileged access is requested. Container
-build/runtime validation is separate from native-package validation; consult CI
-and the validation report before relying on either path.
-
-## Additional engines
-
-See [integration configuration and limits](hub/INTEGRATIONS.md).
-
-- **Sudoku:** first optional owned-process adapter, fresh key generation, public
-  profile persistence and start/stop. Real TCP/SOCKS-to-HTTP forwarding is tested
-  with the pinned compatible core-v0.7.0 binary; full client management,
-  traffic accounting and subscription parity are pending.
-- **Connect Core:** optional read-only alpha status integration with a protected
-  loopback CONNECT IP v2 control plane. No TUN or route changes.
-- **Mist:** explicitly unavailable/disabled pending a verified runtime API and
-  license. It is not presented as a working protocol.
-
-For Russian instructions for parallel testing, see [hub/TESTING-RU.md](hub/TESTING-RU.md).
-
-## Tests and upstream updates
+Обновить проверенным релизом:
 
 ```bash
-cd frontend
-npm run typecheck
-npm run lint
-npm test -- --project unit --project components
-npm run build
-cd ..
-go test -shuffle=on -count=1 ./...
-go test -race ./internal/hub ./internal/config ./internal/web/controller
-python3 hub/package.py
-python3 hub/prepare-test-engines.py
-python3 hub/smoke.py
+curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | sudo bash -s -- --update
 ```
 
-The smoke test uses disposable local data and loopback traffic; it tests fresh
-installation, login/CSRF, status/backup APIs, real packaged Xray forwarding,
-inbound CRUD, disabled integrations, data-preserving updates and retained backup.
-It does not access a real VPS. Native systemd and container installation require
-their own validation. [Upstream maintenance](hub/UPSTREAM.md) explains the
-review/merge workflow. Never reset Connect Hub to upstream or run upstream's
-installer to update Connect Hub.
+Перед обновлением сохраняется полная копия данных. При неудаче запуска восстанавливается предыдущая версия. Копии автоматически не удаляются. Повторная установка уже установленной ревизии не требуется.
 
-## License and origin
+## Sudoku: inbound → устройства → ключи
 
-3x-ui by MHSanaei and contributors; Connect Hub modifications by Sander Stripa
-and contributors, added 23 October 2026. See [NOTICE](NOTICE), [GPL-3.0](LICENSE)
-and the complete Git history for authorship and changes. This software comes
-without warranty. Modified source and build instructions are available in this
-repository; preserve these notices and provide corresponding source with GPL
-binary distributions. Third-party engines retain their own licenses.
+Совместимый Sudoku Core входит в пакет. На странице подключений нажмите **Sudoku** либо откройте **Connect Hub** в боковом меню.
+
+1. Создайте inbound: название, адрес сервера для клиентов и свободный TCP-порт.
+2. Добавьте устройства, например «Телефон» и «Ноутбук».
+3. Для каждого откройте **Ключ / QR / конфигурация**: скопируйте `sudoku://`, отсканируйте QR совместимым клиентом или скачайте JSON.
+4. Запустите inbound. Разрешите выбранный TCP-порт в своём firewall; в Docker отдельно опубликуйте его.
+
+Ключи устройств разные. Можно отключать и включать устройство или окончательно отзывать его ключ. Ключ одного inbound не подходит другому. Включённые inbound’ы и устройства сохраняются после перезапуска. Удалённые inbound’ы остаются в закрытом архиве. UDP, подписки и объединённая с Xray статистика Sudoku пока не реализованы. Ключи и резервные копии содержат секретные данные.
+
+## Connect Core и Mist: что доступно
+
+| Раздел | Реальное поведение |
+|---|---|
+| Основные функции 3x-ui / Xray | Подключения, клиенты, маршрутизация, подписки, статистика, API и резервные копии. Привилегированные операции с хостом ограничены безопасной установкой. |
+| Sudoku | Несколько TCP-inbound’ов, отдельные ключи устройств, ссылки, QR, JSON, включение/отключение и отзыв. |
+| Connect Core alpha | По отдельному разрешению администратора показывает состояние существующего control plane. Запуск VPN, изменение маршрутов и выдача устройств Core из панели не реализованы. |
+| Mist | Не запускается и не предлагается как рабочий протокол: не подтверждены контракт интеграции и лицензия для поставки. |
+
+## Документация и проверка
+
+- [Подробная установка и Docker](hub/TESTING-RU.md)
+- [Настройки интеграций](hub/INTEGRATIONS.md)
+- [Сборка из исходников (English)](README.en.md#build-from-source)
+- [Безопасное обновление исходной базы 3x-ui](hub/UPSTREAM.md)
+- [Релизы](https://github.com/sanderstripa/connect-hub/releases) · [Проверки CI](https://github.com/sanderstripa/connect-hub/actions)
+- [GPL-3.0](LICENSE) · [Авторство и изменения](NOTICE)
+
+Проверки выполняются в изолированных средах. Реальные VPS и личные установки пользователя при разработке не используются. Основа: MHSanaei и участники 3x-ui; изменения Connect Hub: Sander Stripa и участники, 2026. Sudoku сохраняет свои лицензии и авторские уведомления; соответствующие исходники и изменения прилагаются к пакету. Гарантии отсутствуют.

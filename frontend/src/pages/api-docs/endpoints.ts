@@ -250,8 +250,32 @@ export const sections: readonly Section[] = [
     id: 'connect-hub',
     title: 'Connect Hub integrations',
     description:
-      'Session-authenticated integration controls. All POST requests require CSRF. Optional engines are disabled by default.',
+      'Session-authenticated controls. All POST requests require CSRF. Bundled Sudoku is ready for user-created inbounds; experimental Core is opt-in and Mist is unavailable.',
     endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/hub/api/sudoku/inbounds',
+        summary:
+          'List independent Sudoku inbounds and device metadata. No private keys are included.',
+      },
+      {
+        method: 'POST',
+        path: '/panel/hub/api/sudoku/inbounds',
+        summary:
+          'Create a Sudoku inbound. JSON: name, host, port, aead, table. Each inbound has its own fresh master identity and process.',
+      },
+      {
+        method: 'POST',
+        path: '/panel/hub/api/sudoku/inbounds/:id/:action',
+        summary:
+          'Actions: start, stop, remove (archive), devices (create a device with JSON name). Started inbounds restart with the panel.',
+      },
+      {
+        method: 'POST',
+        path: '/panel/hub/api/sudoku/inbounds/:id/devices/:device/:action',
+        summary:
+          'Actions: export (private key, sudoku:// URI and native JSON), enabled, disabled, revoked. Revocation is permanent. Secret exports have Cache-Control: no-store.',
+      },
       {
         method: 'GET',
         path: '/panel/hub/api/status',
