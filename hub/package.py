@@ -29,7 +29,7 @@ for kind,name in [('xray','xray'),('mtg','mtg-multi')]:
 for p in (stage/'bin').iterdir():
  if p.name.startswith(('xray-linux-','mtg-linux-')):p.chmod(0o755)
 for name in ['LICENSE','NOTICE','README.md']:shutil.copy2(root/name,stage/name)
-shutil.copytree(root/'hub',stage/'hub')
+shutil.copytree(root/'hub',stage/'hub',ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
 revision=os.environ.get('CONNECT_HUB_REVISION') or subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip()
 (stage/'BUILD.json').write_text(json.dumps({'revision':revision,'architecture':arch,'upstream':json.loads((root/'hub/upstream.json').read_text()),'dependencies':lock},indent=2))
 archive=out/f'connect-hub-linux-{arch}.tar.gz'

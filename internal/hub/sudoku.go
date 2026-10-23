@@ -46,6 +46,16 @@ type Status struct {
 }
 
 func directory() string { return os.Getenv("CONNECT_HUB_INTEGRATIONS_DIR") }
+func sudokuEnvironment() []string {
+	env := []string{}
+	for _, entry := range os.Environ() {
+		key, _, _ := strings.Cut(entry, "=")
+		if key != "SUDOKU_STATS_PATH" && key != "SUDOKU_POLICY_PATH" && key != "SUDOKU_CONTROL_SOCKET" {
+			env = append(env, entry)
+		}
+	}
+	return append(env, "SUDOKU_STATS_PATH="+filepath.Join(directory(), "sudoku-stats.json"), "SUDOKU_POLICY_PATH="+filepath.Join(directory(), "sudoku-policy.json"), "SUDOKU_CONTROL_SOCKET="+filepath.Join(directory(), "sudoku.sock"))
+}
 func allowed() error {
 	if os.Getenv("CONNECT_HUB_SUDOKU") != "1" {
 		return errors.New("Sudoku is disabled; enable CONNECT_HUB_SUDOKU=1 explicitly")
@@ -157,6 +167,11 @@ func (m *Manager) Create(p SudokuProfile) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, path, "-keygen")
+	if err = os.MkdirAll(directory(), 0700); err != nil {
+		return "", err
+	}
+	cmd.Dir = directory()
+	cmd.Env = sudokuEnvironment()
 	var out limitedBuffer
 	cmd.Stdout = &out
 	cmd.Stderr = &out
@@ -230,6 +245,7 @@ func (m *Manager) Start() error {
 	}
 	cmd := exec.Command(path, "-c", configPath)
 	cmd.Dir = directory()
+	cmd.Env = sudokuEnvironment()
 	// No shell, inherited terminal, secrets in logs, or ownership of external services.
 	cmd.Stdout = io.Discard
 	cmd.Stderr = io.Discard

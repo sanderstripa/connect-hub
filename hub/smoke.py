@@ -65,6 +65,7 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
   template=json.loads(request('panel/api/xray/',{},csrf)['obj'])['xraySetting']
   for outbound in template['outbounds']:
    if outbound.get('tag')=='direct':outbound.setdefault('settings',{}).pop('finalRules',None)
+  template['routing']['rules'].insert(1,{'type':'field','ip':['127.0.0.1/32'],'port':str(fixture.server_port),'outboundTag':'direct'})
   assert request('panel/api/xray/update',{'xraySetting':json.dumps(template),'outboundTestUrl':f'http://127.0.0.1:{fixture.server_port}/'},csrf)['success']
   inbound_port=port()
   inbound={'enable':'true','remark':'Hub CI fixture','listen':'127.0.0.1','port':inbound_port,'protocol':'tunnel','settings':json.dumps({'rewriteAddress':'127.0.0.1','rewritePort':fixture.server_port,'allowedNetwork':'tcp','followRedirect':False,'portMap':{}}),'streamSettings':json.dumps({'network':'tcp','security':'none'}),'sniffing':'{"enabled":false}','allocate':'{"strategy":"always","refresh":5,"concurrency":3}','expiryTime':0,'total':0,'up':0,'down':0}

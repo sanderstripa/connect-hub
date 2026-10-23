@@ -17,6 +17,11 @@ import (
 // one-time secrets, persistence and termination are exercised across processes.
 func TestMain(m *testing.M) {
 	if os.Getenv("HUB_TEST_CORE") == "1" {
+		for _, key := range []string{"SUDOKU_STATS_PATH", "SUDOKU_POLICY_PATH", "SUDOKU_CONTROL_SOCKET"} {
+			if filepath.Dir(os.Getenv(key)) != directory() {
+				os.Exit(9)
+			}
+		}
 		if len(os.Args) > 1 && os.Args[1] == "-keygen" {
 			println("Master Public Key: public-test-key")
 			println("Available Private Key: client-secret")
@@ -64,6 +69,9 @@ func setup(t *testing.T) *Manager {
 	t.Setenv("CONNECT_HUB_SUDOKU_BINARY", p)
 	t.Setenv("CONNECT_HUB_SUDOKU_SHA256", hex.EncodeToString(h[:]))
 	t.Setenv("HUB_TEST_CORE", "1")
+	t.Setenv("SUDOKU_STATS_PATH", filepath.Join(t.TempDir(), "foreign-stats.json"))
+	t.Setenv("SUDOKU_POLICY_PATH", filepath.Join(t.TempDir(), "foreign-policy.json"))
+	t.Setenv("SUDOKU_CONTROL_SOCKET", filepath.Join(t.TempDir(), "foreign.sock"))
 	m := &Manager{}
 	t.Cleanup(func() { m.Stop() })
 	return m
