@@ -6,6 +6,11 @@ die(){ echo "Connect Hub: $*" >&2;exit 1; }
 [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || die 'This tested release requires Linux amd64 (x86_64).'
 for tool in curl sha256sum tar python3 openssl realpath;do command -v "$tool" >/dev/null || die "Required tool missing: $tool";done
 for arg in "$@";do [[ $arg == --update || $arg == --no-service ]] || die 'Supported options: --update, --no-service';done
+runner=(bash)
+if [[ $EUID != 0 && " $* " != *' --no-service '* ]];then
+ command -v sudo >/dev/null || die 'Run from a root shell, or install sudo for your account.'
+ runner=(sudo bash)
+fi
 version=v0.1.0-alpha.2
 base=https://github.com/sanderstripa/connect-hub/releases/download/$version
 tmp=$(mktemp -d)
@@ -24,4 +29,4 @@ PY
 curl --fail --location --proto '=https' --proto-redir '=https' --retry 3 --output "$archive" "$base/connect-hub-linux-amd64.tar.gz"
 printf '%s  %s\n' "$checksum" "$archive" | sha256sum --check --status || die 'Release checksum mismatch; nothing installed.'
 tar -xzf "$archive" -C "$tmp" connect-hub/hub/install.sh
-bash "$tmp/connect-hub/hub/install.sh" --package "$archive" --sha256 "$checksum" "$@"
+"${runner[@]}" "$tmp/connect-hub/hub/install.sh" --package "$archive" --sha256 "$checksum" "$@"

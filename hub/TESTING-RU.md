@@ -5,7 +5,7 @@
 Быстрая установка:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash
 ```
 
 Это ранняя версия 0.1 alpha для проверки. Существующие панели, базы, ключи,

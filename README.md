@@ -9,7 +9,7 @@
 На сервере **Linux amd64 / x86_64 с systemd** выполните:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash
 ```
 
 Установщик сам скачивает фиксированный проверенный релиз, проверяет SHA-256 и устанавливает панель. Не нужно подставлять IP или контрольную сумму. Требуются bash, curl, Python 3, OpenSSL, tar, sha256sum и systemd; отсутствующие компоненты будут названы до установки. ARM64 этой командой пока не устанавливается.
@@ -35,7 +35,7 @@ sudo systemctl stop connect-hub
 Обновить проверенным релизом:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | sudo bash -s -- --update
+curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash -s -- --update
 ```
 
 Перед обновлением сохраняется полная копия данных. При неудаче запуска восстанавливается предыдущая версия. Копии автоматически не удаляются. Повторная установка уже установленной ревизии не требуется.

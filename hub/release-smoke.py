@@ -7,7 +7,7 @@ assert not pathlib.Path('/opt/connect-hub').exists(),'Fresh runner required'
 occupied=[]
 for port in (2053,2096,11111,62789):
  s=socket.socket();s.bind(('127.0.0.1',port));s.listen();occupied.append(s)
-command='set -o pipefail; curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | sudo bash'
+command='set -o pipefail; curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash'
 r=subprocess.run(['bash','-c',command],capture_output=True,text=True)
 assert r.returncode==0,'Public installer failed: '+r.stderr[-6000:]
 try:

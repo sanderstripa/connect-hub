@@ -9,7 +9,7 @@ Independent server panel based on [3x-ui](https://github.com/MHSanaei/3x-ui), wi
 On a **Linux amd64 / x86_64 systemd server**, run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash
 ```
 
 The bootstrap downloads a fixed tested release, verifies its pinned SHA-256 and invokes its installer. No archive, IP or checksum substitution is needed. Requires bash, curl, Python 3, OpenSSL, tar, sha256sum and systemd. Missing prerequisites are reported before installation. The bootstrap does not currently offer ARM64.
@@ -31,7 +31,7 @@ Stop only this panel: `sudo systemctl stop connect-hub`.
 Update a managed installation:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | sudo bash -s -- --update
+curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash -s -- --update
 ```
 
 Updates retain a complete data backup and restore the previous binary/data after a failed launch. Backups are never automatically deleted. Reinstalling an already installed revision is unnecessary. Upstream x-ui maintenance scripts and web self-update cannot overwrite the fork.
