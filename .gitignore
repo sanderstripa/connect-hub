@@ -44,3 +44,8 @@ docker-compose.override.yml
 
 # Ignore .env (Environment Variables) file
 .env
+
+# Connect Hub local state and Python build caches
+connect-hub.db*
+__pycache__/
+*.pyc

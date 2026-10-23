@@ -33,13 +33,12 @@ var contractExtraRoutes = map[string]bool{
 	"POST /login":              true,
 	"POST /logout":             true,
 	"GET /csrf-token":          true,
-	"GET /sponsors":            true,
 	"POST /getTwoFactorEnable": true,
 	"GET /ws":                  true,
 }
 
 func inContractScope(method, path string) bool {
-	return strings.HasPrefix(path, "/panel/api/") || contractExtraRoutes[method+" "+path]
+	return (strings.HasPrefix(path, "/panel/api/") || strings.HasPrefix(path, "/panel/hub/api/")) || contractExtraRoutes[method+" "+path]
 }
 
 func registeredContractRoutes(t *testing.T) map[string]bool {
