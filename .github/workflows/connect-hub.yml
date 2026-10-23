@@ -44,7 +44,7 @@ jobs:
       - run: bash -n hub/install.sh hub/update.sh hub/check-upstream.sh && python3 -m py_compile hub/package.py hub/smoke.py
       - run: python3 hub/package.py
       - name: Static panel runs on Debian 12
-        run: docker run --rm -v "$PWD/dist/connect-hub:/panel:ro" debian:bookworm-slim /panel/connect-hub version
+        run: test "$(docker run --rm -v "$PWD/dist/connect-hub:/panel:ro" debian:bookworm-slim /panel/connect-hub -v)" = "$(cat internal/config/version)"
       - run: python3 hub/prepare-test-engines.py
       - name: Fresh installation, authentication, Xray traffic, update and backup
         run: python3 hub/smoke.py

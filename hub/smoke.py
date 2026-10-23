@@ -84,7 +84,7 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  tools=root/'dist/test-tools';sudoku=tools/'sudoku';control=tools/'connect-control'
  assert sudoku.is_file() and control.is_file(),'prepare-test-engines.py must run before smoke'
  core_dir=td/'core-state'
- subprocess.run([str(control),'init-vps',str(core_dir),'localhost','https://127.0.0.1:17900'],check=True,stdout=subprocess.DEVNULL)
+ subprocess.run([str(control),'init-vps',str(core_dir),f'127.0.0.1:{port()}','https://127.0.0.1:17900'],check=True,stdout=subprocess.DEVNULL)
  core_config=json.loads((core_dir/'control.json').read_text());core_port=port();core_config.update(listen=f'127.0.0.1:{core_port}',enrollment_listen='',owned_tun=False,auto_start=False)
  (core_dir/'control.json').write_text(json.dumps(core_config))
  core_log=open(td/'core.log','wb');core=subprocess.Popen([str(control),'serve',str(core_dir/'control.json')],stdout=core_log,stderr=core_log)
