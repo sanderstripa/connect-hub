@@ -23,8 +23,8 @@ func TestMain(m *testing.M) {
 			}
 		}
 		if len(os.Args) > 1 && os.Args[1] == "-keygen" {
-			println("Master Public Key: public-test-key")
-			println("Available Private Key: client-secret")
+			println("20:00:00 INFO [CLI] Master Public Key:  public-test-key")
+			println("20:00:00 INFO [CLI] Available Private Key: client-secret")
 			os.Exit(0)
 		}
 		b, err := os.ReadFile(os.Args[2])

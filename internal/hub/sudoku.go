@@ -50,11 +50,11 @@ func sudokuEnvironment() []string {
 	env := []string{}
 	for _, entry := range os.Environ() {
 		key, _, _ := strings.Cut(entry, "=")
-		if key != "SUDOKU_STATS_PATH" && key != "SUDOKU_POLICY_PATH" && key != "SUDOKU_CONTROL_SOCKET" {
+		if key != "SUDOKU_STATS_PATH" && key != "SUDOKU_POLICY_PATH" && key != "SUDOKU_CONTROL_SOCKET" && key != "SUDOKU_LOG_LEVEL" {
 			env = append(env, entry)
 		}
 	}
-	return append(env, "SUDOKU_STATS_PATH="+filepath.Join(directory(), "sudoku-stats.json"), "SUDOKU_POLICY_PATH="+filepath.Join(directory(), "sudoku-policy.json"), "SUDOKU_CONTROL_SOCKET="+filepath.Join(directory(), "sudoku.sock"))
+	return append(env, "SUDOKU_LOG_LEVEL=info", "SUDOKU_STATS_PATH="+filepath.Join(directory(), "sudoku-stats.json"), "SUDOKU_POLICY_PATH="+filepath.Join(directory(), "sudoku-policy.json"), "SUDOKU_CONTROL_SOCKET="+filepath.Join(directory(), "sudoku.sock"))
 }
 func allowed() error {
 	if os.Getenv("CONNECT_HUB_SUDOKU") != "1" {
@@ -181,7 +181,7 @@ func (m *Manager) Create(p SudokuProfile) (string, error) {
 	fields := map[string]string{}
 	for _, line := range strings.Split(out.String(), "\n") {
 		for _, label := range []string{"Master Public Key:", "Available Private Key:"} {
-			if v, ok := strings.CutPrefix(strings.TrimSpace(line), label); ok {
+			if _, v, ok := strings.Cut(line, label); ok {
 				fields[label] = strings.TrimSpace(v)
 			}
 		}
