@@ -84,12 +84,15 @@ and the validation report before relying on either path.
 See [integration configuration and limits](hub/INTEGRATIONS.md).
 
 - **Sudoku:** first optional owned-process adapter, fresh key generation, public
-  profile persistence and start/stop. Real transport compatibility remains an
-  acceptance gate; full client management/traffic/subscription parity is pending.
+  profile persistence and start/stop. Real TCP/SOCKS-to-HTTP forwarding is tested
+  with the pinned compatible core-v0.7.0 binary; full client management,
+  traffic accounting and subscription parity are pending.
 - **Connect Core:** optional read-only alpha status integration with a protected
   loopback CONNECT IP v2 control plane. No TUN or route changes.
 - **Mist:** explicitly unavailable/disabled pending a verified runtime API and
   license. It is not presented as a working protocol.
+
+For Russian instructions for parallel testing, see [hub/TESTING-RU.md](hub/TESTING-RU.md).
 
 ## Tests and upstream updates
 

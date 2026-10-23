@@ -36,8 +36,11 @@ binary. No automatic Core download, upgrade or firewall change occurs.
 
 This is a first adapter, not parity with Sudoku UI: per-device issuance,
 hot revocation, session/traffic accounting, QR/subscription export, HTTP masking
-and UDP are not implemented. Tests use a helper child to prove process ownership
-and configuration handling; they do not prove real Sudoku transport compatibility.
+and UDP are not implemented. Unit tests use a helper child to prove process
+ownership and configuration handling. The Linux acceptance test additionally
+uses the actual checksum-pinned compatible core-v0.7.0 server and client to
+forward HTTP through TCP/SOCKS to a disposable loopback fixture. This validates
+that specific transport path, not other Core versions, UDP or public-network use.
 
 ## Connect Core alpha
 
@@ -58,7 +61,9 @@ Only `GET /v1/status` is requested; the browser receives a small allowlist of
 status/version/session fields, never tokens, device keys or the raw Core state.
 No TUN, routes, DNS, enrollment or server creation is exposed by this adapter.
 Tests cover opt-in, authentication, sanitization and redirect refusal against a
-test API. Real Core runtime interoperability remains to be tested separately.
+test API. The Linux acceptance test also boots the pinned real connect-control
+process and reads its stopped/protocol-v2 status without starting TUN or routes.
+This validates status interoperability only; no VPN transport is exposed here.
 
 ## Mist alpha
 
