@@ -23,6 +23,7 @@ COPY --from=builder /src/dist/connect-hub/ /app/
 COPY hub/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 ENV XUI_DB_FOLDER=/etc/connect-hub XUI_LOG_FOLDER=/var/log/connect-hub XUI_BIN_FOLDER=/app/bin XUI_MAIN_FOLDER=/app CONNECT_HUB_INTEGRATIONS_DIR=/etc/connect-hub/integrations XUI_NODE_TOKEN_KEY_FILE=/etc/connect-hub/node_token_key.json
+ENV XUI_DB_TYPE=sqlite XUI_DB_DSN="" XUI_NODE_TOKEN_KEY="" NODE_TOKEN_ENCRYPTION=off
 VOLUME ["/etc/connect-hub"]
 EXPOSE 2053
 ENTRYPOINT ["/app/entrypoint.sh"]

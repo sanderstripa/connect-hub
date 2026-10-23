@@ -11,12 +11,14 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  td=pathlib.Path(td);prefix=td/'app';data=td/'data';logs=td/'logs'
  env={**os.environ,'CONNECT_HUB_PREFIX':str(prefix),'CONNECT_HUB_DATA':str(data),'CONNECT_HUB_LOGS':str(logs)}
  def install(pkg,update=False,check=True):
-  return subprocess.run(['bash',str(root/'hub/install.sh'),'--package',str(pkg),'--sha256',hashlib.sha256(pkg.read_bytes()).hexdigest(),'--no-service']+(['--update']if update else []),env=env,check=check,stdout=subprocess.DEVNULL)
+  inherited={**env,'XUI_DB_TYPE':'postgres','XUI_DB_DSN':'host=127.0.0.1 port=1 user=foreign dbname=foreign sslmode=disable connect_timeout=1','XUI_PORT':'2053','XUI_NODE_TOKEN_KEY_FILE':'/foreign-panel/private-key','NODE_TOKEN_ENCRYPTION':'required'}
+  return subprocess.run(['bash',str(root/'hub/install.sh'),'--package',str(pkg),'--sha256',hashlib.sha256(pkg.read_bytes()).hexdigest(),'--no-service']+(['--update']if update else []),env=inherited,check=check,stdout=subprocess.DEVNULL)
  # A pre-existing panel can keep port 2053 while Hub chooses another port.
  existing=[]
  for used_port in (2053,2096,11111,62789):
   s=socket.socket();s.bind(('127.0.0.1',used_port));s.listen();existing.append(s)
  install(archive);passed('fresh isolated installation alongside occupied port 2053')
+ assert (data/'connect-hub.db').is_file();passed('foreign XUI database/key/port environment is ignored')
  assert not (td/'x-ui').exists()
  assert install(archive,check=False).returncode!=0;passed('fresh installer refuses existing state')
  creds=dict(line.split('=',1) for line in (data/'initial-access.txt').read_text().splitlines())

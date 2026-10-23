@@ -81,6 +81,11 @@ else
  mkdir -p "$data/integrations";touch "$data/.connect-hub-owned"
 fi
 cp -a "$tmp/connect-hub" "$target"
+# Never inherit database DSNs, keys, ports or paths exported by another 3x-ui
+# installation in the invoking shell. This installer always initializes SQLite.
+for inherited in ${!XUI_@};do unset "$inherited";done
+unset NODE_TOKEN_ENCRYPTION
+export XUI_DB_TYPE=sqlite XUI_DB_DSN= XUI_PORT= XUI_NODE_TOKEN_KEY=
 export XUI_DB_FOLDER=$data XUI_LOG_FOLDER=$logs XUI_BIN_FOLDER=$target/bin XUI_MAIN_FOLDER=$target
 export XUI_NODE_TOKEN_KEY_FILE=$data/node_token_key.json
 if ((!update));then
@@ -122,6 +127,11 @@ ReadWritePaths=$data $logs $prefix/current/bin
 WorkingDirectory=$prefix/current
 ExecStart=$prefix/current/connect-hub
 Environment=XUI_DB_FOLDER=$data
+Environment=XUI_DB_TYPE=sqlite
+Environment=XUI_DB_DSN=
+Environment=XUI_PORT=
+Environment=XUI_NODE_TOKEN_KEY=
+Environment=NODE_TOKEN_ENCRYPTION=off
 Environment=XUI_LOG_FOLDER=$logs
 Environment=XUI_BIN_FOLDER=$prefix/current/bin
 Environment=XUI_MAIN_FOLDER=$prefix/current
