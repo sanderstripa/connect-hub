@@ -28,7 +28,11 @@ The installer prints a random URL, username and password. Retrieve them again wi
 sudo cat /etc/connect-hub/initial-access.txt
 ```
 
-The panel initially listens on **127.0.0.1 at a free port**. Forward that port over SSH to use a browser on another computer, then open the complete URL including its random path. Configure external access/TLS separately after testing.
+Open **URL** in your browser: the installer detects the server IPv4 address and
+chooses a free port. Normal native installation needs no SSH tunnel. If a server
+or provider firewall blocks it, allow only the printed new TCP port. Initial
+access uses HTTP; configure HTTPS in panel settings. **LOCAL_URL** is an
+additional address for checks performed on the server itself.
 
 ## Parallel installation and updates
 

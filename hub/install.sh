@@ -6,6 +6,7 @@ package= checksum= update=0 service=1
 prefix=${CONNECT_HUB_PREFIX:-/opt/connect-hub}
 data=${CONNECT_HUB_DATA:-/etc/connect-hub}
 logs=${CONNECT_HUB_LOGS:-/var/log/connect-hub}
+listen=${CONNECT_HUB_LISTEN:-0.0.0.0}
 while (($#)); do
  case "$1" in
   --package) package=$2;shift 2;; --sha256) checksum=$2;shift 2;;
@@ -14,6 +15,7 @@ while (($#)); do
  esac
 done
 die(){ echo "Connect Hub: $*" >&2;exit 1; }
+[[ $listen == 0.0.0.0 || $listen == 127.0.0.1 ]] || die 'CONNECT_HUB_LISTEN must be 0.0.0.0 or 127.0.0.1'
 [[ $(uname -s) == Linux ]] || die 'Linux is required'
 for tool in python3 openssl curl sha256sum realpath;do command -v "$tool" >/dev/null || die "Required tool missing: $tool";done
 if ((service));then for tool in systemctl useradd;do command -v "$tool" >/dev/null || die "Required tool missing: $tool";done;fi
@@ -101,17 +103,30 @@ export XUI_DB_TYPE=sqlite XUI_DB_DSN= XUI_PORT= XUI_NODE_TOKEN_KEY=
 export XUI_DB_FOLDER=$data XUI_LOG_FOLDER=$logs XUI_BIN_FOLDER=$target/bin XUI_MAIN_FOLDER=$target
 export XUI_NODE_TOKEN_KEY_FILE=$data/node_token_key.json
 if ((!update));then
- panel_port=$(python3 - "${CONNECT_HUB_PORT:-0}" <<'PY'
+ panel_port=$(python3 - "${CONNECT_HUB_PORT:-0}" "$listen" <<'PY'
 import socket,sys
 port=int(sys.argv[1])
 if port and not 1024<=port<=65535:raise SystemExit('CONNECT_HUB_PORT must be 1024..65535')
 with socket.socket() as s:
- s.bind(('127.0.0.1',port));print(s.getsockname()[1])
+ s.bind((sys.argv[2],port));print(s.getsockname()[1])
 PY
  )
  username=hub-$(openssl rand -hex 4);password=$(openssl rand -hex 24);path=/$(openssl rand -hex 16)/
- "$target/connect-hub" setting -username "$username" -password "$password" -port "$panel_port" -listenIP 127.0.0.1 -webBasePath "$path" -parallelTest
- printf 'URL=http://127.0.0.1:%s%s\nUSERNAME=%s\nPASSWORD=%s\n' "$panel_port" "$path" "$username" "$password" > "$data/initial-access.txt"
+ "$target/connect-hub" setting -username "$username" -password "$password" -port "$panel_port" -listenIP "$listen" -webBasePath "$path" -parallelTest
+ host=127.0.0.1
+ if [[ $listen != 127.0.0.1 ]];then
+  host=${CONNECT_HUB_HOST:-}
+  if [[ -z $host ]];then host=$(curl -4fsS --connect-timeout 3 --max-time 6 https://api.ipify.org || true);fi
+  host=$(python3 - "$host" <<'PY'
+import ipaddress,socket,sys
+try:print(ipaddress.IPv4Address(sys.argv[1]))
+except ValueError:
+ try:print(ipaddress.IPv4Address(socket.gethostbyname(socket.gethostname())))
+ except (ValueError,OSError):print('127.0.0.1')
+PY
+  )
+ fi
+ printf 'URL=http://%s:%s%s\nLOCAL_URL=http://127.0.0.1:%s%s\nUSERNAME=%s\nPASSWORD=%s\n' "$host" "$panel_port" "$path" "$panel_port" "$path" "$username" "$password" > "$data/initial-access.txt"
 fi
 ln -s "$target" "$prefix/current.new";mv -Tf "$prefix/current.new" "$prefix/current";activated=1
 if ((service));then
@@ -169,4 +184,5 @@ EOF
 fi
 echo "Connect Hub installed: $revision"
 if ((!update));then echo "Initial access saved privately: $data/initial-access.txt";cat "$data/initial-access.txt";fi
+if ((!update));then echo "Open URL in your browser. If your firewall blocks it, allow only this new panel port: $panel_port/tcp. Configure HTTPS in panel settings before regular use.";fi
 [[ -z $backup ]] || echo "Backup retained: $backup"

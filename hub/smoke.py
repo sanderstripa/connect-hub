@@ -9,7 +9,7 @@ def port():
  with socket.socket() as s:s.bind(('127.0.0.1',0));return s.getsockname()[1]
 with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  td=pathlib.Path(td);prefix=td/'app';data=td/'data';logs=td/'logs'
- env={**os.environ,'CONNECT_HUB_PREFIX':str(prefix),'CONNECT_HUB_DATA':str(data),'CONNECT_HUB_LOGS':str(logs)}
+ env={**os.environ,'CONNECT_HUB_PREFIX':str(prefix),'CONNECT_HUB_DATA':str(data),'CONNECT_HUB_LOGS':str(logs),'CONNECT_HUB_LISTEN':'127.0.0.1','CONNECT_HUB_HOST':'127.0.0.1'}
  def install(pkg,update=False,check=True):
   inherited={**env,'XUI_DB_TYPE':'postgres','XUI_DB_DSN':'host=127.0.0.1 port=1 user=foreign dbname=foreign sslmode=disable connect_timeout=1','XUI_PORT':'2053','XUI_NODE_TOKEN_KEY_FILE':'/foreign-panel/private-key','NODE_TOKEN_ENCRYPTION':'required'}
   return subprocess.run(['bash',str(root/'hub/install.sh'),'--package',str(pkg),'--sha256',hashlib.sha256(pkg.read_bytes()).hexdigest(),'--no-service']+(['--update']if update else []),env=inherited,check=check,stdout=subprocess.DEVNULL)

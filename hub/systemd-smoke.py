@@ -5,7 +5,7 @@ root=pathlib.Path(__file__).resolve().parent.parent
 archive=root/'dist/connect-hub-linux-amd64.tar.gz'
 def run(*args,check=True):return subprocess.run(args,check=check,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
 def install(path,update=False):
- return run('sudo','bash',str(root/'hub/install.sh'),'--package',str(path),'--sha256',hashlib.sha256(path.read_bytes()).hexdigest(),*(['--update']if update else []),check=False)
+ return run('sudo','env','CONNECT_HUB_LISTEN=127.0.0.1','CONNECT_HUB_HOST=127.0.0.1','bash',str(root/'hub/install.sh'),'--package',str(path),'--sha256',hashlib.sha256(path.read_bytes()).hexdigest(),*(['--update']if update else []),check=False)
 # Simulate a foreign unit outside /etc: the installer must not shadow it.
 foreign=pathlib.Path('/run/systemd/system/connect-hub.service')
 assert run('systemctl','show','connect-hub.service','-p','LoadState','--value',check=False).stdout.strip()=='not-found'
