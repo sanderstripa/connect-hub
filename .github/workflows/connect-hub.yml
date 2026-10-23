@@ -9,6 +9,10 @@ on:
         description: Verify the public README installation command on a fresh runner
         type: boolean
         default: false
+      runtime_artifact_run:
+        description: Optional prior build run for focused runtime diagnostics
+        type: string
+        default: ''
 permissions:
   contents: read
 concurrency:
@@ -16,7 +20,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   container:
-    if: ${{ !inputs.release_check }}
+    if: ${{ !inputs.release_check && !inputs.runtime_artifact_run }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -24,7 +28,7 @@ jobs:
       - run: docker compose build --build-arg CONNECT_HUB_REVISION="$(git rev-parse HEAD)"
       - run: python3 hub/container-smoke.py
   linux:
-    if: ${{ !inputs.release_check }}
+    if: ${{ !inputs.release_check && !inputs.runtime_artifact_run }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
@@ -66,7 +70,7 @@ jobs:
             dist/SHA256SUMS
             dist/smoke-report.json
   upstream-baseline:
-    if: ${{ !inputs.release_check }}
+    if: ${{ !inputs.release_check && !inputs.runtime_artifact_run }}
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
@@ -91,3 +95,21 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: python3 hub/release-smoke.py
+  runtime-artifact-check:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.runtime_artifact_run != '' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - run: python3 hub/ci-download.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_RUN: ${{ inputs.runtime_artifact_run }}
+      - run: python3 hub/prepare-test-engines.py
+      - run: python3 hub/smoke.py
