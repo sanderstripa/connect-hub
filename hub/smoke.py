@@ -13,13 +13,15 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  def install(pkg,update=False,check=True):
   return subprocess.run(['bash',str(root/'hub/install.sh'),'--package',str(pkg),'--sha256',hashlib.sha256(pkg.read_bytes()).hexdigest(),'--no-service']+(['--update']if update else []),env=env,check=check,stdout=subprocess.DEVNULL)
  # A pre-existing panel can keep port 2053 while Hub chooses another port.
- existing=socket.socket();existing.bind(('127.0.0.1',2053));existing.listen()
+ existing=[]
+ for used_port in (2053,2096,11111,62789):
+  s=socket.socket();s.bind(('127.0.0.1',used_port));s.listen();existing.append(s)
  install(archive);passed('fresh isolated installation alongside occupied port 2053')
  assert not (td/'x-ui').exists()
  assert install(archive,check=False).returncode!=0;passed('fresh installer refuses existing state')
  creds=dict(line.split('=',1) for line in (data/'initial-access.txt').read_text().splitlines())
  env.update(XUI_DB_FOLDER=str(data),XUI_LOG_FOLDER=str(logs),XUI_BIN_FOLDER=str(prefix/'current/bin'),XUI_MAIN_FOLDER=str(prefix/'current'),CONNECT_HUB_INTEGRATIONS_DIR=str(data/'integrations'))
- base=creds['URL'];assert urllib.parse.urlparse(base).port!=2053;existing.close();passed('independent free panel port');jar=http.cookiejar.CookieJar();client=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPCookieProcessor(jar))
+ base=creds['URL'];assert urllib.parse.urlparse(base).port!=2053;passed('independent free panel port');jar=http.cookiejar.CookieJar();client=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPCookieProcessor(jar))
  def request(path,payload=None,token=None,raw=False,json_body=False):
   headers={}
   if token:headers['X-CSRF-Token']=token
@@ -58,6 +60,12 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
    def do_GET(self):self.send_response(200);self.end_headers();self.wfile.write(b'connect-hub-real-xray')
    def log_message(self,*args):pass
   fixture=http.server.ThreadingHTTPServer(('127.0.0.1',0),Fixture);threading.Thread(target=fixture.serve_forever,daemon=True).start()
+  # Explicitly allow the local fixture in THIS disposable panel only. The
+  # shipped default correctly blocks private destinations and stays unchanged.
+  template=json.loads(request('panel/api/xray/',{},csrf)['obj'])['xraySetting']
+  for outbound in template['outbounds']:
+   if outbound.get('tag')=='direct':outbound.setdefault('settings',{}).pop('finalRules',None)
+  assert request('panel/api/xray/update',{'xraySetting':json.dumps(template),'outboundTestUrl':f'http://127.0.0.1:{fixture.server_port}/'},csrf)['success']
   inbound_port=port()
   inbound={'enable':'true','remark':'Hub CI fixture','listen':'127.0.0.1','port':inbound_port,'protocol':'dokodemo-door','settings':json.dumps({'address':'127.0.0.1','port':fixture.server_port,'network':'tcp'}),'streamSettings':json.dumps({'network':'tcp','security':'none'}),'sniffing':'{"enabled":false}','allocate':'{"strategy":"always","refresh":5,"concurrency":3}','expiryTime':0,'total':0,'up':0,'down':0}
   result=request('panel/api/inbounds/add',inbound,csrf);assert result['success'],result
@@ -137,4 +145,5 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  try:
   jar.clear();csrf=request('csrf-token')['obj'];assert request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf)['success'];passed('login after updated release activation')
  finally:stop(p)
+ for s in existing:s.close()
 report['result']='passed';(root/'dist/smoke-report.json').write_text(json.dumps(report,indent=2))

@@ -46,7 +46,9 @@ Use SSH forwarding or configure your own TLS reverse proxy before remote access.
 The service runs as the dedicated unprivileged `connect-hub` account, with a
 read-only system filesystem and private temporary directory. Privileged TUN,
 firewall and host management operations are deliberately unavailable in this
-parallel test installation. Existing panels and their ports are not adopted.
+parallel test installation. Existing panels and their ports are not adopted. Fresh setup allocates separate
+loopback ports for Xray API/metrics and leaves subscription serving disabled.
+You can enable subscriptions in Settings after choosing a free port.
 Set `CONNECT_HUB_PORT` explicitly only if you want a particular unused high port.
 It does not open firewall ports, request certificates, alter DNS/routes, restart
 other services or inspect any existing x-ui/sudoku configuration.

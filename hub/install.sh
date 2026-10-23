@@ -93,7 +93,7 @@ with socket.socket() as s:
 PY
  )
  username=hub-$(openssl rand -hex 4);password=$(openssl rand -hex 24);path=/$(openssl rand -hex 16)/
- "$target/connect-hub" setting -username "$username" -password "$password" -port "$panel_port" -listenIP 127.0.0.1 -webBasePath "$path"
+ "$target/connect-hub" setting -username "$username" -password "$password" -port "$panel_port" -listenIP 127.0.0.1 -webBasePath "$path" -parallelTest
  printf 'URL=http://127.0.0.1:%s%s\nUSERNAME=%s\nPASSWORD=%s\n' "$panel_port" "$path" "$username" "$password" > "$data/initial-access.txt"
 fi
 ln -s "$target" "$prefix/current.new";mv -Tf "$prefix/current.new" "$prefix/current";activated=1

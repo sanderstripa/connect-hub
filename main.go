@@ -625,6 +625,8 @@ func main() {
 	var tokenName string
 	var tokenScope string
 	var resetTwoFactor bool
+	var parallelTest bool
+	settingCmd.BoolVar(&parallelTest, "parallelTest", false, "Initialize isolated Connect Hub internal ports and disable subscriptions")
 	settingCmd.BoolVar(&reset, "reset", false, "Reset all settings")
 	settingCmd.BoolVar(&show, "show", false, "Display current settings")
 	settingCmd.IntVar(&port, "port", 0, "Set panel port number")
@@ -721,6 +723,12 @@ func main() {
 		} else {
 			if err = updateSetting(port, username, password, webBasePath, listenIP, resetTwoFactor); err != nil {
 				return
+			}
+		}
+		if parallelTest {
+			if err = (&service.SettingService{}).InitializeParallelTest(); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
 			}
 		}
 		if webCertFile != "" || webKeyFile != "" {

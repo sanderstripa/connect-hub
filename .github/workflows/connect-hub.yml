@@ -51,6 +51,7 @@ jobs:
           checksum=$(awk '$2=="connect-hub-linux-amd64.tar.gz" {print $1}' dist/SHA256SUMS)
           sudo bash hub/install.sh --package dist/connect-hub-linux-amd64.tar.gz --sha256 "$checksum" > /tmp/connect-hub-install.log
           sudo systemctl is-active --quiet connect-hub
+          test "$(sudo systemctl show connect-hub -p User --value)" = connect-hub
           sudo test -s /etc/connect-hub/initial-access.txt
           sudo systemctl stop connect-hub
       - uses: actions/upload-artifact@v6
