@@ -49,6 +49,13 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
   assert any(c.name=='connect-hub' for c in jar) and all(c.name!='3x-ui' for c in jar)
   passed('random initial credentials, CSRF login and independent session-cookie name')
   assert request('panel/api/server/status')['success'];passed('authenticated status API')
+  # The panel HTTP listener becomes available before its independently starting
+  # Xray child. Wait for actual readiness before editing live core routing.
+  for _ in range(80):
+   status=request('panel/api/server/status')['obj']
+   if status['xray']['state']=='running':break
+   time.sleep(.25)
+  else:raise AssertionError('Xray did not become ready: '+json.dumps(status['xray']))
   status=request('panel/hub/api/status');assert status['success'] and not status['obj']['sudoku']['enabled'] and not status['obj']['connectCore']['enabled'];passed('integrations disabled by default')
   try:request('panel/hub/api/sudoku/start',{})
   except urllib.error.HTTPError as e:assert e.code==403
@@ -76,6 +83,10 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
    try:
     if b'connect-hub-real-xray' in proxy.open(f'http://127.0.0.1:{inbound_port}/',timeout=2).read():traffic=True;break
    except OSError:time.sleep(.25)
+  if not traffic:
+   print((td/'panel.log').read_text()[-12000:],flush=True)
+   print('Runtime config:',request('panel/api/server/getConfigJson'),flush=True)
+   print('Core status:',request('panel/api/server/status')['obj']['xray'],flush=True)
   assert traffic,'real Xray forwarding failed';passed('inbound CRUD and real loopback HTTP through packaged Xray')
   assert request('panel/api/inbounds/del/'+str(created['id']),{},csrf)['success'];fixture.shutdown()
   assert not request('panel/api/server/updatePanel',{},csrf)['success'];passed('upstream web self-update is blocked')
@@ -123,6 +134,9 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
       response+=chunk
      assert b'connect-hub-real-xray' in response;traffic=True;break
    except (OSError,AssertionError):time.sleep(.25)
+  if not traffic:
+   print('Sudoku state:',request('panel/hub/api/status')['obj']['sudoku'],flush=True)
+   print('Client log:',(td/'sudoku-client.log').read_text().replace(secret,'[redacted]')[-8000:],flush=True)
   assert traffic,'real Sudoku TCP/SOCKS round trip failed';passed('real Sudoku client -> managed server -> loopback HTTP traffic')
   assert request('panel/hub/api/sudoku/stop',{},csrf)['success'];assert not request('panel/hub/api/status')['obj']['sudoku']['running'];passed('managed Sudoku stop leaves Core control plane running')
   assert core.poll() is None

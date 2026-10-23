@@ -45,17 +45,11 @@ jobs:
       - run: python3 hub/package.py
       - name: Static panel runs on Debian 12
         run: test "$(docker run --rm -v "$PWD/dist/connect-hub:/panel:ro" debian:bookworm-slim /panel/connect-hub -v)" = "$(cat internal/config/version)"
+      - name: Native systemd installation and failed-update rollback
+        run: python3 hub/systemd-smoke.py
       - run: python3 hub/prepare-test-engines.py
       - name: Fresh installation, authentication, Xray traffic, update and backup
         run: python3 hub/smoke.py
-      - name: Native systemd installation on disposable hosted runner
-        run: |
-          checksum=$(awk '$2=="connect-hub-linux-amd64.tar.gz" {print $1}' dist/SHA256SUMS)
-          sudo bash hub/install.sh --package dist/connect-hub-linux-amd64.tar.gz --sha256 "$checksum" > /tmp/connect-hub-install.log
-          sudo systemctl is-active --quiet connect-hub
-          test "$(sudo systemctl show connect-hub -p User --value)" = connect-hub
-          sudo test -s /etc/connect-hub/initial-access.txt
-          sudo systemctl stop connect-hub
       - uses: actions/upload-artifact@v6
         if: always()
         with:
