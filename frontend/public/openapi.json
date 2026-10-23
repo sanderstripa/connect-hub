@@ -4826,6 +4826,10 @@
       "description": "Two authentication modes are supported. UI sessions use a cookie set by the login endpoint. Programmatic clients (bots, scripts, remote panels) authenticate with a Bearer token taken from Settings → Security → API Token. Both work for every endpoint under /panel/api/*."
     },
     {
+      "name": "Connect Hub integrations",
+      "description": "Session-authenticated integration controls. All POST requests require CSRF. Optional engines are disabled by default."
+    },
+    {
       "name": "Inbounds",
       "description": "Manage inbound configurations and their clients. All endpoints live under /panel/api/inbounds and require a logged-in session or Bearer token. Link-generating endpoints honour forwarded headers only when the request comes from a configured trusted proxy."
     },
@@ -5031,60 +5035,6 @@
         }
       }
     },
-    "/sponsors": {
-      "get": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "Public. Active paid sponsor placements read from the project sponsors.json (cached for 1h); entries outside their from/until window are dropped. Logos are proxied by the panel at /sponsors/logo/{name}. Used by the login page and panel sponsor slots.",
-        "operationId": "get_sponsors",
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "msg": {
-                      "type": "string"
-                    },
-                    "obj": {
-                      "$ref": "#/components/schemas/SponsorList"
-                    }
-                  }
-                },
-                "example": {
-                  "success": true,
-                  "obj": {
-                    "contact": "https://t.me/example",
-                    "sponsors": [
-                      {
-                        "enable": true,
-                        "from": "2026-10-01T00:00:00Z",
-                        "id": "acme-2026-10",
-                        "link": "https://acme.example/?utm_source=3x-ui",
-                        "logo": "/sponsors/logo/acme.png",
-                        "name": "Acme VPS",
-                        "slots": [
-                          ""
-                        ],
-                        "text": {},
-                        "title": {},
-                        "until": "2026-11-01T00:00:00Z"
-                      }
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/getTwoFactorEnable": {
       "post": {
         "tags": [
@@ -5112,6 +5062,156 @@
                 "example": {
                   "success": true,
                   "obj": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/hub/api/status": {
+      "get": {
+        "tags": [
+          "Connect Hub integrations"
+        ],
+        "summary": "Sudoku process state and sanitized read-only Core alpha status. No private keys or tokens are returned.",
+        "operationId": "get_panel_hub_api_status",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/hub/api/sudoku/create": {
+      "post": {
+        "tags": [
+          "Connect Hub integrations"
+        ],
+        "summary": "Create a fresh identity. JSON: host, port (1024..65535), aead (chacha20-poly1305 or aes-128-gcm), table (prefer_ascii or prefer_entropy). Returns obj.privateKey once. Existing profiles are never overwritten.",
+        "operationId": "post_panel_hub_api_sudoku_create",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/hub/api/sudoku/start": {
+      "post": {
+        "tags": [
+          "Connect Hub integrations"
+        ],
+        "summary": "Verify the administrator-pinned binary SHA-256 and start only the owned Sudoku child.",
+        "operationId": "post_panel_hub_api_sudoku_start",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/hub/api/sudoku/stop": {
+      "post": {
+        "tags": [
+          "Connect Hub integrations"
+        ],
+        "summary": "Stop only the Sudoku child started by this panel.",
+        "operationId": "post_panel_hub_api_sudoku_stop",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/hub/api/sudoku/remove": {
+      "post": {
+        "tags": [
+          "Connect Hub integrations"
+        ],
+        "summary": "Remove the stopped public profile. A new identity requires new client keys.",
+        "operationId": "post_panel_hub_api_sudoku_remove",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
                 }
               }
             }
@@ -6603,7 +6703,7 @@
         "tags": [
           "Server"
         ],
-        "summary": "Check whether a newer 3x-ui release is available on GitHub.",
+        "summary": "Check whether a newer Connect Hub release is available on GitHub.",
         "operationId": "get_panel_api_server_getPanelUpdateInfo",
         "responses": {
           "200": {

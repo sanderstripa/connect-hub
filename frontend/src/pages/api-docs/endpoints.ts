@@ -246,17 +246,40 @@ export const sections: readonly Section[] = [
     ],
   },
 
-
   {
     id: 'connect-hub',
     title: 'Connect Hub integrations',
-    description: 'Session-authenticated integration controls. All POST requests require CSRF. Optional engines are disabled by default.',
+    description:
+      'Session-authenticated integration controls. All POST requests require CSRF. Optional engines are disabled by default.',
     endpoints: [
-      { method: 'GET', path: '/panel/hub/api/status', summary: 'Sudoku process state and sanitized read-only Core alpha status. No private keys or tokens are returned.' },
-      { method: 'POST', path: '/panel/hub/api/sudoku/create', summary: 'Create a fresh identity. JSON: host, port (1024..65535), aead (chacha20-poly1305 or aes-128-gcm), table (prefer_ascii or prefer_entropy). Returns obj.privateKey once. Existing profiles are never overwritten.' },
-      { method: 'POST', path: '/panel/hub/api/sudoku/start', summary: 'Verify the administrator-pinned binary SHA-256 and start only the owned Sudoku child.' },
-      { method: 'POST', path: '/panel/hub/api/sudoku/stop', summary: 'Stop only the Sudoku child started by this panel.' },
-      { method: 'POST', path: '/panel/hub/api/sudoku/remove', summary: 'Remove the stopped public profile. A new identity requires new client keys.' },
+      {
+        method: 'GET',
+        path: '/panel/hub/api/status',
+        summary:
+          'Sudoku process state and sanitized read-only Core alpha status. No private keys or tokens are returned.',
+      },
+      {
+        method: 'POST',
+        path: '/panel/hub/api/sudoku/create',
+        summary:
+          'Create a fresh identity. JSON: host, port (1024..65535), aead (chacha20-poly1305 or aes-128-gcm), table (prefer_ascii or prefer_entropy). Returns obj.privateKey once. Existing profiles are never overwritten.',
+      },
+      {
+        method: 'POST',
+        path: '/panel/hub/api/sudoku/start',
+        summary:
+          'Verify the administrator-pinned binary SHA-256 and start only the owned Sudoku child.',
+      },
+      {
+        method: 'POST',
+        path: '/panel/hub/api/sudoku/stop',
+        summary: 'Stop only the Sudoku child started by this panel.',
+      },
+      {
+        method: 'POST',
+        path: '/panel/hub/api/sudoku/remove',
+        summary: 'Remove the stopped public profile. A new identity requires new client keys.',
+      },
     ],
   },
   {
