@@ -43,6 +43,7 @@ export default function SudokuInbounds({ enabled }: { enabled: boolean }) {
   const [deviceName, setDeviceName] = useState('');
   const [credentials, setCredentials] = useState<Credentials>();
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   const [form] = Form.useForm();
   const refresh = useCallback(async () => {
     if (!enabled) return;
@@ -59,6 +60,7 @@ export default function SudokuInbounds({ enabled }: { enabled: boolean }) {
   }, [refresh]);
   async function action(path: string, payload?: Record<string, unknown>) {
     setBusy(true);
+    setError('');
     try {
       const r = await HttpUtil.post<Credentials>(base + path, payload || {}, {
         headers: { 'Content-Type': 'application/json' },
@@ -73,6 +75,8 @@ export default function SudokuInbounds({ enabled }: { enabled: boolean }) {
           setDeviceInbound(undefined);
           setDeviceName('');
         }
+      } else {
+        setError(r.msg || text('Не удалось выполнить действие', 'Action failed'));
       }
       await refresh();
     } finally {
@@ -95,6 +99,7 @@ export default function SudokuInbounds({ enabled }: { enabled: boolean }) {
       title={text('Sudoku: подключения и устройства', 'Sudoku inbounds and devices')}
       extra={<Button onClick={() => void refresh()}>{text('Обновить', 'Refresh')}</Button>}
     >
+      {error && <Alert type="error" showIcon title={error} style={{ marginBottom: 16 }} />}
       {!enabled ? (
         <Alert
           type="info"
