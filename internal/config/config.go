@@ -161,7 +161,7 @@ func GetDBFolderPath() string {
 	if runtime.GOOS == "windows" {
 		return getBaseDir()
 	}
-	return "/etc/x-ui"
+	return "/etc/connect-hub"
 }
 
 // GetDBPath returns the full path to the database file.
@@ -205,7 +205,7 @@ func GetNodeTokenKeyFile() string {
 	if p := strings.TrimSpace(os.Getenv("XUI_NODE_TOKEN_KEY_FILE")); p != "" {
 		return p
 	}
-	return "/etc/x-ui/node_token_key.json"
+	return "/etc/connect-hub/node_token_key.json"
 }
 
 // GetNodeTokenKeyEnv returns the name of the env var holding a single base64
@@ -221,9 +221,9 @@ func GetEnvFilePaths() []string {
 		return nil
 	}
 	return []string{
-		"/etc/default/x-ui",
-		"/etc/conf.d/x-ui",
-		"/etc/sysconfig/x-ui",
+		"/etc/default/connect-hub",
+		"/etc/conf.d/connect-hub",
+		"/etc/sysconfig/connect-hub",
 	}
 }
 
@@ -242,7 +242,7 @@ func GetLogFolder() string {
 	if runtime.GOOS == "windows" {
 		return filepath.Join(".", "log")
 	}
-	return "/var/log/x-ui"
+	return "/var/log/connect-hub"
 }
 
 func copyFile(src, dst string) error {
@@ -264,26 +264,4 @@ func copyFile(src, dst string) error {
 	}
 
 	return out.Sync()
-}
-
-func init() {
-	if runtime.GOOS != "windows" {
-		return
-	}
-	if os.Getenv("XUI_DB_FOLDER") != "" {
-		return
-	}
-	oldDBFolder := "/etc/x-ui"
-	oldDBPath := fmt.Sprintf("%s/%s.db", oldDBFolder, GetName())
-	newDBFolder := GetDBFolderPath()
-	newDBPath := fmt.Sprintf("%s/%s.db", newDBFolder, GetName())
-	_, err := os.Stat(newDBPath)
-	if err == nil {
-		return // new exists
-	}
-	_, err = os.Stat(oldDBPath)
-	if os.IsNotExist(err) {
-		return // old does not exist
-	}
-	_ = copyFile(oldDBPath, newDBPath) // ignore error
 }

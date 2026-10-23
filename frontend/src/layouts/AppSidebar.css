@@ -369,3 +369,12 @@ body.dark .ant-drawer-body .drawer-menu .ant-menu-item-group-list {
   background-color: color-mix(in srgb, var(--ant-color-primary) 10%, transparent) !important;
   color: var(--ant-color-primary) !important;
 }
+
+/* Connect Hub wordmark fits the existing compact sidebar. */
+.sider-brand .brand-text {
+  font-size: 15px;
+  letter-spacing: 0;
+}
+.brand-actions .sidebar-docs {
+  display: none;
+}

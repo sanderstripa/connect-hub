@@ -13,7 +13,6 @@ import {
   ClusterOutlined,
   CodeOutlined,
   CopyOutlined,
-  CrownOutlined,
   DashboardOutlined,
   DatabaseOutlined,
   DiscordOutlined,
@@ -422,10 +421,10 @@ export default function CommandPalette() {
         icon: <ApiOutlined />,
       },
       {
-        path: '/sponsors',
-        title: t('menu.sponsors'),
-        keywords: ['sponsors', 'sponsor', 'partners'],
-        icon: <CrownOutlined />,
+        path: '/hub',
+        title: 'Connect Hub',
+        keywords: ['sudoku', 'connect', 'hub'],
+        icon: <ToolOutlined />,
       },
     ];
 

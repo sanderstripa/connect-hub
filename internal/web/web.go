@@ -20,6 +20,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/amneziawgnet"
 	"github.com/mhsanaei/3x-ui/v3/internal/config"
 	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
+	"github.com/mhsanaei/3x-ui/v3/internal/hub"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/mtproto"
 	"github.com/mhsanaei/3x-ui/v3/internal/tuic"
@@ -765,6 +766,7 @@ func (s *Server) StopPanelOnly() error {
 }
 
 func (s *Server) stop(stopXray bool, stopTgBot bool) error {
+	_ = hub.Sudoku.Stop()
 	s.cancel()
 	var err1 error
 	var err2 error

@@ -1,0 +1,10 @@
+{
+  "xray": {
+    "amd64": {"url":"https://github.com/XTLS/Xray-core/releases/download/v26.10.21/Xray-linux-64.zip","sha256":"0eec3ed4163c273d8c8bf821f7d219e257921cf584aa3fb970715e458e631978"},
+    "arm64": {"url":"https://github.com/XTLS/Xray-core/releases/download/v26.10.21/Xray-linux-arm64-v8a.zip","sha256":"d1304946c486d98e6b886e9b931eaaaebb23835b30e217638037b7f2721d4e9c"}
+  },
+  "mtg": {
+    "amd64": {"url":"https://github.com/MHSanaei/mtg-multi/releases/download/v1.16.0/mtg-multi-1.16.0-linux-amd64.tar.gz","sha256":"b7580e45fe709a4ed625538c4d2d7203b1ecc075619b30f4a3bd6fd1729d84a9"},
+    "arm64": {"url":"https://github.com/MHSanaei/mtg-multi/releases/download/v1.16.0/mtg-multi-1.16.0-linux-arm64.tar.gz","sha256":"0a23628d3de404b9f1cfdca111541872505b740dfa2c123517d876d1edaa6748"}
+  }
+}

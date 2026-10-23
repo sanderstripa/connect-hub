@@ -1,231 +1,113 @@
-[English](/README.md) | [فارسی](/README.fa_IR.md) | [العربية](/README.ar_EG.md) | [中文](/README.zh_CN.md) | [Español](/README.es_ES.md) | [Русский](/README.ru_RU.md) | [Türkçe](/README.tr_TR.md)
+# Connect Hub
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./media/3x-ui-dark.png">
-    <img alt="3x-ui" src="./media/3x-ui-light.png">
-  </picture>
-</p>
+Independent server panel based on [3x-ui](https://github.com/MHSanaei/3x-ui),
+preserving its Git history and GPL-3.0 license. First implementation:
+**0.1.0-alpha.1**. This is an early review build, not a production-ready release.
 
-<p align="center">
-  <a href="https://github.com/MHSanaei/3x-ui/releases"><img src="https://img.shields.io/github/v/release/mhsanaei/3x-ui" alt="Release"></a>
-  <a href="https://github.com/MHSanaei/3x-ui/actions"><img src="https://img.shields.io/github/actions/workflow/status/mhsanaei/3x-ui/release.yml.svg" alt="Build"></a>
-  <a href="#"><img src="https://img.shields.io/github/go-mod/go-version/mhsanaei/3x-ui.svg" alt="GO Version"></a>
-  <a href="https://github.com/MHSanaei/3x-ui/releases/latest"><img src="https://img.shields.io/github/downloads/mhsanaei/3x-ui/total.svg" alt="Downloads"></a>
-  <a href="https://www.gnu.org/licenses/gpl-3.0.en.html"><img src="https://img.shields.io/badge/license-GPL%20V3-blue.svg?longCache=true" alt="License"></a>
-  <a href="https://pkg.go.dev/github.com/mhsanaei/3x-ui/v3"><img src="https://pkg.go.dev/badge/github.com/mhsanaei/3x-ui/v3.svg" alt="Go Reference"></a>
-  <a href="https://docs.sanaei.dev"><img src="https://img.shields.io/badge/docs-docs.sanaei.dev-22d3ee" alt="Documentation"></a>
-</p>
+The existing Xray panel architecture is retained: inbound/outbound management,
+clients, subscriptions, routing, statistics, API, database backups, multi-node
+features and the upstream protocol engines. Connect Hub adds its own identity,
+separate storage, an advertising-free active UI and explicit integration
+boundaries. No settings, users, keys or certificates are imported from 3x-ui.
 
-**3X-UI** is an advanced, open-source web control panel for managing [Xray-core](https://github.com/XTLS/Xray-core) servers. It provides a clean, multi-language interface for deploying, configuring, and monitoring a wide range of proxy and VPN protocols — from a single VPS to multi-node deployments.
+## Build and run
 
-Built as an enhanced fork of the original X-UI project, 3X-UI adds broader protocol support, improved stability, per-client traffic accounting, and many quality-of-life features.
-
-> [!IMPORTANT]
-> This project is intended for personal use only. Please do not use it for illegal purposes or in a production environment.
-
-## Features
-
-- **Multi-protocol inbounds** — VLESS, VMess, Trojan, Shadowsocks, WireGuard, AmneziaWG, TUIC v5, Hysteria2, MTProto, HTTP, SOCKS (Mixed), Dokodemo-door / Tunnel, and TUN.
-- **Modern transports & security** — TCP (Raw), mKCP, WebSocket, gRPC, HTTPUpgrade, and XHTTP, secured with TLS, XTLS, and REALITY.
-- **AmneziaWG built in** — DPI-resistant WireGuard runs inside the panel on a userspace network stack, with no kernel module, DKMS, or extra packages to install.
-- **Native TUIC v5 server** — In-process Go QUIC server with Xray routing and per-client traffic accounting; BBR and New Reno are available server-side. CUBIC is preserved in the client profile but currently falls back to New Reno on the server.
-- **MTProto proxies** — per-client FakeTLS secrets, ad-tags, and quotas, applied live without dropping existing connections.
-- **Fallbacks** — serve multiple protocols on a single port (e.g. VLESS and Trojan on 443) using Xray's fallback support.
-- **Per-client management** — traffic quotas, expiry dates, IP limits with trusted-address exemptions, HWID device limits, scheduled renewal cycles, live online status, and one-click share links, QR codes, and subscriptions.
-- **Traffic statistics** — per inbound, per client, and per outbound, with reset controls.
-- **Multi-node support** — manage and scale across multiple servers from a single panel, including cloning inbounds onto other nodes.
-- **Outbound & routing** — WARP, NordVPN, PIA, custom routing rules, load balancers with balancer-to-balancer fallback, and outbound proxy chaining. Bundled geosite and geoip categories are browsable straight from the rule editor.
-- **Built-in subscription server** — raw, JSON, and Clash output, auto-selected from the client's User-Agent, plus [custom page templates](docs/custom-subscription-templates.md).
-- **Telegram and Discord bots** for remote monitoring and management.
-- **RESTful API** with scoped, optionally expiring tokens and an in-panel API reference.
-- **Installable panel (PWA)** — pin 3X-UI to a desktop or phone home screen.
-- **Flexible storage** — SQLite (default) or PostgreSQL.
-- **13 UI languages** with dark and light themes.
-- **Fail2ban integration** for enforcing per-client IP limits.
-
-## Screenshots
-
-<details>
-<summary>Click to expand</summary>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./media/01-overview-dark.png">
-  <img alt="Overview" src="./media/01-overview-light.png">
-</picture>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./media/02-add-inbound-dark.png">
-  <img alt="Inbounds" src="./media/02-add-inbound-light.png">
-</picture>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./media/03-add-client-dark.png">
-  <img alt="Add client" src="./media/03-add-client-light.png">
-</picture>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./media/05-add-nodes-dark.png">
-  <img alt="Configs" src="./media/05-add-nodes-light.png">
-</picture>
-
-</details>
-
-## Quick Start
+Linux amd64/arm64, Go 1.27.3 with CGO/C compiler, Node 26.12.1/npm 11+, Python
+3.12+, and Git are required. Dependencies are locked in go.sum, package-lock.json
+and hub/dependencies.json. Build natively for the target architecture:
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
+cd frontend
+npm ci --ignore-scripts
+npm run build
+cd ..
+python3 hub/package.py
 ```
 
-To install a specific version, append its tag (e.g. `v3.7.0`):
+CI produces `connect-hub-linux-amd64.tar.gz`, SHA256SUMS and a smoke-test report
+as build artifacts. No release is published automatically. Build revisions,
+upstream revision and sidecar digests are recorded inside BUILD.json. Inputs
+are pinned; byte-identical archive reproducibility has not yet been established.
+
+On a **clean disposable Linux server**, place the package, SHA256SUMS and this
+checkout in the current directory, then install without editing the checksum:
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) v3.7.0
+sha256sum -c SHA256SUMS
+sudo bash hub/install.sh --package connect-hub-linux-amd64.tar.gz --sha256 "$(awk '$2=="connect-hub-linux-amd64.tar.gz" {print $1}' SHA256SUMS)"
 ```
 
-To install the rolling **dev** build (latest per-commit pre-release from `main`, not a stable release), pass `dev-latest`:
+The installer creates only Connect Hub-owned directories and service:
+`/opt/connect-hub`, `/etc/connect-hub`, `/var/log/connect-hub`,
+`connect-hub.service`. It refuses existing target directories on a fresh install.
+The panel initially listens on **127.0.0.1:2053** with random credentials and a
+random URL path, stored in `/etc/connect-hub/initial-access.txt` (mode 0600).
+Use SSH forwarding or configure your own TLS reverse proxy before remote access.
+It does not open firewall ports, request certificates, alter DNS/routes, restart
+other services or inspect any existing x-ui/sudoku configuration.
+
+For an update use the same verified-package command with `--update`. Stop/start
+is limited to `connect-hub.service`; data is copied into a retained backup before
+the new release is activated. A failed service health check restores the prior
+binary/data and retains failed data for inspection. There is no automatic backup
+deletion. The operator must stop a manually launched `--no-service` instance
+before updating it. Panel web self-update is disabled to prevent accidental
+replacement by upstream. Do not use inherited x-ui maintenance scripts.
+
+## Container
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) dev-latest
+docker compose build --build-arg CONNECT_HUB_REVISION="$(git rev-parse HEAD)"
+docker compose up -d
+docker compose exec connect-hub cat /etc/connect-hub/initial-access.txt
 ```
 
-During installation a random username, password, and access path are generated. After installation, run `x-ui` to open the management menu, where you can start/stop the service, view or reset your login credentials, manage SSL certificates, and more.
+This uses fresh, independent named volumes and a loopback-only published panel
+port. Add only the inbound TCP/UDP port mappings you deliberately configure.
+No host network, host data mounts or privileged access is requested. Container
+build/runtime validation is separate from native-package validation; consult CI
+and the validation report before relying on either path.
 
-Every release asset is published with a `.sha256` sum next to it. Both `install.sh` and the updater verify the archive against that sum and abort on a mismatch.
+## Additional engines
 
-For full documentation — installation, configuration, operations, and the complete API reference — visit **[docs.sanaei.dev](https://docs.sanaei.dev)**.
+See [integration configuration and limits](hub/INTEGRATIONS.md).
 
-### Unattended install
+- **Sudoku:** first optional owned-process adapter, fresh key generation, public
+  profile persistence and start/stop. Real transport compatibility remains an
+  acceptance gate; full client management/traffic/subscription parity is pending.
+- **Connect Core:** optional read-only alpha status integration with a protected
+  loopback CONNECT IP v2 control plane. No TUN or route changes.
+- **Mist:** explicitly unavailable/disabled pending a verified runtime API and
+  license. It is not presented as a working protocol.
 
-The installer also runs **non-interactively** for cloud-init.
-Set `XUI_NONINTERACTIVE=1` (or pipe with no TTY) and it installs end-to-end with
-zero prompts, generating random credentials and writing them to
-`/etc/x-ui/install-result.env`. See [`deploy/`](deploy/) for:
-
-- [Cloud-init user-data](deploy/cloud-init/) — unattended install on any cloud (Hetzner/AWS/DO/Vultr/GCP/Azure/Oracle)
-- [Hetzner Cloud notes](deploy/marketplace/hetzner/) — cloud-init deployment on Hetzner
-
-## Supported Platforms
-
-**Operating systems:** Ubuntu, Debian, Armbian, Fedora, CentOS, RHEL, AlmaLinux, Rocky Linux, Oracle Linux, Amazon Linux, Virtuozzo, Arch, Manjaro, Parch, openSUSE (Tumbleweed / Leap), Alpine, and Windows.
-
-**Architectures:** `amd64` · `386` · `arm64` (aarch64) · `armv7` · `armv6` · `armv5` · `s390x`.
-
-## Database Options
-
-3X-UI supports two backends, chosen during the install:
-
-- **SQLite** (default) — a single file at `/etc/x-ui/x-ui.db`. Zero setup, ideal for small and medium deployments.
-- **PostgreSQL** — recommended for high client counts or multi-node setups. The installer can install PostgreSQL locally for you, or accept a DSN to an existing server.
-
-At runtime the backend is selected via environment variables (the installer writes these to `/etc/default/x-ui` for you):
-
-```
-XUI_DB_TYPE=postgres
-XUI_DB_DSN=postgres://xui:password@127.0.0.1:5432/xui?sslmode=disable
-```
-
-### Migrating an existing SQLite install to PostgreSQL
+## Tests and upstream updates
 
 ```bash
-x-ui migrate-db --dsn "postgres://xui:password@127.0.0.1:5432/xui?sslmode=disable"
-# then set XUI_DB_TYPE and XUI_DB_DSN in /etc/default/x-ui and restart:
-systemctl restart x-ui
+cd frontend
+npm run typecheck
+npm run lint
+npm test -- --project unit --project components
+npm run build
+cd ..
+go test -shuffle=on -count=1 ./...
+go test -race ./internal/hub ./internal/config ./internal/web/controller
+python3 hub/package.py
+python3 hub/smoke.py
 ```
 
-The source SQLite file is left untouched; remove it manually once you have verified the new backend.
+The smoke test uses disposable local data and loopback traffic; it tests fresh
+installation, login/CSRF, status/backup APIs, real packaged Xray forwarding,
+inbound CRUD, disabled integrations, data-preserving updates and retained backup.
+It does not access a real VPS. Native systemd and container installation require
+their own validation. [Upstream maintenance](hub/UPSTREAM.md) explains the
+review/merge workflow. Never reset Connect Hub to upstream or run upstream's
+installer to update Connect Hub.
 
-### Docker
+## License and origin
 
-The default `docker compose up -d` keeps using SQLite. To run with the bundled PostgreSQL service, uncomment the two `XUI_DB_*` env lines in `docker-compose.yml` and start with the profile:
-
-```bash
-docker compose --profile postgres up -d
-```
-
-The image bundles Fail2ban (enabled by default) to enforce per-client **IP limits**. Fail2ban bans offenders with `iptables`, which requires the `NET_ADMIN` capability. `docker-compose.yml` already grants it via `cap_add`; if you start the container with `docker run` instead, add the capabilities yourself, otherwise bans are logged but never applied:
-
-```bash
-docker run -d --cap-add=NET_ADMIN --cap-add=NET_RAW ... ghcr.io/mhsanaei/3x-ui
-```
-
-## Environment Variables
-
-| Variable | Description | Default |
-| --- | --- | --- |
-| `XUI_DB_TYPE` | Database backend: `sqlite` or `postgres` | `sqlite` |
-| `XUI_DB_DSN` | PostgreSQL connection string (when `XUI_DB_TYPE=postgres`) | — |
-| `XUI_DB_FOLDER` | Directory for the SQLite database file | `/etc/x-ui` |
-| `XUI_DB_MAX_OPEN_CONNS` | Maximum open connections (PostgreSQL pool) | — |
-| `XUI_DB_MAX_IDLE_CONNS` | Maximum idle connections (PostgreSQL pool) | — |
-| `XUI_INIT_WEB_BASE_PATH` | The initial URI path for the web panel | `/` |
-| `XUI_ENABLE_FAIL2BAN` | Enable Fail2ban-based IP-limit enforcement | `true` |
-| `XUI_LOG_LEVEL` | Log verbosity (`debug`, `info`, `warning`, `error`) | `info` |
-| `XUI_DEBUG` | Enable debug mode | `false` |
-| `XUI_TUNNEL_HEALTH_MONITOR` | Enable the tunnel health monitor (probes a URL and restarts xray after repeated failures; a restart drops all clients) | `false` |
-| `XUI_TUNNEL_HEALTH_PROXY` | Proxy the probe is sent through; point it at a local xray inbound so the probe tests the tunnel (e.g. `socks5://127.0.0.1:1080`). Empty means the probe only checks host connectivity | — |
-| `XUI_TUNNEL_HEALTH_URL` | URL probed for tunnel health | `https://www.cloudflare.com/cdn-cgi/trace` |
-| `XUI_TUNNEL_HEALTH_INTERVAL` | Interval between probes | `30s` |
-| `XUI_TUNNEL_HEALTH_TIMEOUT` | Per-probe timeout | `10s` |
-| `XUI_TUNNEL_HEALTH_FAILURES` | Consecutive failures before a restart is triggered | `3` |
-| `XUI_TUNNEL_HEALTH_COOLDOWN` | Minimum delay between consecutive restarts | `5m` |
-| `NODE_TOKEN_ENCRYPTION` | Encryption at rest for node API tokens: `off`, `migration`, or `required` (note: no `XUI_` prefix) | `off` |
-| `XUI_NODE_TOKEN_KEY_FILE` | JSON keyring (mode `0600`) holding the active key id and its base64 32-byte keys | `/etc/x-ui/node_token_key.json` |
-| `XUI_NODE_TOKEN_KEY` | A single base64 32-byte key, used only when the key file cannot be loaded | — |
-
-The complete list is on the [environment variables reference](https://docs.sanaei.dev/docs/reference/env-vars).
-
-## Supported Languages
-
-The panel UI is available in 13 languages:
-
-English · فارسی · العربية · 中文（简体） · 中文（繁體） · Español · Русский · Українська · Türkçe · Tiếng Việt · 日本語 · Bahasa Indonesia · Português (Brasil)
-
-## Contributing
-
-Contributions are welcome. Please read the [Contributing Guide](/CONTRIBUTING.md) before opening an issue or pull request.
-
-## A Special Thanks to
-
-- [alireza0](https://github.com/alireza0/)
-
-## Acknowledgment
-
-- [Iran v2ray rules](https://github.com/chocolate4u/Iran-v2ray-rules) (License: **GPL-3.0**): _Enhanced v2ray/xray and v2ray/xray-clients routing rules with built-in Iranian domains and a focus on security and adblocking._
-- [Russia v2ray rules](https://github.com/runetfreedom/russia-v2ray-rules-dat) (License: **GPL-3.0**): _This repository contains automatically updated V2Ray routing rules based on data on blocked domains and addresses in Russia._
-
-## Community Tools
-
-Tools and integrations built by the community around 3x-ui.
-
-- [terraform-provider-3x-ui](https://github.com/batonogov/terraform-provider-threexui) (License: **MIT**): _Manage inbounds, clients, panel settings, and Xray configuration as code with Terraform / OpenTofu._
-- [3X-UI Manager](https://github.com/yukh975/3X-UI-Manager) (License: **MIT**): _Native Android client for 3x-ui — dashboard, inbounds, clients with QR sharing, nodes and multi-panel management. Available on F-Droid._
-
-## Support project
-
-**If this project is helpful to you, you may wish to give it a**:star2:
-
-<a href="https://www.buymeacoffee.com/MHSanaei" target="_blank">
-<img src="./media/default-yellow.png" alt="Buy Me A Coffee" style="height: 70px !important;width: 277px !important;" >
-</a>
-
-</br>
-<a href="https://nowpayments.io/donation/hsanaei" target="_blank" rel="noreferrer noopener">
-   <img src="./media/donation-button-black.svg" alt="Crypto donation button by NOWPayments">
-</a>
-
-## Star History
-
-<a href="https://www.star-history.com/?repos=mhsanaei%2F3x-ui&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=mhsanaei/3x-ui&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=mhsanaei/3x-ui&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=mhsanaei/3x-ui&type=date&legend=top-left" />
- </picture>
-</a>
-
-<p align="center">
- <a href="https://www.star-history.com/mhsanaei/3x-ui">
-  <picture><source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/badge?repo=MHSanaei/3x-ui&type=rank&theme=dark" /><source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/badge?repo=MHSanaei/3x-ui&type=rank" /><img alt="Star History Rank" src="https://api.star-history.com/badge?repo=MHSanaei/3x-ui&type=rank" /></picture> <picture><source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/badge?repo=MHSanaei/3x-ui&type=trending&theme=dark" /><source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/badge?repo=MHSanaei/3x-ui&type=trending" /><img alt="GitHub Trending Repository of the Day" src="https://api.star-history.com/badge?repo=MHSanaei/3x-ui&type=trending" /></picture>
- </a>
-</p>
+3x-ui by MHSanaei and contributors; Connect Hub modifications by Sander Stripa
+and contributors, added 23 October 2026. See [NOTICE](NOTICE), [GPL-3.0](LICENSE)
+and the complete Git history for authorship and changes. This software comes
+without warranty. Modified source and build instructions are available in this
+repository; preserve these notices and provide corresponding source with GPL
+binary distributions. Third-party engines retain their own licenses.

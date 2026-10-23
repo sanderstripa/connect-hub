@@ -1,74 +1,28 @@
-# ========================================================
-# Stage: Frontend (Vite)
-# ========================================================
-FROM --platform=$BUILDPLATFORM node:26-alpine AS frontend
+FROM node:26.12.1-bookworm AS frontend
 WORKDIR /src/frontend
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+COPY frontend/package*.json ./
+RUN npm ci --ignore-scripts
 COPY frontend/ ./
 COPY internal/web/translation /src/internal/web/translation
+ENV STORYBOOK_DISABLE_TELEMETRY=1
 RUN npm run build
 
-# ========================================================
-# Stage: Builder
-# ========================================================
-FROM golang:1.27-alpine AS builder
-WORKDIR /app
-ARG TARGETARCH
-
-RUN apk --no-cache --update add \
-  build-base \
-  gcc \
-  curl \
-  unzip
-
+FROM golang:1.27.3-bookworm AS builder
+RUN apt-get update && apt-get install -y --no-install-recommends python3 && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+ARG CONNECT_HUB_REVISION
+ENV CONNECT_HUB_REVISION=$CONNECT_HUB_REVISION
 COPY . .
 COPY --from=frontend /src/internal/web/dist ./internal/web/dist
+RUN python3 hub/package.py
 
-ENV CGO_ENABLED=1
-ENV CGO_CFLAGS="-D_LARGEFILE64_SOURCE"
-RUN go build -ldflags "-w -s" -o build/x-ui main.go
-RUN ./DockerInit.sh "$TARGETARCH"
-
-# ========================================================
-# Stage: Final Image of 3x-ui
-# ========================================================
-FROM alpine
-ENV TZ=Asia/Tehran
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates tzdata openssl curl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-
-RUN apk add --no-cache --update \
-  ca-certificates \
-  tzdata \
-  fail2ban \
-  bash \
-  curl \
-  openssl
-
-COPY --from=builder /app/build/ /app/
-COPY --from=builder /app/DockerEntrypoint.sh /app/
-COPY --from=builder /app/x-ui.sh /usr/bin/x-ui
-COPY --from=builder /app/internal/web/translation /app/internal/web/translation
-
-
-# Configure fail2ban
-RUN rm -f /etc/fail2ban/jail.d/alpine-ssh.conf \
-  && cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local \
-  && sed -i "s/^\[ssh\]$/&\nenabled = false/" /etc/fail2ban/jail.local \
-  && sed -i "s/^\[sshd\]$/&\nenabled = false/" /etc/fail2ban/jail.local \
-  && sed -i "s/#allowipv6 = auto/allowipv6 = auto/g" /etc/fail2ban/fail2ban.conf
-
-RUN chmod +x \
-  /app/DockerEntrypoint.sh \
-  /app/x-ui \
-  /usr/bin/x-ui
-
-ENV XUI_IN_DOCKER="true"
-ENV XUI_MAIN_FOLDER="/app"
-ENV XUI_ENABLE_FAIL2BAN="true"
-ENV XUI_DB_TYPE=""
-ENV XUI_DB_DSN=""
+COPY --from=builder /src/dist/connect-hub/ /app/
+COPY hub/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+ENV XUI_DB_FOLDER=/etc/connect-hub XUI_LOG_FOLDER=/var/log/connect-hub XUI_BIN_FOLDER=/app/bin XUI_MAIN_FOLDER=/app CONNECT_HUB_INTEGRATIONS_DIR=/etc/connect-hub/integrations XUI_NODE_TOKEN_KEY_FILE=/etc/connect-hub/node_token_key.json
+VOLUME ["/etc/connect-hub"]
 EXPOSE 2053
-VOLUME [ "/etc/x-ui" ]
-CMD [ "./x-ui" ]
-ENTRYPOINT [ "/app/DockerEntrypoint.sh" ]
+ENTRYPOINT ["/app/entrypoint.sh"]

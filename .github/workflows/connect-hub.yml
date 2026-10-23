@@ -1,0 +1,66 @@
+name: Connect Hub
+on:
+  push:
+    branches: [main, 'feat/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: connect-hub-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CGO_ENABLED: '1'
+      STORYBOOK_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --ignore-scripts
+        working-directory: frontend
+      - run: npm run typecheck && npm run lint && npm test -- --project unit --project components && npm run build
+        working-directory: frontend
+      - run: go test -shuffle=on -count=1 ./...
+      - run: go test -race -count=1 ./internal/hub ./internal/web/controller ./internal/config
+      - run: bash -n hub/install.sh hub/update.sh hub/check-upstream.sh && python3 -m py_compile hub/package.py hub/smoke.py
+      - run: python3 hub/package.py
+      - name: Fresh installation, authentication, Xray traffic, update and backup
+        run: python3 hub/smoke.py
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: connect-hub-linux-amd64
+          path: |
+            dist/*.tar.gz
+            dist/SHA256SUMS
+            dist/smoke-report.json
+  upstream-baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: 775b2b0b26a699bb5ae361ce3c78b319ab790991
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --ignore-scripts && npm run typecheck && npm test -- --project unit --project components && npm run build
+        working-directory: frontend
+        env:
+          STORYBOOK_DISABLE_TELEMETRY: '1'
+      - run: go test -shuffle=on -count=1 ./...

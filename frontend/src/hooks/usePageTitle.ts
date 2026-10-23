@@ -14,7 +14,6 @@ const TITLE_KEYS: Record<string, string> = {
   '/outbound': 'menu.outbounds',
   '/routing': 'menu.routing',
   '/api-docs': 'menu.apiDocs',
-  '/sponsors': 'menu.sponsors',
 };
 
 export function usePageTitle() {
@@ -23,8 +22,8 @@ export function usePageTitle() {
 
   useEffect(() => {
     const key = TITLE_KEYS[pathname];
-    const title = key ? t(key) : '3X-UI';
+    const title = key ? t(key) : 'Connect Hub';
     const host = window.location.hostname;
-    document.title = host ? `${host} - ${title}` : title;
+    document.title = host ? `Connect Hub · ${host} - ${title}` : `Connect Hub · ${title}`;
   }, [pathname, t]);
 }
