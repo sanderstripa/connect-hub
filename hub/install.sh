@@ -20,7 +20,7 @@ if ((service));then for tool in systemctl useradd;do command -v "$tool" >/dev/nu
 [[ $service == 0 || $EUID == 0 ]] || die 'Run as root for systemd installation'
 if ((service)) && ((!update)) && id connect-hub >/dev/null 2>&1;then die 'An existing connect-hub account will not be adopted';fi
 if ((service)) && ((!update));then
- load_state=$(systemctl show connect-hub.service -p LoadState --value)
+ load_state=$(systemctl show connect-hub.service -p LoadState --value || true)
  [[ $load_state == not-found ]] || die 'An existing connect-hub service will not be adopted'
 fi
 [[ -n $package && $checksum =~ ^[a-fA-F0-9]{64}$ ]] || die 'A built Connect Hub package and its SHA-256 are required; see the GitHub Actions build artifacts'
