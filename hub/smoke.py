@@ -44,7 +44,8 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  p=launch()
  try:
   csrf=request('csrf-token')['obj'];res=request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf);assert res['success'],res
-  passed('random initial credentials and CSRF login')
+  assert any(c.name=='connect-hub' for c in jar) and all(c.name!='3x-ui' for c in jar)
+  passed('random initial credentials, CSRF login and independent session-cookie name')
   assert request('panel/api/server/status')['success'];passed('authenticated status API')
   status=request('panel/hub/api/status');assert status['success'] and not status['obj']['sudoku']['enabled'] and not status['obj']['connectCore']['enabled'];passed('integrations disabled by default')
   try:request('panel/hub/api/sudoku/start',{})

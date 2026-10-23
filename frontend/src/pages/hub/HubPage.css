@@ -1,0 +1,26 @@
+.hub-page {
+  min-height: 100vh;
+}
+.hub-page .content-shell {
+  min-width: 0;
+}
+.hub-page .content-area {
+  padding: 24px;
+}
+.hub-page .ant-space {
+  max-width: 100%;
+}
+.hub-page .ant-alert-description {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 768px) {
+  .hub-page .content-area {
+    padding: 64px 12px 16px;
+  }
+  .hub-page .ant-card-body {
+    padding: 16px;
+  }
+  .hub-page .ant-sidebar > .ant-layout-sider {
+    display: none;
+  }
+}

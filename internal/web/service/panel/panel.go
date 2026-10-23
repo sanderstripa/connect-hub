@@ -515,7 +515,7 @@ func resolveUpdateFolders() (string, string) {
 		}
 	}
 	if mainFolder == "" {
-		mainFolder = "/usr/local/x-ui"
+		mainFolder = "/opt/connect-hub/current"
 	}
 
 	serviceFolder := os.Getenv("XUI_SERVICE")
