@@ -15,7 +15,10 @@ while (($#)); do
 done
 die(){ echo "Connect Hub: $*" >&2;exit 1; }
 [[ $(uname -s) == Linux ]] || die 'Linux is required'
+for tool in python3 openssl curl sha256sum realpath;do command -v "$tool" >/dev/null || die "Required tool missing: $tool";done
+if ((service));then for tool in systemctl useradd;do command -v "$tool" >/dev/null || die "Required tool missing: $tool";done;fi
 [[ $service == 0 || $EUID == 0 ]] || die 'Run as root for systemd installation'
+if ((service)) && ((!update)) && id connect-hub >/dev/null 2>&1;then die 'An existing connect-hub account will not be adopted';fi
 [[ -n $package && $checksum =~ ^[a-fA-F0-9]{64}$ ]] || die 'A built Connect Hub package and its SHA-256 are required; see the GitHub Actions build artifacts'
 for dir in "$prefix" "$data" "$logs"; do
  [[ $dir =~ ^/[a-zA-Z0-9_./-]+$ && $dir != / && $dir != /etc && $dir != /opt && $dir != /var && $dir != /var/log && $dir != *..* && ! -L $dir ]] || die 'Use dedicated absolute directories without symlinks'
@@ -81,12 +84,23 @@ cp -a "$tmp/connect-hub" "$target"
 export XUI_DB_FOLDER=$data XUI_LOG_FOLDER=$logs XUI_BIN_FOLDER=$target/bin XUI_MAIN_FOLDER=$target
 export XUI_NODE_TOKEN_KEY_FILE=$data/node_token_key.json
 if ((!update));then
+ panel_port=$(python3 - "${CONNECT_HUB_PORT:-0}" <<'PY'
+import socket,sys
+port=int(sys.argv[1])
+if port and not 1024<=port<=65535:raise SystemExit('CONNECT_HUB_PORT must be 1024..65535')
+with socket.socket() as s:
+ s.bind(('127.0.0.1',port));print(s.getsockname()[1])
+PY
+ )
  username=hub-$(openssl rand -hex 4);password=$(openssl rand -hex 24);path=/$(openssl rand -hex 16)/
- "$target/connect-hub" setting -username "$username" -password "$password" -port 2053 -listenIP 127.0.0.1 -webBasePath "$path"
- printf 'URL=http://127.0.0.1:2053%s\nUSERNAME=%s\nPASSWORD=%s\n' "$path" "$username" "$password" > "$data/initial-access.txt"
+ "$target/connect-hub" setting -username "$username" -password "$password" -port "$panel_port" -listenIP 127.0.0.1 -webBasePath "$path"
+ printf 'URL=http://127.0.0.1:%s%s\nUSERNAME=%s\nPASSWORD=%s\n' "$panel_port" "$path" "$username" "$password" > "$data/initial-access.txt"
 fi
 ln -s "$target" "$prefix/current.new";mv -Tf "$prefix/current.new" "$prefix/current";activated=1
 if ((service));then
+ if ! id connect-hub >/dev/null 2>&1;then useradd --system --user-group --no-create-home --home-dir "$data" --shell /usr/sbin/nologin connect-hub;fi
+ chmod 0755 "$prefix" "$prefix/releases" "$target"
+ chown -R connect-hub:connect-hub "$data" "$logs" "$target/bin"
  # Refuse to replace a pre-existing, unowned unit.
  unit=/etc/systemd/system/connect-hub.service
  if [[ -e $unit ]] && ! grep -q '^# Managed by Connect Hub$' "$unit";then die 'An unowned connect-hub.service already exists';fi
@@ -97,6 +111,14 @@ Description=Connect Hub server panel
 After=network.target
 [Service]
 Type=simple
+User=connect-hub
+Group=connect-hub
+NoNewPrivileges=true
+ProtectHome=true
+ProtectSystem=strict
+PrivateTmp=true
+RestrictSUIDSGID=true
+ReadWritePaths=$data $logs $prefix/current/bin
 WorkingDirectory=$prefix/current
 ExecStart=$prefix/current/connect-hub
 Environment=XUI_DB_FOLDER=$data

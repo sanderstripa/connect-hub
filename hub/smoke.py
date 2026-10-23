@@ -12,12 +12,14 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  env={**os.environ,'CONNECT_HUB_PREFIX':str(prefix),'CONNECT_HUB_DATA':str(data),'CONNECT_HUB_LOGS':str(logs)}
  def install(pkg,update=False,check=True):
   return subprocess.run(['bash',str(root/'hub/install.sh'),'--package',str(pkg),'--sha256',hashlib.sha256(pkg.read_bytes()).hexdigest(),'--no-service']+(['--update']if update else []),env=env,check=check,stdout=subprocess.DEVNULL)
- install(archive);passed('fresh isolated installation')
+ # A pre-existing panel can keep port 2053 while Hub chooses another port.
+ existing=socket.socket();existing.bind(('127.0.0.1',2053));existing.listen()
+ install(archive);passed('fresh isolated installation alongside occupied port 2053')
  assert not (td/'x-ui').exists()
  assert install(archive,check=False).returncode!=0;passed('fresh installer refuses existing state')
  creds=dict(line.split('=',1) for line in (data/'initial-access.txt').read_text().splitlines())
  env.update(XUI_DB_FOLDER=str(data),XUI_LOG_FOLDER=str(logs),XUI_BIN_FOLDER=str(prefix/'current/bin'),XUI_MAIN_FOLDER=str(prefix/'current'),CONNECT_HUB_INTEGRATIONS_DIR=str(data/'integrations'))
- base=creds['URL'];jar=http.cookiejar.CookieJar();client=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPCookieProcessor(jar))
+ base=creds['URL'];assert urllib.parse.urlparse(base).port!=2053;existing.close();passed('independent free panel port');jar=http.cookiejar.CookieJar();client=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPCookieProcessor(jar))
  def request(path,payload=None,token=None,raw=False,json_body=False):
   headers={}
   if token:headers['X-CSRF-Token']=token

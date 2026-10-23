@@ -1,3 +1,5 @@
+> Archived upstream automation reference. Connect Hub does not enable these bots; current CI is `.github/workflows/connect-hub.yml`.
+
 # Review instructions
 
 3x-ui is a Go (Gin + GORM) web panel that generates configuration, share links

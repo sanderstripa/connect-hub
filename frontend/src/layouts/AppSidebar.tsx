@@ -51,7 +51,7 @@ const DOCS_URL = 'https://docs.sanaei.dev/';
 const REPO_URL = 'https://github.com/sanderstripa/connect-hub';
 const LOGOUT_KEY = '__logout__';
 const RAIL_WIDTH = 72;
-const SIDER_WIDTH = 250;
+const SIDER_WIDTH = 220;
 const SIDEBAR_PINNED_KEY = 'sidebar-pinned';
 
 let hoveredAcrossRemounts = false;

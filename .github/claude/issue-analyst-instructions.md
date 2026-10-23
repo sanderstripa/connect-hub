@@ -1,6 +1,8 @@
+> Archived upstream automation reference. Connect Hub does not enable these bots; current CI is `.github/workflows/connect-hub.yml`.
+
 # Issue analyst instructions
 
-Part of the prompt in `.github/workflows/claude-issue-analyst.yml`, kept here
+Part of the prompt in `.github/upstream-workflows/claude-issue-analyst.yml.disabled`, kept here
 because GitHub rejects a workflow whose prompt passes 21,000 characters. In this
 file `<N>` is the issue NUMBER, `<REPO>` the REPO and `@<OWNER>` the MAINTAINER
 TO TAG that the prompt gives under CURRENT ISSUE.

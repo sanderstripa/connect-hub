@@ -40,9 +40,14 @@ sudo bash hub/install.sh --package connect-hub-linux-amd64.tar.gz --sha256 "$(aw
 The installer creates only Connect Hub-owned directories and service:
 `/opt/connect-hub`, `/etc/connect-hub`, `/var/log/connect-hub`,
 `connect-hub.service`. It refuses existing target directories on a fresh install.
-The panel initially listens on **127.0.0.1:2053** with random credentials and a
+The panel initially listens on **127.0.0.1 at a free high port** with random credentials and a
 random URL path, stored in `/etc/connect-hub/initial-access.txt` (mode 0600).
 Use SSH forwarding or configure your own TLS reverse proxy before remote access.
+The service runs as the dedicated unprivileged `connect-hub` account, with a
+read-only system filesystem and private temporary directory. Privileged TUN,
+firewall and host management operations are deliberately unavailable in this
+parallel test installation. Existing panels and their ports are not adopted.
+Set `CONNECT_HUB_PORT` explicitly only if you want a particular unused high port.
 It does not open firewall ports, request certificates, alter DNS/routes, restart
 other services or inspect any existing x-ui/sudoku configuration.
 
@@ -60,10 +65,14 @@ replacement by upstream. Do not use inherited x-ui maintenance scripts.
 docker compose build --build-arg CONNECT_HUB_REVISION="$(git rev-parse HEAD)"
 docker compose up -d
 docker compose exec connect-hub cat /etc/connect-hub/initial-access.txt
+docker compose port connect-hub 2053
 ```
 
 This uses fresh, independent named volumes and a loopback-only published panel
-port. Add only the inbound TCP/UDP port mappings you deliberately configure.
+port selected automatically by Docker. Replace port 2053 in the printed
+container-internal URL with the port shown by `docker compose port`. The project
+uses its own `connect-hub-test` name, drops all Linux capabilities and enables
+no-new-privileges. Add only the inbound TCP/UDP port mappings you deliberately configure.
 No host network, host data mounts or privileged access is requested. Container
 build/runtime validation is separate from native-package validation; consult CI
 and the validation report before relying on either path.

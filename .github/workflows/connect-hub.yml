@@ -10,6 +10,13 @@ concurrency:
   group: connect-hub-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  container:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker compose build --build-arg CONNECT_HUB_REVISION="$(git rev-parse HEAD)"
+      - run: python3 hub/container-smoke.py
   linux:
     runs-on: ubuntu-24.04
     timeout-minutes: 45

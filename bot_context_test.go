@@ -18,7 +18,7 @@ const (
 	analystContextPath      = ".github/claude/issue-analyst-context.md"
 	analystInstructionsPath = ".github/claude/issue-analyst-instructions.md"
 	reviewPath              = "REVIEW.md"
-	ciWorkflowPath          = ".github/workflows/ci.yml"
+	ciWorkflowPath          = ".github/upstream-workflows/ci.yml.disabled"
 )
 
 func readRepoFile(t *testing.T, path string) string {
@@ -203,7 +203,7 @@ func TestReviewLocaleFileCount(t *testing.T) {
 // characters, so every trigger fails with no job to read; actionlint misses it.
 func TestBotPromptsFitGitHubExpressionLimit(t *testing.T) {
 	const limit = 21000
-	files, err := filepath.Glob(".github/workflows/claude-*.yml")
+	files, err := filepath.Glob(".github/upstream-workflows/claude-*.yml.disabled")
 	if err != nil || len(files) == 0 {
 		t.Fatalf("glob bot workflows: %v (%d files)", err, len(files))
 	}

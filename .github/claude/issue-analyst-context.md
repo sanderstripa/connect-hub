@@ -1,9 +1,11 @@
+> Archived upstream automation reference. Connect Hub does not enable these bots; current CI is `.github/workflows/connect-hub.yml`.
+
 # Repository context for the issue analyst
 
-Briefing for the issue analyst in `.github/workflows/claude-issue-analyst.yml`.
+Briefing for the issue analyst in `.github/upstream-workflows/claude-issue-analyst.yml.disabled`.
 It exists so these facts live in ONE place next to the code instead of being
 restated in the prompt, where they went stale silently. (Pull-request review is
-separate: the reviewer in `.github/workflows/claude-pr-review.yml` is briefed by
+separate: the reviewer in `.github/upstream-workflows/claude-pr-review.yml.disabled` is briefed by
 its own prompt, `CLAUDE.md` and `REVIEW.md`, not this.)
 
 `CLAUDE.md`, `frontend/CLAUDE.md` and `docs/architecture.md` outrank this file.
@@ -140,7 +142,7 @@ configs for the same inbound.
 
 ## What CI runs
 
-`.github/workflows/ci.yml`, on every pull request touching Go or frontend code.
+`.github/upstream-workflows/ci.yml.disabled`, on every pull request touching Go or frontend code.
 It is paths-filtered, so a docs-only or workflow-only change produces no run.
 
 | job | what it proves |

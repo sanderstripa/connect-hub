@@ -1,14 +1,19 @@
+name: connect-hub-test
 services:
   connect-hub:
     build: .
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2053:2053"
+      - "127.0.0.1::2053"
       # Publish only the inbound ports you deliberately configure in the panel.
       # - "18443:18443/tcp"
     volumes:
       - connect-hub-data:/etc/connect-hub
       - connect-hub-logs:/var/log/connect-hub
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
 volumes:
   connect-hub-data:
   connect-hub-logs:
