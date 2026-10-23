@@ -28,6 +28,22 @@ for kind,name in [('xray','xray'),('mtg','mtg-multi')]:
     if member.isfile() and 'license' in pathlib.PurePosixPath(member.name).name.lower():(stage/f'MTG-{pathlib.PurePosixPath(member.name).name}').write_bytes(t.extractfile(member).read())
 for p in (stage/'bin').iterdir():
  if p.name.startswith(('xray-linux-','mtg-linux-')):p.chmod(0o755)
+entry=lock['sudoku'][arch]
+data=urllib.request.urlopen(entry['url'],timeout=120).read()
+if hashlib.sha256(data).hexdigest()!=entry['sha256']:raise SystemExit('Sudoku checksum mismatch')
+with tarfile.open(fileobj=io.BytesIO(data)) as t:
+ member=next(m for m in t.getmembers() if m.isfile() and pathlib.PurePosixPath(m.name).name=='sudoku')
+ binary=t.extractfile(member).read()
+ (stage/'bin'/f'sudoku-linux-{arch}').write_bytes(binary)
+ (stage/'bin'/f'sudoku-linux-{arch}').chmod(0o755)
+ (stage/'bin'/'sudoku.sha256').write_text(hashlib.sha256(binary).hexdigest())
+source=lock['sudokuSource']
+data=urllib.request.urlopen(source['url'],timeout=120).read()
+if hashlib.sha256(data).hexdigest()!=source['sha256']:raise SystemExit('Sudoku source checksum mismatch')
+(stage/'SUDOKU-original-source.tar.gz').write_bytes(data)
+with tarfile.open(fileobj=io.BytesIO(data)) as t:
+ member=next(m for m in t.getmembers() if m.isfile() and pathlib.PurePosixPath(m.name).name=='LICENSE')
+ (stage/'SUDOKU-LICENSE').write_bytes(t.extractfile(member).read())
 for name in ['LICENSE','NOTICE','README.md']:shutil.copy2(root/name,stage/name)
 shutil.copytree(root/'hub',stage/'hub',ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
 revision=os.environ.get('CONNECT_HUB_REVISION') or subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip()

@@ -325,6 +325,7 @@ func (s *Server) startTask(restartXray bool, loc *time.Location) {
 			logger.Warning("start xray failed:", err)
 		}
 	}
+	hub.SudokuInbounds.StartSaved()
 	// Check whether xray is running every second
 	_, _ = s.cron.AddJob(cadenceXrayRunning, job.NewCheckXrayRunningJob())
 
@@ -766,6 +767,7 @@ func (s *Server) StopPanelOnly() error {
 }
 
 func (s *Server) stop(stopXray bool, stopTgBot bool) error {
+	hub.SudokuInbounds.StopAll()
 	_ = hub.Sudoku.Stop()
 	s.cancel()
 	var err1 error

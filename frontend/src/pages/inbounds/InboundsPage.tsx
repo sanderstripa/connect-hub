@@ -1,5 +1,6 @@
 import { lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import {
   Button,
   Card,
@@ -80,7 +81,7 @@ interface ClientMatchTarget {
 }
 
 export default function InboundsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { isDark, isUltra, antdThemeConfig } = useTheme();
   const { isMobile } = useMediaQuery();
 
@@ -718,6 +719,13 @@ export default function InboundsPage() {
 
         <Layout className="content-shell">
           <Layout.Content id="content-layout" className="content-area">
+            <Link to="../hub">
+              <Button style={{ marginBottom: 16 }}>
+                {i18n.language.startsWith('ru')
+                  ? 'Sudoku: подключения и устройства'
+                  : 'Sudoku inbounds and devices'}
+              </Button>
+            </Link>
             <Spin
               spinning={!fetched || !hostsFetched}
               delay={200}

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Disposable Linux installation/API/Xray/update test. No external service access."""
-import hashlib,http.cookiejar,http.server,io,json,os,pathlib,socket,sqlite3,subprocess,tarfile,tempfile,threading,time,urllib.error,urllib.parse,urllib.request
+import hashlib,http.cookiejar,http.server,io,json,os,pathlib,runpy,socket,sqlite3,subprocess,tarfile,tempfile,threading,time,urllib.error,urllib.parse,urllib.request
 root=pathlib.Path(__file__).resolve().parent.parent
 archive=root/'dist/connect-hub-linux-amd64.tar.gz'
 report={'checks':[]}
@@ -68,7 +68,7 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
    if status['xray']['state']=='running':break
    time.sleep(.25)
   else:raise AssertionError('Xray did not become ready: '+json.dumps(status['xray']))
-  status=request('panel/hub/api/status');assert status['success'] and not status['obj']['sudoku']['enabled'] and not status['obj']['connectCore']['enabled'];passed('integrations disabled by default')
+  status=request('panel/hub/api/status');assert status['success'] and status['obj']['sudoku']['enabled'] and not status['obj']['connectCore']['enabled'];passed('bundled Sudoku ready, experimental Core disabled by default')
   try:request('panel/hub/api/sudoku/start',{})
   except urllib.error.HTTPError as e:assert e.code==403
   else:raise AssertionError('missing CSRF accepted')
@@ -159,6 +159,12 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
   assert traffic,'real Sudoku TCP/SOCKS round trip failed';passed('real Sudoku client -> managed server -> loopback HTTP traffic')
   assert request('panel/hub/api/sudoku/stop',{},csrf)['success'];assert not request('panel/hub/api/status')['obj']['sudoku']['running'];passed('managed Sudoku stop leaves Core control plane running')
   assert core.poll() is None
+  suite=runpy.run_path(str(root/'hub/sudoku-inbounds-smoke.py'))['run']
+  a,b,laptop,laptop_cfg,tablet_cfg,check=suite(request,csrf,sudoku,td,fixture.server_port,passed)
+  stop(p);p=launch();jar.clear();csrf=request('csrf-token')['obj'];assert request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf)['success']
+  restored=request('panel/hub/api/sudoku/inbounds')['obj'];assert len(restored)==2 and all(v['status']['running'] for v in restored)
+  assert request('panel/hub/api/sudoku/inbounds/'+a+'/devices/'+laptop+'/export',{},csrf,json_body=True)['obj']['config']['key']==laptop_cfg['key']
+  check(laptop_cfg);check(tablet_cfg);passed('Sudoku inbound autostart, device keys and revocation survive panel restart')
  finally:
   if sudoku_client:stop(sudoku_client)
   if fixture:fixture.shutdown()

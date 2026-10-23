@@ -9,11 +9,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/mhsanaei/3x-ui/v3/internal/config"
 	"io"
 	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -22,6 +24,7 @@ import (
 
 // Manager owns only its own child. It never calls systemctl or changes networking.
 type Manager struct {
+	dir       string
 	mu        sync.Mutex
 	cmd       *exec.Cmd
 	done      chan struct{}
@@ -45,19 +48,20 @@ type Status struct {
 	Profile    *SudokuProfile `json:"profile,omitempty"`
 }
 
-func directory() string { return os.Getenv("CONNECT_HUB_INTEGRATIONS_DIR") }
-func sudokuEnvironment() []string {
+func directory() string           { return os.Getenv("CONNECT_HUB_INTEGRATIONS_DIR") }
+func sudokuEnvironment() []string { return environmentAt(directory()) }
+func environmentAt(dir string) []string {
 	env := []string{}
 	for _, entry := range os.Environ() {
 		key, _, _ := strings.Cut(entry, "=")
-		if key != "SUDOKU_STATS_PATH" && key != "SUDOKU_POLICY_PATH" && key != "SUDOKU_CONTROL_SOCKET" && key != "SUDOKU_LOG_LEVEL" {
+		if key != "CONNECT_HUB_INTEGRATIONS_DIR" && key != "SUDOKU_STATS_PATH" && key != "SUDOKU_POLICY_PATH" && key != "SUDOKU_CONTROL_SOCKET" && key != "SUDOKU_LOG_LEVEL" {
 			env = append(env, entry)
 		}
 	}
-	return append(env, "SUDOKU_LOG_LEVEL=info", "SUDOKU_STATS_PATH="+filepath.Join(directory(), "sudoku-stats.json"), "SUDOKU_POLICY_PATH="+filepath.Join(directory(), "sudoku-policy.json"), "SUDOKU_CONTROL_SOCKET="+filepath.Join(directory(), "sudoku.sock"))
+	return append(env, "CONNECT_HUB_INTEGRATIONS_DIR="+dir, "SUDOKU_LOG_LEVEL=info", "SUDOKU_STATS_PATH="+filepath.Join(dir, "sudoku-stats.json"), "SUDOKU_POLICY_PATH="+filepath.Join(dir, "sudoku-policy.json"), "SUDOKU_CONTROL_SOCKET="+filepath.Join(dir, "sudoku.sock"))
 }
 func allowed() error {
-	if os.Getenv("CONNECT_HUB_SUDOKU") != "1" {
+	if os.Getenv("CONNECT_HUB_SUDOKU") == "0" || (os.Getenv("CONNECT_HUB_SUDOKU") != "1" && !bundledSudoku()) {
 		return errors.New("Sudoku is disabled; enable CONNECT_HUB_SUDOKU=1 explicitly")
 	}
 	if !filepath.IsAbs(directory()) {
@@ -71,6 +75,14 @@ func binary() (string, error) {
 	}
 	p := os.Getenv("CONNECT_HUB_SUDOKU_BINARY")
 	expected := strings.ToLower(os.Getenv("CONNECT_HUB_SUDOKU_SHA256"))
+	if p == "" && bundledSudoku() {
+		p = bundledPath()
+		b, e := os.ReadFile(filepath.Join(config.GetBinFolderPath(), "sudoku.sha256"))
+		if e != nil {
+			return "", e
+		}
+		expected = strings.TrimSpace(string(b))
+	}
 	if !filepath.IsAbs(p) || len(expected) != 64 {
 		return "", errors.New("set an absolute Sudoku binary path and its SHA-256")
 	}
@@ -98,6 +110,10 @@ func binary() (string, error) {
 	}
 	return p, nil
 }
+func bundledPath() string {
+	return filepath.Join(config.GetBinFolderPath(), "sudoku-"+runtime.GOOS+"-"+runtime.GOARCH)
+}
+func bundledSudoku() bool { s, e := os.Stat(bundledPath()); return e == nil && s.Mode().IsRegular() }
 func (p SudokuProfile) Validate() error {
 	if p.Port < 1024 || p.Port > 65535 {
 		return errors.New("Sudoku port must be 1024..65535")
@@ -123,7 +139,7 @@ func (m *Manager) State() Status {
 	if allowed() != nil {
 		return s
 	}
-	b, err := os.ReadFile(filepath.Join(directory(), "sudoku-profile.json"))
+	b, err := os.ReadFile(filepath.Join(m.directory(), "sudoku-profile.json"))
 	if err == nil {
 		var p SudokuProfile
 		if json.Unmarshal(b, &p) == nil && p.Validate() == nil {
@@ -157,7 +173,7 @@ func (m *Manager) Create(p SudokuProfile) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if _, err = os.Stat(filepath.Join(directory(), "sudoku-profile.json")); !os.IsNotExist(err) {
+	if _, err = os.Stat(filepath.Join(m.directory(), "sudoku-profile.json")); !os.IsNotExist(err) {
 		return "", errors.New("a profile already exists; remove it explicitly first")
 	}
 	p.PublicKey = "pending"
@@ -167,11 +183,11 @@ func (m *Manager) Create(p SudokuProfile) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, path, "-keygen")
-	if err = os.MkdirAll(directory(), 0700); err != nil {
+	if err = os.MkdirAll(m.directory(), 0700); err != nil {
 		return "", err
 	}
-	cmd.Dir = directory()
-	cmd.Env = sudokuEnvironment()
+	cmd.Dir = m.directory()
+	cmd.Env = environmentAt(m.directory())
 	var out limitedBuffer
 	cmd.Stdout = &out
 	cmd.Stderr = &out
@@ -180,7 +196,7 @@ func (m *Manager) Create(p SudokuProfile) (string, error) {
 	}
 	fields := map[string]string{}
 	for _, line := range strings.Split(out.String(), "\n") {
-		for _, label := range []string{"Master Public Key:", "Available Private Key:"} {
+		for _, label := range []string{"Master Public Key:", "Available Private Key:", "Master Private Key:"} {
 			if _, v, ok := strings.Cut(line, label); ok {
 				fields[label] = strings.TrimSpace(v)
 			}
@@ -191,11 +207,11 @@ func (m *Manager) Create(p SudokuProfile) (string, error) {
 	if err = p.Validate(); err != nil || secret == "" {
 		return "", errors.New("incompatible Sudoku Core keygen output")
 	}
-	if err = os.MkdirAll(directory(), 0700); err != nil {
+	if err = os.MkdirAll(m.directory(), 0700); err != nil {
 		return "", err
 	}
 	b, _ := json.MarshalIndent(p, "", "  ")
-	f, err := os.OpenFile(filepath.Join(directory(), "sudoku-profile.json"), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+	f, err := os.OpenFile(filepath.Join(m.directory(), "sudoku-profile.json"), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 	if err != nil {
 		return "", err
 	}
@@ -206,6 +222,11 @@ func (m *Manager) Create(p SudokuProfile) (string, error) {
 	}
 	if closeErr != nil {
 		return "", closeErr
+	}
+	if master := fields["Master Private Key:"]; master != "" {
+		if err = os.WriteFile(filepath.Join(m.directory(), "master.key"), []byte(master), 0600); err != nil {
+			return "", err
+		}
 	}
 	m.lastError = ""
 	return secret, nil
@@ -220,7 +241,7 @@ func (m *Manager) Start() error {
 	if err != nil {
 		return err
 	}
-	b, err := os.ReadFile(filepath.Join(directory(), "sudoku-profile.json"))
+	b, err := os.ReadFile(filepath.Join(m.directory(), "sudoku-profile.json"))
 	if err != nil {
 		return err
 	}
@@ -239,13 +260,13 @@ func (m *Manager) Start() error {
 	l.Close()
 	cfg := map[string]any{"mode": "server", "transport": "tcp", "local_port": p.Port, "key": p.PublicKey, "aead": p.AEAD, "ascii": p.Table, "padding_min": 0, "padding_max": 0, "enable_pure_downlink": false, "multiplex": "off", "suspicious_action": "fallback", "fallback_address": "127.0.0.1:1", "httpmask": map[string]any{"disable": true, "mode": "auto", "tls": false, "host": "", "path_root": ""}, "reverse": map[string]string{"listen": ""}, "custom_tables": []string{}}
 	b, _ = json.MarshalIndent(cfg, "", "  ")
-	configPath := filepath.Join(directory(), "sudoku-server.json")
+	configPath := filepath.Join(m.directory(), "sudoku-server.json")
 	if err = os.WriteFile(configPath, b, 0600); err != nil {
 		return err
 	}
 	cmd := exec.Command(path, "-c", configPath)
-	cmd.Dir = directory()
-	cmd.Env = sudokuEnvironment()
+	cmd.Dir = m.directory()
+	cmd.Env = environmentAt(m.directory())
 	// No shell, inherited terminal, secrets in logs, or ownership of external services.
 	cmd.Stdout = io.Discard
 	cmd.Stderr = io.Discard
@@ -301,9 +322,16 @@ func (m *Manager) Remove() error {
 	if m.cmd != nil {
 		return errors.New("stop Sudoku before removing its profile")
 	}
-	err := os.Remove(filepath.Join(directory(), "sudoku-profile.json"))
+	err := os.Remove(filepath.Join(m.directory(), "sudoku-profile.json"))
 	if errors.Is(err, os.ErrNotExist) {
 		return nil
 	}
 	return err
+}
+
+func (m *Manager) directory() string {
+	if m.dir != "" {
+		return m.dir
+	}
+	return directory()
 }

@@ -20,7 +20,7 @@ try:
   with client.open(urllib.request.Request(base+path,data=body,headers=headers),timeout=10)as r:return r.read()
  assert b'Connect Hub' in req('')
  token=json.loads(req('csrf-token'))['obj'];assert json.loads(req('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},token))['success']
- state=json.loads(req('panel/hub/api/status'))['obj'];assert not state['sudoku']['enabled'] and not state['connectCore']['enabled']
+ state=json.loads(req('panel/hub/api/status'))['obj'];assert state['sudoku']['enabled'] and not state['connectCore']['enabled']
  cid=docker('compose','ps','-q','connect-hub');inspect=json.loads(docker('inspect',cid))[0]
  assert inspect['HostConfig']['CapDrop']==['ALL'] and 'no-new-privileges:true' in inspect['HostConfig']['SecurityOpt']
  assert inspect['HostConfig']['NetworkMode']!='host' and not inspect['HostConfig']['Privileged']

@@ -23,6 +23,11 @@ func TestMain(m *testing.M) {
 			}
 		}
 		if len(os.Args) > 1 && os.Args[1] == "-keygen" {
+			if len(os.Args) > 2 && os.Args[2] == "-more" {
+				println("Split Private Key: " + newID() + newID())
+				os.Exit(0)
+			}
+			println("Master Private Key: test-master")
 			println("20:00:00 INFO [CLI] Master Public Key:  public-test-key")
 			println("20:00:00 INFO [CLI] Available Private Key: client-secret")
 			os.Exit(0)

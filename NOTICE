@@ -7,3 +7,7 @@ build and installation instructions: https://github.com/sanderstripa/connect-hub
 Changes: independent identity/storage, advertising removed from active routes,
 isolated installation, reviewed updates, optional integrations and CI.
 Third-party components retain their respective licenses and notices.
+2026-10-24: Sudoku inbound/device management added. Bundled compatible Sudoku
+Core retains its original GPL-3.0-or-later license, authorship and naming notice.
+See SUDOKU-LICENSE and hub/third-party/SUDOKU-SOURCE.md for included source,
+compatibility modifications, provenance and rebuild instructions.
