@@ -18,10 +18,11 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  creds=dict(line.split('=',1) for line in (data/'initial-access.txt').read_text().splitlines())
  env.update(XUI_DB_FOLDER=str(data),XUI_LOG_FOLDER=str(logs),XUI_BIN_FOLDER=str(prefix/'current/bin'),XUI_MAIN_FOLDER=str(prefix/'current'),CONNECT_HUB_INTEGRATIONS_DIR=str(data/'integrations'))
  base=creds['URL'];jar=http.cookiejar.CookieJar();client=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPCookieProcessor(jar))
- def request(path,payload=None,token=None,raw=False):
+ def request(path,payload=None,token=None,raw=False,json_body=False):
   headers={}
   if token:headers['X-CSRF-Token']=token
   b=urllib.parse.urlencode(payload).encode() if payload is not None else None
+  if json_body:headers['Content-Type']='application/json';b=json.dumps(payload).encode()
   req=urllib.request.Request(base+path,data=b,headers=headers)
   with client.open(req,timeout=15) as res:
    body=res.read();return body if raw else json.loads(body)
@@ -67,6 +68,57 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
   assert request('panel/api/inbounds/del/'+str(created['id']),{},csrf)['success'];fixture.shutdown()
   assert not request('panel/api/server/updatePanel',{},csrf)['success'];passed('upstream web self-update is blocked')
  finally:stop(p)
+ # Exercise actual optional engine binaries, while the data plane stays local.
+ tools=root/'dist/test-tools';sudoku=tools/'sudoku';control=tools/'connect-control'
+ assert sudoku.is_file() and control.is_file(),'prepare-test-engines.py must run before smoke'
+ core_dir=td/'core-state'
+ subprocess.run([str(control),'init-vps',str(core_dir),'localhost','https://127.0.0.1:17900'],check=True,stdout=subprocess.DEVNULL)
+ core_config=json.loads((core_dir/'control.json').read_text());core_port=port();core_config.update(listen=f'127.0.0.1:{core_port}',enrollment_listen='',owned_tun=False,auto_start=False)
+ (core_dir/'control.json').write_text(json.dumps(core_config))
+ core_log=open(td/'core.log','wb');core=subprocess.Popen([str(control),'serve',str(core_dir/'control.json')],stdout=core_log,stderr=core_log)
+ env.update(CONNECT_HUB_CORE_ALPHA='1',CONNECT_HUB_CORE_URL=f'http://127.0.0.1:{core_port}',CONNECT_HUB_CORE_TOKEN_FILE=str(core_dir/'control-token'),CONNECT_HUB_SUDOKU='1',CONNECT_HUB_SUDOKU_BINARY=str(sudoku),CONNECT_HUB_SUDOKU_SHA256=hashlib.sha256(sudoku.read_bytes()).hexdigest())
+ p=launch();sudoku_client=None;fixture=None
+ try:
+  jar.clear();csrf=request('csrf-token')['obj'];assert request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf)['success']
+  state=request('panel/hub/api/status')['obj'];assert state['connectCore']['enabled'] and state['connectCore']['status']=='stopped',state
+  assert not any(k in state['connectCore'] for k in ('devices','token','private_key'));passed('real Connect Core alpha status, no TUN start or secret export')
+  sp=port();profile={'host':'127.0.0.1','port':sp,'aead':'chacha20-poly1305','table':'prefer_ascii'}
+  created=request('panel/hub/api/sudoku/create',profile,csrf,json_body=True);assert created['success'],created
+  secret=created['obj']['privateKey'];assert secret and secret not in json.dumps(request('panel/hub/api/status'))
+  assert request('panel/hub/api/sudoku/start',{},csrf)['success'];passed('real compatible Sudoku Core keygen and managed server launch')
+  fixture=http.server.ThreadingHTTPServer(('127.0.0.1',0),Fixture);threading.Thread(target=fixture.serve_forever,daemon=True).start()
+  socks_port=port();client_config=td/'sudoku-client.json'
+  client_config.write_text(json.dumps({'mode':'client','transport':'tcp','local_port':socks_port,'server_address':f'127.0.0.1:{sp}','key':secret,'aead':'chacha20-poly1305','ascii':'prefer_ascii','padding_min':0,'padding_max':0,'enable_pure_downlink':False,'multiplex':'off','httpmask':{'disable':True,'mode':'auto','tls':False,'host':'','path_root':''},'rule_urls':['global']}))
+  sc_log=open(td/'sudoku-client.log','wb');sudoku_client=subprocess.Popen([str(sudoku),'-c',str(client_config)],stdout=sc_log,stderr=sc_log)
+  def recv(s,n):
+   out=b''
+   while len(out)<n:
+    piece=s.recv(n-len(out));assert piece,'SOCKS stream closed';out+=piece
+   return out
+  traffic=False
+  for _ in range(40):
+   try:
+    with socket.create_connection(('127.0.0.1',socks_port),timeout=3) as s:
+     s.sendall(b'\x05\x01\x00');assert recv(s,2)==b'\x05\x00'
+     s.sendall(b'\x05\x01\x00\x01\x7f\x00\x00\x01'+fixture.server_port.to_bytes(2,'big'));reply=recv(s,4);assert reply[1]==0,reply
+     if reply[3]==1:recv(s,6)
+     elif reply[3]==4:recv(s,18)
+     else:recv(s,recv(s,1)[0]+2)
+     s.sendall(b'GET / HTTP/1.0\r\nHost: localhost\r\n\r\n');response=b''
+     while True:
+      chunk=s.recv(4096)
+      if not chunk:break
+      response+=chunk
+     assert b'connect-hub-real-xray' in response;traffic=True;break
+   except (OSError,AssertionError):time.sleep(.25)
+  assert traffic,'real Sudoku TCP/SOCKS round trip failed';passed('real Sudoku client -> managed server -> loopback HTTP traffic')
+  assert request('panel/hub/api/sudoku/stop',{},csrf)['success'];assert not request('panel/hub/api/status')['obj']['sudoku']['running'];passed('managed Sudoku stop leaves Core control plane running')
+  assert core.poll() is None
+ finally:
+  if sudoku_client:stop(sudoku_client)
+  if fixture:fixture.shutdown()
+  stop(p);stop(core);core_log.close()
+ env.pop('CONNECT_HUB_CORE_ALPHA',None);env.pop('CONNECT_HUB_SUDOKU',None)
  initial=(data/'initial-access.txt').read_bytes()
  # Construct a second revision of the same tested package to exercise update
  # and data preservation, rather than downloading an unreviewed remote version.

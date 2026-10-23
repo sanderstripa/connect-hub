@@ -1,7 +1,7 @@
 name: Connect Hub
 on:
   push:
-    branches: [main, 'feat/**']
+    branches: [main]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -36,8 +36,16 @@ jobs:
       - run: go test -race -count=1 ./internal/hub ./internal/web/controller ./internal/config
       - run: bash -n hub/install.sh hub/update.sh hub/check-upstream.sh && python3 -m py_compile hub/package.py hub/smoke.py
       - run: python3 hub/package.py
+      - run: python3 hub/prepare-test-engines.py
       - name: Fresh installation, authentication, Xray traffic, update and backup
         run: python3 hub/smoke.py
+      - name: Native systemd installation on disposable hosted runner
+        run: |
+          checksum=$(awk '$2=="connect-hub-linux-amd64.tar.gz" {print $1}' dist/SHA256SUMS)
+          sudo bash hub/install.sh --package dist/connect-hub-linux-amd64.tar.gz --sha256 "$checksum" > /tmp/connect-hub-install.log
+          sudo systemctl is-active --quiet connect-hub
+          sudo test -s /etc/connect-hub/initial-access.txt
+          sudo systemctl stop connect-hub
       - uses: actions/upload-artifact@v6
         if: always()
         with:

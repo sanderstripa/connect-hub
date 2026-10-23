@@ -26,8 +26,14 @@ type State = {
     error?: string;
     profile?: Profile;
   };
-  mist: { stage: string; reason: string };
-  connectCore: { stage: string; reason: string };
+  mist: { enabled: boolean; stage: string; reason: string; status?: string; version?: string };
+  connectCore: {
+    enabled: boolean;
+    stage: string;
+    reason: string;
+    status?: string;
+    version?: string;
+  };
 };
 export default function HubPage() {
   const [state, setState] = useState<State>();
@@ -177,7 +183,10 @@ export default function HubPage() {
               ['Connect Core', state?.connectCore],
             ].map(([name, cap]) => (
               <Card key={String(name)} title={String(name)}>
-                <Tag color="orange">Experimental alpha · disabled</Tag>
+                <Tag color="orange">
+                  Experimental alpha ·{' '}
+                  {typeof cap === 'object' && cap?.enabled ? cap.status || 'enabled' : 'disabled'}
+                </Tag>
                 <Typography.Paragraph>
                   {typeof cap === 'object' ? cap?.reason : 'Loading…'}
                 </Typography.Paragraph>

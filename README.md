@@ -92,6 +92,7 @@ cd ..
 go test -shuffle=on -count=1 ./...
 go test -race ./internal/hub ./internal/config ./internal/web/controller
 python3 hub/package.py
+python3 hub/prepare-test-engines.py
 python3 hub/smoke.py
 ```
 

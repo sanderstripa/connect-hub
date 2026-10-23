@@ -222,7 +222,7 @@ func (m *Manager) Start() error {
 		return err
 	}
 	l.Close()
-	cfg := map[string]any{"mode": "server", "transport": "tcp", "local_port": p.Port, "key": p.PublicKey, "aead": p.AEAD, "ascii": p.Table, "padding_min": 0, "padding_max": 0, "enable_pure_downlink": false, "multiplex": "auto", "suspicious_action": "fallback", "fallback_address": "127.0.0.1:1", "httpmask": map[string]any{"disable": true, "mode": "auto", "tls": false, "host": "", "path_root": ""}, "reverse": map[string]string{"listen": ""}, "custom_tables": []string{}}
+	cfg := map[string]any{"mode": "server", "transport": "tcp", "local_port": p.Port, "key": p.PublicKey, "aead": p.AEAD, "ascii": p.Table, "padding_min": 0, "padding_max": 0, "enable_pure_downlink": false, "multiplex": "off", "suspicious_action": "fallback", "fallback_address": "127.0.0.1:1", "httpmask": map[string]any{"disable": true, "mode": "auto", "tls": false, "host": "", "path_root": ""}, "reverse": map[string]string{"listen": ""}, "custom_tables": []string{}}
 	b, _ = json.MarshalIndent(cfg, "", "  ")
 	configPath := filepath.Join(directory(), "sudoku-server.json")
 	if err = os.WriteFile(configPath, b, 0600); err != nil {

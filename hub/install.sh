@@ -18,10 +18,16 @@ die(){ echo "Connect Hub: $*" >&2;exit 1; }
 [[ $service == 0 || $EUID == 0 ]] || die 'Run as root for systemd installation'
 [[ -n $package && $checksum =~ ^[a-fA-F0-9]{64}$ ]] || die 'A built Connect Hub package and its SHA-256 are required; see the GitHub Actions build artifacts'
 for dir in "$prefix" "$data" "$logs"; do
- [[ $dir == /* && $dir != / && $dir != /etc && $dir != /opt && $dir != /var && $dir != /var/log && $dir != *..* && ! -L $dir ]] || die 'Use dedicated absolute directories without symlinks'
+ [[ $dir =~ ^/[a-zA-Z0-9_./-]+$ && $dir != / && $dir != /etc && $dir != /opt && $dir != /var && $dir != /var/log && $dir != *..* && ! -L $dir ]] || die 'Use dedicated absolute directories without symlinks'
  [[ $(realpath -m "$dir") == "$dir" ]] || die 'Parent directory symlinks are not supported'
 done
+for a in "$prefix" "$data" "$logs";do
+ for b in "$prefix" "$data" "$logs";do
+  [[ $a == "$b" || $a != "$b/"* ]] || die 'Managed directories must not contain each other'
+ done
+done
 [[ $prefix != "$data" && $prefix != "$logs" && $data != "$logs" ]] || die 'Installation, data and log directories must be distinct'
+if ((service)) && [[ -e /etc/systemd/system/connect-hub.service ]] && ! grep -q '^# Managed by Connect Hub$' /etc/systemd/system/connect-hub.service;then die 'An unowned connect-hub.service already exists';fi
 if ((update)); then
  [[ -L $prefix/current && -f $data/.connect-hub-owned ]] || die 'No managed Connect Hub installation found; no foreign installation will be adopted'
 else
@@ -45,20 +51,11 @@ target=$prefix/releases/$revision
 [[ ! -e $target ]] || die 'This revision is already installed'
 mkdir -p "$prefix/releases" "$logs"
 backup= old= was_active=0
-if ((update)); then
- old=$(readlink -f "$prefix/current")
- [[ $old == "$prefix/releases/"* ]] || die 'Current release points outside managed releases'
- if ((service)) && systemctl is-active --quiet connect-hub; then was_active=1;systemctl stop connect-hub;fi
- backup=$prefix/backups/$(date -u +%Y%m%dT%H%M%SZ)-$$
- mkdir -p "$backup";cp -a "$data" "$backup/data"
- printf '%s\n' "$old" > "$backup/previous-release"
-else
- mkdir -p "$data/integrations";touch "$data/.connect-hub-owned"
-fi
 activated=0
 rollback(){
  result=$?
  if ((result && activated && update)); then
+  if ((service));then systemctl stop connect-hub || true;fi
   ln -s "$old" "$prefix/current.rollback";mv -Tf "$prefix/current.rollback" "$prefix/current"
   # Preserve the failed migration database rather than overwrite or delete it.
   mv "$data" "$backup/failed-data";cp -a "$backup/data" "$data"
@@ -70,6 +67,16 @@ rollback(){
  exit "$result"
 }
 trap rollback EXIT
+if ((update)); then
+ old=$(readlink -f "$prefix/current")
+ [[ $old == "$prefix/releases/"* ]] || die 'Current release points outside managed releases'
+ if ((service)) && systemctl is-active --quiet connect-hub; then was_active=1;systemctl stop connect-hub;fi
+ backup=$prefix/backups/$(date -u +%Y%m%dT%H%M%SZ)-$$
+ mkdir -p "$backup";cp -a "$data" "$backup/data"
+ printf '%s\n' "$old" > "$backup/previous-release"
+else
+ mkdir -p "$data/integrations";touch "$data/.connect-hub-owned"
+fi
 cp -a "$tmp/connect-hub" "$target"
 export XUI_DB_FOLDER=$data XUI_LOG_FOLDER=$logs XUI_BIN_FOLDER=$target/bin XUI_MAIN_FOLDER=$target
 export XUI_NODE_TOKEN_KEY_FILE=$data/node_token_key.json
