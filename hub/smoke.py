@@ -87,7 +87,11 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
   result=request('panel/api/inbounds/add',inbound,csrf);assert result['success'],result
   items=request('panel/api/inbounds/list')['obj'];created=next(x for x in items if x['remark']=='Hub CI fixture')
   proxy=urllib.request.build_opener(urllib.request.ProxyHandler({}));traffic=False
-  for _ in range(40):
+  # A runtime add can legitimately fall back to the upstream pending-config
+  # reconciliation job, which runs every 30 seconds. Exercise that natural
+  # path rather than forcing a restart or failing before its first tick.
+  deadline=time.monotonic()+65
+  while time.monotonic()<deadline:
    try:
     if b'connect-hub-real-xray' in proxy.open(f'http://127.0.0.1:{inbound_port}/',timeout=2).read():traffic=True;break
    except OSError as error:last_error=str(error);time.sleep(.25)
