@@ -160,11 +160,16 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
   assert request('panel/hub/api/sudoku/stop',{},csrf)['success'];assert not request('panel/hub/api/status')['obj']['sudoku']['running'];passed('managed Sudoku stop leaves Core control plane running')
   assert core.poll() is None
   suite=runpy.run_path(str(root/'hub/sudoku-inbounds-smoke.py'))['run']
-  a,b,laptop,laptop_cfg,tablet_cfg,check=suite(request,csrf,sudoku,td,fixture.server_port,passed)
+  a,b,laptop,laptop_cfg,tablet_cfg,phone_cfg,check=suite(request,csrf,sudoku,td,fixture.server_port,passed)
   stop(p);p=launch();jar.clear();csrf=request('csrf-token')['obj'];assert request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf)['success']
-  restored=request('panel/hub/api/sudoku/inbounds')['obj'];assert len(restored)==2 and all(v['status']['running'] for v in restored)
+  # HTTP is available before the background engine startup finishes.
+  for _ in range(80):
+   restored=request('panel/hub/api/sudoku/inbounds')['obj']
+   if len(restored)==2 and all(v['status']['running'] for v in restored):break
+   time.sleep(.25)
+  else:raise AssertionError('Sudoku autostart failed: '+json.dumps(restored))
   assert request('panel/hub/api/sudoku/inbounds/'+a+'/devices/'+laptop+'/export',{},csrf,json_body=True)['obj']['config']['key']==laptop_cfg['key']
-  check(laptop_cfg);check(tablet_cfg);passed('Sudoku inbound autostart, device keys and revocation survive panel restart')
+  check(laptop_cfg);check(tablet_cfg);check(phone_cfg,False);passed('Sudoku inbound autostart, device keys and revocation survive panel restart')
  finally:
   if sudoku_client:stop(sudoku_client)
   if fixture:fixture.shutdown()

@@ -67,4 +67,4 @@ def run(request,csrf,core,td,fixture_port,passed):
  api('/'+a+'/devices/'+phone+'/revoked');check(phone_cfg,False);check(laptop_cfg);check(tablet_cfg)
  assert not request(base+'/'+a+'/devices/'+phone+'/enabled',{},csrf,json_body=True)['success']
  passed('per-device disable, enable and permanent revoke preserve other device and inbound access')
- return a,b,laptop,laptop_cfg,tablet_cfg,check
+ return a,b,laptop,laptop_cfg,tablet_cfg,phone_cfg,check
