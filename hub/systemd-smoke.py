@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Disposable hosted-runner test: real unprivileged service and failed update rollback."""
-import hashlib,io,json,pathlib,subprocess,tarfile,tempfile,time
+import hashlib,io,json,pathlib,ssl,subprocess,tarfile,tempfile,time,urllib.request
 root=pathlib.Path(__file__).resolve().parent.parent
 archive=root/'dist/connect-hub-linux-amd64.tar.gz'
 def run(*args,check=True):return subprocess.run(args,check=check,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
 def install(path,update=False):
- return run('sudo','env','CONNECT_HUB_LISTEN=127.0.0.1','CONNECT_HUB_HOST=127.0.0.1','bash',str(root/'hub/install.sh'),'--package',str(path),'--sha256',hashlib.sha256(path.read_bytes()).hexdigest(),*(['--update']if update else []),check=False)
+ return run('sudo','env','CONNECT_HUB_TLS_MODE=selfsigned','CONNECT_HUB_LISTEN=127.0.0.1','CONNECT_HUB_HOST=127.0.0.1','bash',str(root/'hub/install.sh'),'--package',str(path),'--sha256',hashlib.sha256(path.read_bytes()).hexdigest(),*(['--update']if update else []),check=False)
 # Simulate a foreign unit outside /etc: the installer must not shadow it.
 foreign=pathlib.Path('/run/systemd/system/connect-hub.service')
 assert run('systemctl','show','connect-hub.service','-p','LoadState','--value',check=False).stdout.strip()=='not-found'
@@ -27,6 +27,16 @@ try:
  assert run('sudo','systemctl','show','connect-hub','-p','User','--value').stdout.strip()=='connect-hub'
  old=run('sudo','readlink','-f','/opt/connect-hub/current').stdout.strip()
  access=run('sudo','cat','/etc/connect-hub/initial-access.txt').stdout
+ credentials=dict(line.split('=',1)for line in access.splitlines())
+ assert credentials['URL'].startswith('https://')
+ certificate=run('sudo','cat','/opt/connect-hub/tls/fullchain.pem').stdout
+ context=ssl.create_default_context(cadata=certificate)
+ client=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=context))
+ assert b'Connect Hub' in client.open(credentials['LOCAL_URL'],timeout=10).read()
+ assert run('sudo','systemctl','is-active','connect-hub-cert-renew.timer').stdout.strip()=='active'
+ assert 'CONNECT HUB' in r.stdout and 'Username /' in r.stdout and 'Password /' in r.stdout
+ assert run('sudo','bash','/usr/local/bin/connect-hub','status',check=False).returncode==0
+ print('PASS: actual HTTPS, SAN verification using the explicit test certificate, own renewal timer and readable installer summary',flush=True)
  print('PASS: native systemd service runs as dedicated unprivileged connect-hub account',flush=True)
  with tempfile.TemporaryDirectory(prefix='hub-failed-update-') as td:
   broken=pathlib.Path(td)/'broken.tar.gz'

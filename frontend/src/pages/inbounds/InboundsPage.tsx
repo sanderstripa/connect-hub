@@ -11,7 +11,6 @@ import {
   Row,
   Spin,
   Statistic,
-  Tabs,
   message,
 } from 'antd';
 
@@ -82,8 +81,8 @@ interface ClientMatchTarget {
 }
 
 export default function InboundsPage() {
-  const { t, i18n } = useTranslation();
-  const [protocolView, setProtocolView] = useState('standard');
+  const { t } = useTranslation();
+  const [sudokuRefreshKey, setSudokuRefreshKey] = useState(0);
   const [sudokuEnabled, setSudokuEnabled] = useState(false);
   useEffect(() => {
     void HttpUtil.get<{ sudoku: { enabled: boolean } }>('/panel/hub/api/status').then((r) => {
@@ -304,7 +303,9 @@ export default function InboundsPage() {
       for (const candidate of dbInbounds) {
         if (candidate.id === dbInbound.id) continue;
         if (!['trojan', 'vless'].includes(candidate.protocol)) continue;
-        const candStream = coerceInboundJsonField(candidate.streamSettings) as { network?: string };
+        const candStream = coerceInboundJsonField(candidate.streamSettings) as {
+          network?: string;
+        };
         if (candStream.network !== 'tcp') continue;
         const candSettings = coerceInboundJsonField(candidate.settings) as {
           fallbacks?: { dest?: string }[];
@@ -433,7 +434,9 @@ export default function InboundsPage() {
     );
     const out: string[] = [];
     for (const ib of hydrated) {
-      const settings = coerceInboundJsonField(ib.settings) as { clients?: { subId?: string }[] };
+      const settings = coerceInboundJsonField(ib.settings) as {
+        clients?: { subId?: string }[];
+      };
       const clients = settings.clients || [];
       for (const c of clients) {
         if (c.subId && subSettings.subURI) {
@@ -456,7 +459,9 @@ export default function InboundsPage() {
       value: '',
       json: true,
       confirm: async (value) => {
-        const msg = await HttpUtil.post('/panel/api/inbounds/import', { data: value });
+        const msg = await HttpUtil.post('/panel/api/inbounds/import', {
+          data: value,
+        });
         if (msg?.success) {
           await refresh();
           return true;
@@ -481,7 +486,9 @@ export default function InboundsPage() {
   const confirmDelete = useCallback(
     (dbInbound: DBInbound) => {
       modal.confirm({
-        title: t('pages.inbounds.deleteConfirmTitle', { remark: dbInbound.remark }),
+        title: t('pages.inbounds.deleteConfirmTitle', {
+          remark: dbInbound.remark,
+        }),
         content: t('pages.inbounds.deleteConfirmContent'),
         okText: t('delete'),
         okType: 'danger',
@@ -503,7 +510,9 @@ export default function InboundsPage() {
           return;
         }
         modal.confirm({
-          title: t('pages.inbounds.bulkDeleteConfirmTitle', { count: ids.length }),
+          title: t('pages.inbounds.bulkDeleteConfirmTitle', {
+            count: ids.length,
+          }),
           content: t('pages.inbounds.bulkDeleteConfirmContent'),
           okText: t('delete'),
           okType: 'danger',
@@ -542,7 +551,9 @@ export default function InboundsPage() {
   const confirmResetTraffic = useCallback(
     (dbInbound: DBInbound) => {
       modal.confirm({
-        title: t('pages.inbounds.resetConfirmTitle', { remark: dbInbound.remark }),
+        title: t('pages.inbounds.resetConfirmTitle', {
+          remark: dbInbound.remark,
+        }),
         content: t('pages.inbounds.resetConfirmContent'),
         okText: t('reset'),
         cancelText: t('cancel'),
@@ -559,7 +570,10 @@ export default function InboundsPage() {
     (dbInbound: DBInbound) => {
       const count = clientCount[dbInbound.id]?.clients || 0;
       modal.confirm({
-        title: t('pages.inbounds.delAllClientsConfirmTitle', { remark: dbInbound.remark, count }),
+        title: t('pages.inbounds.delAllClientsConfirmTitle', {
+          remark: dbInbound.remark,
+          count,
+        }),
         content: t('pages.inbounds.delAllClientsConfirmContent'),
         okText: t('delete'),
         okType: 'danger',
@@ -586,7 +600,9 @@ export default function InboundsPage() {
         return;
       }
       modal.confirm({
-        title: t('pages.inbounds.cloneConfirmTitle', { remark: dbInbound.remark }),
+        title: t('pages.inbounds.cloneConfirmTitle', {
+          remark: dbInbound.remark,
+        }),
         content: t('pages.inbounds.cloneConfirmContent'),
         okText: t('pages.inbounds.clone'),
         cancelText: t('cancel'),
@@ -727,110 +743,101 @@ export default function InboundsPage() {
 
         <Layout className="content-shell">
           <Layout.Content id="content-layout" className="content-area">
-            <Tabs
-              activeKey={protocolView}
-              onChange={setProtocolView}
-              items={[
-                {
-                  key: 'standard',
-                  label: i18n.language.startsWith('ru')
-                    ? 'Основные протоколы'
-                    : 'Standard protocols',
-                },
-                { key: 'sudoku', label: 'Sudoku' },
-              ]}
-            />
-            {protocolView === 'sudoku' ? (
-              <SudokuInbounds enabled={sudokuEnabled} />
-            ) : (
-              <Spin
-                spinning={!fetched || !hostsFetched}
-                delay={200}
-                description={t('loading')}
-                size="large"
-              >
-                {!fetched || !hostsFetched ? (
-                  <div className="loading-spacer" />
-                ) : fetchError || hostsError ? (
-                  <Result
-                    status="error"
-                    title={t('somethingWentWrong')}
-                    subTitle={fetchError || hostsError}
-                    extra={
-                      <Button
-                        type="primary"
-                        onClick={() => {
-                          void refresh();
-                          void refetchHosts();
-                        }}
-                      >
-                        {t('refresh')}
-                      </Button>
-                    }
-                  />
-                ) : (
-                  <Row gutter={[isMobile ? 8 : 16, 12]}>
-                    <Col span={24}>
-                      <Card size="small" hoverable className="summary-card">
-                        <Row gutter={[16, 12]}>
-                          <Col xs={12} sm={12} md={8}>
-                            <Statistic
-                              title={t('pages.inbounds.totalDownUp')}
-                              value={0}
-                              formatter={() => (
-                                <span>
-                                  <ArrowUpOutlined /> {SizeFormatter.sizeFormat(totals.up)}
-                                  {' / '}
-                                  <ArrowDownOutlined /> {SizeFormatter.sizeFormat(totals.down)}
-                                </span>
-                              )}
-                            />
-                          </Col>
-                          <Col xs={12} sm={12} md={8}>
-                            <Statistic
-                              title={t('pages.inbounds.totalUsage')}
-                              value={SizeFormatter.sizeFormat(totals.up + totals.down)}
-                              prefix={<PieChartOutlined />}
-                            />
-                          </Col>
-                          <Col xs={24} sm={24} md={8}>
-                            <Statistic
-                              title={t('pages.inbounds.inboundCount')}
-                              value={String(dbInbounds.length)}
-                              prefix={<BarsOutlined />}
-                            />
-                          </Col>
-                        </Row>
-                      </Card>
-                    </Col>
+            <SudokuInbounds enabled={sudokuEnabled} refreshKey={sudokuRefreshKey}>
+              {(additionalInbounds) => (
+                <Spin
+                  spinning={!fetched || !hostsFetched}
+                  delay={200}
+                  description={t('loading')}
+                  size="large"
+                >
+                  {!fetched || !hostsFetched ? (
+                    <div className="loading-spacer" />
+                  ) : fetchError || hostsError ? (
+                    <Result
+                      status="error"
+                      title={t('somethingWentWrong')}
+                      subTitle={fetchError || hostsError}
+                      extra={
+                        <Button
+                          type="primary"
+                          onClick={() => {
+                            void refresh();
+                            void refetchHosts();
+                          }}
+                        >
+                          {t('refresh')}
+                        </Button>
+                      }
+                    />
+                  ) : (
+                    <Row gutter={[isMobile ? 8 : 16, 12]}>
+                      <Col span={24}>
+                        <Card size="small" hoverable className="summary-card">
+                          <Row gutter={[16, 12]}>
+                            <Col xs={12} sm={12} md={8}>
+                              <Statistic
+                                title={t('pages.inbounds.totalDownUp')}
+                                value={0}
+                                formatter={() => (
+                                  <span>
+                                    <ArrowUpOutlined /> {SizeFormatter.sizeFormat(totals.up)}
+                                    {' / '}
+                                    <ArrowDownOutlined /> {SizeFormatter.sizeFormat(totals.down)}
+                                  </span>
+                                )}
+                              />
+                            </Col>
+                            <Col xs={12} sm={12} md={8}>
+                              <Statistic
+                                title={t('pages.inbounds.totalUsage')}
+                                value={SizeFormatter.sizeFormat(totals.up + totals.down)}
+                                prefix={<PieChartOutlined />}
+                              />
+                            </Col>
+                            <Col xs={24} sm={24} md={8}>
+                              <Statistic
+                                title={t('pages.inbounds.inboundCount')}
+                                value={String(dbInbounds.length + additionalInbounds.length)}
+                                prefix={<BarsOutlined />}
+                              />
+                            </Col>
+                          </Row>
+                        </Card>
+                      </Col>
 
-                    <Col span={24}>
-                      <InboundList
-                        dbInbounds={dbInbounds}
-                        clientCount={clientCount}
-                        onlineClients={onlineClients}
-                        lastOnlineMap={lastOnlineMap}
-                        inboundSpeed={inboundSpeed}
-                        expireDiff={expireDiff}
-                        trafficDiff={trafficDiff}
-                        pageSize={pageSize}
-                        isMobile={isMobile}
-                        subEnable={subSettings.enable}
-                        nodesById={nodesById}
-                        hasActiveNode={showNodeInfo}
-                        hosts={hosts}
-                        onAddInbound={onAddInbound}
-                        onGeneralAction={onGeneralAction}
-                        onRowAction={({ key, dbInbound }) =>
-                          onRowAction({ key, dbInbound: dbInbound as unknown as DBInbound })
-                        }
-                        onBulkDelete={confirmBulkDelete}
-                      />
-                    </Col>
-                  </Row>
-                )}
-              </Spin>
-            )}
+                      <Col span={24}>
+                        <InboundList
+                          dbInbounds={dbInbounds}
+                          additionalInbounds={additionalInbounds}
+                          clientCount={clientCount}
+                          onlineClients={onlineClients}
+                          lastOnlineMap={lastOnlineMap}
+                          inboundSpeed={inboundSpeed}
+                          expireDiff={expireDiff}
+                          trafficDiff={trafficDiff}
+                          pageSize={pageSize}
+                          isMobile={isMobile}
+                          subEnable={subSettings.enable}
+                          nodesById={nodesById}
+                          hasActiveNode={showNodeInfo}
+                          hosts={hosts}
+                          onAddInbound={onAddInbound}
+                          onGeneralAction={onGeneralAction}
+                          onRowAction={({ key, dbInbound }) =>
+                            onRowAction({
+                              key,
+                              dbInbound: dbInbound as unknown as DBInbound,
+                            })
+                          }
+                          onBulkDelete={confirmBulkDelete}
+                        />
+                      </Col>
+                    </Row>
+                  )}
+                </Spin>
+              )}
+            </SudokuInbounds>
           </Layout.Content>
         </Layout>
 
@@ -838,7 +845,11 @@ export default function InboundsPage() {
           <InboundFormModal
             open={formOpen}
             onClose={() => setFormOpen(false)}
-            onSaved={refresh}
+            onSaved={() => {
+              void refresh();
+              setSudokuRefreshKey((value) => value + 1);
+            }}
+            sudokuAvailable={sudokuEnabled}
             mode={formMode}
             dbInbound={formDbInbound}
             dbInbounds={dbInbounds}

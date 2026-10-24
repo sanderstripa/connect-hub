@@ -61,7 +61,10 @@ export function useInboundColumns({
 
   return useMemo(() => {
     const compareText = (a: string | undefined | null, b: string | undefined | null) =>
-      (a || '').localeCompare(b || '', undefined, { numeric: true, sensitivity: 'base' });
+      (a || '').localeCompare(b || '', undefined, {
+        numeric: true,
+        sensitivity: 'base',
+      });
 
     const nodeName = (record: DBInboundRecord) => {
       if (record.nodeId == null) return t('pages.inbounds.localPanel');
@@ -464,7 +467,15 @@ export function useInboundColumns({
       },
     );
 
-    return cols;
+    return cols.map((column) => ({
+      ...column,
+      render: (value, record, index) =>
+        record.managed
+          ? record.managed.cell(String(column.key))
+          : column.render
+            ? column.render(value, record, index)
+            : value,
+    }));
   }, [
     t,
     hasAnyRemark,

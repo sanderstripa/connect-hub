@@ -103,6 +103,9 @@ export XUI_DB_TYPE=sqlite XUI_DB_DSN= XUI_PORT= XUI_NODE_TOKEN_KEY=
 export XUI_DB_FOLDER=$data XUI_LOG_FOLDER=$logs XUI_BIN_FOLDER=$target/bin XUI_MAIN_FOLDER=$target
 export XUI_NODE_TOKEN_KEY_FILE=$data/node_token_key.json
 if ((!update));then
+ if [[ -z ${CONNECT_HUB_PORT:-} && -t 2 && -r /dev/tty ]];then
+  read -r -p 'Panel port (Enter = choose a free port): ' CONNECT_HUB_PORT </dev/tty || true
+ fi
  panel_port=$(python3 - "${CONNECT_HUB_PORT:-0}" "$listen" <<'PY'
 import socket,sys
 port=int(sys.argv[1])
@@ -164,6 +167,7 @@ Environment=XUI_BIN_FOLDER=$prefix/current/bin
 Environment=XUI_MAIN_FOLDER=$prefix/current
 Environment=XUI_NODE_TOKEN_KEY_FILE=$data/node_token_key.json
 Environment=CONNECT_HUB_INTEGRATIONS_DIR=$data/integrations
+EnvironmentFile=-$data/panel.env
 EnvironmentFile=-$data/integrations.env
 Restart=on-failure
 KillMode=control-group
@@ -172,17 +176,43 @@ UMask=0077
 [Install]
 WantedBy=multi-user.target
 EOF
+ # Keep a familiar management command, scoped to this installation only.
+ if [[ -e /usr/local/bin/connect-hub ]] && ! grep -q 'Connect Hub modifications' /usr/local/bin/connect-hub;then die 'Refusing to replace a foreign connect-hub command';fi
+ install -m 0755 "$target/x-ui.sh" /usr/local/bin/connect-hub
+ cert_settings=$("$target/connect-hub" setting -getCert true)
+ if [[ ${CONNECT_HUB_TLS_MODE:-auto} != off ]] && ! grep -q '^cert: .' <<< "$cert_settings";then
+  if [[ -z ${CONNECT_HUB_DOMAIN:-} && -t 2 && -r /dev/tty ]];then
+   read -r -p 'HTTPS certificate domain (Enter = detected server IP): ' CONNECT_HUB_DOMAIN </dev/tty || true
+  fi
+  CONNECT_HUB_PREFIX="$prefix" CONNECT_HUB_DATA="$data" CONNECT_HUB_DOMAIN="${CONNECT_HUB_DOMAIN:-}" bash "$target/hub/cert.sh"
+ fi
  systemctl daemon-reload;systemctl enable --now connect-hub
  settings=$("$target/connect-hub" setting -show true)
  panel_port=$(printf '%s\n' "$settings" | sed -n 's/^port: //p')
  health=0
  for attempt in {1..20};do
-  if curl --noproxy '*' -sS -o /dev/null "http://127.0.0.1:${panel_port}/";then health=1;break;fi
+  # Local health probe only: the temporary certificate is intentionally not a public CA certificate.
+  local_url=$(sed -n 's/^LOCAL_URL=//p' "$data/initial-access.txt")
+  if curl --noproxy '*' --insecure -sS -o /dev/null "$local_url";then health=1;break;fi
   sleep 1
  done
  [[ $health == 1 ]] && systemctl is-active --quiet connect-hub || die 'Service failed health check' 
 fi
-echo "Connect Hub installed: $revision"
-if ((!update));then echo "Initial access saved privately: $data/initial-access.txt";cat "$data/initial-access.txt";fi
-if ((!update));then echo "Open URL in your browser. If your firewall blocks it, allow only this new panel port: $panel_port/tcp. Configure HTTPS in panel settings before regular use.";fi
-[[ -z $backup ]] || echo "Backup retained: $backup"
+green= cyan= yellow= bold= reset=
+if [[ -t 1 && -z ${NO_COLOR:-} ]];then green=$'\033[32m';cyan=$'\033[36m';yellow=$'\033[33m';bold=$'\033[1m';reset=$'\033[0m';fi
+printf '\n%s============================================================%s\n' "$green" "$reset"
+printf '%s                 CONNECT HUB — READY%s\n' "$bold" "$reset"
+printf '%s============================================================%s\n\n' "$green" "$reset"
+while IFS='=' read -r key value;do
+ case "$key" in
+  URL) printf '%s  Open in browser / Адрес панели:%s\n\n    %s\n\n' "$cyan" "$reset" "$value";;
+  USERNAME) printf '  Username / Логин:    %s%s%s\n' "$bold" "$value" "$reset";;
+  PASSWORD) printf '  Password / Пароль:  %s%s%s\n\n' "$bold" "$value" "$reset";;
+  CERTIFICATE) if [[ $value == trusted ]];then printf '%s  HTTPS: trusted Let’s Encrypt certificate; automatic renewal.%s\n\n' "$green" "$reset";else printf '%s  HTTPS: temporary certificate — browser warning expected.\n  Retry trusted issuance: sudo connect-hub → SSL certificate.%s\n\n' "$yellow" "$reset";fi;;
+ esac
+done < "$data/initial-access.txt"
+printf '  Access details / Данные входа: %s/initial-access.txt\n' "$data"
+printf '  Management menu / Меню управления: sudo connect-hub\n'
+printf '  If blocked, allow only the chosen new panel TCP port.\n'
+[[ -z $backup ]] || printf '  Backup retained / Резервная копия: %s\n' "$backup"
+printf '\n%s============================================================%s\n\n' "$green" "$reset"

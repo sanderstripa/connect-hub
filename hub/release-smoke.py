@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Exact public README command, restricted to a fresh GitHub-hosted runner."""
-import http.cookiejar,http.server,json,os,pathlib,runpy,socket,subprocess,tempfile,threading,urllib.parse,urllib.request
+import http.cookiejar,http.server,json,os,pathlib,runpy,socket,ssl,subprocess,tempfile,threading,urllib.parse,urllib.request
 assert os.environ.get('GITHUB_ACTIONS')=='true' and os.environ.get('RUNNER_ENVIRONMENT')=='github-hosted','Hosted disposable runner required'
 root=pathlib.Path(__file__).resolve().parent.parent
 assert not pathlib.Path('/opt/connect-hub').exists(),'Fresh runner required'
@@ -14,7 +14,10 @@ try:
  raw=subprocess.check_output(['sudo','cat','/etc/connect-hub/initial-access.txt'],text=True)
  creds=dict(line.split('=',1)for line in raw.splitlines());base=creds['LOCAL_URL']
  assert urllib.parse.urlparse(base).hostname=='127.0.0.1' and urllib.parse.urlparse(base).port not in (2053,2096,11111,62789)
- jar=http.cookiejar.CookieJar();client=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPCookieProcessor(jar))
+ certificate=subprocess.check_output(['sudo','cat','/opt/connect-hub/tls/fullchain.pem'],text=True)
+ context=ssl.create_default_context(cadata=certificate)
+ assert base.startswith('https://'),'Public installation must enable HTTPS'
+ jar=http.cookiejar.CookieJar();client=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=context),urllib.request.HTTPCookieProcessor(jar))
  def request(path,payload=None,token=None,json_body=False):
   headers={'X-CSRF-Token':token}if token else {}
   body=urllib.parse.urlencode(payload).encode()if payload is not None else None

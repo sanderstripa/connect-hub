@@ -9,9 +9,9 @@ for arg in "$@";do [[ $arg == --update || $arg == --no-service ]] || die 'Suppor
 runner=(bash)
 if [[ $EUID != 0 && " $* " != *' --no-service '* ]];then
  command -v sudo >/dev/null || die 'Run from a root shell, or install sudo for your account.'
- runner=(sudo bash)
+ runner=(sudo env "CONNECT_HUB_TLS_MODE=${CONNECT_HUB_TLS_MODE:-auto}" "CONNECT_HUB_DOMAIN=${CONNECT_HUB_DOMAIN:-}" "CONNECT_HUB_ACME_EMAIL=${CONNECT_HUB_ACME_EMAIL:-}" bash)
 fi
-version=v0.1.0-alpha.2
+version=v0.1.0-alpha.3
 base=https://github.com/sanderstripa/connect-hub/releases/download/$version
 tmp=$(mktemp -d)
 trap 'rm -rf -- "$tmp"' EXIT

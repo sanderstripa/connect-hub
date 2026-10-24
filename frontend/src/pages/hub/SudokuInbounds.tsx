@@ -1,23 +1,24 @@
 // Connect Hub Sudoku inbounds and device credentials, 2026-10-24. GPL-3.0.
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import {
   Alert,
   Button,
   Card,
-  Form,
   Input,
-  InputNumber,
   Modal,
   Popconfirm,
   QRCode,
-  Select,
   Space,
+  Switch,
   Table,
   Tag,
   Typography,
 } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { MoreOutlined } from '@ant-design/icons';
 import { HttpUtil } from '@/utils';
+
+import type { DBInboundRecord } from '@/pages/inbounds/list/types';
 
 type Device = { id: string; name: string; status: string; created: string };
 type Inbound = {
@@ -31,20 +32,32 @@ type Inbound = {
     profile?: { host: string; port: number; aead: string; table: string };
   };
 };
-type Credentials = { privateKey: string; uri: string; config: Record<string, unknown> };
+type Credentials = {
+  privateKey: string;
+  uri: string;
+  config: Record<string, unknown>;
+};
 const base = '/panel/hub/api/sudoku/inbounds';
-export default function SudokuInbounds({ enabled }: { enabled: boolean }) {
+export default function SudokuInbounds({
+  enabled,
+  refreshKey,
+  children,
+}: {
+  enabled: boolean;
+  refreshKey: number;
+  children: (rows: DBInboundRecord[]) => ReactNode;
+}) {
   const { i18n } = useTranslation();
   const ru = (i18n.resolvedLanguage || i18n.language).startsWith('ru');
   const text = (r: string, e: string) => (ru ? r : e);
   const [items, setItems] = useState<Inbound[]>([]);
-  const [creating, setCreating] = useState(false);
+  const [selected, setSelected] = useState<string>();
   const [deviceInbound, setDeviceInbound] = useState<string>();
   const [deviceName, setDeviceName] = useState('');
   const [credentials, setCredentials] = useState<Credentials>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [form] = Form.useForm();
+
   const refresh = useCallback(async () => {
     if (!enabled) return;
     const r = await HttpUtil.get<Inbound[]>(base);
@@ -57,7 +70,7 @@ export default function SudokuInbounds({ enabled }: { enabled: boolean }) {
       clearTimeout(initial);
       clearInterval(timer);
     };
-  }, [refresh]);
+  }, [refresh, refreshKey]);
   async function action(path: string, payload?: Record<string, unknown>) {
     setBusy(true);
     setError('');
@@ -67,10 +80,6 @@ export default function SudokuInbounds({ enabled }: { enabled: boolean }) {
       });
       if (r.success) {
         if (r.obj?.uri) setCredentials(r.obj);
-        if (path === '') {
-          setCreating(false);
-          form.resetFields();
-        }
         if (path.endsWith('/devices')) {
           setDeviceInbound(undefined);
           setDeviceName('');
@@ -86,7 +95,9 @@ export default function SudokuInbounds({ enabled }: { enabled: boolean }) {
   function download() {
     if (!credentials) return;
     const url = URL.createObjectURL(
-      new Blob([JSON.stringify(credentials.config, null, 2)], { type: 'application/json' }),
+      new Blob([JSON.stringify(credentials.config, null, 2)], {
+        type: 'application/json',
+      }),
     );
     const link = document.createElement('a');
     link.href = url;
@@ -94,211 +105,210 @@ export default function SudokuInbounds({ enabled }: { enabled: boolean }) {
     link.click();
     URL.revokeObjectURL(url);
   }
-  return (
-    <Card
-      title={text('Sudoku: подключения и устройства', 'Sudoku inbounds and devices')}
-      extra={<Button onClick={() => void refresh()}>{text('Обновить', 'Refresh')}</Button>}
-    >
-      {error && <Alert type="error" showIcon title={error} style={{ marginBottom: 16 }} />}
-      {!enabled ? (
-        <Alert
-          type="info"
-          showIcon
-          title={text('Sudoku недоступен', 'Sudoku unavailable')}
-          description={text(
-            'Установите актуальный пакет Connect Hub с совместимым Sudoku Core. Если Sudoku отключён администратором, его необходимо включить.',
-            'Install the current Connect Hub package with its compatible Sudoku Core. An explicit administrator disable must be removed.',
-          )}
-        />
-      ) : (
-        <>
-          <Typography.Paragraph>
-            {text(
-              'Создайте inbound со свободным TCP-портом, затем добавьте устройства. Каждое устройство получает собственный ключ, ссылку и конфигурацию.',
-              'Create an inbound on a free TCP port, then add devices. Each device receives its own key, link and configuration.',
-            )}
-          </Typography.Paragraph>
-          <Button type="primary" onClick={() => setCreating(true)}>
-            {text('Создать inbound', 'Create inbound')}
-          </Button>
-          <Space orientation="vertical" style={{ width: '100%', marginTop: 16 }} size="large">
-            {items.map((item) => (
-              <Card
-                key={item.id}
-                size="small"
-                title={
-                  <>
-                    {item.name}{' '}
-                    <Tag color={item.status.running ? 'green' : 'default'}>
-                      {item.status.running
-                        ? text('Работает', 'Running')
-                        : text('Остановлен', 'Stopped')}
-                    </Tag>
-                  </>
-                }
-              >
-                <Typography.Paragraph>
-                  {item.status.profile?.host}:{item.status.profile?.port} ·{' '}
-                  {item.status.profile?.aead} · {item.status.profile?.table}
-                </Typography.Paragraph>
-                {item.status.error && <Alert type="error" title={item.status.error} />}
-                <Space wrap style={{ marginBottom: 16 }}>
-                  <Button
-                    disabled={busy || item.status.running}
-                    onClick={() => void action(`/${item.id}/start`)}
-                  >
-                    {text('Запустить', 'Start')}
-                  </Button>
-                  <Button
-                    disabled={busy || !item.status.running}
-                    onClick={() => void action(`/${item.id}/stop`)}
-                  >
-                    {text('Остановить', 'Stop')}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setDeviceInbound(item.id);
-                      setDeviceName('');
-                    }}
-                  >
-                    {text('Добавить устройство', 'Add device')}
-                  </Button>
-                  <Popconfirm
-                    title={text(
-                      'Удалить inbound? Его ключи будут сохранены в закрытом архиве.',
-                      'Remove inbound? Its keys will be retained in a private archive.',
-                    )}
-                    onConfirm={() => action(`/${item.id}/remove`)}
-                  >
-                    <Button danger disabled={busy || item.status.running}>
-                      {text('Удалить', 'Remove')}
-                    </Button>
-                  </Popconfirm>
-                </Space>
-                <Table<Device>
-                  rowKey="id"
-                  size="small"
-                  pagination={false}
-                  scroll={{ x: 560 }}
-                  dataSource={item.devices}
-                  columns={[
-                    { title: text('Устройство', 'Device'), dataIndex: 'name' },
-                    {
-                      title: text('Доступ', 'Access'),
-                      render: (_, device) => (
-                        <Tag color={device.status === 'enabled' ? 'green' : 'default'}>
-                          {device.status === 'enabled'
-                            ? text('Разрешён', 'Enabled')
-                            : device.status === 'disabled'
-                              ? text('Отключён', 'Disabled')
-                              : text('Отозван', 'Revoked')}
-                        </Tag>
-                      ),
-                    },
-                    {
-                      title: text('Действия', 'Actions'),
-                      render: (_, device) => (
-                        <Space wrap>
-                          <Button
-                            size="small"
-                            disabled={busy || device.status !== 'enabled'}
-                            onClick={() => void action(`/${item.id}/devices/${device.id}/export`)}
-                          >
-                            {text('Ключ / QR / конфигурация', 'Key / QR / configuration')}
-                          </Button>
-                          {device.status !== 'revoked' && (
-                            <>
-                              <Button
-                                size="small"
-                                disabled={busy}
-                                onClick={() =>
-                                  void action(
-                                    `/${item.id}/devices/${device.id}/${device.status === 'enabled' ? 'disabled' : 'enabled'}`,
-                                  )
-                                }
-                              >
-                                {device.status === 'enabled'
-                                  ? text('Отключить', 'Disable')
-                                  : text('Включить', 'Enable')}
-                              </Button>
-                              <Popconfirm
-                                title={text(
-                                  'Навсегда отозвать ключ этого устройства?',
-                                  'Permanently revoke this device key?',
-                                )}
-                                onConfirm={() => action(`/${item.id}/devices/${device.id}/revoked`)}
-                              >
-                                <Button danger size="small" disabled={busy}>
-                                  {text('Отозвать', 'Revoke')}
-                                </Button>
-                              </Popconfirm>
-                            </>
-                          )}
-                        </Space>
-                      ),
-                    },
-                  ]}
-                />
-              </Card>
-            ))}
+  const rows: DBInboundRecord[] = items.map((item, index) => {
+    const manage = (
+      <Button
+        type="text"
+        size="small"
+        className="row-action-trigger"
+        icon={<MoreOutlined />}
+        aria-label={text('Устройства / ключи', 'Devices / keys')}
+        onClick={() => setSelected(item.id)}
+      />
+    );
+    const toggle = (
+      <Switch
+        checked={item.status.running}
+        loading={busy}
+        onChange={(next) => void action('/' + item.id + (next ? '/start' : '/stop'))}
+      />
+    );
+    return {
+      id: -(index + 1),
+      enable: item.status.running,
+      remark: item.name,
+      protocol: 'sudoku',
+      port: item.status.profile?.port ?? 0,
+      subSortIndex: 1,
+      up: 0,
+      down: 0,
+      total: 0,
+      expiryTime: 0,
+      _expiryTime: null,
+      settings: {},
+      streamSettings: {},
+      managed: {
+        id: 'sudoku:' + item.id,
+        mobile: (
+          <Space wrap>
+            <strong>{item.name}</strong>
+            <Tag>Sudoku</Tag>
+            <span>{item.status.profile?.port}</span>
+            {toggle}
+            {manage}
           </Space>
-          {!items.length && (
-            <Typography.Paragraph style={{ marginTop: 16 }}>
-              {text('Подключений пока нет.', 'No inbounds yet.')}
-            </Typography.Paragraph>
-          )}
-        </>
-      )}
+        ),
+        cell: (key) => {
+          switch (key) {
+            case 'id':
+              return item.id.slice(0, 8);
+            case 'action':
+              return manage;
+            case 'enable':
+              return toggle;
+            case 'remark':
+              return item.name;
+            case 'port':
+              return item.status.profile?.port;
+            case 'protocol':
+              return <Tag color="blue">Sudoku · TCP</Tag>;
+            case 'clients':
+              return (
+                <Button type="link" onClick={() => setSelected(item.id)}>
+                  {item.devices.length}
+                </Button>
+              );
+            case 'node':
+              return text('Локальная панель', 'Local panel');
+            default:
+              return '—';
+          }
+        },
+      },
+    };
+  });
+  return (
+    <>
+      {error && <Alert type="error" showIcon title={error} />}
+      {children(rows)}
       <Modal
-        title={text('Новый Sudoku inbound', 'New Sudoku inbound')}
-        open={creating}
-        onCancel={() => setCreating(false)}
-        onOk={() => form.submit()}
-        confirmLoading={busy}
+        open={!!selected}
+        title={text('Устройства подключения', 'Inbound devices')}
+        onCancel={() => setSelected(undefined)}
+        footer={null}
+        width={850}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          initialValues={{ port: 18443, aead: 'chacha20-poly1305', table: 'prefer_ascii' }}
-          onFinish={(v) => void action('', v)}
-        >
-          <Form.Item
-            name="name"
-            label={text('Название', 'Name')}
-            rules={[{ required: true, max: 120 }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="host"
-            label={text(
-              'Адрес сервера для клиентов (IP или домен)',
-              'Server address for clients (IP or domain)',
-            )}
-            rules={[{ required: true }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="port"
-            label={text('Свободный TCP-порт', 'Free TCP port')}
-            rules={[{ required: true }]}
-          >
-            <InputNumber min={1024} max={65535} />
-          </Form.Item>
-          <Form.Item name="aead" label={text('Шифрование', 'Encryption')}>
-            <Select options={[{ value: 'chacha20-poly1305' }, { value: 'aes-128-gcm' }]} />
-          </Form.Item>
-          <Form.Item name="table" label={text('Режим таблицы', 'Table mode')}>
-            <Select options={[{ value: 'prefer_ascii' }, { value: 'prefer_entropy' }]} />
-          </Form.Item>
-        </Form>
-        <Typography.Paragraph type="secondary">
-          {text(
-            'Порт нужно разрешить в вашем firewall; в Docker также опубликовать его. Connect Hub не меняет эти настройки автоматически.',
-            'Allow this port in your firewall; publish it separately when using Docker. Connect Hub does not change these settings automatically.',
-          )}
-        </Typography.Paragraph>
+        {items
+          .filter((item) => item.id === selected)
+          .map((item) => (
+            <Card
+              key={item.id}
+              size="small"
+              title={
+                <>
+                  {item.name}{' '}
+                  <Tag color={item.status.running ? 'green' : 'default'}>
+                    {item.status.running
+                      ? text('Работает', 'Running')
+                      : text('Остановлен', 'Stopped')}
+                  </Tag>
+                </>
+              }
+            >
+              <Typography.Paragraph>
+                {item.status.profile?.host}:{item.status.profile?.port} ·{' '}
+                {item.status.profile?.aead} · {item.status.profile?.table}
+              </Typography.Paragraph>
+              {item.status.error && <Alert type="error" title={item.status.error} />}
+              <Space wrap style={{ marginBottom: 16 }}>
+                <Button
+                  disabled={busy || item.status.running}
+                  onClick={() => void action(`/${item.id}/start`)}
+                >
+                  {text('Запустить', 'Start')}
+                </Button>
+                <Button
+                  disabled={busy || !item.status.running}
+                  onClick={() => void action(`/${item.id}/stop`)}
+                >
+                  {text('Остановить', 'Stop')}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setDeviceInbound(item.id);
+                    setDeviceName('');
+                  }}
+                >
+                  {text('Добавить устройство', 'Add device')}
+                </Button>
+                <Popconfirm
+                  title={text(
+                    'Удалить inbound? Его ключи будут сохранены в закрытом архиве.',
+                    'Remove inbound? Its keys will be retained in a private archive.',
+                  )}
+                  onConfirm={() => action(`/${item.id}/remove`)}
+                >
+                  <Button danger disabled={busy || item.status.running}>
+                    {text('Удалить', 'Remove')}
+                  </Button>
+                </Popconfirm>
+              </Space>
+              <Table<Device>
+                rowKey="id"
+                size="small"
+                pagination={false}
+                scroll={{ x: 560 }}
+                dataSource={item.devices}
+                columns={[
+                  { title: text('Устройство', 'Device'), dataIndex: 'name' },
+                  {
+                    title: text('Доступ', 'Access'),
+                    render: (_, device) => (
+                      <Tag color={device.status === 'enabled' ? 'green' : 'default'}>
+                        {device.status === 'enabled'
+                          ? text('Разрешён', 'Enabled')
+                          : device.status === 'disabled'
+                            ? text('Отключён', 'Disabled')
+                            : text('Отозван', 'Revoked')}
+                      </Tag>
+                    ),
+                  },
+                  {
+                    title: text('Действия', 'Actions'),
+                    render: (_, device) => (
+                      <Space wrap>
+                        <Button
+                          size="small"
+                          disabled={busy || device.status !== 'enabled'}
+                          onClick={() => void action(`/${item.id}/devices/${device.id}/export`)}
+                        >
+                          {text('Ключ / QR / конфигурация', 'Key / QR / configuration')}
+                        </Button>
+                        {device.status !== 'revoked' && (
+                          <>
+                            <Button
+                              size="small"
+                              disabled={busy}
+                              onClick={() =>
+                                void action(
+                                  `/${item.id}/devices/${device.id}/${device.status === 'enabled' ? 'disabled' : 'enabled'}`,
+                                )
+                              }
+                            >
+                              {device.status === 'enabled'
+                                ? text('Отключить', 'Disable')
+                                : text('Включить', 'Enable')}
+                            </Button>
+                            <Popconfirm
+                              title={text(
+                                'Навсегда отозвать ключ этого устройства?',
+                                'Permanently revoke this device key?',
+                              )}
+                              onConfirm={() => action(`/${item.id}/devices/${device.id}/revoked`)}
+                            >
+                              <Button danger size="small" disabled={busy}>
+                                {text('Отозвать', 'Revoke')}
+                              </Button>
+                            </Popconfirm>
+                          </>
+                        )}
+                      </Space>
+                    ),
+                  },
+                ]}
+              />
+            </Card>
+          ))}
       </Modal>
       <Modal
         title={text('Добавить устройство', 'Add device')}
@@ -354,6 +364,6 @@ export default function SudokuInbounds({ enabled }: { enabled: boolean }) {
           </Space>
         )}
       </Modal>
-    </Card>
+    </>
   );
 }

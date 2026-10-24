@@ -49,6 +49,7 @@ function HostRemarksSuffix({ remarks }: { remarks: string[] }) {
 
 export default function InboundList({
   dbInbounds,
+  additionalInbounds = [],
   clientCount,
   lastOnlineMap: _lastOnlineMap,
   inboundSpeed,
@@ -93,7 +94,10 @@ export default function InboundList({
     () => [
       { value: 'all' as const, label: t('pages.clients.filters.nodes') },
       { value: 0, label: t('pages.clients.filters.localPanel') },
-      ...Array.from(nodesById.values()).map((n) => ({ value: n.id, label: n.name || `#${n.id}` })),
+      ...Array.from(nodesById.values()).map((n) => ({
+        value: n.id,
+        label: n.name || `#${n.id}`,
+      })),
     ],
     [nodesById, t],
   );
@@ -101,7 +105,7 @@ export default function InboundList({
   const hostRemarksByInboundId = useMemo(() => buildHostRemarksByInboundId(hosts), [hosts]);
 
   const visibleInbounds = useMemo(() => {
-    let list = dbInbounds;
+    let list = [...dbInbounds, ...additionalInbounds];
     if (nodeFilter === 0) list = list.filter((ib) => ib.nodeId == null);
     else if (nodeFilter !== 'all') list = list.filter((ib) => ib.nodeId === nodeFilter);
     const q = searchKey.trim().toLowerCase();
@@ -113,7 +117,7 @@ export default function InboundList({
       const hostRemarks = hostRemarksByInboundId.get(ib.id) ?? [];
       return hostRemarks.some((remark) => remark.toLowerCase().includes(q));
     });
-  }, [dbInbounds, nodeFilter, searchKey, hostRemarksByInboundId]);
+  }, [dbInbounds, additionalInbounds, nodeFilter, searchKey, hostRemarksByInboundId]);
 
   const onSwitchEnable = useCallback(async (dbInbound: DBInboundRecord, next: boolean) => {
     const previous = dbInbound.enable;
@@ -130,9 +134,10 @@ export default function InboundList({
 
   const hasAnyRemark = useMemo(
     () =>
-      dbInbounds.some((i) => typeof i.remark === 'string' && i.remark.trim() !== '') ||
-      dbInbounds.some((i) => (hostRemarksByInboundId.get(i.id)?.length ?? 0) > 0),
-    [dbInbounds, hostRemarksByInboundId],
+      [...dbInbounds, ...additionalInbounds].some(
+        (i) => typeof i.remark === 'string' && i.remark.trim() !== '',
+      ) || dbInbounds.some((i) => (hostRemarksByInboundId.get(i.id)?.length ?? 0) > 0),
+    [dbInbounds, additionalInbounds, hostRemarksByInboundId],
   );
 
   const hasAnySubSortIndex = useMemo(
@@ -151,15 +156,14 @@ export default function InboundList({
 
   const selectAll = useCallback(
     (checked: boolean) => {
-      setSelectedRowKeys(checked ? visibleInbounds.map((i) => i.id) : []);
+      setSelectedRowKeys(checked ? visibleInbounds.filter((i) => !i.managed).map((i) => i.id) : []);
     },
     [visibleInbounds],
   );
 
-  const allSelected =
-    visibleInbounds.length > 0 && selectedRowKeys.length === visibleInbounds.length;
-  const someSelected =
-    selectedRowKeys.length > 0 && selectedRowKeys.length < visibleInbounds.length;
+  const selectableCount = visibleInbounds.filter((record) => !record.managed).length;
+  const allSelected = selectableCount > 0 && selectedRowKeys.length === selectableCount;
+  const someSelected = selectedRowKeys.length > 0 && selectedRowKeys.length < selectableCount;
 
   const handleBulkDelete = useCallback(async () => {
     const ok = await onBulkDelete(selectedRowKeys);
@@ -193,8 +197,16 @@ export default function InboundList({
 
   const generalActionsMenu: MenuProps = {
     items: [
-      { key: 'import', icon: <ImportOutlined />, label: t('pages.inbounds.importInbound') },
-      { key: 'export', icon: <ExportOutlined />, label: t('pages.inbounds.export') },
+      {
+        key: 'import',
+        icon: <ImportOutlined />,
+        label: t('pages.inbounds.importInbound'),
+      },
+      {
+        key: 'export',
+        icon: <ExportOutlined />,
+        label: t('pages.inbounds.export'),
+      },
       ...(subEnable
         ? [
             {
@@ -263,7 +275,9 @@ export default function InboundList({
                 onClose={() => setSelectedRowKeys([])}
                 style={{ marginInlineEnd: 0 }}
               >
-                {t('pages.inbounds.selectedCount', { count: selectedRowKeys.length })}
+                {t('pages.inbounds.selectedCount', {
+                  count: selectedRowKeys.length,
+                })}
               </Tag>
               <Button
                 danger
@@ -300,64 +314,75 @@ export default function InboundList({
                     <span className="bulk-count">{selectedRowKeys.length}</span>
                   )}
                 </div>
-                {visibleInbounds.map((record) => (
-                  <div
-                    key={record.id}
-                    className={`inbound-card${selectedRowKeys.includes(record.id) ? ' is-selected' : ''}`}
-                  >
-                    <div className="card-head">
-                      <Checkbox
-                        checked={selectedRowKeys.includes(record.id)}
-                        onChange={(e) => toggleSelect(record.id, e.target.checked)}
-                      />
-                      <span className="card-id">#{record.id}</span>
-                      <span className="tag-name">
-                        <span className="inbound-remark">{record.remark}</span>
-                        <HostRemarksSuffix remarks={hostRemarksByInboundId.get(record.id) ?? []} />
-                      </span>
-                      <div className="card-actions">
-                        <Tooltip title={t('pages.inbounds.inboundInfo')}>
-                          <InfoCircleOutlined
-                            className="row-action-trigger"
-                            role="button"
-                            tabIndex={0}
-                            aria-label={t('pages.inbounds.inboundInfo')}
-                            onClick={() => setStatsRecord(record)}
-                            onKeyDown={activateOnKey(() => setStatsRecord(record))}
-                          />
-                        </Tooltip>
-                        <Switch
-                          checked={record.enable}
-                          size="small"
-                          onChange={(next) => onSwitchEnable(record, next)}
+                {visibleInbounds.map((record) =>
+                  record.managed ? (
+                    <div key={record.managed.id} className="inbound-card">
+                      {record.managed.mobile}
+                    </div>
+                  ) : (
+                    <div
+                      key={record.id}
+                      className={`inbound-card${selectedRowKeys.includes(record.id) ? ' is-selected' : ''}`}
+                    >
+                      <div className="card-head">
+                        <Checkbox
+                          checked={selectedRowKeys.includes(record.id)}
+                          onChange={(e) => toggleSelect(record.id, e.target.checked)}
                         />
-                        <Dropdown
-                          trigger={['click']}
-                          placement="bottomRight"
-                          menu={{
-                            items: buildRowActionsMenu({
-                              record,
-                              subEnable,
-                              t,
-                              isMobile: true,
-                              hasClients: (clientCount[record.id]?.clients || 0) > 0,
-                            }),
-                            onClick: ({ key }) =>
-                              onRowAction({ key: key as RowAction, dbInbound: record }),
-                          }}
-                        >
-                          <Button
-                            type="text"
-                            size="small"
-                            className="row-action-trigger"
-                            icon={<MoreOutlined />}
-                            aria-label={t('more')}
+                        <span className="card-id">#{record.id}</span>
+                        <span className="tag-name">
+                          <span className="inbound-remark">{record.remark}</span>
+                          <HostRemarksSuffix
+                            remarks={hostRemarksByInboundId.get(record.id) ?? []}
                           />
-                        </Dropdown>
+                        </span>
+                        <div className="card-actions">
+                          <Tooltip title={t('pages.inbounds.inboundInfo')}>
+                            <InfoCircleOutlined
+                              className="row-action-trigger"
+                              role="button"
+                              tabIndex={0}
+                              aria-label={t('pages.inbounds.inboundInfo')}
+                              onClick={() => setStatsRecord(record)}
+                              onKeyDown={activateOnKey(() => setStatsRecord(record))}
+                            />
+                          </Tooltip>
+                          <Switch
+                            checked={record.enable}
+                            size="small"
+                            onChange={(next) => onSwitchEnable(record, next)}
+                          />
+                          <Dropdown
+                            trigger={['click']}
+                            placement="bottomRight"
+                            menu={{
+                              items: buildRowActionsMenu({
+                                record,
+                                subEnable,
+                                t,
+                                isMobile: true,
+                                hasClients: (clientCount[record.id]?.clients || 0) > 0,
+                              }),
+                              onClick: ({ key }) =>
+                                onRowAction({
+                                  key: key as RowAction,
+                                  dbInbound: record,
+                                }),
+                            }}
+                          >
+                            <Button
+                              type="text"
+                              size="small"
+                              className="row-action-trigger"
+                              icon={<MoreOutlined />}
+                              aria-label={t('more')}
+                            />
+                          </Dropdown>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </>
             )}
           </div>
@@ -365,9 +390,10 @@ export default function InboundList({
           <Table
             columns={columns}
             dataSource={visibleInbounds}
-            rowKey={(r) => r.id}
+            rowKey={(r) => r.managed?.id ?? r.id}
             rowSelection={{
               selectedRowKeys,
+              getCheckboxProps: (record) => ({ disabled: !!record.managed }),
               onChange: (keys: Key[]) => setSelectedRowKeys(keys as number[]),
             }}
             pagination={paginationFor(visibleInbounds)}

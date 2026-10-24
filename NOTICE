@@ -11,3 +11,5 @@ Third-party components retain their respective licenses and notices.
 Core retains its original GPL-3.0-or-later license, authorship and naming notice.
 See SUDOKU-LICENSE and hub/third-party/SUDOKU-SOURCE.md for included source,
 compatibility modifications, provenance and rebuild instructions.
+
+2026-10-24: Restored the upstream-derived management menu with independent Connect Hub paths and service names; integrated Sudoku into the shared protocol picker/list; added isolated ACME certificate setup. acme.sh and its Cloudflare DNS hook are distributed unmodified under their accompanying GPL license; exact revision and source are in hub/third-party/ACME-SOURCE.md.
