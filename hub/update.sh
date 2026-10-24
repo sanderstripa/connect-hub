@@ -17,8 +17,7 @@ PY
  exit "$result"
 }
 trap finish EXIT
-[[ -z ${XUI_UPDATE_TAG:-} ]] || { echo 'No tested development-channel release is available.' >&2; exit 1; }
-version=v0.1.0-alpha.3
+version=$(python3 /opt/connect-hub/current/hub/release.py amd64 "${XUI_UPDATE_TAG:-}")
 base=https://github.com/sanderstripa/connect-hub/releases/download/$version
 temporary_dir=$(mktemp -d)
 archive=$temporary_dir/connect-hub-linux-amd64.tar.gz

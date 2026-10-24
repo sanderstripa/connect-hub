@@ -252,8 +252,8 @@ export default function InboundFormModal({
   const [sudokuMode, setSudokuMode] = useState(false);
   const [sudoku, setSudoku] = useState({
     name: '',
-    host: '',
-    port: 18443,
+    host: window.location.hostname.replace(/^\[|\]$/g, ''),
+    port: RandomUtil.randomInteger(10000, 60000),
     aead: 'chacha20-poly1305',
     table: 'prefer_ascii',
     enable: true,
@@ -495,8 +495,8 @@ export default function InboundFormModal({
     setSudokuError('');
     setSudoku({
       name: '',
-      host: '',
-      port: 18443,
+      host: window.location.hostname.replace(/^\[|\]$/g, ''),
+      port: initial.port ?? RandomUtil.randomInteger(10000, 60000),
       aead: 'chacha20-poly1305',
       table: 'prefer_ascii',
       enable: true,
@@ -682,21 +682,21 @@ export default function InboundFormModal({
   const okText = mode === 'edit' ? t('pages.clients.submitEdit') : t('create');
 
   async function saveSudoku() {
-    if (!sudokuAvailable || !sudoku.name.trim() || !sudoku.host.trim() || !sudoku.port) {
-      setSudokuError(
-        text(
-          'Укажите название, адрес сервера и свободный TCP-порт.',
-          'Enter a name, server address and free TCP port.',
-        ),
-      );
+    const host = sudoku.host.trim() || window.location.hostname.replace(/^\[|\]$/g, '');
+    if (!sudokuAvailable || !host || !sudoku.port) {
+      setSudokuError(text('Укажите корректный TCP-порт.', 'Enter a valid TCP port.'));
       return;
     }
     setSaving(true);
     setSudokuError('');
     try {
-      const result = await HttpUtil.post<{ id: string }>('/panel/hub/api/sudoku/inbounds', sudoku, {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const result = await HttpUtil.post<{ id: string }>(
+        '/panel/hub/api/sudoku/inbounds',
+        { ...sudoku, name: sudoku.name.trim() || `Sudoku-${sudoku.port}`, host },
+        {
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
       if (!result.success || !result.obj) {
         setSudokuError(
           result.msg || text('Не удалось создать подключение', 'Could not create inbound'),
@@ -775,7 +775,7 @@ export default function InboundFormModal({
           onChange={(enable) => setSudoku((v) => ({ ...v, enable }))}
         />
       </Form.Item>
-      <Form.Item label={t('pages.inbounds.remark')} htmlFor="sudoku-name" required>
+      <Form.Item label={t('pages.inbounds.remark')} htmlFor="sudoku-name">
         <Input
           id="sudoku-name"
           value={sudoku.name}
@@ -784,20 +784,6 @@ export default function InboundFormModal({
         />
       </Form.Item>
       {protocolField}
-      <Form.Item
-        htmlFor="sudoku-host"
-        label={text(
-          'Адрес сервера для клиентов (IP или домен)',
-          'Server address for clients (IP or domain)',
-        )}
-        required
-      >
-        <Input
-          id="sudoku-host"
-          value={sudoku.host}
-          onChange={(e) => setSudoku((v) => ({ ...v, host: e.target.value }))}
-        />
-      </Form.Item>
       <Form.Item label={t('pages.inbounds.port')} htmlFor="sudoku-port" required>
         <InputNumber
           id="sudoku-port"
