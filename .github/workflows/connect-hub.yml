@@ -17,7 +17,7 @@ permissions:
   contents: read
 concurrency:
   group: connect-hub-${{ github.ref }}-${{ inputs.release_check || false }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   scripts:
     runs-on: ubuntu-24.04
@@ -99,6 +99,18 @@ jobs:
         env:
           STORYBOOK_DISABLE_TELEMETRY: '1'
       - run: go test -shuffle=on -count=1 ./...
+  upgrade-alpha2:
+    needs: linux
+    if: ${{ !inputs.release_check && !inputs.runtime_artifact_run }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v6
+        with:
+          name: connect-hub-linux-amd64
+          path: dist
+      - run: python3 hub/upgrade-alpha2-smoke.py
   public-release-install:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.release_check }}
     runs-on: ubuntu-24.04

@@ -86,6 +86,10 @@ fi
 openssl x509 -in "$work/cert.pem" -pubkey -noout > "$work/cert.pub"
 openssl pkey -in "$work/key.pem" -pubout > "$work/key.pub"
 cmp -s "$work/cert.pub" "$work/key.pub"
+if ((renew)) && cmp -s "$work/cert.pem" "$prefix/tls/fullchain.pem" && cmp -s "$work/key.pem" "$prefix/tls/privkey.pem";then
+ echo 'Certificate unchanged; panel restart is unnecessary.'
+ exit 0
+fi
 install -o root -g connect-hub -m 0640 "$work/key.pem" "$prefix/tls/privkey.pem"
 install -o root -g connect-hub -m 0640 "$work/cert.pem" "$prefix/tls/fullchain.pem"
 export XUI_DB_TYPE=sqlite XUI_DB_DSN= XUI_DB_FOLDER=$data
