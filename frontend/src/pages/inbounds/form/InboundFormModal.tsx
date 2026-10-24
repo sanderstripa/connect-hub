@@ -749,6 +749,18 @@ export default function InboundFormModal({
           ...(mode === 'add' ? [{ value: 'sudoku', label: 'Sudoku' }] : []),
         ]}
         onSelect={(value) => {
+          if (value === 'sudoku') {
+            setSudoku((current) => ({
+              ...current,
+              name: String(getV('remark') ?? current.name),
+              port: Number(getV('port') ?? current.port),
+              enable: Boolean(getV('enable') ?? current.enable),
+            }));
+          } else if (sudokuMode) {
+            setV('remark', sudoku.name);
+            setV('port', sudoku.port);
+            setV('enable', sudoku.enable);
+          }
           setSudokuMode(value === 'sudoku');
           setSudokuError('');
           setActiveTab('basic');

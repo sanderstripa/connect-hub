@@ -22,8 +22,11 @@ try {
  }
  await page.getByRole('button',{name:'Add Inbound',exact:true}).click();
  let modal=page.getByRole('dialog');
+ await modal.getByRole('textbox',{name:'Remark',exact:true}).fill('Unified Sudoku');
+ await modal.getByRole('spinbutton',{name:'Port',exact:true}).fill(String(cfg.port));
  await selectProtocol('Sudoku');
- await modal.locator('#sudoku-name').fill('Unified Sudoku');
+ if(await modal.locator('#sudoku-name').inputValue()!=='Unified Sudoku')throw Error('Protocol switching lost the existing remark');
+ if(await modal.locator('#sudoku-port').inputValue()!==String(cfg.port))throw Error('Protocol switching lost the existing port');
  if(await modal.locator('#sudoku-host').count())throw Error('Sudoku must not add a mandatory server-address field');
  await modal.locator('#sudoku-port').fill(String(cfg.port));
  const creating=page.waitForResponse(r=>r.request().method()==='POST'&&new URL(r.url()).pathname.endsWith('/sudoku/inbounds'));
