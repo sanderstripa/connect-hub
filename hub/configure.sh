@@ -15,7 +15,7 @@ NONINTERACTIVE=0
 if [[ ${XUI_NONINTERACTIVE:-0} == 1 || ! -t 0 ]];then NONINTERACTIVE=1;fi
 export NONINTERACTIVE
 source "$xui_folder/hub/upstream-install-functions.sh"
-for option in USERNAME PASSWORD WEB_BASE_PATH PANEL_PORT SSL_MODE SSL_DOMAIN SSL_IPV6 DB_TYPE DB_DSN;do
+for option in USERNAME PASSWORD WEB_BASE_PATH PANEL_PORT SSL_MODE DOMAIN SSL_IPV6 DB_TYPE DB_DSN;do
  own_name=CONNECT_HUB_$option
  if [[ -n ${!own_name+x} ]];then export "XUI_$option=${!own_name}";fi
 done
@@ -75,6 +75,18 @@ EOF
 
 # Keep the original certificate menu and custom-path workflow. The explicit
 # selfsigned CI mode never contacts the public CA; normal mode uses upstream.
+ssl_cert_issue() {
+ install_acme || return 1
+ _upstream_ssl_cert_issue
+}
+setup_ip_certificate() {
+ python3 - "$1" "${2:-}" <<'PY' || return 1
+import ipaddress,sys
+ipaddress.IPv4Address(sys.argv[1])
+if sys.argv[2]:ipaddress.IPv6Address(sys.argv[2])
+PY
+ _upstream_setup_ip_certificate "$@"
+}
 prompt_and_setup_ssl() {
  local panel_port=$1 web_path=$2 server_ip=$3
  printf 'URL=http://%s:%s/%s\nLOCAL_URL=http://127.0.0.1:%s/%s\nUSERNAME=%s\nPASSWORD=%s\n' "$server_ip" "$panel_port" "${web_path#/}" "$panel_port" "${web_path#/}" "$config_username" "$config_password" > "$data/initial-access.txt"
@@ -83,7 +95,7 @@ prompt_and_setup_ssl() {
   SSL_SCHEME=https;SSL_HOST=$server_ip
  else
   if [[ ${CONNECT_HUB_TLS_MODE:-auto} == off ]];then export XUI_SSL_MODE=none
-  elif [[ -n ${CONNECT_HUB_DOMAIN:-} ]];then export XUI_SSL_MODE=domain XUI_SSL_DOMAIN="$CONNECT_HUB_DOMAIN"
+  elif [[ -n ${CONNECT_HUB_DOMAIN:-} ]];then export XUI_SSL_MODE=domain XUI_DOMAIN="$CONNECT_HUB_DOMAIN"
   else export XUI_SSL_MODE=${XUI_SSL_MODE:-ip};fi
   _upstream_prompt_and_setup_ssl "$@"
   if [[ $SSL_SCHEME == https ]] && ! "$xui_folder/connect-hub" setting -getCert true | grep -q '^cert: .';then

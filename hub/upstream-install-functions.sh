@@ -446,7 +446,7 @@ setup_ssl_certificate() {
 
 # Issue Let's Encrypt IP certificate with shortlived profile (~6 days validity)
 # Requires acme.sh and port 80 open for HTTP-01 challenge
-setup_ip_certificate() {
+_upstream_setup_ip_certificate() {
     local ipv4="$1"
     local ipv6="$2" # optional
 
@@ -602,7 +602,7 @@ setup_ip_certificate() {
 }
 
 # Comprehensive manual SSL certificate issuance via acme.sh
-ssl_cert_issue() {
+_upstream_ssl_cert_issue() {
     local existing_webBasePath=$(${xui_folder}/connect-hub setting -show true | grep 'webBasePath:' | awk -F': ' '{print $2}' | tr -d '[:space:]' | sed 's#^/##')
     local existing_port=$(${xui_folder}/connect-hub setting -show true | grep 'port:' | awk -F': ' '{print $2}' | tr -d '[:space:]')
 
