@@ -11,8 +11,6 @@ install(){
  if [[ ${1:-} == -* ]];then command install "$@";return;fi
  curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash
 }
-update(){ curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash -s -- --update; }
-update_dev(){ XUI_UPDATE_TAG=dev-latest bash /opt/connect-hub/current/hub/update.sh; }
 legacy_version(){
  local tag_version
  read -rp 'Which panel version would you like to install? (for example: 0.1.0-alpha.4): ' tag_version
