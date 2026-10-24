@@ -106,7 +106,9 @@ fi
 python3 - "$data/initial-access.txt" "$host" "$trusted" <<'PY'
 import pathlib,sys,urllib.parse
 p=pathlib.Path(sys.argv[1]);v=dict(line.split('=',1)for line in p.read_text().splitlines())
-u=urllib.parse.urlparse(v['URL']);v['URL']=urllib.parse.urlunparse(u._replace(scheme='https',netloc=f'{sys.argv[2]}:{u.port}'))
+u=urllib.parse.urlparse(v['URL']);host=sys.argv[2]
+if ':' in host:host=f'[{host}]'
+v['URL']=urllib.parse.urlunparse(u._replace(scheme='https',netloc=f'{host}:{u.port}'))
 v['LOCAL_URL']=urllib.parse.urlunparse(u._replace(scheme='https',netloc=f'127.0.0.1:{u.port}'))
 v['CERTIFICATE']='trusted' if sys.argv[3]=='1' else 'temporary-self-signed'
 p.write_text(''.join(f'{k}={value}\n'for k,value in v.items()));p.chmod(0o600)

@@ -26,7 +26,10 @@ try:
  folders=docker('compose','exec','-T','connect-hub','bash','-c','xui_folder="$XUI_MAIN_FOLDER"; running_in_docker=true; source /app/hub/management-overrides.sh; printf "%s\\n" "$XUI_MAIN_FOLDER" "$XUI_BIN_FOLDER"')
  assert folders.splitlines()==['/app','/app/bin'],folders
  cid=docker('compose','ps','-q','connect-hub');inspect=json.loads(docker('inspect',cid))[0]
- assert {'NET_ADMIN','NET_RAW'}<=set(inspect['HostConfig']['CapAdd'] or []) and 'no-new-privileges:true' in inspect['HostConfig']['SecurityOpt']
+ capabilities={value.removeprefix('CAP_') for value in inspect['HostConfig']['CapAdd'] or []}
+ assert {'NET_ADMIN','NET_RAW'}<=capabilities,capabilities
+ options=inspect['HostConfig']['SecurityOpt'] or []
+ assert any(value in ('no-new-privileges','no-new-privileges:true') for value in options),options
  jail=docker('compose','exec','-T','connect-hub','fail2ban-client','status','connect-hub-ipl')
  assert 'connect-hub-ipl' in jail
  docker('compose','exec','-T','connect-hub','fail2ban-client','set','connect-hub-ipl','banip','198.51.100.23')
