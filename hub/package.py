@@ -44,7 +44,7 @@ if hashlib.sha256(data).hexdigest()!=source['sha256']:raise SystemExit('Sudoku s
 with tarfile.open(fileobj=io.BytesIO(data)) as t:
  member=next(m for m in t.getmembers() if m.isfile() and pathlib.PurePosixPath(m.name).name=='LICENSE')
  (stage/'SUDOKU-LICENSE').write_bytes(t.extractfile(member).read())
-for name in ['LICENSE','NOTICE','README.md','README.en.md']:shutil.copy2(root/name,stage/name)
+for name in ['LICENSE','NOTICE','README.md','README.en.md','x-ui.sh']:shutil.copy2(root/name,stage/name)
 shutil.copytree(root/'hub',stage/'hub',ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
 revision=os.environ.get('CONNECT_HUB_REVISION') or subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip()
 (stage/'BUILD.json').write_text(json.dumps({'revision':revision,'architecture':arch,'upstream':json.loads((root/'hub/upstream.json').read_text()),'dependencies':lock},indent=2))

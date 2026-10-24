@@ -8,8 +8,8 @@ import (
 )
 
 // InitializeParallelTest writes only this panel's freshly created database.
-// Subscription serving starts disabled; all internal Xray listeners get their
-// own available loopback ports rather than colliding with another panel's core.
+// Subscription defaults remain upstream's; internal Xray and subscription ports
+// are independently allocated instead of colliding with another panel's core.
 func (s *SettingService) InitializeParallelTest() error {
 	panelPort, err := s.GetPort()
 	if err != nil {
@@ -23,7 +23,11 @@ func (s *SettingService) InitializeParallelTest() error {
 	}()
 	ports := []int{}
 	for len(ports) < 3 {
-		l, e := net.Listen("tcp", "127.0.0.1:0")
+		address := "127.0.0.1:0"
+		if len(ports) == 2 {
+			address = ":0" // The upstream subscription listener may bind all interfaces.
+		}
+		l, e := net.Listen("tcp", address)
 		if e != nil {
 			return e
 		}
@@ -54,7 +58,7 @@ func (s *SettingService) InitializeParallelTest() error {
 	if err != nil {
 		return err
 	}
-	for key, value := range map[string]string{"subEnable": "false", "subListen": "127.0.0.1", "subPort": strconv.Itoa(ports[2]), "xrayTemplateConfig": string(b)} {
+	for key, value := range map[string]string{"subPort": strconv.Itoa(ports[2]), "xrayTemplateConfig": string(b)} {
 		if err = s.setString(key, value); err != nil {
 			return err
 		}

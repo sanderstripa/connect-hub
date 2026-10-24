@@ -626,7 +626,7 @@ func main() {
 	var tokenScope string
 	var resetTwoFactor bool
 	var parallelTest bool
-	settingCmd.BoolVar(&parallelTest, "parallelTest", false, "Initialize isolated Connect Hub internal ports and disable subscriptions")
+	settingCmd.BoolVar(&parallelTest, "parallelTest", false, "Initialize separate Connect Hub internal and subscription ports")
 	settingCmd.BoolVar(&reset, "reset", false, "Reset all settings")
 	settingCmd.BoolVar(&show, "show", false, "Display current settings")
 	settingCmd.IntVar(&port, "port", 0, "Set panel port number")

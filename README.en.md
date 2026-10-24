@@ -20,7 +20,7 @@ On a **Linux amd64 / x86_64 systemd server**, run:
 curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash
 ```
 
-The bootstrap downloads a fixed tested release, verifies its pinned SHA-256 and invokes its installer. No archive, IP or checksum substitution is needed. Requires bash, curl, Python 3, OpenSSL, tar, sha256sum and systemd. Missing prerequisites are reported before installation. The bootstrap does not currently offer ARM64.
+The bootstrap downloads a fixed tested release, verifies its pinned SHA-256 and invokes its installer. No archive, IP or checksum substitution is needed. Requires bash, curl, Python 3, OpenSSL, tar, sha256sum and systemd. Missing prerequisites are installed through the OS package manager. The bootstrap does not currently offer ARM64.
 
 The installer prints a random URL, username and password. Retrieve them again with:
 
@@ -31,12 +31,16 @@ sudo cat /etc/connect-hub/initial-access.txt
 Open **URL** in your browser: the installer detects the server IPv4 address and
 chooses a free port. Normal native installation needs no SSH tunnel. If a server
 or provider firewall blocks it, allow only the printed new TCP port. Initial
-access uses HTTP; configure HTTPS in panel settings. **LOCAL_URL** is an
+access uses HTTPS. Setup requests a trusted Let's Encrypt IP/domain certificate
+and configures automatic renewal. External TCP port 80 must be reachable and
+free. If validation is unavailable, other services are left running and an
+explicitly identified temporary certificate is used; the browser will warn
+until trusted issuance succeeds. **LOCAL_URL** is an
 additional address for checks performed on the server itself.
 
 ## Parallel installation and updates
 
-Only `/opt/connect-hub`, `/etc/connect-hub`, `/var/log/connect-hub`, the `connect-hub` account and service are created. Existing names/paths are refused. No foreign database, keys or certificates are imported; no firewall, DNS, routes or other services are changed. Internal Xray ports are independently allocated and subscriptions initially disabled. The service runs under a dedicated unprivileged account.
+Only `/opt/connect-hub`, `/etc/connect-hub`, `/var/log/connect-hub`, the `connect-hub` account and service are created. Existing names/paths are refused. No foreign database, keys or certificates are imported; no firewall, DNS, routes or other services are changed. Internal Xray ports are independently allocated and subscription defaults are preserved with a separate free port. The service runs as root, as in upstream 3x-ui.
 
 Stop only this panel: `sudo systemctl stop connect-hub`.
 
@@ -46,12 +50,13 @@ Update a managed installation:
 curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash -s -- --update
 ```
 
-Updates retain a complete data backup and restore the previous binary/data after a failed launch. Backups are never automatically deleted. Reinstalling an already installed revision is unnecessary. Upstream x-ui maintenance scripts and web self-update cannot overwrite the fork.
+Updates retain a complete data backup and restore the previous binary/data after a failed launch. Backups are never automatically deleted. Reinstalling an already installed revision is unnecessary. Web updates install only a checksum-verified Connect Hub release and cannot replace the fork with upstream binaries.
 
 ## Sudoku inbounds and devices
 
 A pinned compatible Sudoku Core is included. In the normal **Inbounds** page,
-select the **Sudoku** tab. All standard protocols remain on the adjacent tab:
+click **Add Inbound → Basic → Protocol → Sudoku**. All protocols use the same
+inbound list, with device/key management opened from the inbound row:
 
 1. Create an inbound with a name, client-facing server address and free TCP port.
 2. Add devices, such as Phone and Laptop.
@@ -85,3 +90,5 @@ Artifacts include BUILD.json with exact build/upstream revisions, third-party li
 - [GPL-3.0](LICENSE) and [authorship/modifications](NOTICE)
 
 Based on 3x-ui by MHSanaei and contributors. Connect Hub modifications by Sander Stripa and contributors, 2026. Original Sudoku authorship/license notices and corresponding source are retained. No endorsement or warranty is implied. Validation uses isolated environments, never the user's live VPS or existing installations.
+
+Management menu: `sudo connect-hub`. The upstream-derived management menu is restored with Connect Hub paths and service names. Certificate retry: `sudo bash /opt/connect-hub/current/hub/cert.sh`, then `sudo systemctl restart connect-hub`. Existing HTTP installations receive HTTPS during this update when no certificate is configured.

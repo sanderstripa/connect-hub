@@ -1,0 +1,62 @@
+import { chromium } from '../frontend/node_modules/playwright/index.mjs';
+import { readFile } from 'node:fs/promises';
+let input='';for await(const chunk of process.stdin)input+=chunk;
+const cfg=JSON.parse(input);const browser=await chromium.launch({headless:true});
+try {
+ const page=await browser.newPage({locale:'en-US',viewport:{width:1440,height:1000}});
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(cfg.url);
+ await page.locator('input[autocomplete="username"]').fill(cfg.user);
+ await page.locator('input[autocomplete="current-password"]').fill(cfg.password);
+ await page.locator('button[type="submit"]').click();await page.waitForURL('**/panel/');
+ await page.goto(cfg.url+'panel/inbounds');
+ if(await page.getByRole('tab',{name:'Sudoku',exact:true}).count())throw Error('Separate Sudoku tab must not exist');
+ async function selectProtocol(value) {
+  await page.getByRole('dialog').locator('#protocol').click();
+  const dropdown=page.locator('.ant-select-dropdown:visible').last();
+  await dropdown.locator('.ant-select-item-option').first().waitFor();
+  await dropdown.hover();
+  await page.mouse.wheel(0,value==='Sudoku'?2400:-2400);
+  await page.waitForTimeout(200);
+  await dropdown.getByText(value,{exact:true}).click();
+ }
+ await page.getByRole('button',{name:'Add Inbound',exact:true}).click();
+ let modal=page.getByRole('dialog');
+ await selectProtocol('Sudoku');
+ await modal.locator('#sudoku-name').fill('Unified Sudoku');
+ await modal.locator('#sudoku-host').fill('127.0.0.1');
+ await modal.locator('#sudoku-port').fill(String(cfg.port));
+ const creating=page.waitForResponse(r=>r.request().method()==='POST'&&new URL(r.url()).pathname.endsWith('/sudoku/inbounds'));
+ await modal.getByRole('button',{name:'Create',exact:true}).click();
+ const result=await (await creating).json();if(!result.success)throw Error('Creation failed: '+JSON.stringify(result));
+ await modal.waitFor({state:'hidden'});
+ const row=page.getByRole('row').filter({has:page.getByText('Unified Sudoku',{exact:true})});
+ await row.waitFor();await row.getByText('Sudoku · TCP',{exact:true}).waitFor();
+ await row.getByRole('button',{name:'Devices / keys',exact:true}).click();
+ await page.getByRole('button',{name:'Add device',exact:true}).click();
+ let device=page.getByRole('dialog').filter({has:page.getByRole('textbox',{name:'Device name',exact:true})});
+ await device.getByRole('textbox',{name:'Device name',exact:true}).fill('Phone unified');
+ await device.getByRole('button',{name:'OK',exact:true}).click();
+ const phone=page.getByRole('row').filter({has:page.getByText('Phone unified',{exact:true})});await phone.waitFor();
+ await phone.getByRole('button',{name:'Key / QR / configuration',exact:true}).click();
+ let exported=page.getByRole('dialog').filter({has:page.getByText('Link for a compatible client',{exact:true})});
+ const downloading=page.waitForEvent('download');await exported.getByRole('button',{name:'Download client configuration (.json)',exact:true}).click();
+ const config=JSON.parse(await readFile(await (await downloading).path(),'utf8'));
+ if(!config.key||config.server_address!==`127.0.0.1:${cfg.port}`)throw Error('Invalid export');
+ await exported.getByRole('button',{name:'Close',exact:true}).last().click();
+ await page.getByRole('dialog').getByRole('button',{name:'Close',exact:true}).first().click();
+ // The ordinary form must still offer and render standard protocols after Sudoku.
+ await page.getByRole('button',{name:'Add Inbound',exact:true}).click();modal=page.getByRole('dialog');
+ await selectProtocol('Sudoku');
+ await selectProtocol('vless');
+ if(await modal.locator('#sudoku-host').count())throw Error('Sudoku fields leaked into standard protocol form');
+ await modal.getByRole('button',{name:'Close',exact:true}).last().click();
+ await page.context().addCookies([{name:'lang',value:'ru-RU',url:cfg.url}]);await page.reload();
+ await page.getByText('Unified Sudoku',{exact:true}).waitFor();
+ await page.screenshot({path:cfg.output+'/unified-inbounds-desktop.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});await page.waitForTimeout(500);
+ if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw Error('Mobile overflow');
+ await page.screenshot({path:cfg.output+'/unified-inbounds-mobile.png',fullPage:true});
+ if(errors.length)throw Error(errors.join('\n'));
+ console.log('PASS: shared Add Inbound -> Basic -> Protocol -> Sudoku, shared list, real device key/QR/JSON and standard protocol switching');
+} finally {await browser.close();}

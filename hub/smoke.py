@@ -108,7 +108,7 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
    print('Core status:',request('panel/api/server/status')['obj']['xray'],flush=True)
   assert traffic,'real Xray forwarding failed';passed('inbound CRUD and real loopback HTTP through packaged Xray')
   assert request('panel/api/inbounds/del/'+str(created['id']),{},csrf)['success'];fixture.shutdown()
-  assert not request('panel/api/server/updatePanel',{},csrf)['success'];passed('upstream web self-update is blocked')
+  assert not request('panel/api/server/updatePanel',{},csrf)['success'];passed('web update refuses unmanaged test installations')
  finally:stop(p)
  # Exercise actual optional engine binaries, while the data plane stays local.
  tools=root/'dist/test-tools';sudoku=tools/'sudoku';control=tools/'connect-control'

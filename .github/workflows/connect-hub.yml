@@ -17,8 +17,13 @@ permissions:
   contents: read
 concurrency:
   group: connect-hub-${{ github.ref }}-${{ inputs.release_check || false }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
+  scripts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - run: bash -n install.sh x-ui.sh hub/*.sh && python3 -m py_compile hub/*.py
   container:
     if: ${{ !inputs.release_check && !inputs.runtime_artifact_run }}
     runs-on: ubuntu-24.04
@@ -52,7 +57,7 @@ jobs:
         working-directory: frontend
       - run: go test -shuffle=on -count=1 ./...
       - run: go test -race -count=1 ./internal/hub ./internal/web/controller ./internal/config
-      - run: bash -n install.sh hub/install.sh hub/update.sh hub/check-upstream.sh && python3 -m py_compile hub/package.py hub/smoke.py hub/sudoku-inbounds-smoke.py hub/release-smoke.py
+      - run: bash -n install.sh x-ui.sh hub/install.sh hub/cert.sh hub/update.sh hub/check-upstream.sh && python3 -m py_compile hub/package.py hub/smoke.py hub/sudoku-inbounds-smoke.py hub/release-smoke.py
       - run: python3 hub/package.py
       - name: Static panel runs on Debian 12
         run: test "$(docker run --rm -v "$PWD/dist/connect-hub:/panel:ro" debian:bookworm-slim /panel/connect-hub -v)" = "$(cat internal/config/version)"
@@ -61,6 +66,11 @@ jobs:
       - run: python3 hub/prepare-test-engines.py
       - name: Fresh installation, authentication, Xray traffic, update and backup
         run: python3 hub/smoke.py
+      - name: Install browser for the actual shared inbound form
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - name: Actual shared protocol picker, inbound list and device keys
+        run: python3 hub/browser-smoke.py
       - uses: actions/upload-artifact@v6
         if: always()
         with:
@@ -69,6 +79,7 @@ jobs:
             dist/*.tar.gz
             dist/SHA256SUMS
             dist/smoke-report.json
+            dist/unified-inbounds-*.png
   upstream-baseline:
     if: ${{ !inputs.release_check && !inputs.runtime_artifact_run }}
     runs-on: ubuntu-24.04
@@ -88,10 +99,24 @@ jobs:
         env:
           STORYBOOK_DISABLE_TELEMETRY: '1'
       - run: go test -shuffle=on -count=1 ./...
+  upgrade-alpha2:
+    needs: linux
+    if: ${{ !inputs.release_check && !inputs.runtime_artifact_run }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v6
+        with:
+          name: connect-hub-linux-amd64
+          path: dist
+      - run: python3 hub/upgrade-alpha2-smoke.py
   public-release-install:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.release_check }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    env:
+      CONNECT_HUB_TLS_MODE: selfsigned
     steps:
       - uses: actions/checkout@v7
       - run: python3 hub/release-smoke.py

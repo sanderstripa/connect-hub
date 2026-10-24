@@ -25,8 +25,8 @@ func TestParallelInitializationSeparatesInternalListeners(t *testing.T) {
 	if e := s.InitializeParallelTest(); e != nil {
 		t.Fatal(e)
 	}
-	if enabled, e := s.GetSubEnable(); e != nil || enabled {
-		t.Fatal("subscription listener enabled by default", e)
+	if enabled, e := s.GetSubEnable(); e != nil || !enabled {
+		t.Fatal("upstream subscription default was changed", e)
 	}
 	b, e := s.GetXrayConfigTemplate()
 	if e != nil {

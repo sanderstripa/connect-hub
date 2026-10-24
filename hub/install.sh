@@ -65,7 +65,13 @@ PY
 revision=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["revision"])' "$tmp/connect-hub/BUILD.json")
 [[ $revision =~ ^[a-f0-9]{40}$ ]] || die 'Invalid package revision'
 target=$prefix/releases/$revision
-[[ ! -e $target ]] || die 'This revision is already installed'
+if [[ -e $target ]];then
+ if ((update)) && [[ $(readlink -f "$prefix/current") == "$target" ]];then
+  printf 'Connect Hub is already up to date.\n'
+  exit 0
+ fi
+ die 'This revision already exists but is not the active managed revision'
+fi
 mkdir -p "$prefix/releases" "$logs"
 backup= old= was_active=0
 activated=0
@@ -100,9 +106,19 @@ cp -a "$tmp/connect-hub" "$target"
 for inherited in ${!XUI_@};do unset "$inherited";done
 unset NODE_TOKEN_ENCRYPTION
 export XUI_DB_TYPE=sqlite XUI_DB_DSN= XUI_PORT= XUI_NODE_TOKEN_KEY=
+if ((update)) && [[ -f $data/panel.env ]];then
+ # Read only database values from this installation's own service environment.
+ # Never evaluate environment-file contents as shell commands.
+ while IFS='=' read -r key value;do
+  case $key in XUI_DB_TYPE|XUI_DB_DSN) export "$key=$value";; esac
+ done < "$data/panel.env"
+fi
 export XUI_DB_FOLDER=$data XUI_LOG_FOLDER=$logs XUI_BIN_FOLDER=$target/bin XUI_MAIN_FOLDER=$target
 export XUI_NODE_TOKEN_KEY_FILE=$data/node_token_key.json
 if ((!update));then
+ if [[ -z ${CONNECT_HUB_PORT:-} && -t 2 && -r /dev/tty ]];then
+  read -r -p 'Panel port (Enter = choose a free port): ' CONNECT_HUB_PORT </dev/tty || true
+ fi
  panel_port=$(python3 - "${CONNECT_HUB_PORT:-0}" "$listen" <<'PY'
 import socket,sys
 port=int(sys.argv[1])
@@ -143,14 +159,8 @@ Description=Connect Hub server panel
 After=network.target
 [Service]
 Type=simple
-User=connect-hub
-Group=connect-hub
-NoNewPrivileges=true
-ProtectHome=true
-ProtectSystem=strict
-PrivateTmp=true
-RestrictSUIDSGID=true
-ReadWritePaths=$data $logs $prefix/current/bin
+User=root
+Group=root
 WorkingDirectory=$prefix/current
 ExecStart=$prefix/current/connect-hub
 Environment=XUI_DB_FOLDER=$data
@@ -164,6 +174,8 @@ Environment=XUI_BIN_FOLDER=$prefix/current/bin
 Environment=XUI_MAIN_FOLDER=$prefix/current
 Environment=XUI_NODE_TOKEN_KEY_FILE=$data/node_token_key.json
 Environment=CONNECT_HUB_INTEGRATIONS_DIR=$data/integrations
+Environment=CONNECT_HUB_NATIVE_INSTALL=1
+EnvironmentFile=-$data/panel.env
 EnvironmentFile=-$data/integrations.env
 Restart=on-failure
 KillMode=control-group
@@ -172,17 +184,54 @@ UMask=0077
 [Install]
 WantedBy=multi-user.target
 EOF
+ # Keep a familiar management command, scoped to this installation only.
+ if [[ -e /usr/local/bin/connect-hub ]] && ! grep -q 'Connect Hub modifications' /usr/local/bin/connect-hub;then die 'Refusing to replace a foreign connect-hub command';fi
+ install -m 0755 "$target/x-ui.sh" /usr/local/bin/connect-hub
+ cert_settings=$("$target/connect-hub" setting -getCert true)
+ if ! grep -q '^cert: .' <<< "$cert_settings";then
+  . "$target/hub/setup-ssl.sh"
+  setup_install_ssl
+ fi
  systemctl daemon-reload;systemctl enable --now connect-hub
  settings=$("$target/connect-hub" setting -show true)
  panel_port=$(printf '%s\n' "$settings" | sed -n 's/^port: //p')
+ panel_path=$(printf '%s\n' "$settings" | sed -n 's/^webBasePath: //p')
+ scheme=http
+ if grep -q '^Panel is secure with SSL$' <<< "$settings";then scheme=https;fi
+ python3 - "$data/initial-access.txt" "$panel_port" "$panel_path" "$scheme" <<'PY'
+import pathlib,sys,urllib.parse
+p=pathlib.Path(sys.argv[1]);values=dict(line.split('=',1)for line in p.read_text().splitlines())
+u=urllib.parse.urlparse(values['URL']);host=u.hostname
+if ':'in host:host=f'[{host}]'
+values['URL']=urllib.parse.urlunparse(u._replace(scheme=sys.argv[4],netloc=f'{host}:{sys.argv[2]}',path=sys.argv[3]))
+values['LOCAL_URL']=f'{sys.argv[4]}://127.0.0.1:{sys.argv[2]}{sys.argv[3]}'
+p.write_text(''.join(f'{key}={value}\n'for key,value in values.items()));p.chmod(0o600)
+PY
  health=0
  for attempt in {1..20};do
-  if curl --noproxy '*' -sS -o /dev/null "http://127.0.0.1:${panel_port}/";then health=1;break;fi
+  # Local health probe only: the temporary certificate is intentionally not a public CA certificate.
+  local_url=$(sed -n 's/^LOCAL_URL=//p' "$data/initial-access.txt")
+  if curl --noproxy '*' --insecure -sS -o /dev/null "$local_url";then health=1;break;fi
   sleep 1
  done
  [[ $health == 1 ]] && systemctl is-active --quiet connect-hub || die 'Service failed health check' 
 fi
-echo "Connect Hub installed: $revision"
-if ((!update));then echo "Initial access saved privately: $data/initial-access.txt";cat "$data/initial-access.txt";fi
-if ((!update));then echo "Open URL in your browser. If your firewall blocks it, allow only this new panel port: $panel_port/tcp. Configure HTTPS in panel settings before regular use.";fi
-[[ -z $backup ]] || echo "Backup retained: $backup"
+green= cyan= yellow= bold= reset=
+if [[ -t 1 && -z ${NO_COLOR:-} ]];then green=$'\033[32m';cyan=$'\033[36m';yellow=$'\033[33m';bold=$'\033[1m';reset=$'\033[0m';fi
+printf '\n%s============================================================%s\n' "$green" "$reset"
+printf '%s                 CONNECT HUB — READY%s\n' "$bold" "$reset"
+printf '%s============================================================%s\n\n' "$green" "$reset"
+while IFS='=' read -r key value;do
+ case "$key" in
+  URL) printf '%s  Open in browser / Адрес панели:%s\n\n    %s\n\n' "$cyan" "$reset" "$value";;
+  USERNAME) if ((!update));then printf '  Username / Логин:    %s%s%s\n' "$bold" "$value" "$reset";fi;;
+  PASSWORD) if ((!update));then printf '  Password / Пароль:  %s%s%s\n\n' "$bold" "$value" "$reset";fi;;
+  CERTIFICATE) if [[ $value == trusted ]];then printf '%s  HTTPS: trusted Let’s Encrypt certificate; automatic renewal.%s\n\n' "$green" "$reset";else printf '%s  HTTPS: temporary certificate — browser warning expected.\n  Retry trusted issuance: sudo connect-hub → SSL certificate.%s\n\n' "$yellow" "$reset";fi;;
+ esac
+done < "$data/initial-access.txt"
+if ((update));then printf '  Use your current login and password / Логин и пароль сохранены.\n\n';fi
+printf '  Access details / Данные входа: %s/initial-access.txt\n' "$data"
+printf '  Management menu / Меню управления: sudo connect-hub\n'
+printf '  If blocked, allow only the chosen new panel TCP port.\n'
+[[ -z $backup ]] || printf '  Backup retained / Резервная копия: %s\n' "$backup"
+printf '\n%s============================================================%s\n\n' "$green" "$reset"

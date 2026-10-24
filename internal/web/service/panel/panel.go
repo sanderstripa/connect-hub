@@ -214,8 +214,8 @@ func (s *PanelService) GetUpdateStatus() *PanelUpdateStatus {
 }
 
 func (s *PanelService) startUpdate(useDev bool) (int64, error) {
-	if config.GetName() == "connect-hub" {
-		return 0, fmt.Errorf("Connect Hub updates require the reviewed hub/install.sh --update procedure; web self-update is disabled")
+	if config.GetName() == "connect-hub" && os.Getenv("CONNECT_HUB_NATIVE_INSTALL") != "1" {
+		return 0, fmt.Errorf("panel web update requires a managed native Connect Hub installation")
 	}
 	runID := time.Now().UnixNano()
 	if !acquireUpdateSlot(runID) {
@@ -255,7 +255,7 @@ func (s *PanelService) startUpdate(useDev bool) (int64, error) {
 	proxyEnv := updateProxyEnvVars()
 
 	if systemdRun, err := exec.LookPath("systemd-run"); err == nil {
-		unitName := fmt.Sprintf("x-ui-web-update-%d", time.Now().Unix())
+		unitName := fmt.Sprintf("connect-hub-web-update-%d", time.Now().Unix())
 		args := []string{
 			"--unit", unitName,
 			"--setenv", "XUI_MAIN_FOLDER=" + mainFolder,
@@ -376,6 +376,28 @@ func releaseUpdateSlot() {
 }
 
 func downloadPanelUpdater() (string, error) {
+	if config.GetName() == "connect-hub" {
+		mainFolder, _ := resolveUpdateFolders()
+		contents, err := os.ReadFile(filepath.Join(mainFolder, "hub", "update.sh"))
+		if err != nil {
+			return "", fmt.Errorf("read installed Connect Hub updater: %w", err)
+		}
+		if len(contents) == 0 || len(contents) > maxPanelUpdaterBytes {
+			return "", fmt.Errorf("invalid installed Connect Hub updater size")
+		}
+		file, err := os.CreateTemp("", "connect-hub-update-*.sh")
+		if err != nil {
+			return "", err
+		}
+		path := file.Name()
+		_, writeErr := file.Write(contents)
+		closeErr := file.Close()
+		if writeErr != nil || closeErr != nil {
+			_ = os.Remove(path)
+			return "", fmt.Errorf("copy installed updater: write=%v close=%v", writeErr, closeErr)
+		}
+		return path, nil
+	}
 	client := (&service.SettingService{}).NewProxiedHTTPClient(15 * time.Second)
 	req, reqErr := http.NewRequestWithContext(context.Background(), http.MethodGet, panelUpdaterURL, nil)
 	if reqErr != nil {
@@ -448,6 +470,9 @@ func fetchPanelRelease(tag string) (*service.Release, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound && tag == "" {
+		return fetchPanelRelease("v0.1.0-alpha.3")
+	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("GitHub API returned status %d: %s", resp.StatusCode, resp.Status)
 	}
