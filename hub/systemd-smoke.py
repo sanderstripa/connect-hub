@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Disposable hosted-runner test: real unprivileged service and failed update rollback."""
+"""Disposable hosted-runner test: real root service and failed update rollback."""
 import hashlib,io,json,pathlib,ssl,subprocess,tarfile,tempfile,time,urllib.request
 root=pathlib.Path(__file__).resolve().parent.parent
 archive=root/'dist/connect-hub-linux-amd64.tar.gz'
@@ -39,6 +39,11 @@ try:
  assert menu_status.returncode==0,menu_status.stderr[-2000:]
  print('PASS: actual HTTPS, SAN verification using the explicit test certificate, own renewal timer and readable installer summary',flush=True)
  print('PASS: native systemd service runs as root, matching upstream 3x-ui',flush=True)
+ unchanged=install(archive,True)
+ assert unchanged.returncode==0,unchanged.stderr
+ assert run('sudo','cat','/etc/connect-hub/initial-access.txt').stdout==access
+ assert run('sudo','readlink','-f','/opt/connect-hub/current').stdout.strip()==old
+ print('PASS: updating the active revision is a successful no-op preserving access',flush=True)
  with tempfile.TemporaryDirectory(prefix='hub-failed-update-') as td:
   broken=pathlib.Path(td)/'broken.tar.gz'
   with tarfile.open(archive) as source,tarfile.open(broken,'w:gz') as dest:

@@ -106,6 +106,13 @@ cp -a "$tmp/connect-hub" "$target"
 for inherited in ${!XUI_@};do unset "$inherited";done
 unset NODE_TOKEN_ENCRYPTION
 export XUI_DB_TYPE=sqlite XUI_DB_DSN= XUI_PORT= XUI_NODE_TOKEN_KEY=
+if ((update)) && [[ -f $data/panel.env ]];then
+ # Read only database values from this installation's own service environment.
+ # Never evaluate environment-file contents as shell commands.
+ while IFS='=' read -r key value;do
+  case $key in XUI_DB_TYPE|XUI_DB_DSN) export "$key=$value";; esac
+ done < "$data/panel.env"
+fi
 export XUI_DB_FOLDER=$data XUI_LOG_FOLDER=$logs XUI_BIN_FOLDER=$target/bin XUI_MAIN_FOLDER=$target
 export XUI_NODE_TOKEN_KEY_FILE=$data/node_token_key.json
 if ((!update));then

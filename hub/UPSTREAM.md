@@ -25,5 +25,7 @@ release a tested Connect Hub package independently. Source at the exact build
 revision must remain available with distributed GPL binaries.
 
 Updates retain full backups without automatic retention deletion. The web
-self-updater is intentionally blocked until an authenticated release-update
-flow has been implemented and validated; it can never download upstream 3x-ui.
+self-updater uses the updater bundled inside the installed release, with the
+original authenticated update/status flow. It installs only a fixed Connect Hub
+release archive after SHA-256 verification and cannot download upstream binaries.
+The native service runs as root, as explicitly requested for upstream parity.

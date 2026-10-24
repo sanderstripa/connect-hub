@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Exact public README command, restricted to a fresh GitHub-hosted runner."""
-import http.cookiejar,http.server,json,os,pathlib,runpy,socket,ssl,subprocess,tempfile,threading,urllib.parse,urllib.request
+import http.cookiejar,http.server,json,os,pathlib,runpy,socket,ssl,subprocess,tempfile,threading,time,urllib.parse,urllib.request
 assert os.environ.get('GITHUB_ACTIONS')=='true' and os.environ.get('RUNNER_ENVIRONMENT')=='github-hosted','Hosted disposable runner required'
 root=pathlib.Path(__file__).resolve().parent.parent
 assert not pathlib.Path('/opt/connect-hub').exists(),'Fresh runner required'
@@ -38,6 +38,20 @@ try:
    suite=runpy.run_path(str(root/'hub/sudoku-inbounds-smoke.py'))['run']
    suite(request,csrf,pathlib.Path('/opt/connect-hub/current/bin/sudoku-linux-amd64'),td,fixture.server_port,lambda name:print('PASS:',name,flush=True))
  finally:fixture.shutdown()
+ # Exercise the real root web updater against the same public verified release.
+ # An already-current version must succeed without changing credentials or keys.
+ update=request('panel/api/server/updatePanel',{},csrf)
+ assert update['success'],update.get('msg')
+ run_id=update['obj']['runId']
+ for _ in range(180):
+  status=request('panel/api/server/getUpdateStatus')['obj']
+  if status['runId']==run_id and status['state'] in ('success','failed'):break
+  time.sleep(1)
+ else:raise AssertionError('Public web updater did not finish')
+ assert status['state']=='success' and status['exitCode']==0,status
+ assert subprocess.check_output(['sudo','cat','/etc/connect-hub/initial-access.txt'],text=True)==raw
+ assert request('panel/hub/api/status')['success']
+ print('PASS: authenticated root web update installs only the verified public fork release and succeeds without changing current access',flush=True)
 finally:
  subprocess.run(['sudo','systemctl','stop','connect-hub'],check=False)
  for s in occupied:s.close()
