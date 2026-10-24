@@ -17,7 +17,7 @@ COPY --from=frontend /src/internal/web/dist ./internal/web/dist
 RUN python3 hub/package.py
 
 FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates tzdata openssl curl bash fail2ban iptables cron procps && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates tzdata openssl curl bash python3 fail2ban iptables cron procps && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=builder /src/dist/connect-hub/ /app/
 COPY hub/entrypoint.sh /app/entrypoint.sh
