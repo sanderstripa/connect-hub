@@ -749,6 +749,18 @@ export default function InboundFormModal({
           ...(mode === 'add' ? [{ value: 'sudoku', label: 'Sudoku' }] : []),
         ]}
         onSelect={(value) => {
+          if (value === 'sudoku') {
+            setSudoku((current) => ({
+              ...current,
+              name: String(getV('remark') ?? current.name),
+              port: Number(getV('port') ?? current.port),
+              enable: Boolean(getV('enable') ?? current.enable),
+            }));
+          } else if (sudokuMode) {
+            setV('remark', sudoku.name);
+            setV('port', sudoku.port);
+            setV('enable', sudoku.enable);
+          }
           setSudokuMode(value === 'sudoku');
           setSudokuError('');
           setActiveTab('basic');
@@ -787,7 +799,7 @@ export default function InboundFormModal({
       <Form.Item label={t('pages.inbounds.port')} htmlFor="sudoku-port" required>
         <InputNumber
           id="sudoku-port"
-          min={1024}
+          min={1}
           max={65535}
           value={sudoku.port}
           onChange={(port) => setSudoku((v) => ({ ...v, port: port ?? 0 }))}

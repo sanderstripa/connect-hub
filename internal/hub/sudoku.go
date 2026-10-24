@@ -115,8 +115,8 @@ func bundledPath() string {
 }
 func bundledSudoku() bool { s, e := os.Stat(bundledPath()); return e == nil && s.Mode().IsRegular() }
 func (p SudokuProfile) Validate() error {
-	if p.Port < 1024 || p.Port > 65535 {
-		return errors.New("Sudoku port must be 1024..65535")
+	if p.Port < 1 || p.Port > 65535 {
+		return errors.New("Sudoku port must be 1..65535")
 	}
 	if p.Host == "" || strings.ContainsAny(p.Host, "/\\ \t\r\n@?#") {
 		return errors.New("enter a server IP address or DNS name")
