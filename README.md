@@ -71,7 +71,7 @@ curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/insta
 | Раздел | Реальное поведение |
 |---|---|
 | Основные функции 3x-ui / Xray | Подключения, клиенты, маршрутизация, подписки, статистика, API и резервные копии. Служба работает от root, как в исходной панели. |
-| Sudoku | Несколько TCP-inbound’ов, отдельные ключи устройств, ссылки, QR, JSON, включение/отключение и отзыв. |
+| Sudoku | Обычные подключения и клиенты, отдельные ключи устройств, ссылки, QR, подписки, счётчики и резервная копия базы; TCP и UDP-over-TCP, включение/отключение и отзыв. |
 | Connect Core alpha | По отдельному разрешению администратора показывает состояние существующего control plane. Запуск VPN, изменение маршрутов и выдача устройств Core из панели не реализованы. |
 | Mist | Не запускается и не предлагается как рабочий протокол: не подтверждены контракт интеграции и лицензия для поставки. |
 
@@ -87,3 +87,4 @@ curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/insta
 Проверки выполняются в изолированных средах. Реальные VPS и личные установки пользователя при разработке не используются. Основа: MHSanaei и участники 3x-ui; изменения Connect Hub: Sander Stripa и участники, 2026. Sudoku сохраняет свои лицензии и авторские уведомления; соответствующие исходники и изменения прилагаются к пакету. Гарантии отсутствуют.
 
 Management menu: `sudo connect-hub`. The upstream-derived management menu is restored with Connect Hub paths and service names. Certificate retry: `sudo bash /opt/connect-hub/current/hub/cert.sh`, then `sudo systemctl restart connect-hub`. Existing HTTP installations receive HTTPS during this update when no certificate is configured.
+

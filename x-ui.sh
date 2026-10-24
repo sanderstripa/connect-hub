@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 35583)
-Total output lines: 3712
-
 #!/bin/bash
 # Connect Hub modifications, 2026-10-24. GPL-3.0; upstream source and authorship in NOTICE.
 
@@ -1931,7 +1928,59 @@ ssl_cert_issue() {
     fi
 
     if [[ -f "/opt/connect-hub/tls/manual/${domain}/privkey.pem" && -f "/opt/connect-hub/tls/manual/${domain}/fullchain.pem" && (${installRc} -eq 0 || ${installWroteFiles} -eq 1) ]]; then
-        LOGI "Installing certificate succeeded, enabling auto re…583 tokens truncated…panel (optional)."
+        LOGI "Installing certificate succeeded, enabling auto renew..."
+    else
+        LOGE "Installing certificate failed, exiting."
+        if [[ ${cert_exists} -eq 0 ]]; then
+            rm -rf /opt/connect-hub/acme/certs/${domain} /opt/connect-hub/acme/certs/${domain}_ecc
+        fi
+        exit 1
+    fi
+
+    # enable auto-renew
+    /opt/connect-hub/acme/acme.sh --upgrade --auto-upgrade
+    if [ $? -ne 0 ]; then
+        LOGE "Auto renew failed, certificate details:"
+        ls -lah cert/*
+        chmod 600 $certPath/privkey.pem
+        chmod 644 $certPath/fullchain.pem
+        exit 1
+    else
+        LOGI "Auto renew succeeded, certificate details:"
+        ls -lah cert/*
+        chmod 600 $certPath/privkey.pem
+        chmod 644 $certPath/fullchain.pem
+    fi
+
+    # Prompt user to set panel paths after successful certificate installation
+    read -rp "Would you like to set this certificate for the panel? (y/n): " setPanel
+    if [[ "$setPanel" == "y" || "$setPanel" == "Y" ]]; then
+        local webCertFile="/opt/connect-hub/tls/manual/${domain}/fullchain.pem"
+        local webKeyFile="/opt/connect-hub/tls/manual/${domain}/privkey.pem"
+
+        if [[ -f "$webCertFile" && -f "$webKeyFile" ]]; then
+            ${xui_folder}/connect-hub cert -webCert "$webCertFile" -webCertKey "$webKeyFile"
+            LOGI "Panel paths set for domain: $domain"
+            LOGI "  - Certificate File: $webCertFile"
+            LOGI "  - Private Key File: $webKeyFile"
+            echo -e "${green}Access URL: https://${domain}:${existing_port}${existing_webBasePath}${plain}"
+            restart
+        else
+            LOGE "Error: Certificate or private key file not found for domain: $domain."
+        fi
+    else
+        LOGI "Skipping panel path setting."
+    fi
+}
+
+ssl_cert_issue_CF() {
+    local existing_webBasePath=$(${xui_folder}/connect-hub setting -show true | grep -Eo 'webBasePath: .+' | awk '{print $2}')
+    local existing_port=$(${xui_folder}/connect-hub setting -show true | grep -Eo 'port: .+' | awk '{print $2}')
+    LOGI "****** Instructions for Use ******"
+    LOGI "Follow the steps below to complete the process:"
+    LOGI "1. A Cloudflare API Token (recommended, scoped to Zone:DNS:Edit) or the Global API Key + registered email."
+    LOGI "2. The Domain Name."
+    LOGI "3. Once the certificate is issued, you will be prompted to set the certificate for the panel (optional)."
     LOGI "4. The script also supports automatic renewal of the SSL certificate after installation."
 
     confirm "Do you confirm the information and wish to proceed? [y/n]" "y"
@@ -3660,4 +3709,3 @@ if [[ $# > 0 ]]; then
 else
     show_menu
 fi
-

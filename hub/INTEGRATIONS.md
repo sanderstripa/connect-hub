@@ -12,7 +12,7 @@ Each runtime uses an exact whitelist of registered client-key hashes. Unknown ke
 
 Only disposable runtime configs, counters and private control sockets live under CONNECT_HUB_INTEGRATIONS_DIR/native-sudoku. A change to the client set or server configuration currently restarts that inbound's own child. Other inbounds and external services are unaffected. CONNECT_HUB_SUDOKU=0 disables the integration. A reviewed compatible binary may be selected with CONNECT_HUB_SUDOKU_BINARY and CONNECT_HUB_SUDOKU_SHA256; it must implement the disclosed listen-address and access-control contract.
 
-The normal form exposes the original core's encryption and ASCII/entropy table modes. The protocol listens on TCP; the upstream compatible client also contains UDP-over-TCP support, which is distinct from a UDP listener. Compatibility is tested with the pinned original compatible client, not asserted for every third-party application. Allow configured ports deliberately; Docker needs explicit inbound port mappings.
+The normal form exposes the original core's encryption and ASCII/entropy table modes. The protocol listens on TCP and carries UDP over that TCP transport. Real SOCKS UDP ASSOCIATE echo tests verify both native inbounds and revoked-device rejection using a compatible client. Compatibility is tested with the pinned original compatible client, not asserted for every third-party application. Allow configured TCP ports deliberately; Docker needs explicit inbound port mappings.
 
 ## Connect Core alpha
 
@@ -29,3 +29,4 @@ Place these in /etc/connect-hub/integrations.env (0600), make the token file rea
 ## Mist
 
 Mist remains unavailable and disabled. Its implementation branches have not established a verified panel management contract and redistribution license for this adapter. No Mist binary is downloaded or executed. This is an explicit experimental boundary accepted for the present release, not a working transport claim.
+
