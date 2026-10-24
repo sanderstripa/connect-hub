@@ -35,15 +35,21 @@ ACME_WRAPPER
 uninstall(){
  confirm 'Remove Connect Hub service and retain its data in a backup?' 'n' || return 0
  [[ -f /etc/connect-hub/.connect-hub-owned ]] || { LOGE 'Not a managed Connect Hub installation';return 1; }
- systemctl stop connect-hub connect-hub-cert-renew.timer || true
+ systemctl stop connect-hub connect-hub-cert-renew.timer connect-hub-cert-renew.service || true
  systemctl disable connect-hub connect-hub-cert-renew.timer || true
- local backup="/opt/connect-hub/backups/uninstall-$(date -u +%Y%m%dT%H%M%SZ)-$$"
- mkdir -p "$backup"
+ local backup="/var/backups/connect-hub/uninstall-$(date -u +%Y%m%dT%H%M%SZ)-$$"
+ [[ -d /opt/connect-hub && ! -L /opt/connect-hub && ! -L /etc/connect-hub && ! -L /var/log/connect-hub ]] || { LOGE 'Unexpected installation paths';return 1; }
+ command install -d -m 0700 "$backup"
  mv /etc/connect-hub "$backup/data"
+ mv /opt/connect-hub "$backup/app"
+ [[ ! -d /var/log/connect-hub ]] || mv /var/log/connect-hub "$backup/logs"
  for unit in connect-hub.service connect-hub-cert-renew.service connect-hub-cert-renew.timer;do
   local file="/etc/systemd/system/$unit"
   if [[ -f $file ]] && grep -q '^# Managed by Connect Hub$' "$file";then rm -- "$file";fi
  done
  systemctl daemon-reload
- echo 'Removed only Connect Hub service. Data and releases retained in /opt/connect-hub.'
+ userdel connect-hub || true
+ if grep -q 'Connect Hub modifications' /usr/local/bin/connect-hub;then rm -- /usr/local/bin/connect-hub;fi
+ echo "Removed only Connect Hub. Data, releases and backups retained in $backup."
+ echo 'Reinstall: curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash'
 }

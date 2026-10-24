@@ -189,6 +189,18 @@ EOF
  systemctl daemon-reload;systemctl enable --now connect-hub
  settings=$("$target/connect-hub" setting -show true)
  panel_port=$(printf '%s\n' "$settings" | sed -n 's/^port: //p')
+ panel_path=$(printf '%s\n' "$settings" | sed -n 's/^webBasePath: //p')
+ scheme=http
+ if grep -q '^Panel is secure with SSL$' <<< "$settings";then scheme=https;fi
+ python3 - "$data/initial-access.txt" "$panel_port" "$panel_path" "$scheme" <<'PY'
+import pathlib,sys,urllib.parse
+p=pathlib.Path(sys.argv[1]);values=dict(line.split('=',1)for line in p.read_text().splitlines())
+u=urllib.parse.urlparse(values['URL']);host=u.hostname
+if ':'in host:host=f'[{host}]'
+values['URL']=urllib.parse.urlunparse(u._replace(scheme=sys.argv[4],netloc=f'{host}:{sys.argv[2]}',path=sys.argv[3]))
+values['LOCAL_URL']=f'{sys.argv[4]}://127.0.0.1:{sys.argv[2]}{sys.argv[3]}'
+p.write_text(''.join(f'{key}={value}\n'for key,value in values.items()));p.chmod(0o600)
+PY
  health=0
  for attempt in {1..20};do
   # Local health probe only: the temporary certificate is intentionally not a public CA certificate.
@@ -206,11 +218,12 @@ printf '%s============================================================%s\n\n' "$
 while IFS='=' read -r key value;do
  case "$key" in
   URL) printf '%s  Open in browser / Адрес панели:%s\n\n    %s\n\n' "$cyan" "$reset" "$value";;
-  USERNAME) printf '  Username / Логин:    %s%s%s\n' "$bold" "$value" "$reset";;
-  PASSWORD) printf '  Password / Пароль:  %s%s%s\n\n' "$bold" "$value" "$reset";;
+  USERNAME) if ((!update));then printf '  Username / Логин:    %s%s%s\n' "$bold" "$value" "$reset";fi;;
+  PASSWORD) if ((!update));then printf '  Password / Пароль:  %s%s%s\n\n' "$bold" "$value" "$reset";fi;;
   CERTIFICATE) if [[ $value == trusted ]];then printf '%s  HTTPS: trusted Let’s Encrypt certificate; automatic renewal.%s\n\n' "$green" "$reset";else printf '%s  HTTPS: temporary certificate — browser warning expected.\n  Retry trusted issuance: sudo connect-hub → SSL certificate.%s\n\n' "$yellow" "$reset";fi;;
  esac
 done < "$data/initial-access.txt"
+if ((update));then printf '  Use your current login and password / Логин и пароль сохранены.\n\n';fi
 printf '  Access details / Данные входа: %s/initial-access.txt\n' "$data"
 printf '  Management menu / Меню управления: sudo connect-hub\n'
 printf '  If blocked, allow only the chosen new panel TCP port.\n'

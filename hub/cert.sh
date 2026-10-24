@@ -122,7 +122,7 @@ cat > /etc/systemd/system/connect-hub-cert-renew.timer <<'EOF'
 [Unit]
 Description=Check Connect Hub certificate renewal twice daily
 [Timer]
-OnBootSec=10min
+OnActiveSec=10min
 OnUnitActiveSec=12h
 RandomizedDelaySec=15min
 Persistent=true

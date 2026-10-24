@@ -14,9 +14,10 @@ try {
  async function selectProtocol(value) {
   await page.getByRole('dialog').locator('#protocol').click();
   const dropdown=page.locator('.ant-select-dropdown:visible').last();
-  await dropdown.evaluate((element,last)=>{
-   for(const child of element.querySelectorAll('div'))if(child.scrollHeight>child.clientHeight && ['auto','scroll'].includes(getComputedStyle(child).overflowY))child.scrollTop=last?child.scrollHeight:0;
-  },value==='Sudoku');
+  await dropdown.locator('.ant-select-item-option').first().waitFor();
+  await dropdown.hover();
+  await page.mouse.wheel(0,value==='Sudoku'?2400:-2400);
+  await page.waitForTimeout(200);
   await dropdown.getByText(value,{exact:true}).click();
  }
  await page.getByRole('button',{name:'Add Inbound',exact:true}).click();

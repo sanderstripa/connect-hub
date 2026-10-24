@@ -58,5 +58,13 @@ try:
   else:raise AssertionError('old service did not recover')
   assert run('sudo','find','/opt/connect-hub/backups','-type','d','-name','failed-data').stdout.strip(),'failed data was not retained'
   print('PASS: failed real service update restores prior binary/data and retains backup plus failed data',flush=True)
+ removed=subprocess.run(['sudo','bash','/usr/local/bin/connect-hub','uninstall'],input='y\n',text=True,capture_output=True)
+ assert removed.returncode==0,removed.stderr[-2000:]
+ assert not pathlib.Path('/opt/connect-hub').exists() and not pathlib.Path('/etc/connect-hub').exists()
+ assert run('sudo','find','/var/backups/connect-hub','-name','connect-hub.db').stdout.strip()
+ reinstalled=install(archive);assert reinstalled.returncode==0,reinstalled.stderr[-2000:]
+ assert run('sudo','systemctl','is-active','connect-hub').stdout.strip()=='active'
+ assert run('sudo','cat','/etc/connect-hub/initial-access.txt').stdout!=access
+ print('PASS: ordinary menu uninstall retains all data, then a clean reinstall succeeds without importing it',flush=True)
 finally:
  run('sudo','systemctl','stop','connect-hub',check=False)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Upgrade the public alpha.2 on a fresh disposable hosted runner."""
-import hashlib,http.cookiejar,io,json,os,pathlib,socket,ssl,subprocess,tarfile,tempfile,time,urllib.parse,urllib.request
+import hashlib,http.cookiejar,io,json,os,pathlib,secrets,socket,ssl,subprocess,tarfile,tempfile,time,urllib.parse,urllib.request
 assert os.environ.get('GITHUB_ACTIONS')=='true' and os.environ.get('RUNNER_ENVIRONMENT')=='github-hosted'
 assert not pathlib.Path('/opt/connect-hub').exists()
 root=pathlib.Path(__file__).resolve().parent.parent
@@ -31,14 +31,20 @@ with tempfile.TemporaryDirectory(prefix='hub-alpha2-upgrade-')as raw:
   result=api('panel/hub/api/sudoku/inbounds',{'name':'Preserved alpha2 inbound','host':'127.0.0.1','port':port,'aead':'chacha20-poly1305','table':'prefer_ascii'},True);assert result['success'];inbound=result['obj']['id']
   result=api(f'panel/hub/api/sudoku/inbounds/{inbound}/devices',{'name':'Preserved phone'},True);assert result['success'];device=result['obj']['id']
   old_key=api(f'panel/hub/api/sudoku/inbounds/{inbound}/devices/{device}/export',{},True)['obj']['privateKey']
+  # A real user may change access settings after installation; initial-access.txt
+  # must not be mistaken for the current database's port/path or password.
+  with socket.socket()as s:s.bind(('127.0.0.1',0));custom_port=s.getsockname()[1]
+  custom_password=secrets.token_hex(24);custom_path='/custom-alpha2-access/'
+  run('sudo','env','XUI_DB_FOLDER=/etc/connect-hub','/opt/connect-hub/current/connect-hub','setting','-username','changed-user','-password',custom_password,'-port',str(custom_port),'-webBasePath',custom_path)
+  run('sudo','systemctl','restart','connect-hub')
   current=root/'dist/connect-hub-linux-amd64.tar.gz'
   run('sudo','env','CONNECT_HUB_TLS_MODE=selfsigned','bash',str(root/'hub/install.sh'),'--package',str(current),'--sha256',hashlib.sha256(current.read_bytes()).hexdigest(),'--update')
   after=access();assert after['URL'].startswith('https://')
   for field in ('USERNAME','PASSWORD'):assert after[field]==before[field]
-  assert urllib.parse.urlparse(after['URL']).path==urllib.parse.urlparse(before['URL']).path
-  assert urllib.parse.urlparse(after['URL']).port==urllib.parse.urlparse(before['URL']).port
+  assert urllib.parse.urlparse(after['URL']).path==custom_path
+  assert urllib.parse.urlparse(after['URL']).port==custom_port
   certificate=run('sudo','cat','/opt/connect-hub/tls/fullchain.pem').stdout
-  api=session(after,certificate)
+  api=session({**after,'USERNAME':'changed-user','PASSWORD':custom_password},certificate)
   listed=api('panel/hub/api/sudoku/inbounds')['obj'];assert any(i['id']==inbound and i['name']=='Preserved alpha2 inbound'for i in listed)
   assert api(f'panel/hub/api/sudoku/inbounds/{inbound}/devices/{device}/export',{},True)['obj']['privateKey']==old_key
   assert run('sudo','find','/opt/connect-hub/backups','-name','connect-hub.db').stdout.strip()
