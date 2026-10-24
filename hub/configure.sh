@@ -44,33 +44,7 @@ for arg in "$@";do [[ $arg != --upgrade ]] || exit 0;done
 exec bash /opt/connect-hub/current/hub/third-party/acme.sh --home /opt/connect-hub/acme --config-home /opt/connect-hub/acme --cert-home /opt/connect-hub/acme/certs "$@"
 ACME
  chmod 0700 "$prefix/acme/acme.sh"
- for unit in connect-hub-cert-renew.service connect-hub-cert-renew.timer;do
-  if [[ -e /etc/systemd/system/$unit ]] && ! grep -q '^# Managed by Connect Hub$' "/etc/systemd/system/$unit";then
-   echo "Refusing to replace foreign $unit" >&2;return 1
-  fi
- done
- cat > /etc/systemd/system/connect-hub-cert-renew.service <<EOF
-# Managed by Connect Hub
-[Unit]
-Description=Renew only Connect Hub certificates using its isolated ACME account
-[Service]
-Type=oneshot
-ExecStart=/bin/bash $prefix/acme/acme.sh --cron
-EOF
- cat > /etc/systemd/system/connect-hub-cert-renew.timer <<'EOF'
-# Managed by Connect Hub
-[Unit]
-Description=Check Connect Hub certificate renewal twice daily
-[Timer]
-OnActiveSec=10min
-OnUnitActiveSec=12h
-RandomizedDelaySec=15min
-Persistent=true
-[Install]
-WantedBy=timers.target
-EOF
- systemctl daemon-reload
- systemctl enable --now connect-hub-cert-renew.timer
+ CONNECT_HUB_PREFIX="$prefix" CONNECT_HUB_DATA="$data" bash "$xui_folder/hub/setup-renew.sh"
 }
 
 # Keep the original certificate menu and custom-path workflow. The explicit
@@ -127,3 +101,4 @@ printf 'URL=%s\nLOCAL_URL=%s://127.0.0.1:%s/%s\nUSERNAME=%s\nPASSWORD=%s\n' "$XU
 if [[ -n $certificate_state ]];then printf 'CERTIFICATE=%s\n' "$certificate_state" >> "$data/initial-access.txt";fi
 chmod 0600 "$data/initial-access.txt"
 touch "$data/.upstream-configured"
+

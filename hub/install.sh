@@ -244,6 +244,7 @@ EOF
   . "$target/hub/setup-ssl.sh"
   setup_install_ssl
  fi
+ if [[ -x $prefix/acme/acme.sh ]];then CONNECT_HUB_PREFIX="$prefix" CONNECT_HUB_DATA="$data" bash "$target/hub/setup-renew.sh";fi
  systemctl daemon-reload;systemctl enable --now connect-hub
  settings=$("$target/connect-hub" setting -show true)
  panel_port=$(printf '%s\n' "$settings" | sed -n 's/^port: //p')

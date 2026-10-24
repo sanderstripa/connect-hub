@@ -22,12 +22,6 @@ legacy_version(){
 replace_xui_script(){ command install -m 0755 /opt/connect-hub/current/x-ui.sh /usr/local/bin/connect-hub; }
 update_shell(){ replace_xui_script; }
 xui_env_file_path(){ echo /etc/connect-hub/panel.env; }
-ssl_cert_issue_for_ip(){ bash /opt/connect-hub/current/hub/cert.sh && restart; }
-ssl_cert_issue(){
- local host
- read -rp 'Certificate IP or domain (empty = detected IP): ' host
- CONNECT_HUB_DOMAIN="$host" bash /opt/connect-hub/current/hub/cert.sh && restart
-}
 install_acme(){
  mkdir -p /opt/connect-hub/acme
  chmod 0700 /opt/connect-hub/acme
@@ -39,6 +33,7 @@ done
 exec bash /opt/connect-hub/current/hub/third-party/acme.sh --home /opt/connect-hub/acme --config-home /opt/connect-hub/acme --cert-home /opt/connect-hub/acme/certs "$@"
 ACME_WRAPPER
  chmod 0700 /opt/connect-hub/acme/acme.sh
+ bash "$xui_folder/hub/setup-renew.sh"
 }
 uninstall(){
  confirm 'Remove Connect Hub service and retain its data in a backup?' 'n' || return 0

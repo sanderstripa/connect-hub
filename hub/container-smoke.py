@@ -22,7 +22,7 @@ try:
  token=json.loads(req('csrf-token'))['obj'];assert json.loads(req('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},token))['success']
  state=json.loads(req('panel/hub/api/status'))['obj'];assert state['sudoku']['enabled'] and not state['connectCore']['enabled']
  menu=docker('compose','exec','-T','connect-hub','bash','/usr/local/bin/connect-hub','status')
- assert 'Connect Hub' in menu or 'connect-hub' in menu
+  assert 'Running' in menu and 'Not Running' not in menu and 'Not Installed' not in menu,menu
  folders=docker('compose','exec','-T','connect-hub','bash','-c','xui_folder="$XUI_MAIN_FOLDER"; running_in_docker=true; source /app/hub/management-overrides.sh; printf "%s\\n" "$XUI_MAIN_FOLDER" "$XUI_BIN_FOLDER"')
  assert folders.splitlines()==['/app','/app/bin'],folders
  cid=docker('compose','ps','-q','connect-hub');inspect=json.loads(docker('inspect',cid))[0]
@@ -54,7 +54,7 @@ try:
   except OSError:time.sleep(.5)
  else:raise AssertionError('recreated container did not retain working HTTPS')
  token=json.loads(req('csrf-token'))['obj'];assert json.loads(req('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},token))['success']
- assert 'cert.sh --renew' in docker('compose','exec','-T','connect-hub','cat','/etc/cron.d/connect-hub-cert-renew')
+ assert 'hub/renew.sh' in docker('compose','exec','-T','connect-hub','cat','/etc/cron.d/connect-hub-cert-renew')
  assert docker('compose','exec','-T','connect-hub','pgrep','-x','cron')
  print('PASS: container recreation retains verified HTTPS, login and certificate-renewal scheduling')
 finally:

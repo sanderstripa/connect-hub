@@ -408,7 +408,7 @@ setup_ssl_certificate() {
     if [ $? -ne 0 ]; then
         echo -e "${yellow}Failed to issue certificate for ${domain}${plain}"
         echo -e "${yellow}Please ensure port 80 is open and try again later with: connect-hub${plain}"
-        rm -rf /opt/connect-hub/acme/${domain} /opt/connect-hub/acme/${domain}_ecc 2> /dev/null
+        rm -rf /opt/connect-hub/acme/certs/${domain} /opt/connect-hub/acme/certs/${domain}_ecc 2> /dev/null
         rm -rf "$certPath" 2> /dev/null
         return 1
     fi
@@ -547,8 +547,8 @@ _upstream_setup_ip_certificate() {
         echo -e "${red}Failed to issue IP certificate${plain}"
         echo -e "${yellow}Please ensure port ${WebPort} is reachable (or forwarded from external port 80)${plain}"
         # Cleanup acme.sh data for both IPv4 and IPv6 if specified
-        rm -rf /opt/connect-hub/acme/${ipv4} /opt/connect-hub/acme/${ipv4}_ecc 2> /dev/null
-        [[ -n "$ipv6" ]] && rm -rf /opt/connect-hub/acme/${ipv6} /opt/connect-hub/acme/${ipv6}_ecc 2> /dev/null
+        rm -rf /opt/connect-hub/acme/certs/${ipv4} /opt/connect-hub/acme/certs/${ipv4}_ecc 2> /dev/null
+        [[ -n "$ipv6" ]] && rm -rf /opt/connect-hub/acme/certs/${ipv6} /opt/connect-hub/acme/certs/${ipv6}_ecc 2> /dev/null
         rm -rf ${certDir} 2> /dev/null
         return 1
     fi
@@ -567,8 +567,8 @@ _upstream_setup_ip_certificate() {
     if [[ ! -f "${certDir}/fullchain.pem" || ! -f "${certDir}/privkey.pem" ]]; then
         echo -e "${red}Certificate files not found after installation${plain}"
         # Cleanup acme.sh data for both IPv4 and IPv6 if specified
-        rm -rf /opt/connect-hub/acme/${ipv4} /opt/connect-hub/acme/${ipv4}_ecc 2> /dev/null
-        [[ -n "$ipv6" ]] && rm -rf /opt/connect-hub/acme/${ipv6} /opt/connect-hub/acme/${ipv6}_ecc 2> /dev/null
+        rm -rf /opt/connect-hub/acme/certs/${ipv4} /opt/connect-hub/acme/certs/${ipv4}_ecc 2> /dev/null
+        [[ -n "$ipv6" ]] && rm -rf /opt/connect-hub/acme/certs/${ipv6} /opt/connect-hub/acme/certs/${ipv6}_ecc 2> /dev/null
         rm -rf ${certDir} 2> /dev/null
         return 1
     fi
@@ -656,10 +656,10 @@ _upstream_ssl_cert_issue() {
     local cert_exists=0
     if /opt/connect-hub/acme/acme.sh --list 2> /dev/null | awk '{print $1}' | grep -Fxq "${domain}"; then
         local acmeCertDir=""
-        if [[ -s /opt/connect-hub/acme/${domain}_ecc/fullchain.cer && -s /opt/connect-hub/acme/${domain}_ecc/${domain}.key ]]; then
-            acmeCertDir=/opt/connect-hub/acme/${domain}_ecc
-        elif [[ -s /opt/connect-hub/acme/${domain}/fullchain.cer && -s /opt/connect-hub/acme/${domain}/${domain}.key ]]; then
-            acmeCertDir=/opt/connect-hub/acme/${domain}
+        if [[ -s /opt/connect-hub/acme/certs/${domain}_ecc/fullchain.cer && -s /opt/connect-hub/acme/certs/${domain}_ecc/${domain}.key ]]; then
+            acmeCertDir=/opt/connect-hub/acme/certs/${domain}_ecc
+        elif [[ -s /opt/connect-hub/acme/certs/${domain}/fullchain.cer && -s /opt/connect-hub/acme/certs/${domain}/${domain}.key ]]; then
+            acmeCertDir=/opt/connect-hub/acme/certs/${domain}
         fi
         if [[ -n "${acmeCertDir}" ]]; then
             cert_exists=1
@@ -668,7 +668,7 @@ _upstream_ssl_cert_issue() {
             [[ -n "${certInfo}" ]] && echo "$certInfo"
         else
             echo -e "${yellow}Found incomplete acme.sh state for ${domain} (no valid certificate files); cleaning it up and re-issuing.${plain}"
-            rm -rf /opt/connect-hub/acme/${domain} /opt/connect-hub/acme/${domain}_ecc
+            rm -rf /opt/connect-hub/acme/certs/${domain} /opt/connect-hub/acme/certs/${domain}_ecc
         fi
     fi
     if [[ ${cert_exists} -eq 0 ]]; then
@@ -706,7 +706,7 @@ _upstream_ssl_cert_issue() {
         /opt/connect-hub/acme/acme.sh --issue -d ${domain} $(acme_listen_flag) --standalone --httpport ${WebPort} --force
         if [ $? -ne 0 ]; then
             echo -e "${red}Issuing certificate failed, please check logs.${plain}"
-            rm -rf /opt/connect-hub/acme/${domain} /opt/connect-hub/acme/${domain}_ecc
+            rm -rf /opt/connect-hub/acme/certs/${domain} /opt/connect-hub/acme/certs/${domain}_ecc
             systemctl start connect-hub 2> /dev/null || rc-service connect-hub start 2> /dev/null
             return 1
         else
@@ -764,7 +764,7 @@ _upstream_ssl_cert_issue() {
     else
         echo -e "${red}Installing certificate failed, exiting.${plain}"
         if [[ ${cert_exists} -eq 0 ]]; then
-            rm -rf /opt/connect-hub/acme/${domain} /opt/connect-hub/acme/${domain}_ecc
+            rm -rf /opt/connect-hub/acme/certs/${domain} /opt/connect-hub/acme/certs/${domain}_ecc
         fi
         systemctl start connect-hub 2> /dev/null || rc-service connect-hub start 2> /dev/null
         return 1
@@ -1369,3 +1369,4 @@ EOF
 # limits), so a fresh install should make it work out of the box, just like the
 # Docker image already does. Non-fatal by design: a fail2ban failure must never
 # abort the panel install.
+

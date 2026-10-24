@@ -120,35 +120,7 @@ if [[ ${XUI_IN_DOCKER:-false} == true ]];then
  echo "Connect Hub certificate configured (trusted=$trusted); container renewal scheduled."
  exit 0
 fi
-for unit in connect-hub-cert-renew.service connect-hub-cert-renew.timer;do
- file=/etc/systemd/system/$unit
- [[ ! -e $file ]] || grep -q '^# Managed by Connect Hub$' "$file" || { echo "Refusing foreign $unit" >&2;exit 1; }
-done
-cat > /etc/systemd/system/connect-hub-cert-renew.service <<EOF
-# Managed by Connect Hub
-[Unit]
-Description=Renew only the Connect Hub certificate
-[Service]
-Type=oneshot
-Environment=CONNECT_HUB_PREFIX=$prefix
-Environment=CONNECT_HUB_DATA=$data
-Environment=CONNECT_HUB_DOMAIN=$host
-ExecStart=/bin/bash $prefix/current/hub/cert.sh --renew
-EOF
-cat > /etc/systemd/system/connect-hub-cert-renew.timer <<'EOF'
-# Managed by Connect Hub
-[Unit]
-Description=Check Connect Hub certificate renewal twice daily
-[Timer]
-OnActiveSec=10min
-OnUnitActiveSec=12h
-RandomizedDelaySec=15min
-Persistent=true
-[Install]
-WantedBy=timers.target
-EOF
-systemctl daemon-reload
-systemctl enable --now connect-hub-cert-renew.timer
+CONNECT_HUB_PREFIX="$prefix" CONNECT_HUB_DATA="$data" bash "$prefix/current/hub/setup-renew.sh"
 if ((renew));then systemctl restart connect-hub;fi
 echo "Connect Hub certificate configured (trusted=$trusted)."
 
