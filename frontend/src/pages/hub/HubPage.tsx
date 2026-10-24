@@ -47,13 +47,12 @@ export default function HubPage() {
           <Layout.Content className="content-area">
             <Typography.Title level={2}>Connect Hub</Typography.Title>
             <Typography.Paragraph>
-              Independent server panel based on{' '}
-              <a href="https://github.com/MHSanaei/3x-ui">3x-ui by MHSanaei and contributors</a>.
-              Modified by Sander Stripa and contributors, 23 October 2026.{' '}
+              Connect Hub.{' '}
               <a href="https://github.com/sanderstripa/connect-hub/blob/main/LICENSE">
                 GNU GPL-3.0
               </a>{' '}
               · <a href="https://github.com/sanderstripa/connect-hub">Source and modifications</a>.
+              {' '}<a href="https://github.com/sanderstripa/connect-hub/blob/main/NOTICE">Legal notices</a>.
               No warranty.
             </Typography.Paragraph>
             <Space orientation="vertical" size="large" style={{ width: '100%' }}>
@@ -78,3 +77,4 @@ export default function HubPage() {
     </ConfigProvider>
   );
 }
+

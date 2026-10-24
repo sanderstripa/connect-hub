@@ -3,6 +3,9 @@ services:
   connect-hub:
     build: .
     restart: unless-stopped
+    environment:
+      XUI_DB_TYPE: "${CONNECT_HUB_DB_TYPE:-sqlite}"
+      XUI_DB_DSN: "${CONNECT_HUB_DB_DSN:-}"
     ports:
       - "127.0.0.1::2053"
       # Publish only the inbound ports you deliberately configure in the panel.
@@ -10,10 +13,27 @@ services:
     volumes:
       - connect-hub-data:/etc/connect-hub
       - connect-hub-logs:/var/log/connect-hub
-    cap_drop:
-      - ALL
+      - connect-hub-acme:/opt/connect-hub/acme
+      - connect-hub-tls:/opt/connect-hub/tls
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
     security_opt:
       - no-new-privileges:true
+  postgres:
+    image: postgres:16-alpine
+    profiles: [postgres]
+    environment:
+      POSTGRES_USER: connecthub
+      POSTGRES_PASSWORD: "${CONNECT_HUB_POSTGRES_PASSWORD:-connecthub}"
+      POSTGRES_DB: connecthub
+    volumes:
+      - connect-hub-postgres:/var/lib/postgresql/data
+    restart: unless-stopped
 volumes:
   connect-hub-data:
   connect-hub-logs:
+  connect-hub-acme:
+  connect-hub-tls:
+  connect-hub-postgres:
+

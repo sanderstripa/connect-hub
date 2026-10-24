@@ -39,6 +39,15 @@ try:
  assert menu_status.returncode==0,menu_status.stderr[-2000:]
  print('PASS: actual HTTPS, SAN verification using the explicit test certificate, own renewal timer and readable installer summary',flush=True)
  print('PASS: native systemd service runs as root, matching upstream 3x-ui',flush=True)
+ run('sudo','mkdir','-p','/opt/connect-hub/tls/manual-test')
+ run('sudo','cp','/opt/connect-hub/tls/fullchain.pem','/opt/connect-hub/tls/manual-test/fullchain.pem')
+ run('sudo','cp','/opt/connect-hub/tls/privkey.pem','/opt/connect-hub/tls/manual-test/privkey.pem')
+ run('sudo','/opt/connect-hub/current/connect-hub','setting','-webCert','/opt/connect-hub/tls/manual-test/fullchain.pem','-webCertKey','/opt/connect-hub/tls/manual-test/privkey.pem')
+ run('sudo','bash','/opt/connect-hub/current/hub/renew.sh')
+ custom=run('sudo','/opt/connect-hub/current/connect-hub','setting','-getCert','true').stdout
+ assert 'cert: /opt/connect-hub/tls/manual-test/fullchain.pem' in custom
+ run('sudo','/opt/connect-hub/current/connect-hub','setting','-webCert','/opt/connect-hub/tls/fullchain.pem','-webCertKey','/opt/connect-hub/tls/privkey.pem')
+ print('PASS: renewal retains the operator-selected certificate instead of switching paths',flush=True)
  unchanged=install(archive,True)
  assert unchanged.returncode==0,unchanged.stderr
  assert run('sudo','cat','/etc/connect-hub/initial-access.txt').stdout==access
@@ -73,3 +82,4 @@ try:
  print('PASS: ordinary menu uninstall retains all data, then a clean reinstall succeeds without importing it',flush=True)
 finally:
  run('sudo','systemctl','stop','connect-hub',check=False)
+
