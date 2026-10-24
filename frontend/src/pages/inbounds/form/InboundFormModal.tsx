@@ -775,7 +775,7 @@ export default function InboundFormModal({
           onChange={(enable) => setSudoku((v) => ({ ...v, enable }))}
         />
       </Form.Item>
-      <Form.Item label={t('pages.inbounds.remark')} required>
+      <Form.Item label={t('pages.inbounds.remark')} htmlFor="sudoku-name" required>
         <Input
           id="sudoku-name"
           value={sudoku.name}
@@ -785,6 +785,7 @@ export default function InboundFormModal({
       </Form.Item>
       {protocolField}
       <Form.Item
+        htmlFor="sudoku-host"
         label={text(
           'Адрес сервера для клиентов (IP или домен)',
           'Server address for clients (IP or domain)',
@@ -797,7 +798,7 @@ export default function InboundFormModal({
           onChange={(e) => setSudoku((v) => ({ ...v, host: e.target.value }))}
         />
       </Form.Item>
-      <Form.Item label={t('pages.inbounds.port')} required>
+      <Form.Item label={t('pages.inbounds.port')} htmlFor="sudoku-port" required>
         <InputNumber
           id="sudoku-port"
           min={1024}

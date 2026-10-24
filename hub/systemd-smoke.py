@@ -35,7 +35,8 @@ try:
  assert b'Connect Hub' in client.open(credentials['LOCAL_URL'],timeout=10).read()
  assert run('sudo','systemctl','is-active','connect-hub-cert-renew.timer').stdout.strip()=='active'
  assert 'CONNECT HUB' in r.stdout and 'Username /' in r.stdout and 'Password /' in r.stdout
- assert run('sudo','bash','/usr/local/bin/connect-hub','status',check=False).returncode==0
+ menu_status=run('sudo','bash','/usr/local/bin/connect-hub','status',check=False)
+ assert menu_status.returncode==0,menu_status.stderr[-2000:]
  print('PASS: actual HTTPS, SAN verification using the explicit test certificate, own renewal timer and readable installer summary',flush=True)
  print('PASS: native systemd service runs as dedicated unprivileged connect-hub account',flush=True)
  with tempfile.TemporaryDirectory(prefix='hub-failed-update-') as td:

@@ -1,4 +1,5 @@
 #!/bin/bash
+# Connect Hub modifications, 2026-10-24. GPL-3.0; upstream source and authorship in NOTICE.
 
 red='\033[0;31m'
 green='\033[0;32m'
@@ -2913,7 +2914,7 @@ pg_ensure_hba_password_auth() {
     local tmp
     tmp=$(mktemp) || return 1
     {
-        echo "# Added by Connect Hub: allow password logins for the panel database."
+        echo "# Added by 3connect-hub: allow password logins for the panel database."
         echo "host    ${pg_db}    all    127.0.0.1/32    md5"
         echo "host    ${pg_db}    all    ::1/128         md5"
         cat "${hba_file}"
@@ -3639,123 +3640,8 @@ show_menu() {
     esac
 }
 
+. "$xui_folder/hub/management-overrides.sh"
 
-# Connect Hub modifications, 2026-10-24. GPL-3.0; upstream attribution in NOTICE.
-export XUI_DB_FOLDER=/etc/connect-hub XUI_LOG_FOLDER=/var/log/connect-hub
-export XUI_BIN_FOLDER=/opt/connect-hub/current/bin XUI_MAIN_FOLDER=/opt/connect-hub/current
-install(){ curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash; }
-update(){ curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash -s -- --update; }
-update_dev(){ echo 'Development builds must pass the fork CI and review before installation.'; }
-legacy_version(){ echo 'Use a retained Connect Hub backup; upstream binaries cannot replace this fork.'; }
-replace_xui_script(){ install -m 0755 /opt/connect-hub/current/x-ui.sh /usr/local/bin/connect-hub; }
-update_shell(){ replace_xui_script; }
-ssl_cert_issue_for_ip(){ bash /opt/connect-hub/current/hub/cert.sh; systemctl restart connect-hub; }
-ssl_cert_issue(){
-  local host
-  read -rp 'Certificate IP or domain (empty = detected IP): ' host
-  CONNECT_HUB_DOMAIN="$host" bash /opt/connect-hub/current/hub/cert.sh
-  systemctl restart connect-hub
-}
-
-
-# Use only the pinned client and this panel's account/config, never ~/.acme.sh.
-install_acme(){
-  mkdir -p /opt/connect-hub/acme
-  chmod 0700 /opt/connect-hub/acme
-  cat > /opt/connect-hub/acme/acme.sh <<'ACME_WRAPPER'
-#!/usr/bin/env bash
-for argument in "$@";do
-  if [[ $argument == --upgrade ]];then echo 'The pinned ACME client is updated with Connect Hub releases.';exit 0;fi
-done
-exec bash /opt/connect-hub/current/hub/third-party/acme.sh --home /opt/connect-hub/acme --config-home /opt/connect-hub/acme --cert-home /opt/connect-hub/acme/certs "$@"
-ACME_WRAPPER
-  chmod 0700 /opt/connect-hub/acme/acme.sh
-}
-
-xui_env_file_path(){ echo /etc/connect-hub/panel.env; }
-# Managed data is retained; removing this panel never purges a shared PostgreSQL server.
-uninstall(){
-  confirm 'Remove Connect Hub service and retain its data in a backup?' 'n' || return 0
-  [[ -f /etc/connect-hub/.connect-hub-owned ]] || { LOGE 'Not a managed Connect Hub installation';return 1; }
-  systemctl stop connect-hub connect-hub-cert-renew.timer || true
-  systemctl disable connect-hub connect-hub-cert-renew.timer || true
-  local backup="/opt/connect-hub/backups/uninstall-$(date -u +%Y%m%dT%H%M%SZ)-$"
-  mkdir -p "$backup"
-  mv /etc/connect-hub "$backup/data"
-  for unit in connect-hub.service connect-hub-cert-renew.service connect-hub-cert-renew.timer;do
-    local file="/etc/systemd/system/$unit"
-    if [[ -f $file ]] && grep -q '^# Managed by Connect Hub
-    case $1 in
-        "start")
-            check_install 0 && start 0
-            ;;
-        "stop")
-            check_install 0 && stop 0
-            ;;
-        "restart")
-            check_install 0 && restart 0
-            ;;
-        "restart-xray")
-            check_install 0 && restart_xray 0
-            ;;
-        "status")
-            check_install 0 && status 0
-            ;;
-        "settings")
-            check_install 0 && check_config 0
-            ;;
-        "enable")
-            check_install 0 && enable 0
-            ;;
-        "disable")
-            check_install 0 && disable 0
-            ;;
-        "log")
-            check_install 0 && show_log 0
-            ;;
-        "banlog")
-            check_install 0 && show_banlog 0
-            ;;
-        "setup-fail2ban")
-            setup_fail2ban_iplimit
-            ;;
-        "update")
-            check_install 0 && update 0
-            ;;
-        "update-dev")
-            check_install 0 && update_dev 0
-            ;;
-        "legacy")
-            check_install 0 && legacy_version 0
-            ;;
-        "install")
-            check_uninstall 0 && install 0
-            ;;
-        "uninstall")
-            check_install 0 && uninstall 0
-            ;;
-        "update-all-geofiles")
-            geo_updated=0
-            if check_install 0 && update_all_geofiles 0; then
-                [[ $geo_updated -eq 0 ]] || restart 0
-            fi
-            ;;
-        "migrateDB")
-            migrate_db "$2" "$3"
-            ;;
-        "pgclient")
-            pg_upgrade_client "$2"
-            ;;
-        *) show_usage ;;
-    esac
-else
-    show_menu
-fi
- "$file";then rm -- "$file";fi
-  done
-  systemctl daemon-reload
-  echo "Removed only Connect Hub service. Data and releases retained in /opt/connect-hub."
-}
 if [[ $# > 0 ]]; then
     case $1 in
         "start")

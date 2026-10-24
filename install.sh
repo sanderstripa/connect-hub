@@ -4,13 +4,29 @@ set -Eeuo pipefail
 umask 077
 die(){ echo "Connect Hub: $*" >&2;exit 1; }
 [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || die 'This tested release requires Linux amd64 (x86_64).'
-for tool in curl sha256sum tar python3 openssl realpath;do command -v "$tool" >/dev/null || die "Required tool missing: $tool";done
 for arg in "$@";do [[ $arg == --update || $arg == --no-service ]] || die 'Supported options: --update, --no-service';done
 runner=(bash)
 if [[ $EUID != 0 && " $* " != *' --no-service '* ]];then
  command -v sudo >/dev/null || die 'Run from a root shell, or install sudo for your account.'
  runner=(sudo env "CONNECT_HUB_TLS_MODE=${CONNECT_HUB_TLS_MODE:-auto}" "CONNECT_HUB_DOMAIN=${CONNECT_HUB_DOMAIN:-}" "CONNECT_HUB_ACME_EMAIL=${CONNECT_HUB_ACME_EMAIL:-}" bash)
 fi
+missing=0
+for tool in curl sha256sum tar python3 openssl realpath;do command -v "$tool" >/dev/null || missing=1;done
+if ((missing));then
+ [[ " $* " != *' --no-service '* ]] || die 'Install curl, Python 3, OpenSSL, tar and coreutils before a user-only installation.'
+ echo 'Installing required components / Установка необходимых компонентов...'
+ "${runner[@]}" -s <<'DEPENDENCIES'
+set -e
+if command -v apt-get >/dev/null;then apt-get update;apt-get install -y curl ca-certificates python3 openssl tar coreutils
+elif command -v dnf >/dev/null;then dnf install -y curl ca-certificates python3 openssl tar coreutils
+elif command -v yum >/dev/null;then yum install -y curl ca-certificates python3 openssl tar coreutils
+elif command -v pacman >/dev/null;then pacman -Sy --noconfirm curl ca-certificates python openssl tar coreutils
+elif command -v zypper >/dev/null;then zypper --non-interactive install curl ca-certificates python3 openssl tar coreutils
+else echo 'Install curl, ca-certificates, Python 3, OpenSSL, tar and coreutils with your OS package manager.' >&2;exit 1
+fi
+DEPENDENCIES
+fi
+for tool in curl sha256sum tar python3 openssl realpath;do command -v "$tool" >/dev/null || die "Required tool missing after dependency installation: $tool";done
 version=v0.1.0-alpha.3
 base=https://github.com/sanderstripa/connect-hub/releases/download/$version
 tmp=$(mktemp -d)

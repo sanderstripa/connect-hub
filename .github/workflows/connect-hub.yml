@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - run: bash -n install.sh x-ui.sh hub/install.sh hub/cert.sh && python3 -m py_compile hub/*.py
+      - run: bash -n install.sh x-ui.sh hub/*.sh && python3 -m py_compile hub/*.py
   container:
     if: ${{ !inputs.release_check && !inputs.runtime_artifact_run }}
     runs-on: ubuntu-24.04

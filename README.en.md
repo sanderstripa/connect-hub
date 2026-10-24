@@ -20,7 +20,7 @@ On a **Linux amd64 / x86_64 systemd server**, run:
 curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash
 ```
 
-The bootstrap downloads a fixed tested release, verifies its pinned SHA-256 and invokes its installer. No archive, IP or checksum substitution is needed. Requires bash, curl, Python 3, OpenSSL, tar, sha256sum and systemd. Missing prerequisites are reported before installation. The bootstrap does not currently offer ARM64.
+The bootstrap downloads a fixed tested release, verifies its pinned SHA-256 and invokes its installer. No archive, IP or checksum substitution is needed. Requires bash, curl, Python 3, OpenSSL, tar, sha256sum and systemd. Missing prerequisites are installed through the OS package manager. The bootstrap does not currently offer ARM64.
 
 The installer prints a random URL, username and password. Retrieve them again with:
 
@@ -40,7 +40,7 @@ additional address for checks performed on the server itself.
 
 ## Parallel installation and updates
 
-Only `/opt/connect-hub`, `/etc/connect-hub`, `/var/log/connect-hub`, the `connect-hub` account and service are created. Existing names/paths are refused. No foreign database, keys or certificates are imported; no firewall, DNS, routes or other services are changed. Internal Xray ports are independently allocated and subscriptions initially disabled. The service runs under a dedicated unprivileged account.
+Only `/opt/connect-hub`, `/etc/connect-hub`, `/var/log/connect-hub`, the `connect-hub` account and service are created. Existing names/paths are refused. No foreign database, keys or certificates are imported; no firewall, DNS, routes or other services are changed. Internal Xray ports are independently allocated and subscription defaults are preserved with a separate free port. The service runs under a dedicated unprivileged account.
 
 Stop only this panel: `sudo systemctl stop connect-hub`.
 

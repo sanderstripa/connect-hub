@@ -11,9 +11,17 @@ try {
  await page.locator('button[type="submit"]').click();await page.waitForURL('**/panel/');
  await page.goto(cfg.url+'panel/inbounds');
  if(await page.getByRole('tab',{name:'Sudoku',exact:true}).count())throw Error('Separate Sudoku tab must not exist');
+ async function selectProtocol(value) {
+  await page.getByRole('dialog').locator('#protocol').click();
+  const dropdown=page.locator('.ant-select-dropdown:visible').last();
+  await dropdown.evaluate((element,last)=>{
+   for(const child of element.querySelectorAll('div'))if(child.scrollHeight>child.clientHeight && ['auto','scroll'].includes(getComputedStyle(child).overflowY))child.scrollTop=last?child.scrollHeight:0;
+  },value==='Sudoku');
+  await dropdown.getByText(value,{exact:true}).click();
+ }
  await page.getByRole('button',{name:'Add Inbound',exact:true}).click();
  let modal=page.getByRole('dialog');
- await modal.locator('#protocol').click();await page.getByRole('option',{name:'Sudoku',exact:true}).click();
+ await selectProtocol('Sudoku');
  await modal.locator('#sudoku-name').fill('Unified Sudoku');
  await modal.locator('#sudoku-host').fill('127.0.0.1');
  await modal.locator('#sudoku-port').fill(String(cfg.port));
@@ -38,8 +46,8 @@ try {
  await page.getByRole('dialog').getByRole('button',{name:'Close',exact:true}).first().click();
  // The ordinary form must still offer and render standard protocols after Sudoku.
  await page.getByRole('button',{name:'Add Inbound',exact:true}).click();modal=page.getByRole('dialog');
- await modal.locator('#protocol').click();await page.getByRole('option',{name:'Sudoku',exact:true}).click();
- await modal.locator('#protocol').click();await page.getByRole('option',{name:'vless',exact:true}).click();
+ await selectProtocol('Sudoku');
+ await selectProtocol('vless');
  if(await modal.locator('#sudoku-host').count())throw Error('Sudoku fields leaked into standard protocol form');
  await modal.getByRole('button',{name:'Close',exact:true}).last().click();
  await page.context().addCookies([{name:'lang',value:'ru-RU',url:cfg.url}]);await page.reload();
