@@ -74,7 +74,7 @@ jobs:
         run: python3 hub/browser-smoke.py
       - name: Two actual version changes using the ordinary web update button
         run: python3 hub/web-update-smoke.py
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: connect-hub-linux-amd64
