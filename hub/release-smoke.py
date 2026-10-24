@@ -25,10 +25,10 @@ try:
   with client.open(urllib.request.Request(base+path,data=body,headers=headers),timeout=15)as response:return json.load(response)
  csrf=request('csrf-token')['obj'];assert request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf)['success']
  state=request('panel/hub/api/status')['obj'];assert state['sudoku']['enabled'] and not state['connectCore']['enabled']
- user=subprocess.check_output(['systemctl','show','connect-hub','-p','User','--value'],text=True).strip();assert user=='connect-hub'
+ user=subprocess.check_output(['systemctl','show','connect-hub','-p','User','--value'],text=True).strip();assert user=='root'
  listen=subprocess.check_output(['sudo','python3','-c',"import sqlite3; print(sqlite3.connect('/etc/connect-hub/connect-hub.db').execute(\"select value from settings where key='webListen'\").fetchone()[0])"],text=True).strip()
  assert listen=='0.0.0.0','README installation must permit the authorized direct browser access'
- print('PASS: exact public README command downloads release, verifies checksum, installs unprivileged service and permits authenticated login',flush=True)
+ print('PASS: exact public README command downloads release, verifies checksum, installs root service and permits authenticated login',flush=True)
  class Fixture(http.server.BaseHTTPRequestHandler):
   def do_GET(self):self.send_response(200);self.end_headers();self.wfile.write(b'connect-hub-real-xray')
   def log_message(self,*args):pass

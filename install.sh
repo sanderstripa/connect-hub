@@ -8,7 +8,9 @@ for arg in "$@";do [[ $arg == --update || $arg == --no-service ]] || die 'Suppor
 runner=(bash)
 if [[ $EUID != 0 && " $* " != *' --no-service '* ]];then
  command -v sudo >/dev/null || die 'Run from a root shell, or install sudo for your account.'
- runner=(sudo env "CONNECT_HUB_TLS_MODE=${CONNECT_HUB_TLS_MODE:-auto}" "CONNECT_HUB_DOMAIN=${CONNECT_HUB_DOMAIN:-}" "CONNECT_HUB_ACME_EMAIL=${CONNECT_HUB_ACME_EMAIL:-}" bash)
+ runner=(sudo env "CONNECT_HUB_DOMAIN=${CONNECT_HUB_DOMAIN:-}" "CONNECT_HUB_ACME_EMAIL=${CONNECT_HUB_ACME_EMAIL:-}")
+ if [[ -n ${CONNECT_HUB_TLS_MODE+x} ]];then runner+=("CONNECT_HUB_TLS_MODE=$CONNECT_HUB_TLS_MODE");fi
+ runner+=(bash)
 fi
 missing=0
 for tool in curl sha256sum tar python3 openssl realpath;do command -v "$tool" >/dev/null || missing=1;done

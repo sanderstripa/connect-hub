@@ -65,7 +65,13 @@ PY
 revision=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["revision"])' "$tmp/connect-hub/BUILD.json")
 [[ $revision =~ ^[a-f0-9]{40}$ ]] || die 'Invalid package revision'
 target=$prefix/releases/$revision
-[[ ! -e $target ]] || die 'This revision is already installed'
+if [[ -e $target ]];then
+ if ((update)) && [[ $(readlink -f "$prefix/current") == "$target" ]];then
+  printf 'Connect Hub is already up to date.\n'
+  exit 0
+ fi
+ die 'This revision already exists but is not the active managed revision'
+fi
 mkdir -p "$prefix/releases" "$logs"
 backup= old= was_active=0
 activated=0
@@ -146,14 +152,8 @@ Description=Connect Hub server panel
 After=network.target
 [Service]
 Type=simple
-User=connect-hub
-Group=connect-hub
-NoNewPrivileges=true
-ProtectHome=true
-ProtectSystem=strict
-PrivateTmp=true
-RestrictSUIDSGID=true
-ReadWritePaths=$data $logs $prefix/current/bin
+User=root
+Group=root
 WorkingDirectory=$prefix/current
 ExecStart=$prefix/current/connect-hub
 Environment=XUI_DB_FOLDER=$data
@@ -167,6 +167,7 @@ Environment=XUI_BIN_FOLDER=$prefix/current/bin
 Environment=XUI_MAIN_FOLDER=$prefix/current
 Environment=XUI_NODE_TOKEN_KEY_FILE=$data/node_token_key.json
 Environment=CONNECT_HUB_INTEGRATIONS_DIR=$data/integrations
+Environment=CONNECT_HUB_NATIVE_INSTALL=1
 EnvironmentFile=-$data/panel.env
 EnvironmentFile=-$data/integrations.env
 Restart=on-failure
@@ -180,11 +181,9 @@ EOF
  if [[ -e /usr/local/bin/connect-hub ]] && ! grep -q 'Connect Hub modifications' /usr/local/bin/connect-hub;then die 'Refusing to replace a foreign connect-hub command';fi
  install -m 0755 "$target/x-ui.sh" /usr/local/bin/connect-hub
  cert_settings=$("$target/connect-hub" setting -getCert true)
- if [[ ${CONNECT_HUB_TLS_MODE:-auto} != off ]] && ! grep -q '^cert: .' <<< "$cert_settings";then
-  if [[ -z ${CONNECT_HUB_DOMAIN:-} && -t 2 && -r /dev/tty ]];then
-   read -r -p 'HTTPS certificate domain (Enter = detected server IP): ' CONNECT_HUB_DOMAIN </dev/tty || true
-  fi
-  CONNECT_HUB_PREFIX="$prefix" CONNECT_HUB_DATA="$data" CONNECT_HUB_DOMAIN="${CONNECT_HUB_DOMAIN:-}" bash "$target/hub/cert.sh"
+ if ! grep -q '^cert: .' <<< "$cert_settings";then
+  . "$target/hub/setup-ssl.sh"
+  setup_install_ssl
  fi
  systemctl daemon-reload;systemctl enable --now connect-hub
  settings=$("$target/connect-hub" setting -show true)

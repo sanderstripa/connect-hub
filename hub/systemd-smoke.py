@@ -24,7 +24,7 @@ r=install(archive)
 if r.returncode:raise AssertionError('systemd installation failed: '+r.stderr)
 try:
  assert run('sudo','systemctl','is-active','connect-hub').stdout.strip()=='active'
- assert run('sudo','systemctl','show','connect-hub','-p','User','--value').stdout.strip()=='connect-hub'
+ assert run('sudo','systemctl','show','connect-hub','-p','User','--value').stdout.strip()=='root'
  old=run('sudo','readlink','-f','/opt/connect-hub/current').stdout.strip()
  access=run('sudo','cat','/etc/connect-hub/initial-access.txt').stdout
  credentials=dict(line.split('=',1)for line in access.splitlines())
@@ -38,7 +38,7 @@ try:
  menu_status=run('sudo','bash','/usr/local/bin/connect-hub','status',check=False)
  assert menu_status.returncode==0,menu_status.stderr[-2000:]
  print('PASS: actual HTTPS, SAN verification using the explicit test certificate, own renewal timer and readable installer summary',flush=True)
- print('PASS: native systemd service runs as dedicated unprivileged connect-hub account',flush=True)
+ print('PASS: native systemd service runs as root, matching upstream 3x-ui',flush=True)
  with tempfile.TemporaryDirectory(prefix='hub-failed-update-') as td:
   broken=pathlib.Path(td)/'broken.tar.gz'
   with tarfile.open(archive) as source,tarfile.open(broken,'w:gz') as dest:

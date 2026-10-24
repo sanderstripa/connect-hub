@@ -40,7 +40,7 @@ additional address for checks performed on the server itself.
 
 ## Parallel installation and updates
 
-Only `/opt/connect-hub`, `/etc/connect-hub`, `/var/log/connect-hub`, the `connect-hub` account and service are created. Existing names/paths are refused. No foreign database, keys or certificates are imported; no firewall, DNS, routes or other services are changed. Internal Xray ports are independently allocated and subscription defaults are preserved with a separate free port. The service runs under a dedicated unprivileged account.
+Only `/opt/connect-hub`, `/etc/connect-hub`, `/var/log/connect-hub`, the `connect-hub` account and service are created. Existing names/paths are refused. No foreign database, keys or certificates are imported; no firewall, DNS, routes or other services are changed. Internal Xray ports are independently allocated and subscription defaults are preserved with a separate free port. The service runs as root, as in upstream 3x-ui.
 
 Stop only this panel: `sudo systemctl stop connect-hub`.
 
@@ -50,7 +50,7 @@ Update a managed installation:
 curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash -s -- --update
 ```
 
-Updates retain a complete data backup and restore the previous binary/data after a failed launch. Backups are never automatically deleted. Reinstalling an already installed revision is unnecessary. Upstream x-ui maintenance scripts and web self-update cannot overwrite the fork.
+Updates retain a complete data backup and restore the previous binary/data after a failed launch. Backups are never automatically deleted. Reinstalling an already installed revision is unnecessary. Web updates install only a checksum-verified Connect Hub release and cannot replace the fork with upstream binaries.
 
 ## Sudoku inbounds and devices
 
