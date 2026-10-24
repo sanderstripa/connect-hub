@@ -11,6 +11,11 @@ red='\033[0;31m';green='\033[0;32m';blue='\033[0;34m';yellow='\033[0;33m';plain=
 source /etc/os-release
 release=$ID
 echo "The OS release is: $release"
+# curl | bash occupies stdin with the bootstrap script. Keep the original
+# installation prompts on the controlling SSH terminal when one is present.
+if [[ ${XUI_NONINTERACTIVE:-0} != 1 && ! -t 0 && -t 2 && -r /dev/tty ]];then
+ exec < /dev/tty
+fi
 NONINTERACTIVE=0
 if [[ ${XUI_NONINTERACTIVE:-0} == 1 || ! -t 0 ]];then NONINTERACTIVE=1;fi
 export NONINTERACTIVE
