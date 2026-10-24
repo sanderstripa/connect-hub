@@ -1,0 +1,55 @@
+# One specific release only, fixed commit and successful build; no ongoing autopublication.
+name: Publish tested Connect Hub alpha 4 once
+on:
+  push:
+    branches: [release/alpha4-once]
+permissions:
+  contents: read
+jobs:
+  publish:
+    if: github.repository == 'sanderstripa/connect-hub' && github.ref == 'refs/heads/release/alpha4-once'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: 4277f69de9f888c2885dcc93811f36f7351ce189
+          persist-credentials: false
+      - name: Require this exact successful main build
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const {data: run} = await github.rest.actions.getWorkflowRun({owner:context.repo.owner,repo:context.repo.repo,run_id: 40092371837});
+            if(run.head_sha !== '4277f69de9f888c2885dcc93811f36f7351ce189' || run.head_branch !== 'main' || run.event !== 'push' || run.conclusion !== 'success') throw Error('The fixed main build has not passed');
+            const {data: branch} = await github.rest.repos.getBranch({owner:context.repo.owner,repo:context.repo.repo,branch:'main'});
+            if(branch.commit.sha !== '4277f69de9f888c2885dcc93811f36f7351ce189') throw Error('Main moved; do not publish a different revision');
+      - uses: actions/download-artifact@v6
+        with:
+          github-token: ${{ github.token }}
+          run-id: 40092371837
+          name: connect-hub-linux-amd64
+          path: dist
+      - name: Verify exact native build and publish only alpha 4
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist
+          sha256sum --check SHA256SUMS
+          tar -xOf connect-hub-linux-amd64.tar.gz connect-hub/BUILD.json > BUILD.json
+          python3 -c "import json; assert json.load(open('BUILD.json'))['revision']=='4277f69de9f888c2885dcc93811f36f7351ce189'"
+          gh release create v0.1.0-alpha.4 --repo sanderstripa/connect-hub --target 4277f69de9f888c2885dcc93811f36f7351ce189 --prerelease --title 'Connect Hub v0.1.0-alpha.4' --notes-file ../hub/RELEASE.md connect-hub-linux-amd64.tar.gz SHA256SUMS
+  verify-public-installation:
+    needs: publish
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: 4277f69de9f888c2885dcc93811f36f7351ce189
+          persist-credentials: false
+      - name: Exact README command, HTTPS, device connections and web update
+        env:
+          CONNECT_HUB_TLS_MODE: selfsigned
+        run: python3 hub/release-smoke.py
+
