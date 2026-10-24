@@ -63,6 +63,7 @@ const MULTI_CLIENT_PROTOCOLS = new Set([
   'hysteria',
   'wireguard',
   'mtproto',
+  'sudoku',
   'amneziawg',
   'tuic',
   'masque',

@@ -223,6 +223,10 @@ func (s *ClientService) delInboundClients(inboundSvc *InboundService, inboundId 
 
 	// Apply runtime deletes after commit — outside the serialized writer so a
 	// slow node call can't stall traffic accounting.
+	if oldInbound.NodeID == nil && oldInbound.Protocol == model.Sudoku {
+		inboundSvc.applyLocalSudoku(oldInbound.Id)
+		return needRestart, nil
+	}
 	nodePushFailed := false
 	for _, t := range targets {
 		if len(t.email) == 0 {
@@ -584,6 +588,8 @@ func (s *ClientService) AddInboundClient(inboundSvc *InboundService, data *model
 	if oldInbound.NodeID == nil {
 		if !push {
 			needRestart = true
+		} else if oldInbound.Protocol == model.Sudoku {
+			inboundSvc.applyLocalSudoku(oldInbound.Id)
 		} else if oldInbound.Protocol == model.MTProto {
 			inboundSvc.applyLocalMtproto(oldInbound.Id)
 		} else if oldInbound.Protocol == model.AmneziaWG {
@@ -1019,6 +1025,8 @@ func (s *ClientService) UpdateInboundClient(inboundSvc *InboundService, data *mo
 		if oldInbound.NodeID == nil {
 			if !push {
 				needRestart = true
+			} else if oldInbound.Protocol == model.Sudoku {
+				inboundSvc.applyLocalSudoku(oldInbound.Id)
 			} else if oldInbound.Protocol == model.MTProto {
 				inboundSvc.applyLocalMtproto(oldInbound.Id)
 			} else if oldInbound.Protocol == model.AmneziaWG {
@@ -1206,7 +1214,9 @@ func (s *ClientService) DelInboundClientByEmail(inboundSvc *InboundService, inbo
 	// inbound's runtime even when the same email survives in another inbound.
 	if len(email) > 0 {
 		if oldInbound.NodeID == nil {
-			if oldInbound.Protocol == model.MTProto {
+			if oldInbound.Protocol == model.Sudoku {
+				inboundSvc.applyLocalSudoku(oldInbound.Id)
+			} else if oldInbound.Protocol == model.MTProto {
 				// mtg serves the full secret set, so any client delete re-applies
 				// it (removing the last client stops the sidecar) regardless of the
 				// client's enable state.

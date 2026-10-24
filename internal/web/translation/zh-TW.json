@@ -486,6 +486,8 @@
         "accounts": "帳號",
         "allowTransparent": "允許透明",
         "encryptionMethod": "加密方法",
+        "sudokuEncryption": "Encryption",
+        "sudokuTable": "Table mode",
         "fakeTlsDomain": "FakeTLS 網域 (SNI)",
         "mtprotoSecret": "金鑰",
         "mtgDomainFrontingIp": "網域前置 IP",

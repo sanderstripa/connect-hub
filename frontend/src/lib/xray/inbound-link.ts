@@ -1412,6 +1412,7 @@ type ClientShape = {
   password?: string;
   auth?: string;
   secret?: string;
+ sudokuKey?:string;
   email?: string;
   subId?: string;
 };
@@ -1432,6 +1433,7 @@ export function getInboundClients(inbound: Inbound): ClientShape[] | null {
       return (inbound.settings.clients ?? []) as ClientShape[];
     case 'hysteria':
       return (inbound.settings.clients ?? []) as ClientShape[];
+    case 'sudoku':
     case 'mtproto':
       return (inbound.settings.clients ?? []) as ClientShape[];
     case 'tuic':
@@ -1527,6 +1529,29 @@ export function genLink(input: GenLinkInput): string {
         clientAuth: client.auth ?? '',
         externalProxy,
       });
+    case 'sudoku': {
+      const compact = {
+        h: address.replace(/^\[|\]$/g, ''),
+        p: port ?? inbound.port,
+        k: client.sudokuKey ?? '',
+        a: inbound.settings.table.replace(/^prefer_/, ''),
+        e: inbound.settings.aead,
+        m: 1080,
+        x: true,
+        hd: true,
+        hm: 'auto',
+        hx: 'off',
+        hy: '',
+        n: remark ?? '',
+      };
+      return (
+        'sudoku://' +
+        Base64.encode(JSON.stringify(compact))
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=+$/, '')
+      );
+    }
     case 'mtproto':
       return genMtprotoLink({ inbound, address, port, clientSecret: client.secret ?? '' });
     case 'tuic':

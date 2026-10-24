@@ -118,7 +118,10 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  core_config=json.loads((core_dir/'control.json').read_text());core_port=port();core_config.update(listen=f'127.0.0.1:{core_port}',enrollment_listen='',owned_tun=False,auto_start=False)
  (core_dir/'control.json').write_text(json.dumps(core_config))
  core_log=open(td/'core.log','wb');core=subprocess.Popen([str(control),'serve',str(core_dir/'control.json')],stdout=core_log,stderr=core_log)
- env.update(CONNECT_HUB_CORE_ALPHA='1',CONNECT_HUB_CORE_URL=f'http://127.0.0.1:{core_port}',CONNECT_HUB_CORE_TOKEN_FILE=str(core_dir/'control-token'),CONNECT_HUB_SUDOKU='1',CONNECT_HUB_SUDOKU_BINARY=str(sudoku),CONNECT_HUB_SUDOKU_SHA256=hashlib.sha256(sudoku.read_bytes()).hexdigest())
+ # The panel serves with its newly built bundled core. The separate pinned
+ # previous core remains the CLIENT, proving wire compatibility across versions.
+ server_sudoku=prefix/'current/bin/sudoku-linux-amd64'
+ env.update(CONNECT_HUB_CORE_ALPHA='1',CONNECT_HUB_CORE_URL=f'http://127.0.0.1:{core_port}',CONNECT_HUB_CORE_TOKEN_FILE=str(core_dir/'control-token'),CONNECT_HUB_SUDOKU='1',CONNECT_HUB_SUDOKU_BINARY=str(server_sudoku),CONNECT_HUB_SUDOKU_SHA256=hashlib.sha256(server_sudoku.read_bytes()).hexdigest())
  p=launch();sudoku_client=None;fixture=None
  try:
   jar.clear();csrf=request('csrf-token')['obj'];assert request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf)['success']
@@ -161,6 +164,7 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
   assert core.poll() is None
   suite=runpy.run_path(str(root/'hub/sudoku-inbounds-smoke.py'))['run']
   a,b,laptop,laptop_cfg,tablet_cfg,phone_cfg,check=suite(request,csrf,sudoku,td,fixture.server_port,passed)
+  runpy.run_path(str(root/'hub/native-sudoku-smoke.py'))['run'](request,csrf,sudoku,td,passed,(a,b,laptop,laptop_cfg,tablet_cfg,phone_cfg,check))
   stop(p);p=launch();jar.clear();csrf=request('csrf-token')['obj'];assert request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf)['success']
   # HTTP is available before the background engine startup finishes.
   for _ in range(80):
@@ -192,3 +196,4 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  finally:stop(p)
  for s in existing:s.close()
 report['result']='passed';(root/'dist/smoke-report.json').write_text(json.dumps(report,indent=2))
+

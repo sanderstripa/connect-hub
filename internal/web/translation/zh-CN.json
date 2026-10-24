@@ -506,6 +506,8 @@
         "accounts": "账户",
         "allowTransparent": "允许透明",
         "encryptionMethod": "加密方法",
+        "sudokuEncryption": "Encryption",
+        "sudokuTable": "Table mode",
         "fakeTlsDomain": "FakeTLS 域名 (SNI)",
         "mtprotoSecret": "密钥",
         "mtgDomainFrontingIp": "域前置 IP",

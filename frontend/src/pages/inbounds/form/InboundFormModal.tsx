@@ -62,6 +62,7 @@ import { XDriveStreamSettingsSchema } from '@/schemas/protocols/stream/xdrive';
 import { DateTimePicker } from '@/components/form';
 import { FinalMaskField } from '@/lib/xray/forms/fields';
 import XDriveForm from '@/lib/xray/forms/transport/XDriveForm';
+import SudokuFields from './protocols/sudoku';
 import './InboundFormModal.css';
 
 import { AdvancedAllEditor, AdvancedSliceEditor } from './advanced-editors';
@@ -109,10 +110,7 @@ const labelWithHint = (label: string, hint: string) => (
   </span>
 );
 
-const PROTOCOL_OPTIONS = Object.values(Protocols).map((p) => ({
-  value: p,
-  label: p,
-}));
+const PROTOCOL_OPTIONS = Object.values(Protocols).map((p) => ({ value: p, label: p === Protocols.SUDOKU ? 'Sudoku' : p }));
 const SHARE_ADDR_STRATEGIES = ['node', 'listen', 'custom'] as const;
 const SHARE_ADDR_HOSTNAME_RE =
   /^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)*$/;
@@ -154,10 +152,7 @@ function firstRhfValidationIssue(
   const record = value as Record<string, unknown>;
   // `type` is what marks a react-hook-form leaf FieldError; anything else is a group.
   if ('type' in record) {
-    return {
-      path,
-      message: typeof record.message === 'string' ? record.message : '',
-    };
+    return { path, message: typeof record.message === 'string' ? record.message : '' };
   }
   for (const key of Object.keys(record)) {
     const issue = firstRhfValidationIssue(record[key], [...path, key]);
@@ -181,7 +176,6 @@ interface InboundFormModalProps {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
-  sudokuAvailable?: boolean;
   mode: 'add' | 'edit';
   dbInbound: DBInbound | null;
   dbInbounds: DBInbound[];
@@ -240,30 +234,16 @@ export default function InboundFormModal({
   open,
   onClose,
   onSaved,
-  sudokuAvailable = false,
   mode,
   dbInbound,
   dbInbounds,
   availableNodes,
   availableNodesFetched = true,
 }: InboundFormModalProps) {
-  const { t, i18n } = useTranslation();
-  const text = (ru: string, en: string) => (i18n.language.startsWith('ru') ? ru : en);
-  const [sudokuMode, setSudokuMode] = useState(false);
-  const [sudoku, setSudoku] = useState({
-    name: '',
-    host: window.location.hostname.replace(/^\[|\]$/g, ''),
-    port: RandomUtil.randomInteger(10000, 60000),
-    aead: 'chacha20-poly1305',
-    table: 'prefer_ascii',
-    enable: true,
-  });
-  const [sudokuError, setSudokuError] = useState('');
+  const { t } = useTranslation();
   const [messageApi, messageContextHolder] = message.useMessage();
   const [modal, modalContextHolder] = Modal.useModal();
-  const methods = useForm<InboundFormValues>({
-    defaultValues: buildAddModeValues(),
-  });
+  const methods = useForm<InboundFormValues>({ defaultValues: buildAddModeValues() });
   const setV = methods.setValue as unknown as (name: string, value: unknown) => void;
   const getV = methods.getValues as unknown as (name?: string) => unknown;
   const control = methods.control;
@@ -335,11 +315,7 @@ export default function InboundFormModal({
     nodeId: typeof wNodeId === 'number' ? wNodeId : null,
     protocol,
     streamSettings: { network },
-    settings: {
-      network: wSsNetwork,
-      allowedNetwork: wTunnelNetwork,
-      udp: mixedUdpOn,
-    },
+    settings: { network: wSsNetwork, allowedNetwork: wTunnelNetwork, udp: mixedUdpOn },
   });
   const isFallbackHost =
     (protocol === Protocols.VLESS || protocol === Protocols.TROJAN) &&
@@ -398,10 +374,7 @@ export default function InboundFormModal({
   // persisted field the Go backend reads directly, so it must be kept in
   // sync even when the user free-types a new private key instead of using
   // the regenerate button.
-  const awgPrivateKey = useWatch({
-    control,
-    name: 'settings.server.privateKey',
-  });
+  const awgPrivateKey = useWatch({ control, name: 'settings.server.privateKey' });
   const awgPubKey =
     typeof awgPrivateKey === 'string' && awgPrivateKey.length > 0
       ? Wireguard.generateKeypair(awgPrivateKey).publicKey
@@ -453,12 +426,7 @@ export default function InboundFormModal({
       const msg = await HttpUtil.get('/panel/api/server/getNewVlessEnc');
       if (!msg?.success) return;
       const obj = msg.obj as {
-        auths?: {
-          decryption: string;
-          encryption: string;
-          label?: string;
-          id?: string;
-        }[];
+        auths?: { decryption: string; encryption: string; label?: string; id?: string }[];
       };
       const block = (obj.auths || []).find((a) => matchesVlessAuth(a, authId));
       if (!block) return;
@@ -491,16 +459,6 @@ export default function InboundFormModal({
         ? withoutClients(rawInboundToFormValues(dbInbound))
         : buildAddModeValues();
     methods.reset(initial);
-    setSudokuMode(false);
-    setSudokuError('');
-    setSudoku({
-      name: '',
-      host: window.location.hostname.replace(/^\[|\]$/g, ''),
-      port: initial.port ?? RandomUtil.randomInteger(10000, 60000),
-      aead: 'chacha20-poly1305',
-      table: 'prefer_ascii',
-      enable: true,
-    });
     setScanResult(null);
     setActiveTab('basic');
     const initialTag = (initial.tag ?? '') as string;
@@ -614,11 +572,7 @@ export default function InboundFormModal({
       } else {
         const current = getV('streamSettings') as { network?: string } | undefined;
         if (current?.network === 'hysteria' || current?.network === 'masque' || !current?.network) {
-          setV('streamSettings', {
-            network: 'tcp',
-            security: 'none',
-            tcpSettings: {},
-          });
+          setV('streamSettings', { network: 'tcp', security: 'none', tcpSettings: {} });
         }
       }
     });
@@ -643,9 +597,7 @@ export default function InboundFormModal({
     }
     setSaving(true);
     try {
-      const payload = formValuesToWirePayload(parsed.data, {
-        omitClients: mode === 'edit',
-      });
+      const payload = formValuesToWirePayload(parsed.data, { omitClients: mode === 'edit' });
       const url =
         mode === 'edit' && dbInbound
           ? `/panel/api/inbounds/update/${dbInbound.id}`
@@ -681,147 +633,6 @@ export default function InboundFormModal({
 
   const okText = mode === 'edit' ? t('pages.clients.submitEdit') : t('create');
 
-  async function saveSudoku() {
-    const host = sudoku.host.trim() || window.location.hostname.replace(/^\[|\]$/g, '');
-    if (!sudokuAvailable || !host || !sudoku.port) {
-      setSudokuError(text('Укажите корректный TCP-порт.', 'Enter a valid TCP port.'));
-      return;
-    }
-    setSaving(true);
-    setSudokuError('');
-    try {
-      const result = await HttpUtil.post<{ id: string }>(
-        '/panel/hub/api/sudoku/inbounds',
-        { ...sudoku, name: sudoku.name.trim() || `Sudoku-${sudoku.port}`, host },
-        {
-          headers: { 'Content-Type': 'application/json' },
-        },
-      );
-      if (!result.success || !result.obj) {
-        setSudokuError(
-          result.msg || text('Не удалось создать подключение', 'Could not create inbound'),
-        );
-        return;
-      }
-      if (sudoku.enable) {
-        const started = await HttpUtil.post(
-          '/panel/hub/api/sudoku/inbounds/' + result.obj.id + '/start',
-          {},
-          { headers: { 'Content-Type': 'application/json' } },
-        );
-        if (!started.success)
-          messageApi.error(
-            started.msg ||
-              text(
-                'Подключение создано, но запуск не удался. Проверьте его в списке.',
-                'Inbound created but could not start. Check it in the list.',
-              ),
-          );
-      }
-      onSaved();
-      onClose();
-    } catch {
-      setSudokuError(
-        text(
-          'Ошибка запроса. Проверьте список перед повторной попыткой.',
-          'Request failed. Check the list before retrying.',
-        ),
-      );
-      onSaved();
-    } finally {
-      setSaving(false);
-    }
-  }
-  const protocolField = (
-    <FormField
-      name="protocol"
-      label={t('pages.inbounds.protocol')}
-      transform={{
-        input: (value) => (sudokuMode ? 'sudoku' : value),
-        output: (value) => (value === 'sudoku' ? protocol : value),
-      }}
-    >
-      <Select
-        id="protocol"
-        disabled={mode === 'edit'}
-        options={[
-          ...PROTOCOL_OPTIONS,
-          ...(mode === 'add' ? [{ value: 'sudoku', label: 'Sudoku' }] : []),
-        ]}
-        onSelect={(value) => {
-          if (value === 'sudoku') {
-            setSudoku((current) => ({
-              ...current,
-              name: String(getV('remark') ?? current.name),
-              port: Number(getV('port') ?? current.port),
-              enable: Boolean(getV('enable') ?? current.enable),
-            }));
-          } else if (sudokuMode) {
-            setV('remark', sudoku.name);
-            setV('port', sudoku.port);
-            setV('enable', sudoku.enable);
-          }
-          setSudokuMode(value === 'sudoku');
-          setSudokuError('');
-          setActiveTab('basic');
-        }}
-      />
-    </FormField>
-  );
-  const sudokuBasicTab = (
-    <>
-      {sudokuError && <Alert type="error" showIcon title={sudokuError} />}
-      {!sudokuAvailable && (
-        <Alert
-          type="warning"
-          showIcon
-          title={text(
-            'Sudoku недоступен в установленном пакете или отключён администратором.',
-            'Sudoku is unavailable in this package or disabled by the administrator.',
-          )}
-        />
-      )}
-      <Form.Item label={t('enable')}>
-        <Switch
-          checked={sudoku.enable}
-          onChange={(enable) => setSudoku((v) => ({ ...v, enable }))}
-        />
-      </Form.Item>
-      <Form.Item label={t('pages.inbounds.remark')} htmlFor="sudoku-name">
-        <Input
-          id="sudoku-name"
-          value={sudoku.name}
-          maxLength={120}
-          onChange={(e) => setSudoku((v) => ({ ...v, name: e.target.value }))}
-        />
-      </Form.Item>
-      {protocolField}
-      <Form.Item label={t('pages.inbounds.port')} htmlFor="sudoku-port" required>
-        <InputNumber
-          id="sudoku-port"
-          min={1}
-          max={65535}
-          value={sudoku.port}
-          onChange={(port) => setSudoku((v) => ({ ...v, port: port ?? 0 }))}
-        />
-      </Form.Item>
-      <Form.Item label={text('Шифрование', 'Encryption')}>
-        <Select
-          value={sudoku.aead}
-          onChange={(aead) => setSudoku((v) => ({ ...v, aead }))}
-          options={[{ value: 'chacha20-poly1305' }, { value: 'aes-128-gcm' }]}
-        />
-      </Form.Item>
-      <Form.Item label={text('Режим таблицы', 'Table mode')}>
-        <Select
-          value={sudoku.table}
-          onChange={(table) => setSudoku((v) => ({ ...v, table }))}
-          options={[{ value: 'prefer_ascii' }, { value: 'prefer_entropy' }]}
-        />
-      </Form.Item>
-    </>
-  );
-
   const basicTab = (
     <>
       {mode === 'add' && (
@@ -852,7 +663,9 @@ export default function InboundFormModal({
         </FormField>
       )}
 
-      {protocolField}
+      <FormField name="protocol" label={t('pages.inbounds.protocol')}>
+        <Select id="protocol" disabled={mode === 'edit'} options={PROTOCOL_OPTIONS} />
+      </FormField>
 
       <FormField
         name="listen"
@@ -972,9 +785,7 @@ export default function InboundFormModal({
         <FormField
           name="trafficResetDay"
           label={t('pages.inbounds.periodicTrafficResetDay')}
-          rules={{
-            validate: rhfZodValidate(InboundDbFieldsSchema.shape.trafficResetDay),
-          }}
+          rules={{ validate: rhfZodValidate(InboundDbFieldsSchema.shape.trafficResetDay) }}
         >
           <InputNumber min={1} max={31} />
         </FormField>
@@ -1032,6 +843,7 @@ export default function InboundFormModal({
       {protocol === Protocols.HTTP && <HttpFields />}
       {protocol === Protocols.MIXED && <MixedFields mixedUdpOn={mixedUdpOn} />}
 
+      {protocol === Protocols.SUDOKU && <SudokuFields />}
       {protocol === Protocols.MTPROTO && <MtprotoFields />}
 
       {protocol === Protocols.SHADOWSOCKS && <ShadowsocksFields isSSWith2022={isSSWith2022} />}
@@ -1196,14 +1008,8 @@ export default function InboundFormModal({
     </>
   );
 
-  const tlsOk = canEnableTls({
-    protocol,
-    streamSettings: { network, security },
-  });
-  const realityOk = canEnableReality({
-    protocol,
-    streamSettings: { network, security },
-  });
+  const tlsOk = canEnableTls({ protocol, streamSettings: { network, security } });
+  const realityOk = canEnableReality({ protocol, streamSettings: { network, security } });
   const tlsOnly = protocol === Protocols.HYSTERIA || protocol === Protocols.MASQUE;
 
   const securityTab = (
@@ -1359,7 +1165,7 @@ export default function InboundFormModal({
         confirmLoading={saving}
         mask={{ closable: false }}
         width={780}
-        onOk={sudokuMode ? saveSudoku : submit}
+        onOk={submit}
         onCancel={onClose}
         destroyOnHidden
       >
@@ -1373,84 +1179,75 @@ export default function InboundFormModal({
             <Tabs
               activeKey={activeTab}
               onChange={setActiveTab}
-              items={
-                sudokuMode
+              items={[
+                {
+                  key: 'basic',
+                  label: t('pages.xray.basicTemplate'),
+                  children: basicTab,
+                  forceRender: true,
+                },
+                ...((
+                  [
+                    Protocols.VLESS,
+                    Protocols.SHADOWSOCKS,
+                    Protocols.HTTP,
+                    Protocols.MIXED,
+                    Protocols.TUNNEL,
+                    Protocols.TUN,
+                    Protocols.WIREGUARD,
+                    Protocols.SUDOKU,
+                    Protocols.MTPROTO,
+                    Protocols.AMNEZIAWG,
+                    Protocols.TUIC,
+                    Protocols.MASQUE,
+                  ] as string[]
+                ).includes(protocol) || isFallbackHost
                   ? [
                       {
-                        key: 'basic',
-                        label: t('pages.xray.basicTemplate'),
-                        children: sudokuBasicTab,
-                      },
-                    ]
-                  : [
-                      {
-                        key: 'basic',
-                        label: t('pages.xray.basicTemplate'),
-                        children: basicTab,
-                        forceRender: true,
-                      },
-                      ...((
-                        [
-                          Protocols.VLESS,
-                          Protocols.SHADOWSOCKS,
-                          Protocols.HTTP,
-                          Protocols.MIXED,
-                          Protocols.TUNNEL,
-                          Protocols.TUN,
-                          Protocols.WIREGUARD,
-                          Protocols.MTPROTO,
-                          Protocols.AMNEZIAWG,
-                          Protocols.TUIC,
-                          Protocols.MASQUE,
-                        ] as string[]
-                      ).includes(protocol) || isFallbackHost
-                        ? [
-                            {
-                              key: 'protocol',
-                              label: t('pages.inbounds.protocol'),
-                              children: protocolTab,
-                              forceRender: true,
-                            },
-                          ]
-                        : []),
-                      ...(streamEnabled
-                        ? [
-                            {
-                              key: 'stream',
-                              label: t('pages.inbounds.streamTab'),
-                              children: streamTab,
-                              forceRender: true,
-                            },
-                            ...(protocol !== Protocols.WIREGUARD && protocol !== Protocols.TUNNEL
-                              ? [
-                                  {
-                                    key: 'security',
-                                    label: t('pages.inbounds.securityTab'),
-                                    children: securityTab,
-                                    forceRender: true,
-                                  },
-                                ]
-                              : []),
-                          ]
-                        : []),
-                      ...(sniffingSupported
-                        ? [
-                            {
-                              key: 'sniffing',
-                              label: t('pages.inbounds.sniffingTab'),
-                              children: sniffingTab,
-                              forceRender: true,
-                            },
-                          ]
-                        : []),
-                      {
-                        key: 'advanced',
-                        label: t('pages.xray.advancedTemplate'),
-                        children: advancedTab,
+                        key: 'protocol',
+                        label: t('pages.inbounds.protocol'),
+                        children: protocolTab,
                         forceRender: true,
                       },
                     ]
-              }
+                  : []),
+                ...(streamEnabled
+                  ? [
+                      {
+                        key: 'stream',
+                        label: t('pages.inbounds.streamTab'),
+                        children: streamTab,
+                        forceRender: true,
+                      },
+                      ...(protocol !== Protocols.WIREGUARD && protocol !== Protocols.TUNNEL
+                        ? [
+                            {
+                              key: 'security',
+                              label: t('pages.inbounds.securityTab'),
+                              children: securityTab,
+                              forceRender: true,
+                            },
+                          ]
+                        : []),
+                    ]
+                  : []),
+                ...(sniffingSupported
+                  ? [
+                      {
+                        key: 'sniffing',
+                        label: t('pages.inbounds.sniffingTab'),
+                        children: sniffingTab,
+                        forceRender: true,
+                      },
+                    ]
+                  : []),
+                {
+                  key: 'advanced',
+                  label: t('pages.xray.advancedTemplate'),
+                  children: advancedTab,
+                  forceRender: true,
+                },
+              ]}
             />
           </Form>
         </FormProvider>

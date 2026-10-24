@@ -507,6 +507,8 @@
         "accounts": "アカウント",
         "allowTransparent": "透過を許可",
         "encryptionMethod": "暗号化方式",
+        "sudokuEncryption": "Encryption",
+        "sudokuTable": "Table mode",
         "fakeTlsDomain": "FakeTLS ドメイン (SNI)",
         "mtprotoSecret": "シークレット",
         "mtgDomainFrontingIp": "ドメインフロンティング IP",

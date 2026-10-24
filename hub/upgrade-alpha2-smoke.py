@@ -45,8 +45,12 @@ with tempfile.TemporaryDirectory(prefix='hub-alpha2-upgrade-')as raw:
   assert urllib.parse.urlparse(after['URL']).port==custom_port
   certificate=run('sudo','cat','/opt/connect-hub/tls/fullchain.pem').stdout
   api=session({**after,'USERNAME':'changed-user','PASSWORD':custom_password},certificate)
-  listed=api('panel/hub/api/sudoku/inbounds')['obj'];assert any(i['id']==inbound and i['name']=='Preserved alpha2 inbound'for i in listed)
+  listed=api('panel/hub/api/sudoku/inbounds')['obj']
+  if not any(i['id']==inbound and i['name']=='Preserved alpha2 inbound'for i in listed):
+   print(run('sudo','journalctl','-u','connect-hub','--no-pager','-n','50').stdout,flush=True)
+   raise AssertionError('Earlier inbound absent from first authenticated response: '+repr([(i['id'],i['name'])for i in listed]))
   assert api(f'panel/hub/api/sudoku/inbounds/{inbound}/devices/{device}/export',{},True)['obj']['privateKey']==old_key
   assert run('sudo','find','/opt/connect-hub/backups','-name','connect-hub.db').stdout.strip()
   print('PASS: actual public alpha.2 -> updated panel, HTTPS login, same credentials/path/port, inbound/device key and retained backup',flush=True)
  finally:run('sudo','systemctl','stop','connect-hub')
+

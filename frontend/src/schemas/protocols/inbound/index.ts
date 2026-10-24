@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SudokuInboundSettingsSchema } from './sudoku';
 
 import { AmneziawgInboundSettingsSchema } from './amneziawg';
 import { HttpInboundSettingsSchema } from './http';
@@ -21,6 +22,7 @@ export * from './hysteria';
 export * from './masque';
 export * from './mixed';
 export * from './mtproto';
+export * from './sudoku';
 export * from './shadowsocks';
 export * from './trojan';
 export * from './tuic';
@@ -36,6 +38,7 @@ export * from './wireguard';
 // Consumers narrow on `.protocol` and TypeScript narrows `.settings` to the
 // matching leaf type.
 export const InboundSettingsSchema = z.discriminatedUnion('protocol', [
+  z.object({ protocol: z.literal('sudoku'), settings: SudokuInboundSettingsSchema }),
   z.object({ protocol: z.literal('vmess'), settings: VmessInboundSettingsSchema }),
   z.object({ protocol: z.literal('vless'), settings: VlessInboundSettingsSchema }),
   z.object({ protocol: z.literal('trojan'), settings: TrojanInboundSettingsSchema }),

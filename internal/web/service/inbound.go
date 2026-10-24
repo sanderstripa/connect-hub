@@ -21,6 +21,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/mtproto"
+	"github.com/mhsanaei/3x-ui/v3/internal/sudoku"
 	"github.com/mhsanaei/3x-ui/v3/internal/tuic"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/common"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/maskcompat"
@@ -1277,6 +1278,9 @@ func (s *InboundService) normalizeMtprotoXrayPort(inbound *model.Inbound, oldSet
 // Returns the created inbound, whether Xray needs restart, and any error.
 func (s *InboundService) AddInbound(inbound *model.Inbound) (*model.Inbound, bool, error) {
 	inbound.Id = 0
+	if err := sudoku.NormalizeSettings(inbound); err != nil {
+		return inbound, false, err
+	}
 	if err := normalizeTuicSettings(inbound); err != nil {
 		return inbound, false, err
 	}
@@ -1970,6 +1974,9 @@ func (s *InboundService) UpdateInbound(inbound *model.Inbound) (*model.Inbound, 
 	// Restore the stored NodeID before any host-scoped check so a node inbound
 	// stays scoped to its own node (the payload's nodeId is unreliable, often absent).
 	inbound.NodeID = oldInbound.NodeID
+	if err := sudoku.NormalizeSettings(inbound); err != nil {
+		return inbound, false, err
+	}
 	if err := normalizeTuicSettings(inbound); err != nil {
 		return inbound, false, err
 	}
@@ -2283,7 +2290,7 @@ func (s *InboundService) UpdateInbound(inbound *model.Inbound) (*model.Inbound, 
 // servedOutsideXray: these protocols run under their own manager, whose update
 // reconfigures in place where a Del+Add would drop every live session.
 func servedOutsideXray(protocol model.Protocol) bool {
-	return protocol == model.MTProto || protocol == model.TUIC || protocol == model.AmneziaWG
+	return protocol == model.Sudoku || protocol == model.MTProto || protocol == model.TUIC || protocol == model.AmneziaWG
 }
 
 // applyInboundUserOps reports whether per-user core ops moved running to next, so

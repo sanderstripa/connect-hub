@@ -430,6 +430,7 @@ export interface Client {
   secret?: string;
   security: string;
   subId: string;
+  sudokuKey?: string;
   tgId: number;
   totalGB: number;
   trafficReset?: string;
@@ -482,6 +483,7 @@ export interface ClientRecord {
   secret: string;
   security: string;
   subId: string;
+  sudokuKey?: string;
   tgId: number;
   totalGB: number;
   trafficReset: string;

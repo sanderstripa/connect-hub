@@ -507,6 +507,8 @@
         "accounts": "Contas",
         "allowTransparent": "Permitir transparente",
         "encryptionMethod": "Método de criptografia",
+        "sudokuEncryption": "Encryption",
+        "sudokuTable": "Table mode",
         "fakeTlsDomain": "Domínio FakeTLS (SNI)",
         "mtprotoSecret": "Segredo",
         "mtgDomainFrontingIp": "IP de domain fronting",

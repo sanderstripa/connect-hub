@@ -32,6 +32,9 @@ func applyClientRecordMerge(row *model.ClientRecord, incoming *model.ClientRecor
 	if incoming.Auth != "" {
 		row.Auth = incoming.Auth
 	}
+	if incoming.SudokuKey != "" {
+		row.SudokuKey = incoming.SudokuKey
+	}
 	if incoming.Secret != "" {
 		row.Secret = incoming.Secret
 	}

@@ -65,6 +65,7 @@ const TRACKED_PROTOCOLS: readonly string[] = [
   Protocols.HYSTERIA,
   Protocols.WIREGUARD,
   Protocols.MTPROTO,
+  Protocols.SUDOKU,
   Protocols.AMNEZIAWG,
   Protocols.TUIC,
   Protocols.MASQUE,
