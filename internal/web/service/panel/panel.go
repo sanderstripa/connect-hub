@@ -248,6 +248,13 @@ func (s *PanelService) startUpdate(useDev bool) (int64, error) {
 	updateTag := ""
 	if useDev {
 		updateTag = devReleaseTag
+	} else {
+		release, err := fetchPanelRelease("")
+		if err != nil {
+			_ = os.Remove(scriptPath)
+			return 0, fmt.Errorf("resolve panel update release: %w", err)
+		}
+		updateTag = release.TagName
 	}
 	updateScript := fmt.Sprintf("set -e; trap 'rm -f %s' EXIT; %s %s", shellQuote(scriptPath), shellQuote(bash), shellQuote(scriptPath))
 	runIDEnv := "XUI_UPDATE_RUN_ID=" + strconv.FormatInt(runID, 10)
@@ -471,7 +478,7 @@ func fetchPanelRelease(tag string) (*service.Release, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusNotFound && tag == "" {
-		return fetchPanelRelease("v0.1.0-alpha.3")
+		return fetchInstallablePrerelease(client)
 	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("GitHub API returned status %d: %s", resp.StatusCode, resp.Status)
@@ -482,6 +489,45 @@ func fetchPanelRelease(tag string) (*service.Release, error) {
 		return nil, err
 	}
 	return &release, nil
+}
+
+// GitHub's /latest intentionally omits prereleases. Alpha installations still
+// need to discover the next published package without a hard-coded version.
+func fetchInstallablePrerelease(client *http.Client) (*service.Release, error) {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://api.github.com/repos/sanderstripa/connect-hub/releases?per_page=100", nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("GitHub releases returned HTTP %d", resp.StatusCode)
+	}
+	var releases []struct {
+		service.Release
+		Draft bool `json:"draft"`
+		Assets []struct { Name string `json:"name"` } `json:"assets"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil {
+		return nil, err
+	}
+	for _, release := range releases {
+		if release.Draft || !regexp.MustCompile(`^v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$`).MatchString(release.TagName) {
+			continue
+		}
+		archive, manifest := false, false
+		for _, asset := range release.Assets {
+			archive = archive || asset.Name == "connect-hub-linux-"+runtime.GOARCH+".tar.gz"
+			manifest = manifest || asset.Name == "SHA256SUMS"
+		}
+		if archive && manifest {
+			return &release.Release, nil
+		}
+	}
+	return nil, fmt.Errorf("no installable Connect Hub release is published")
 }
 
 // extractReleaseCommit reads the build commit recorded in the dev release: first

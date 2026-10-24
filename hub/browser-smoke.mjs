@@ -24,7 +24,7 @@ try {
  let modal=page.getByRole('dialog');
  await selectProtocol('Sudoku');
  await modal.locator('#sudoku-name').fill('Unified Sudoku');
- await modal.locator('#sudoku-host').fill('127.0.0.1');
+ if(await modal.locator('#sudoku-host').count())throw Error('Sudoku must not add a mandatory server-address field');
  await modal.locator('#sudoku-port').fill(String(cfg.port));
  const creating=page.waitForResponse(r=>r.request().method()==='POST'&&new URL(r.url()).pathname.endsWith('/sudoku/inbounds'));
  await modal.getByRole('button',{name:'Create',exact:true}).click();
