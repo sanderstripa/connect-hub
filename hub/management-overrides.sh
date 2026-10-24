@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # Connect Hub modifications, 2026-10-24. GPL-3.0; upstream attribution in NOTICE.
 # Sourced by the original upstream-derived management menu before dispatch.
-export XUI_DB_FOLDER=/etc/connect-hub XUI_LOG_FOLDER=/var/log/connect-hub
-export XUI_BIN_FOLDER=/opt/connect-hub/current/bin XUI_MAIN_FOLDER=/opt/connect-hub/current
+if [[ ${running_in_docker:-false} == true ]];then
+ export XUI_DB_FOLDER=${XUI_DB_FOLDER:-/etc/connect-hub} XUI_LOG_FOLDER=${XUI_LOG_FOLDER:-/var/log/connect-hub}
+else
+ export XUI_DB_FOLDER=${CONNECT_HUB_DATA:-/etc/connect-hub} XUI_LOG_FOLDER=${CONNECT_HUB_LOGS:-/var/log/connect-hub}
+fi
+export XUI_BIN_FOLDER="$xui_folder/bin" XUI_MAIN_FOLDER="$xui_folder"
 install(){
  if [[ ${1:-} == -* ]];then command install "$@";return;fi
  curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash
@@ -18,12 +22,11 @@ legacy_version(){
 replace_xui_script(){ command install -m 0755 /opt/connect-hub/current/x-ui.sh /usr/local/bin/connect-hub; }
 update_shell(){ replace_xui_script; }
 xui_env_file_path(){ echo /etc/connect-hub/panel.env; }
-ssl_cert_issue_for_ip(){ bash /opt/connect-hub/current/hub/cert.sh; systemctl restart connect-hub; }
+ssl_cert_issue_for_ip(){ bash /opt/connect-hub/current/hub/cert.sh && restart; }
 ssl_cert_issue(){
  local host
  read -rp 'Certificate IP or domain (empty = detected IP): ' host
- CONNECT_HUB_DOMAIN="$host" bash /opt/connect-hub/current/hub/cert.sh
- systemctl restart connect-hub
+ CONNECT_HUB_DOMAIN="$host" bash /opt/connect-hub/current/hub/cert.sh && restart
 }
 install_acme(){
  mkdir -p /opt/connect-hub/acme
@@ -58,3 +61,4 @@ uninstall(){
  echo "Removed only Connect Hub. Data, releases and backups retained in $backup."
  echo 'Reinstall: curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash'
 }
+

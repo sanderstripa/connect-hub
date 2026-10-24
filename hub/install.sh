@@ -107,6 +107,19 @@ else
  mkdir -p "$data/integrations";touch "$data/.connect-hub-owned"
 fi
 cp -a "$tmp/connect-hub" "$target"
+# Preserve administrator-added bin assets exactly as upstream does. Bundled
+# files are always taken from the new verified release; runtime configs are
+# regenerated. Only this Connect Hub installation's previous release is read.
+if ((update)) && [[ -d $old/bin ]];then
+ while IFS= read -r -d '' asset;do
+  relative=${asset#"$old/bin/"}
+  case "$relative" in config.json|mtproto|mtproto/*|tuic|tuic/*|tuic-server|tuic-server-*) continue;;esac
+  if [[ ! -e $target/bin/$relative && ! -L $target/bin/$relative ]];then
+   mkdir -p "$target/bin/$(dirname "$relative")"
+   cp -a "$asset" "$target/bin/$relative"
+  fi
+ done < <(find "$old/bin" \( -type f -o -type l \) -print0)
+fi
 # Never inherit database DSNs, keys, ports or paths exported by another 3x-ui
 # installation in the invoking shell. This installer always initializes SQLite.
 for inherited in ${!XUI_@};do unset "$inherited";done
@@ -274,3 +287,4 @@ printf '  Management menu / Меню управления: sudo connect-hub\n'
 printf '  If blocked, allow only the chosen new panel TCP port.\n'
 [[ -z $backup ]] || printf '  Backup retained / Резервная копия: %s\n' "$backup"
 printf '\n%s============================================================%s\n\n' "$green" "$reset"
+

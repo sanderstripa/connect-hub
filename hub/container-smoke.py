@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Start the compose project alongside an occupied default panel port."""
-import http.cookiejar,json,pathlib,socket,subprocess,time,urllib.request,urllib.parse
+import http.cookiejar,json,pathlib,socket,ssl,subprocess,time,urllib.request,urllib.parse
 root=pathlib.Path(__file__).resolve().parent.parent
 def docker(*args):return subprocess.check_output(['docker',*args],cwd=root,text=True).strip()
 existing=socket.socket();existing.bind(('127.0.0.1',2053));existing.listen()
@@ -21,11 +21,21 @@ try:
  assert b'Connect Hub' in req('')
  token=json.loads(req('csrf-token'))['obj'];assert json.loads(req('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},token))['success']
  state=json.loads(req('panel/hub/api/status'))['obj'];assert state['sudoku']['enabled'] and not state['connectCore']['enabled']
+ menu=docker('compose','exec','-T','connect-hub','bash','/usr/local/bin/connect-hub','status')
+ assert 'Connect Hub' in menu or 'connect-hub' in menu
+ folders=docker('compose','exec','-T','connect-hub','bash','-c','xui_folder="$XUI_MAIN_FOLDER"; running_in_docker=true; source /app/hub/management-overrides.sh; printf "%s\\n" "$XUI_MAIN_FOLDER" "$XUI_BIN_FOLDER"')
+ assert folders.splitlines()==['/app','/app/bin'],folders
  cid=docker('compose','ps','-q','connect-hub');inspect=json.loads(docker('inspect',cid))[0]
- assert inspect['HostConfig']['CapDrop']==['ALL'] and 'no-new-privileges:true' in inspect['HostConfig']['SecurityOpt']
+ assert {'NET_ADMIN','NET_RAW'}<=set(inspect['HostConfig']['CapAdd'] or []) and 'no-new-privileges:true' in inspect['HostConfig']['SecurityOpt']
+ jail=docker('compose','exec','-T','connect-hub','fail2ban-client','status','connect-hub-ipl')
+ assert 'connect-hub-ipl' in jail
+ docker('compose','exec','-T','connect-hub','fail2ban-client','set','connect-hub-ipl','banip','198.51.100.23')
+ assert '198.51.100.23' in docker('compose','exec','-T','connect-hub','iptables-save')
+ docker('compose','exec','-T','connect-hub','fail2ban-client','set','connect-hub-ipl','unbanip','198.51.100.23')
+ assert '198.51.100.23' not in docker('compose','exec','-T','connect-hub','iptables-save')
  assert inspect['HostConfig']['NetworkMode']!='host' and not inspect['HostConfig']['Privileged']
  assert all(m['Type']=='volume' for m in inspect['Mounts']),'host bind mount present'
- print('PASS: container login, disabled integrations, free loopback port, independent volumes, no privileges or host networking')
+ print('PASS: container login, management command, upstream IP-limit jail/capabilities, independent volumes and network namespace')
  docker('compose','restart')
  for _ in range(60):
   try:
@@ -33,7 +43,22 @@ try:
   except subprocess.CalledProcessError:time.sleep(.5)
  else:raise AssertionError('container did not restart')
  print('PASS: container restart preserves its own credentials')
+ docker('compose','exec','-T','connect-hub','env','CONNECT_HUB_TLS_MODE=selfsigned','CONNECT_HUB_DOMAIN=127.0.0.1','bash','/app/hub/cert.sh')
+ certificate=docker('compose','exec','-T','connect-hub','cat','/opt/connect-hub/tls/fullchain.pem')
+ docker('compose','up','-d','--force-recreate')
+ published=docker('compose','port','connect-hub','2053');host_port=published.rsplit(':',1)[1]
+ base=creds['URL'].replace('http://127.0.0.1:2053','https://127.0.0.1:'+host_port)
+ client=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=ssl.create_default_context(cadata=certificate)),urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+ for _ in range(60):
+  try:assert b'Connect Hub' in req('');break
+  except OSError:time.sleep(.5)
+ else:raise AssertionError('recreated container did not retain working HTTPS')
+ token=json.loads(req('csrf-token'))['obj'];assert json.loads(req('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},token))['success']
+ assert 'cert.sh --renew' in docker('compose','exec','-T','connect-hub','cat','/etc/cron.d/connect-hub-cert-renew')
+ assert docker('compose','exec','-T','connect-hub','pgrep','-x','cron')
+ print('PASS: container recreation retains verified HTTPS, login and certificate-renewal scheduling')
 finally:
  existing.close()
  # Stop only this test compose project. Volumes/data are deliberately retained.
  subprocess.run(['docker','compose','down'],cwd=root,check=False)
+

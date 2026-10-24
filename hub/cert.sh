@@ -92,7 +92,16 @@ if ((renew)) && cmp -s "$work/cert.pem" "$prefix/tls/fullchain.pem" && cmp -s "$
 fi
 install -o root -g connect-hub -m 0640 "$work/key.pem" "$prefix/tls/privkey.pem"
 install -o root -g connect-hub -m 0640 "$work/cert.pem" "$prefix/tls/fullchain.pem"
-export XUI_DB_TYPE=sqlite XUI_DB_DSN= XUI_DB_FOLDER=$data
+if [[ ${XUI_IN_DOCKER:-false} == true ]];then
+ export XUI_DB_TYPE=${XUI_DB_TYPE:-sqlite} XUI_DB_DSN=${XUI_DB_DSN:-} XUI_DB_FOLDER=$data
+else
+ export XUI_DB_TYPE=sqlite XUI_DB_DSN= XUI_DB_FOLDER=$data
+fi
+if [[ -f $data/panel.env ]];then
+ while IFS='=' read -r key value;do
+  case $key in XUI_DB_TYPE|XUI_DB_DSN) export "$key=$value";;esac
+ done < "$data/panel.env"
+fi
 "$prefix/current/connect-hub" setting -webCert "$prefix/tls/fullchain.pem" -webCertKey "$prefix/tls/privkey.pem" >/dev/null
 python3 - "$data/initial-access.txt" "$host" "$trusted" <<'PY'
 import pathlib,sys,urllib.parse
@@ -102,6 +111,15 @@ v['LOCAL_URL']=urllib.parse.urlunparse(u._replace(scheme='https',netloc=f'127.0.
 v['CERTIFICATE']='trusted' if sys.argv[3]=='1' else 'temporary-self-signed'
 p.write_text(''.join(f'{k}={value}\n'for k,value in v.items()));p.chmod(0o600)
 PY
+if [[ ${XUI_IN_DOCKER:-false} == true ]];then
+ CONNECT_HUB_PREFIX="$prefix" CONNECT_HUB_DATA="$data" bash "$prefix/current/hub/container-renew.sh"
+ if ((renew));then
+  [[ -f /.dockerenv && $(readlink -f /proc/1/exe) == $(readlink -f "$prefix/current/connect-hub") ]] || { echo 'Refusing to signal an unrelated PID 1.' >&2;exit 1; }
+  kill -HUP 1
+ fi
+ echo "Connect Hub certificate configured (trusted=$trusted); container renewal scheduled."
+ exit 0
+fi
 for unit in connect-hub-cert-renew.service connect-hub-cert-renew.timer;do
  file=/etc/systemd/system/$unit
  [[ ! -e $file ]] || grep -q '^# Managed by Connect Hub$' "$file" || { echo "Refusing foreign $unit" >&2;exit 1; }
@@ -133,3 +151,4 @@ systemctl daemon-reload
 systemctl enable --now connect-hub-cert-renew.timer
 if ((renew));then systemctl restart connect-hub;fi
 echo "Connect Hub certificate configured (trusted=$trusted)."
+

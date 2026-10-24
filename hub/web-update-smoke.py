@@ -9,7 +9,7 @@ import hashlib,http.cookiejar,http.server,io,json,os,pathlib,socket,ssl,subproce
 
 assert os.environ.get('GITHUB_ACTIONS')=='true' and os.environ.get('RUNNER_ENVIRONMENT')=='github-hosted','Disposable GitHub runner only'
 root=pathlib.Path(__file__).resolve().parent.parent
-def run(*args,check=True):return subprocess.run(args,check=check,capture_output=True,text=True)
+def run(*args,check=True,input=None):return subprocess.run(args,check=check,capture_output=True,text=True,input=input)
 def owned_read(path):return run('sudo','cat',path).stdout
 credentials=dict(line.split('=',1)for line in owned_read('/etc/connect-hub/initial-access.txt').splitlines())
 original_access=owned_read('/etc/connect-hub/initial-access.txt')
@@ -110,6 +110,12 @@ with tempfile.TemporaryDirectory(prefix='hub-web-upgrade-') as raw:
         assert run('sudo','readlink','-f','/opt/connect-hub/current').stdout.strip()==original_revision
         assert api(f'panel/hub/api/sudoku/inbounds/{inbound}/devices/{device}/export',{},True)['obj']['privateKey']==secret
         active['bad_checksum']=False;downloads.clear()
+        # Upstream preserves administrator-added assets across real updates,
+        # while excluding its regenerable per-inbound runtime configuration.
+        run('sudo','tee','/opt/connect-hub/current/bin/own-custom-test.dat',input='Connect Hub custom asset\n')
+        run('sudo','ln','-s','own-custom-test.dat','/opt/connect-hub/current/bin/own-custom-link.dat')
+        run('sudo','mkdir','-p','/opt/connect-hub/current/bin/mtproto')
+        run('sudo','tee','/opt/connect-hub/current/bin/mtproto/orphan-test.toml',input='stale runtime configuration\n')
         print('PASS: wrong release checksum reports failure and preserves installed binary, access and key; retry remains available',flush=True)
         for tag in tags:
             active['tag']=tag
@@ -125,9 +131,13 @@ with tempfile.TemporaryDirectory(prefix='hub-web-upgrade-') as raw:
             assert api(f'panel/hub/api/sudoku/inbounds/{inbound}/devices/{device}/export',{},True)['obj']['privateKey']==secret
             assert run('sudo','systemctl','is-active','connect-hub').stdout.strip()=='active'
             assert run('sudo','find','/opt/connect-hub/backups','-name','connect-hub.db').stdout.strip()
+            assert owned_read('/opt/connect-hub/current/bin/own-custom-test.dat')=='Connect Hub custom asset\n'
+            assert owned_read('/opt/connect-hub/current/bin/own-custom-link.dat')=='Connect Hub custom asset\n'
+            assert run('sudo','test','-e','/opt/connect-hub/current/bin/mtproto/orphan-test.toml',check=False).returncode!=0
         assert downloads==tags,downloads
         print('PASS: two distinct real binaries installed by ordinary web button, changed revisions/versions, preserved login and Sudoku key, retained backups',flush=True)
     finally:
         run('sudo','systemctl','stop','connect-hub',check=False)
         proxy.shutdown();proxy.server_close()
         run('sudo','rm','--',trust);run('sudo','update-ca-certificates')
+
