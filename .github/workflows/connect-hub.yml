@@ -61,6 +61,8 @@ jobs:
       - run: go test -race -count=1 ./internal/hub ./internal/web/controller ./internal/config
       - run: for script in install.sh x-ui.sh hub/*.sh; do bash -n "$script" || exit; done; python3 -m py_compile hub/*.py
       - run: python3 hub/package.py
+      - name: Original interactive setup with piped stdin and an SSH-style terminal
+        run: python3 hub/interactive-config-smoke.py
       - name: Static panel runs on Debian 12
         run: test "$(docker run --rm -v "$PWD/dist/connect-hub:/panel:ro" debian:bookworm-slim /panel/connect-hub -v)" = "$(cat internal/config/version)"
       - name: Native systemd installation and failed-update rollback
