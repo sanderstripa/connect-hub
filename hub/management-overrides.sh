@@ -19,6 +19,32 @@ legacy_version(){
 }
 replace_xui_script(){ command install -m 0755 /opt/connect-hub/current/x-ui.sh /usr/local/bin/connect-hub; }
 update_shell(){ replace_xui_script; }
+remove_iplimit(){
+ echo -e "\n${green}\t1.${plain} Only remove Connect Hub IP Limit configurations"
+ echo -e "${green}\t2.${plain} Remove Connect Hub IP Limit (retain shared Fail2ban)"
+ echo -e "${green}\t0.${plain} Back to Main Menu"
+ local choice file
+ read -rp 'Choose an option: ' choice
+ case "$choice" in
+  0) show_menu;return;;
+  1|2) ;;
+  *) LOGE 'Invalid option';return 1;;
+ esac
+ # Fail2ban may be shared by SSH and other panels. Stop only our jail; never
+ # delete its configuration directory, stop its daemon or remove its package.
+ local files=(/etc/fail2ban/filter.d/connect-hub-ipl.conf /etc/fail2ban/action.d/connect-hub-ipl.conf /etc/fail2ban/jail.d/connect-hub-ipl.conf /etc/fail2ban/jail.d/connect-hub-ipl-backend.conf)
+ for file in "${files[@]}";do
+  if [[ -e $file || -L $file ]] && { [[ -L $file ]] || ! grep -q '^# Managed by Connect Hub$' "$file"; };then
+   LOGE "Refusing to remove an unowned configuration: $file";return 1
+  fi
+ done
+ if command -v fail2ban-client >/dev/null && fail2ban-client status connect-hub-ipl >/dev/null 2>&1;then
+  fail2ban-client stop connect-hub-ipl || return 1
+ fi
+ for file in "${files[@]}";do [[ ! -f $file ]] || rm -- "$file";done
+ LOGI 'Connect Hub IP Limit removed. Shared Fail2ban and other jails were retained.'
+ before_show_menu
+}
 xui_env_file_path(){ echo /etc/connect-hub/panel.env; }
 install_acme(){
  mkdir -p /opt/connect-hub/acme

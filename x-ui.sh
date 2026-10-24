@@ -2199,12 +2199,7 @@ iplimit_main() {
         2)
             read -rp "Please enter new Ban Duration in Minutes [default 30]: " NUM
             if [[ $NUM =~ ^[0-9]+$ ]]; then
-                create_iplimit_jails ${NUM}
-                if [[ $release == "alpine" ]]; then
-                    rc-service fail2ban restart
-                else
-                    systemctl restart fail2ban
-                fi
+                create_iplimit_jails "${NUM}" && fail2ban-client reload --restart connect-hub-ipl
             else
                 echo -e "${red}${NUM} is not a number! Please, try again.${plain}"
             fi
@@ -2257,11 +2252,7 @@ iplimit_main() {
             iplimit_main
             ;;
         9)
-            if [[ $release == "alpine" ]]; then
-                rc-service fail2ban restart
-            else
-                systemctl restart fail2ban
-            fi
+            fail2ban-client reload --restart connect-hub-ipl
             iplimit_main
             ;;
         10)
@@ -2365,7 +2356,7 @@ setup_fail2ban_iplimit() {
     echo -e "${green}Configuring IP Limit...${plain}\n"
 
     # make sure there's no conflict for jail files
-    iplimit_remove_conflicts
+    iplimit_remove_conflicts || return 1
 
     # Check if log file exists
     if ! test -f "${iplimit_banned_log_path}"; then
@@ -2379,21 +2370,21 @@ setup_fail2ban_iplimit() {
 
     # Create the iplimit jail files
     # we didn't pass the bantime here to use the default value
-    create_iplimit_jails
+    create_iplimit_jails || return 1
 
     # Launching fail2ban
     if [[ $release == "alpine" ]]; then
         if [[ $(rc-service fail2ban status | grep -F 'status: started' -c) == 0 ]]; then
             rc-service fail2ban start
         else
-            rc-service fail2ban restart
+            fail2ban-client reload --restart connect-hub-ipl
         fi
         rc-update add fail2ban
     else
         if ! systemctl is-active --quiet fail2ban; then
             systemctl start fail2ban
         else
-            systemctl restart fail2ban
+            fail2ban-client reload --restart connect-hub-ipl
         fi
         systemctl enable fail2ban
     fi
@@ -2519,21 +2510,18 @@ show_banlog() {
 create_iplimit_jails() {
     # Use default bantime if not passed => 30 minutes
     local bantime="${1:-30}"
+    [[ $bantime =~ ^[0-9]+$ ]] || return 1
+    local owned_file
+    for owned_file in /etc/fail2ban/jail.d/connect-hub-ipl.conf /etc/fail2ban/filter.d/connect-hub-ipl.conf /etc/fail2ban/action.d/connect-hub-ipl.conf;do
+        if [[ -e $owned_file || -L $owned_file ]] && { [[ -L $owned_file ]] || ! grep -q '^# Managed by Connect Hub$' "$owned_file"; };then
+            LOGE "Refusing to replace an unowned configuration: $owned_file"
+            return 1
+        fi
+    done
 
-    # Uncomment 'allowipv6 = auto' in fail2ban.conf
-    sed -i 's/#allowipv6 = auto/allowipv6 = auto/g' /etc/fail2ban/fail2ban.conf
-
-    # Debian 12+ / Ubuntu 22.04+ log sshd to the journal only; a jail.d override
-    # survives package upgrades. Only the stock 'backend = auto' is overridden.
-    if [[ ( "${release}" == "debian" && ${os_version} -ge 12 ) || ( "${release}" == "ubuntu" && ${os_version} -ge 2200 ) ]] &&
-        sed -n '0,/action =/p' /etc/fail2ban/jail.conf | grep -q '^backend = auto'; then
-        cat << EOF > /etc/fail2ban/jail.d/connect-hub-ipl-backend.conf
-[DEFAULT]
-backend = systemd
-EOF
-    fi
-
+    # Other panels and SSH keep their own global backend/IPv6 settings.
     cat << EOF > /etc/fail2ban/jail.d/connect-hub-ipl.conf
+# Managed by Connect Hub
 [connect-hub-ipl]
 enabled=true
 backend=auto
@@ -2546,6 +2534,7 @@ bantime=${bantime}m
 EOF
 
     cat << EOF > /etc/fail2ban/filter.d/connect-hub-ipl.conf
+# Managed by Connect Hub
 [Definition]
 datepattern = ^%%Y/%%m/%%d %%H:%%M:%%S
 failregex   = \[LIMIT_IP\]\s*Email\s*=\s*<F-USER>.+</F-USER>\s*\|\|\s*Disconnecting OLD IP\s*=\s*<ADDR>\s*\|\|\s*Timestamp\s*=\s*\d+
@@ -2565,6 +2554,7 @@ EOF
     [[ -n "${panel_port}" ]] && exempt_ports="${exempt_ports},${panel_port}"
 
     cat << EOF > /etc/fail2ban/action.d/connect-hub-ipl.conf
+# Managed by Connect Hub
 [INCLUDES]
 before = iptables-allports.conf
 
@@ -2603,10 +2593,10 @@ iplimit_remove_conflicts() {
     )
 
     for file in "${jail_files[@]}"; do
-        # Check for [connect-hub-ipl] config in jail file then remove it
+        # Never rewrite a shared jail file belonging to an existing installation.
         if test -f "${file}" && grep -qw 'connect-hub-ipl' ${file}; then
-            sed -i "/\[connect-hub-ipl\]/,/^$/d" ${file}
-            echo -e "${yellow}Removing conflicts of [connect-hub-ipl] in jail (${file})!${plain}\n"
+            LOGE "A pre-existing connect-hub-ipl section exists in $file; leaving it unchanged."
+            return 1
         fi
     done
 }

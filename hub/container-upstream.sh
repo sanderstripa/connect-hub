@@ -11,6 +11,7 @@ if [ "$XUI_ENABLE_FAIL2BAN" = "true" ]; then
     mkdir -p /etc/fail2ban/jail.d /etc/fail2ban/filter.d /etc/fail2ban/action.d
 
     cat > /etc/fail2ban/jail.d/connect-hub-ipl.conf << EOF
+# Managed by Connect Hub
 [connect-hub-ipl]
 enabled=true
 backend=auto
@@ -23,6 +24,7 @@ bantime=30m
 EOF
 
     cat > /etc/fail2ban/filter.d/connect-hub-ipl.conf << 'EOF'
+# Managed by Connect Hub
 [Definition]
 datepattern = ^%%Y/%%m/%%d %%H:%%M:%%S
 failregex   = \[LIMIT_IP\]\s*Email\s*=\s*<F-USER>.+</F-USER>\s*\|\|\s*Disconnecting OLD IP\s*=\s*<ADDR>\s*\|\|\s*Timestamp\s*=\s*\d+
@@ -40,6 +42,7 @@ EOF
     [ -n "$PANEL_PORT" ] && EXEMPT_PORTS="$EXEMPT_PORTS,$PANEL_PORT"
 
     cat > /etc/fail2ban/action.d/connect-hub-ipl.conf << EOF
+# Managed by Connect Hub
 [INCLUDES]
 before = iptables-allports.conf
 
