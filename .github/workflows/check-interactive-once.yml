@@ -1,0 +1,30 @@
+name: Verify piped interactive setup once
+on:
+  push:
+    branches: [test/interactive-setup-once]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  interactive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: eaa7a285d99a2a383fc5e1b85e07354593a396ab
+          persist-credentials: false
+      - uses: actions/download-artifact@v6
+        with:
+          github-token: ${{ github.token }}
+          run-id: 40129694596
+          name: connect-hub-linux-amd64
+          path: dist
+      - name: Verified existing native build, real new interactive configuration
+        run: |
+          cd dist
+          sha256sum --check SHA256SUMS
+          tar -xzf connect-hub-linux-amd64.tar.gz
+          python3 -c "import json; assert json.load(open('connect-hub/BUILD.json'))['revision']=='041a926f8647794b49030b652c8c0f470e57f773'"
+          cd ..
+          python3 hub/interactive-config-smoke.py
