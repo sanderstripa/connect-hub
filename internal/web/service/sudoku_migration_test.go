@@ -43,6 +43,9 @@ func TestSudokuMigrationPreservesKeysAndDoesNotResurrectDeletedInbounds(t *testi
 	}
 	write("devices.json", []map[string]any{{"id": device, "name": "Phone", "status": "enabled", "created": "2026-10-24T00:00:00Z", "userHash": hash, "privateKey": settings.Clients[0].SudokuKey}})
 	svc := &InboundService{}
+	// Disabling the runtime must not hide or strand keys during a database
+	// migration; no core needs to be started to preserve this stopped inbound.
+	t.Setenv("CONNECT_HUB_SUDOKU","0")
 	if err := svc.MigrateLegacySudoku(); err != nil {
 		t.Fatal(err)
 	}
@@ -79,3 +82,4 @@ func TestSudokuMigrationPreservesKeysAndDoesNotResurrectDeletedInbounds(t *testi
 		t.Fatal("migration destroyed recovery key files")
 	}
 }
+

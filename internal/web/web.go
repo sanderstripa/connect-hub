@@ -326,9 +326,6 @@ func (s *Server) startTask(restartXray bool, loc *time.Location) {
 			logger.Warning("start xray failed:", err)
 		}
 	}
-	if err := (&service.InboundService{}).MigrateLegacySudoku(); err != nil {
-		logger.Warning("Sudoku migration failed; previous key files were preserved:", err)
-	}
 	go job.NewSudokuJob().Run()
 	// Check whether xray is running every second
 	_, _ = s.cron.AddJob(cadenceXrayRunning, job.NewCheckXrayRunningJob())
@@ -572,6 +569,12 @@ func (s *Server) start(restartXray bool, startTgBot bool) (err error) {
 		return tls.X509KeyPair(ck.CertPEM, ck.KeyPEM)
 	})
 
+	// Complete our earlier alpha's data migration before the HTTP listener is
+	// visible. A failed migration must fail startup so the updater can roll back,
+	// rather than present an apparently empty panel while keys remain elsewhere.
+	if err := (&service.InboundService{}).MigrateLegacySudoku(); err != nil {
+		return fmt.Errorf("Sudoku migration failed; previous key files were preserved: %w", err)
+	}
 	engine, err := s.initRouter()
 	if err != nil {
 		return err
@@ -864,3 +867,4 @@ func scheduleSettingJob(c *cron.Cron, name, spec, fallback string, j cron.Job) c
 	logger.Infof("%s scheduled, run at %s", name, spec)
 	return c.Schedule(schedule, j)
 }
+
