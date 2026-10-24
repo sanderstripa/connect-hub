@@ -8,7 +8,7 @@ ENV STORYBOOK_DISABLE_TELEMETRY=1
 RUN npm run build
 
 FROM golang:1.27.3-bookworm AS builder
-RUN apt-get update && apt-get install -y --no-install-recommends python3 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends python3 git && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 ARG CONNECT_HUB_REVISION
 ENV CONNECT_HUB_REVISION=$CONNECT_HUB_REVISION

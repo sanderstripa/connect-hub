@@ -1,0 +1,28 @@
+diff --git a/internal/config/config.go b/internal/config/config.go
+--- a/internal/config/config.go
++++ b/internal/config/config.go
+@@ -24,6 +24,7 @@ type Config struct {
+ 	Mode               string         `json:"mode"`           // "client" or "server"
+ 	Transport          string         `json:"transport"`      // "tcp" or "udp"
+ 	LocalPort          int            `json:"local_port"`
++	ListenAddress      string         `json:"listen_address,omitempty"` // Connect Hub: standard inbound listen address.
+ 	ServerAddress      string         `json:"server_address"`
+ 	FallbackAddr       string         `json:"fallback_address"`
+ 	Key                string         `json:"key"`
+diff --git a/internal/app/server.go b/internal/app/server.go
+--- a/internal/app/server.go
++++ b/internal/app/server.go
+@@ -22,5 +22,5 @@ package app
+ import (
+-	"fmt"
+ 	"net"
+ 	"os"
++	"strconv"
+ 	"strings"
+@@ -87,5 +87,5 @@ func RunServer(cfg *config.Config, tables []*sudoku.Table) {
+ 	// Listen on TCP port.
+-	l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.LocalPort))
++	l, err := net.Listen("tcp", net.JoinHostPort(cfg.ListenAddress, strconv.Itoa(cfg.LocalPort)))
+ 	if err != nil {
+ 		logx.Fatalf("Server", "%v", err)
+ 	}

@@ -486,6 +486,8 @@
         "accounts": "Hesaplar",
         "allowTransparent": "Şeffafa İzin Ver",
         "encryptionMethod": "Şifreleme Yöntemi",
+        "sudokuEncryption": "Encryption",
+        "sudokuTable": "Table mode",
         "fakeTlsDomain": "FakeTLS alan adı (SNI)",
         "mtprotoSecret": "Gizli Anahtar (Secret)",
         "mtgDomainFrontingIp": "Domain fronting IP",

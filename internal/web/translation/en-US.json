@@ -488,6 +488,8 @@
         "accounts": "Accounts",
         "allowTransparent": "Allow transparent",
         "encryptionMethod": "Encryption method",
+        "sudokuEncryption": "Encryption",
+        "sudokuTable": "Table mode",
         "fakeTlsDomain": "FakeTLS domain (SNI)",
         "mtprotoSecret": "Secret",
         "mtgDomainFrontingIp": "Domain fronting IP",

@@ -20,6 +20,7 @@ import {
 import type { StreamSettings } from '@/schemas/api/inbound';
 import type { Sniffing } from '@/schemas/primitives';
 import type { z } from 'zod';
+import { SudokuClientSchema } from '@/schemas/protocols/inbound/sudoku';
 import {
   dropEmptyFinalMask,
   normalizeStreamSettingsForWire,
@@ -287,6 +288,8 @@ function clientSchemaForProtocol(protocol: string): z.ZodType | null {
       return HysteriaClientSchema;
     case 'wireguard':
       return WireguardClientSchema;
+    case 'sudoku':
+      return SudokuClientSchema;
     case 'mtproto':
       return MtprotoClientSchema;
     case 'amneziawg':

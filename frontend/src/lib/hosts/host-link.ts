@@ -115,7 +115,7 @@ export function hostEndpointsFor(
 
 // Panel-built links of these protocols read Hosts; the rest still show the
 // inbound's own address on the inbounds page.
-const HOST_LINK_PROTOCOLS: ReadonlySet<string> = new Set(['mtproto', 'wireguard', 'amneziawg']);
+const HOST_LINK_PROTOCOLS: ReadonlySet<string> = new Set(['mtproto', 'sudoku', 'wireguard', 'amneziawg']);
 
 export function withHostEndpoints(
   inbound: Inbound,

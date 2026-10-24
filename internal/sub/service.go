@@ -187,7 +187,7 @@ func (s *SubService) clientForLink(inbound *model.Inbound, email string) (model.
 // while the shared clients.wg_* columns collapse to whichever tunnel inbound
 // synced last (see TunnelAllowedIPsByInbound / amneziaWGClientAddresses).
 func (s *SubService) clientsForLinkExport(inbound *model.Inbound) ([]model.Client, error) {
-	if inbound.Protocol == model.WireGuard || inbound.Protocol == model.AmneziaWG {
+	if inbound.Protocol == model.Sudoku || inbound.Protocol == model.WireGuard || inbound.Protocol == model.AmneziaWG {
 		return s.inboundService.GetClients(inbound)
 	}
 	if database.GetDB() != nil {
@@ -686,7 +686,7 @@ func (s *SubService) getInboundsBySubId(subId string) ([]*model.Inbound, error) 
 		JOIN client_inbounds ON client_inbounds.inbound_id = inbounds.id
 		JOIN clients ON clients.id = client_inbounds.client_id
 		WHERE
-			inbounds.protocol in ('vmess','vless','trojan','shadowsocks','hysteria','wireguard','amneziawg','mtproto','tuic','masque')
+			inbounds.protocol in ('vmess','vless','trojan','shadowsocks','hysteria','wireguard','amneziawg','mtproto','sudoku','tuic','masque')
 			AND clients.sub_id = ? AND inbounds.enable = ?
 	)`, subId, true).Order("sub_sort_index ASC").Order("id ASC").Find(&inbounds).Error
 	if err != nil {
@@ -834,6 +834,8 @@ func (s *SubService) GetLink(inbound *model.Inbound, email string) string {
 		return s.genShadowsocksLink(inbound, email)
 	case "hysteria":
 		return s.genHysteriaLink(inbound, email)
+	case "sudoku":
+		return s.genSudokuLink(inbound, email)
 	case "mtproto":
 		return s.genMtprotoLink(inbound, email)
 	case "wireguard":

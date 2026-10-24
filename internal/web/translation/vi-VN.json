@@ -507,6 +507,8 @@
         "accounts": "Tài khoản",
         "allowTransparent": "Cho phép trong suốt",
         "encryptionMethod": "Phương thức mã hóa",
+        "sudokuEncryption": "Encryption",
+        "sudokuTable": "Table mode",
         "fakeTlsDomain": "Tên miền FakeTLS (SNI)",
         "mtprotoSecret": "Khóa bí mật",
         "mtgDomainFrontingIp": "IP domain fronting",

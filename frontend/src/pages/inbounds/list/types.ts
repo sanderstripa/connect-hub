@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import type { NodeRecord } from '@/api/queries/useNodesQuery';
 import type { HostRecord } from '@/schemas/api/host';
 
@@ -23,7 +22,6 @@ export type ProtocolFlags = {
 };
 
 export interface DBInboundRecord extends ProtocolFlags {
-  managed?: { id: string; cell: (key: string) => ReactNode; mobile: ReactNode };
   id: number;
   enable: boolean;
   remark: string;
@@ -69,7 +67,6 @@ export type GeneralAction = 'import' | 'export' | 'subs' | 'resetInbounds';
 
 export interface InboundListProps {
   dbInbounds: DBInboundRecord[];
-  additionalInbounds?: DBInboundRecord[];
   clientCount: Record<number, ClientCountEntry>;
   onlineClients: string[];
   lastOnlineMap: Record<string, number>;

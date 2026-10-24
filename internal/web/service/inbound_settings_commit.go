@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/sudoku"
 
 	"gorm.io/gorm"
 )
@@ -22,6 +23,9 @@ func commitInboundClientSettings(tx *gorm.DB, ib *model.Inbound, base string) er
 			return err
 		}
 		ib.Settings = merged
+	}
+	if err := sudoku.NormalizeSettings(ib); err != nil {
+		return err
 	}
 	return tx.Model(&model.Inbound{}).Where("id = ?", ib.Id).Update("settings", ib.Settings).Error
 }

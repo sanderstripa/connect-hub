@@ -23,6 +23,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/hub"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/mtproto"
+	"github.com/mhsanaei/3x-ui/v3/internal/sudoku"
 	"github.com/mhsanaei/3x-ui/v3/internal/tuic"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/common"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/cronspec"
@@ -325,7 +326,10 @@ func (s *Server) startTask(restartXray bool, loc *time.Location) {
 			logger.Warning("start xray failed:", err)
 		}
 	}
-	hub.SudokuInbounds.StartSaved()
+	if err := (&service.InboundService{}).MigrateLegacySudoku(); err != nil {
+		logger.Warning("Sudoku migration failed; previous key files were preserved:", err)
+	}
+	go job.NewSudokuJob().Run()
 	// Check whether xray is running every second
 	_, _ = s.cron.AddJob(cadenceXrayRunning, job.NewCheckXrayRunningJob())
 
@@ -340,6 +344,7 @@ func (s *Server) startTask(restartXray bool, loc *time.Location) {
 	}()
 
 	// Reconcile mtproto (mtg) sidecars and scrape their traffic
+	_, _ = s.cron.AddJob("@every 5s", job.NewSudokuJob())
 	mtJob := job.NewMtprotoJob()
 	_, _ = s.cron.AddJob(cadenceMtproto, mtJob)
 	go mtJob.Run()
@@ -786,6 +791,7 @@ func (s *Server) stop(stopXray bool, stopTgBot bool) error {
 			logger.Warning("persist final TUIC traffic on shutdown failed:", err)
 			err2 = err
 		}
+		sudoku.GetManager().StopAll()
 		mtproto.GetManager().StopAll()
 		amneziawgnet.GetManager().StopAll()
 		amneziawgnet.GetOutboundManager().StopAll()

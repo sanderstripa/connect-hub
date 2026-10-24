@@ -13,6 +13,7 @@ const LINK_PROTOCOLS: ReadonlySet<string> = new Set([
   Protocols.SHADOWSOCKS,
   Protocols.HYSTERIA,
   Protocols.MTPROTO,
+  Protocols.SUDOKU,
   Protocols.TUIC,
 ]);
 

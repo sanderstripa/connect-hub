@@ -1771,6 +1771,9 @@ export const SCHEMAS: Record<string, unknown> = {
         "description": "Subscription identifier",
         "type": "string"
       },
+      "sudokuKey": {
+        "type": "string"
+      },
       "tgId": {
         "description": "Telegram user ID for notifications",
         "format": "int64",
@@ -1975,6 +1978,9 @@ export const SCHEMAS: Record<string, unknown> = {
         "type": "string"
       },
       "subId": {
+        "type": "string"
+      },
+      "sudokuKey": {
         "type": "string"
       },
       "tgId": {
@@ -3088,6 +3094,7 @@ export const SCHEMAS: Record<string, unknown> = {
           "tunnel",
           "tun",
           "mtproto",
+          "sudoku",
           "amneziawg",
           "tuic",
           "masque"

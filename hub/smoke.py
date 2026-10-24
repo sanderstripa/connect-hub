@@ -161,6 +161,7 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
   assert core.poll() is None
   suite=runpy.run_path(str(root/'hub/sudoku-inbounds-smoke.py'))['run']
   a,b,laptop,laptop_cfg,tablet_cfg,phone_cfg,check=suite(request,csrf,sudoku,td,fixture.server_port,passed)
+  runpy.run_path(str(root/'hub/native-sudoku-smoke.py'))['run'](request,csrf,sudoku,td,passed,(a,b,laptop,laptop_cfg,tablet_cfg,phone_cfg,check))
   stop(p);p=launch();jar.clear();csrf=request('csrf-token')['obj'];assert request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf)['success']
   # HTTP is available before the background engine startup finishes.
   for _ in range(80):

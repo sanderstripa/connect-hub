@@ -19,6 +19,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
+	"github.com/mhsanaei/3x-ui/v3/internal/sudoku"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/common"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/random"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
@@ -203,6 +204,9 @@ func (s *ClientService) Create(inboundSvc *InboundService, payload *ClientCreate
 		}
 		if client.Auth == "" {
 			client.Auth = existing.Auth
+		}
+		if client.SudokuKey == "" {
+			client.SudokuKey = existing.SudokuKey
 		}
 		if client.Secret == "" {
 			client.Secret = existing.Secret
@@ -407,6 +411,8 @@ func markInboundNodesDirty(inboundIds []int) error {
 
 func (s *ClientService) fillProtocolDefaults(c *model.Client, ib *model.Inbound) error {
 	switch ib.Protocol {
+	case model.Sudoku:
+		return sudoku.NormalizeClient(c, ib)
 	case model.VMESS, model.VLESS:
 		if c.ID == "" {
 			c.ID = uuid.NewString()
@@ -673,6 +679,9 @@ func (s *ClientService) Update(inboundSvc *InboundService, id int, updated model
 	if updated.Auth == "" {
 		updated.Auth = existing.Auth
 	}
+	if updated.SudokuKey == "" {
+		updated.SudokuKey = existing.SudokuKey
+	}
 	if updated.Secret == "" {
 		updated.Secret = existing.Secret
 	}
@@ -790,6 +799,7 @@ func (s *ClientService) Update(inboundSvc *InboundService, id int, updated model
 				"password":          merged.Password,
 				"auth":              merged.Auth,
 				"secret":            merged.Secret,
+				"sudoku_key":        merged.SudokuKey,
 				"flow":              merged.Flow,
 				"security":          merged.Security,
 				"wg_private_key":    merged.PrivateKey,

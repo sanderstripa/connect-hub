@@ -486,6 +486,8 @@
         "accounts": "Акаунти",
         "allowTransparent": "Дозволити прозорий",
         "encryptionMethod": "Метод шифрування",
+        "sudokuEncryption": "Encryption",
+        "sudokuTable": "Table mode",
         "fakeTlsDomain": "Домен FakeTLS (SNI)",
         "mtprotoSecret": "Секрет",
         "mtgDomainFrontingIp": "IP домен-фронтингу",

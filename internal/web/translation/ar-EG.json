@@ -486,6 +486,8 @@
         "accounts": "الحسابات",
         "allowTransparent": "السماح بالشفاف",
         "encryptionMethod": "طريقة التشفير",
+        "sudokuEncryption": "Encryption",
+        "sudokuTable": "Table mode",
         "fakeTlsDomain": "نطاق FakeTLS (SNI)",
         "mtprotoSecret": "المفتاح السري",
         "mtgDomainFrontingIp": "عنوان IP لـ Domain fronting",

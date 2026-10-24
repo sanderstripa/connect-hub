@@ -32,6 +32,7 @@ const (
 	WireGuard   Protocol = "wireguard"
 	Hysteria    Protocol = "hysteria"
 	MTProto     Protocol = "mtproto"
+	Sudoku      Protocol = "sudoku"
 	AmneziaWG   Protocol = "amneziawg"
 	TUIC        Protocol = "tuic"
 	MASQUE      Protocol = "masque"
@@ -65,7 +66,7 @@ type Inbound struct {
 	// Xray configuration fields
 	Listen            string   `json:"listen" form:"listen"`
 	Port              int      `json:"port" form:"port" validate:"gte=0,lte=65535" example:"443"`
-	Protocol          Protocol `json:"protocol" form:"protocol" validate:"required,oneof=vmess vless trojan shadowsocks wireguard hysteria http mixed tunnel tun mtproto amneziawg tuic masque" example:"vless"`
+	Protocol          Protocol `json:"protocol" form:"protocol" validate:"required,oneof=vmess vless trojan shadowsocks wireguard hysteria http mixed tunnel tun mtproto sudoku amneziawg tuic masque" example:"vless"`
 	Settings          string   `json:"settings" form:"settings"`
 	StreamSettings    string   `json:"streamSettings" form:"streamSettings"`
 	Tag               string   `json:"tag" form:"tag" gorm:"unique" example:"in-443-tcp"`
@@ -944,6 +945,7 @@ type Client struct {
 	PreSharedKey        string           `json:"preSharedKey,omitempty"`
 	KeepAlive           *int             `json:"keepAlive,omitempty"`      // Seconds between PersistentKeepalive packets; 0 sends none, omit to keep the stored value
 	ForwardedPorts      string           `json:"forwardedPorts,omitempty"` // AmneziaWG per-client port-forwarding spec, e.g. "80,443,8000-8100"
+	SudokuKey           string           `json:"sudokuKey,omitempty"`
 	Secret              string           `json:"secret,omitempty" example:"ee1234567890abcdef1234567890abcd7777772e636c6f7564666c6172652e636f6d"`
 	AdTag               string           `json:"adTag,omitempty" example:"0123456789abcdef0123456789abcdef"`
 	Email               string           `json:"email"`                            // Client email identifier
@@ -982,6 +984,7 @@ type ClientRecord struct {
 	PreSharedKey    string `json:"preSharedKey" gorm:"column:wg_pre_shared_key"`
 	KeepAlive       int    `json:"keepAlive" gorm:"column:wg_keep_alive;default:0"`
 	ForwardedPorts  string `json:"forwardedPorts" gorm:"column:wg_forwarded_ports"`
+	SudokuKey       string `json:"sudokuKey,omitempty" gorm:"column:sudoku_key;default:''"`
 	Secret          string `json:"secret" gorm:"column:secret"`
 	AdTag           string `json:"adTag" gorm:"column:ad_tag;default:''"`
 	LimitIP         int    `json:"limitIp" gorm:"column:limit_ip"`
@@ -1221,6 +1224,7 @@ func (c *Client) ToRecord() *ClientRecord {
 		KeepAlive:      c.KeepAliveSeconds(),
 		ForwardedPorts: c.ForwardedPorts,
 		Secret:         c.Secret,
+		SudokuKey:      c.SudokuKey,
 		AdTag:          c.AdTag,
 	}
 	if c.Reverse != nil {
@@ -1280,6 +1284,7 @@ func (r *ClientRecord) ToClient() *Client {
 		KeepAlive:      nonZeroKeepAlive(r.KeepAlive),
 		ForwardedPorts: r.ForwardedPorts,
 		Secret:         r.Secret,
+		SudokuKey:      r.SudokuKey,
 		AdTag:          r.AdTag,
 	}
 	if r.Reverse != "" {
@@ -1507,6 +1512,12 @@ func MergeClientRecord(existing *ClientRecord, incoming *ClientRecord) []ClientM
 		if incomingNewer || existing.PreSharedKey == "" {
 			existing.PreSharedKey = incoming.PreSharedKey
 			keepSecret("preSharedKey")
+		}
+	}
+	if existing.SudokuKey != incoming.SudokuKey && incoming.SudokuKey != "" {
+		if incomingNewer || existing.SudokuKey == "" {
+			existing.SudokuKey = incoming.SudokuKey
+			keepSecret("sudokuKey")
 		}
 	}
 	if existing.Secret != incoming.Secret && incoming.Secret != "" {

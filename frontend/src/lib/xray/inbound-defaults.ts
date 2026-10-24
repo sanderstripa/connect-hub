@@ -371,6 +371,7 @@ export function createDefaultTuicInboundSettings(): TuicInboundSettings {
 // Callers swapping off the class hierarchy use this in place of
 // `getSettings(p)` + `.toJson()`.
 export type AnyInboundSettings =
+  | import('@/schemas/protocols/inbound/sudoku').SudokuInboundSettings
   | VlessInboundSettings
   | VmessInboundSettings
   | TrojanInboundSettings
@@ -408,6 +409,14 @@ export function createDefaultInboundSettings(protocol: string): AnyInboundSettin
       return createDefaultTunInboundSettings();
     case 'wireguard':
       return createDefaultWireguardInboundSettings();
+    case 'sudoku':
+      return {
+        masterKey: '',
+        publicKey: '',
+        aead: 'chacha20-poly1305',
+        table: 'prefer_ascii',
+        clients: [],
+      };
     case 'mtproto':
       return createDefaultMtprotoInboundSettings();
     case 'amneziawg':

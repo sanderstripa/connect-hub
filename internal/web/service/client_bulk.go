@@ -830,6 +830,9 @@ func (s *ClientService) bulkAdjustInboundClients(
 			}
 		}
 	} else {
+		if oldInbound.Protocol == model.Sudoku && oldInbound.NodeID == nil {
+			inboundSvc.applyLocalSudoku(oldInbound.Id)
+		}
 		if adTagChanged && oldInbound.Protocol == model.MTProto && oldInbound.NodeID == nil {
 			inboundSvc.applyLocalMtproto(oldInbound.Id)
 		}

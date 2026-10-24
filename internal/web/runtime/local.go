@@ -12,6 +12,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/amneziawgnet"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/mtproto"
+	"github.com/mhsanaei/3x-ui/v3/internal/sudoku"
 	"github.com/mhsanaei/3x-ui/v3/internal/tuic"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 )
@@ -49,6 +50,13 @@ func (l *Local) withAPI(fn func(api *xray.XrayAPI) error) error {
 }
 
 func (l *Local) AddInbound(_ context.Context, ib *model.Inbound) error {
+	if ib.Protocol == model.Sudoku {
+		inst, ok := sudoku.InstanceFromInbound(ib)
+		if !ok {
+			return nil
+		}
+		return sudoku.GetManager().Ensure(inst)
+	}
 	if ib.Protocol == model.MTProto {
 		inst, ok := mtproto.InstanceFromInbound(ib)
 		if !ok {
@@ -106,6 +114,10 @@ func (l *Local) AddInbound(_ context.Context, ib *model.Inbound) error {
 }
 
 func (l *Local) DelInbound(_ context.Context, ib *model.Inbound) error {
+	if ib.Protocol == model.Sudoku {
+		sudoku.GetManager().Remove(ib.Id)
+		return nil
+	}
 	if ib.Protocol == model.MTProto {
 		mtproto.GetManager().Remove(ib.Id)
 		return nil
@@ -133,6 +145,18 @@ func (l *Local) DelInbound(_ context.Context, ib *model.Inbound) error {
 }
 
 func (l *Local) UpdateInbound(ctx context.Context, oldIb, newIb *model.Inbound) error {
+	if oldIb.Protocol == model.Sudoku || newIb.Protocol == model.Sudoku {
+		if oldIb.Protocol == model.Sudoku && (newIb.Protocol != model.Sudoku || !newIb.Enable) {
+			sudoku.GetManager().Remove(oldIb.Id)
+		}
+		if oldIb.Protocol != model.Sudoku {
+			_ = l.DelInbound(ctx, oldIb)
+		}
+		if !newIb.Enable {
+			return nil
+		}
+		return l.AddInbound(ctx, newIb)
+	}
 	if oldIb.Protocol == model.MTProto || newIb.Protocol == model.MTProto {
 		return l.updateMtprotoInbound(ctx, oldIb, newIb)
 	}
@@ -273,7 +297,7 @@ func (l *Local) updateTuicInbound(ctx context.Context, oldIb, newIb *model.Inbou
 }
 
 func (l *Local) AddUser(_ context.Context, ib *model.Inbound, userMap map[string]any) error {
-	if ib.Protocol == model.MTProto || ib.Protocol == model.AmneziaWG || ib.Protocol == model.TUIC {
+	if ib.Protocol == model.Sudoku || ib.Protocol == model.MTProto || ib.Protocol == model.AmneziaWG || ib.Protocol == model.TUIC {
 		return nil
 	}
 	return l.withAPI(func(api *xray.XrayAPI) error {
@@ -282,7 +306,7 @@ func (l *Local) AddUser(_ context.Context, ib *model.Inbound, userMap map[string
 }
 
 func (l *Local) RemoveUser(_ context.Context, ib *model.Inbound, email string) error {
-	if ib.Protocol == model.MTProto || ib.Protocol == model.AmneziaWG || ib.Protocol == model.TUIC {
+	if ib.Protocol == model.Sudoku || ib.Protocol == model.MTProto || ib.Protocol == model.AmneziaWG || ib.Protocol == model.TUIC {
 		return nil
 	}
 	return l.withAPI(func(api *xray.XrayAPI) error {

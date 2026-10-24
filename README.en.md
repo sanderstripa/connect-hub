@@ -56,14 +56,13 @@ Updates retain a complete data backup and restore the previous binary/data after
 
 A pinned compatible Sudoku Core is included. In the normal **Inbounds** page,
 click **Add Inbound → Basic → Protocol → Sudoku**. All protocols use the same
-inbound list, with device/key management opened from the inbound row:
+inbound list and the original client controls:
 
-1. Create an inbound with a name, client-facing server address and free TCP port.
-2. Add devices, such as Phone and Laptop.
-3. Open **Key / QR / configuration** for each device. Copy its `sudoku://` URI, scan the QR with a compatible client or download native client JSON.
-4. Start the inbound and deliberately allow its TCP port in your firewall. Docker also requires an explicit inbound port mapping.
+1. Choose Sudoku and a free port. The remark, listen address and limits are ordinary 3x-ui fields; no additional mandatory server-address field is introduced.
+2. Open the standard **Clients** page, create a client and attach it to this inbound. Create a separate client for each device.
+3. Open the client's standard **QR Code** button to copy its `sudoku://` link or scan its QR in a compatible application.
 
-Each device receives a distinct key. Disable/re-enable a device or permanently revoke its key. Keys cannot authenticate to another inbound. Enabled inbounds and device credentials persist across panel restarts; removed inbounds are retained in a private archive. Sudoku UDP, subscriptions and unified Xray traffic accounting are not implemented. Treat credentials and backups as secrets.
+Keys are generated automatically and preserved on edits. The ordinary client operations, subscription links, traffic counters and panel database backups include Sudoku. Earlier Connect Hub alpha inbounds migrate into that database without changing device keys; unrelated installations are never imported. A client-set change may reconnect devices on that inbound only. Its port must be reachable; Docker needs an explicit port mapping.
 
 Connect Core alpha remains an opt-in, read-only status adapter for an existing protected control plane: it cannot start VPN/TUN, modify routes or issue Core devices. Mist remains unavailable until its integration contract and redistribution license are verified. Neither experimental transport is claimed as implemented.
 
