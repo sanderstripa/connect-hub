@@ -8,8 +8,13 @@ install(){
  curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash
 }
 update(){ curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash -s -- --update; }
-update_dev(){ echo 'Development builds must pass the fork CI and review before installation.'; }
-legacy_version(){ echo 'Use a retained Connect Hub backup; upstream binaries cannot replace this fork.'; }
+update_dev(){ XUI_UPDATE_TAG=dev-latest bash /opt/connect-hub/current/hub/update.sh; }
+legacy_version(){
+ local tag_version
+ read -rp 'Which panel version would you like to install? (for example: 0.1.0-alpha.4): ' tag_version
+ [[ -n $tag_version ]] || { LOGE 'Panel version cannot be empty';return 1; }
+ XUI_UPDATE_TAG="v${tag_version#v}" bash /opt/connect-hub/current/hub/update.sh
+}
 replace_xui_script(){ command install -m 0755 /opt/connect-hub/current/x-ui.sh /usr/local/bin/connect-hub; }
 update_shell(){ replace_xui_script; }
 xui_env_file_path(){ echo /etc/connect-hub/panel.env; }

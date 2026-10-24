@@ -787,7 +787,7 @@ export default function InboundFormModal({
       <Form.Item label={t('pages.inbounds.port')} htmlFor="sudoku-port" required>
         <InputNumber
           id="sudoku-port"
-          min={1024}
+          min={1}
           max={65535}
           value={sudoku.port}
           onChange={(port) => setSudoku((v) => ({ ...v, port: port ?? 0 }))}

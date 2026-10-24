@@ -4,7 +4,15 @@ set -Eeuo pipefail
 umask 077
 die(){ echo "Connect Hub: $*" >&2;exit 1; }
 [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || die 'This tested release requires Linux amd64 (x86_64).'
-for arg in "$@";do [[ $arg == --update || $arg == --no-service ]] || die 'Supported options: --update, --no-service';done
+requested_version=
+installer_args=()
+for arg in "$@";do
+ case "$arg" in
+  --update|--no-service) installer_args+=("$arg");;
+  v[0-9]*|[0-9]*) [[ -z $requested_version ]] || die 'Specify only one version';requested_version="v${arg#v}";;
+  *) die 'Supported options: [VERSION] --update --no-service';;
+ esac
+done
 runner=(bash)
 if [[ $EUID != 0 && " $* " != *' --no-service '* ]];then
  command -v sudo >/dev/null || die 'Run from a root shell, or install sudo for your account.'
@@ -29,7 +37,7 @@ fi
 DEPENDENCIES
 fi
 for tool in curl sha256sum tar python3 openssl realpath;do command -v "$tool" >/dev/null || die "Required tool missing after dependency installation: $tool";done
-version=$(python3 - <<'CONNECT_HUB_RELEASE_PY'
+version=$(python3 - amd64 "$requested_version" <<'CONNECT_HUB_RELEASE_PY'
 """Resolve an installable Connect Hub GitHub release; never execute remote scripts."""
 import json,re,sys,urllib.error,urllib.request
 
@@ -88,4 +96,4 @@ PY
 curl --fail --location --proto '=https' --proto-redir '=https' --retry 3 --output "$archive" "$base/connect-hub-linux-amd64.tar.gz"
 printf '%s  %s\n' "$checksum" "$archive" | sha256sum --check --status || die 'Release checksum mismatch; nothing installed.'
 tar -xzf "$archive" -C "$tmp" connect-hub/hub/install.sh
-"${runner[@]}" "$tmp/connect-hub/hub/install.sh" --package "$archive" --sha256 "$checksum" "$@"
+"${runner[@]}" "$tmp/connect-hub/hub/install.sh" --package "$archive" --sha256 "$checksum" "${installer_args[@]}"

@@ -70,7 +70,13 @@ if [[ -e $target ]];then
   printf 'Connect Hub is already up to date.\n'
   exit 0
  fi
- die 'This revision already exists but is not the active managed revision'
+ if ((update)) && [[ -d $target && -f $target/BUILD.json ]];then
+  retained=$prefix/backups/retained-release-$(date -u +%Y%m%dT%H%M%SZ)-$$
+  mkdir -p "$prefix/backups"
+  mv "$target" "$retained"
+ else
+  die 'This revision already exists but is not the active managed revision'
+ fi
 fi
 mkdir -p "$prefix/releases" "$logs"
 backup= old= was_active=0
@@ -115,7 +121,17 @@ if ((update)) && [[ -f $data/panel.env ]];then
 fi
 export XUI_DB_FOLDER=$data XUI_LOG_FOLDER=$logs XUI_BIN_FOLDER=$target/bin XUI_MAIN_FOLDER=$target
 export XUI_NODE_TOKEN_KEY_FILE=$data/node_token_key.json
-if ((!update));then
+ln -s "$target" "$prefix/current.new";mv -Tf "$prefix/current.new" "$prefix/current";activated=1
+if ((service)) && ! id connect-hub >/dev/null 2>&1;then useradd --system --user-group --no-create-home --home-dir "$data" --shell /usr/sbin/nologin connect-hub;fi
+if ((!update && service));then
+ CONNECT_HUB_PREFIX="$prefix" CONNECT_HUB_DATA="$data" CONNECT_HUB_HOST="${CONNECT_HUB_HOST:-}" bash "$target/hub/configure.sh"
+ if [[ -f $data/panel.env ]];then
+  while IFS='=' read -r key value;do case $key in XUI_DB_TYPE|XUI_DB_DSN) export "$key=$value";; esac;done < "$data/panel.env"
+ fi
+ listen_args=()
+ if [[ -n ${CONNECT_HUB_LISTEN+x} ]];then listen_args=(-listenIP "$listen");fi
+ "$target/connect-hub" setting -parallelTest "${listen_args[@]}"
+elif ((!update));then
  if [[ -z ${CONNECT_HUB_PORT:-} && -t 2 && -r /dev/tty ]];then
   read -r -p 'Panel port (Enter = choose a free port): ' CONNECT_HUB_PORT </dev/tty || true
  fi
@@ -144,7 +160,6 @@ PY
  fi
  printf 'URL=http://%s:%s%s\nLOCAL_URL=http://127.0.0.1:%s%s\nUSERNAME=%s\nPASSWORD=%s\n' "$host" "$panel_port" "$path" "$panel_port" "$path" "$username" "$password" > "$data/initial-access.txt"
 fi
-ln -s "$target" "$prefix/current.new";mv -Tf "$prefix/current.new" "$prefix/current";activated=1
 if ((service));then
  if ! id connect-hub >/dev/null 2>&1;then useradd --system --user-group --no-create-home --home-dir "$data" --shell /usr/sbin/nologin connect-hub;fi
  chmod 0755 "$prefix" "$prefix/releases" "$target"
@@ -157,12 +172,17 @@ if ((service));then
 [Unit]
 Description=Connect Hub server panel
 After=network.target
+Wants=network.target
+StartLimitIntervalSec=180
+StartLimitBurst=10
 [Service]
 Type=simple
 User=root
 Group=root
 WorkingDirectory=$prefix/current
 ExecStart=$prefix/current/connect-hub
+ExecReload=/bin/kill -USR1 \$MAINPID
+Environment=XRAY_VMESS_AEAD_FORCED=false
 Environment=XUI_DB_FOLDER=$data
 Environment=XUI_DB_TYPE=sqlite
 Environment=XUI_DB_DSN=
@@ -178,6 +198,25 @@ Environment=CONNECT_HUB_NATIVE_INSTALL=1
 EnvironmentFile=-$data/panel.env
 EnvironmentFile=-$data/integrations.env
 Restart=on-failure
+RestartSec=5s
+NoNewPrivileges=yes
+ProtectSystem=full
+ReadWritePaths=-$data -$prefix -$logs
+ReadWriteDirectories=-$data -$prefix -$logs
+ReadWritePaths=-/proc/sys/net
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectHome=read-only
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+CapabilityBoundingSet=CAP_DAC_OVERRIDE CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_RAW
+SystemCallArchitectures=native
 KillMode=control-group
 TimeoutStopSec=30
 UMask=0077
@@ -188,7 +227,7 @@ EOF
  if [[ -e /usr/local/bin/connect-hub ]] && ! grep -q 'Connect Hub modifications' /usr/local/bin/connect-hub;then die 'Refusing to replace a foreign connect-hub command';fi
  install -m 0755 "$target/x-ui.sh" /usr/local/bin/connect-hub
  cert_settings=$("$target/connect-hub" setting -getCert true)
- if ! grep -q '^cert: .' <<< "$cert_settings";then
+ if [[ ! -f $data/.upstream-configured ]] && ! grep -q '^cert: .' <<< "$cert_settings";then
   . "$target/hub/setup-ssl.sh"
   setup_install_ssl
  fi
