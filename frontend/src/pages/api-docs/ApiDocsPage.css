@@ -67,7 +67,7 @@
 }
 
 .api-docs-page .swagger-ui {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: Montserrat, sans-serif;
 }
 
 /* ──────────────────────────────────────────────────────────────────
@@ -201,7 +201,7 @@
 }
 
 .api-docs-page.is-dark .swagger-ui textarea {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: Montserrat, sans-serif;
 }
 
 .api-docs-page.is-dark .swagger-ui input::placeholder,

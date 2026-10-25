@@ -23,8 +23,8 @@ const DEFAULT_STROKE3 = '#a0d911';
 const DEFAULT_MIN_COLOR = '#52c41a';
 const DEFAULT_MAX_COLOR = '#fa541c';
 const GRID_COLOR = 'rgba(128, 128, 140, 0.35)';
-const AXIS_FONT = '10px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
-const LABEL_FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const AXIS_FONT = '10px Montserrat';
+const LABEL_FONT = 'Montserrat';
 
 interface SparklineProps {
   data: number[];

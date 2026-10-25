@@ -85,12 +85,14 @@ func normalizeWebBasePath(basePath string) string {
 }
 
 func pwaHeadInjection(basePath, pageName string) []byte {
+	basePath = normalizeWebBasePath(basePath)
+	icon := `<link rel="icon" type="image/svg+xml" href="` + htmlpkg.EscapeString(basePath+"icons/connect-hub.svg") + `">`
 	if pageName != "index.html" && pageName != "login.html" {
-		return nil
+		return []byte(icon)
 	}
 
 	basePath = normalizeWebBasePath(basePath)
-	return []byte(`<link rel="manifest" href="` + htmlpkg.EscapeString(basePath+"manifest.webmanifest") + `"><script data-cfasync="false" defer src="` + htmlpkg.EscapeString(basePath+"pwa-register.js") + `"></script>`)
+	return []byte(icon + `<link rel="manifest" href="` + htmlpkg.EscapeString(basePath+"manifest.webmanifest") + `"><script data-cfasync="false" defer src="` + htmlpkg.EscapeString(basePath+"pwa-register.js") + `"></script>`)
 }
 
 func serveDistPage(c *gin.Context, name string) {

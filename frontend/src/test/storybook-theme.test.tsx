@@ -2,7 +2,7 @@ import { fireEvent, render } from '@testing-library/react';
 import { afterEach, expect, test } from 'vitest';
 
 import { withTheme } from '../../.storybook/preview';
-import { ThemeProvider, useTheme } from '@/hooks/useTheme';
+import { ThemeProvider, useTheme, buildAntdThemeConfig } from '@/hooks/useTheme';
 
 function Story() {
   return <div>Story</div>;
@@ -18,6 +18,22 @@ function ThemeToggle() {
   const { toggleTheme } = useTheme();
   return <button onClick={toggleTheme}>toggle</button>;
 }
+
+test('only light and dark are selectable and both use Montserrat for every token', () => {
+  localStorage.setItem('isUltraDarkThemeEnabled', 'true');
+  const { getByRole } = render(<ThemeProvider><ThemeToggle /></ThemeProvider>);
+  expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
+  fireEvent.click(getByRole('button'));
+  expect(document.body.classList.contains('light')).toBe(true);
+  fireEvent.click(getByRole('button'));
+  expect(document.body.classList.contains('dark')).toBe(true);
+  expect(localStorage.getItem('isUltraDarkThemeEnabled')).toBeNull();
+  for (const dark of [false, true]) {
+    const config = buildAntdThemeConfig(dark);
+    expect(config.token?.fontFamily).toBe('Montserrat, sans-serif');
+    expect(config.token?.fontFamilyCode).toBe('Montserrat, sans-serif');
+  }
+});
 
 afterEach(() => {
   document.body.className = '';

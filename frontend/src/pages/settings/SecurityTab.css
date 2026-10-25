@@ -86,7 +86,7 @@
 .api-token-value {
   flex: 1;
   min-width: 0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: Montserrat, sans-serif;
   font-size: 12.5px;
   padding: 4px 8px;
   background: var(--ant-color-fill-tertiary);

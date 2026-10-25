@@ -25,6 +25,9 @@ jobs:
       - uses: actions/checkout@v7
       - run: for script in install.sh x-ui.sh hub/*.sh; do bash -n "$script" || exit; done; python3 -m py_compile hub/*.py
       - run: python3 -m unittest discover -s hub -p '*_test.py'
+      - run: python3 hub/wizard-smoke.py
+      - name: Opt-in BBR and additional swap on this disposable VM only
+        run: sudo --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT python3 -B hub/system-options-smoke.py
   container:
     if: ${{ !inputs.release_check && !inputs.runtime_artifact_run }}
     runs-on: ubuntu-24.04
@@ -86,6 +89,8 @@ jobs:
             dist/SHA256SUMS
             dist/smoke-report.json
             dist/unified-inbounds-*.png
+            dist/connect-hub-*.png
+            dist/connect-font-audit.json
   upstream-baseline:
     if: ${{ !inputs.release_check && !inputs.runtime_artifact_run }}
     runs-on: ubuntu-24.04

@@ -45,9 +45,10 @@ export default function HubPage() {
         <AppSidebar />
         <Layout className="content-shell">
           <Layout.Content className="content-area">
-            <Typography.Title level={2}>Connect Hub</Typography.Title>
+            <Typography.Title level={2}>Connect. Hub</Typography.Title>
             <Typography.Paragraph>
-              Connect Hub.{' '}
+              Connect. Hub is a self-hosted server panel built on 3x-ui, with native Sudoku,
+              ordinary client management and safe independent updates.{' '}
               <a href="https://github.com/sanderstripa/connect-hub/blob/main/LICENSE">
                 GNU GPL-3.0
               </a>{' '}

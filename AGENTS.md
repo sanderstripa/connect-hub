@@ -1,5 +1,16 @@
 # Connect Hub requirements
 
+Current user authorization, 25 October 2026, supersedes earlier visual/installer restrictions:
+- Montserrat everywhere in the product, including code/log/QR dialogs and subscription pages.
+- Exactly two themes, light and dark, with the supplied CONNECT screenshots as visual references.
+- Connect. Hub wordmark, a new monochrome icon, English repository presentation and About text.
+- Own bilingual installer: initial hardware summary, opt-in supported BBR and sized swap,
+  IP/domain address choice, DNS/certificate checks, automatic renewal and return to IP on failure.
+- BBR and swap changes are authorized only when explicitly selected in the installer.
+  Preserve existing swap, other panels and services. Never tune the real host/VPS during development.
+- The one-copy bootstrap must work on Ubuntu/Debian without a preinstalled curl, handling root/sudo.
+- Preserve all existing panel capabilities, native Sudoku, keys/data and safe updates.
+
 User requirements restated explicitly on 2026-10-24:
 
 - Connect Hub is the complete 3x-ui fork, not a separate Sudoku panel or redesign.

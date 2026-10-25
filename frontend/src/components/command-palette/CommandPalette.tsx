@@ -65,7 +65,7 @@ export default function CommandPalette() {
   const { t } = useTranslation();
   const [messageApi, messageContextHolder] = message.useMessage();
   const navigate = useNavigate();
-  const { isDark, isUltra, toggleTheme, toggleUltra, antdThemeConfig } = useTheme();
+  const { isDark, isUltra, toggleTheme, antdThemeConfig } = useTheme();
   const { isOpen, close } = useCommandPalette();
   const { allSetting } = useAllSettings();
   const { data: inbounds = [] } = useInboundOptions();
@@ -215,17 +215,9 @@ export default function CommandPalette() {
   }, [close, messageApi, t]);
 
   const cycleTheme = useCallback(() => {
-    if (!isDark) {
-      toggleTheme();
-      if (isUltra) toggleUltra();
-    } else if (!isUltra) {
-      toggleUltra();
-    } else {
-      toggleUltra();
-      toggleTheme();
-    }
+    toggleTheme();
     close();
-  }, [isDark, isUltra, toggleTheme, toggleUltra, close]);
+  }, [toggleTheme, close]);
 
   const trimmedQuery = query.trim();
   const isDebouncing = isOpen && trimmedQuery.length > 0 && trimmedQuery !== debouncedQuery;
@@ -422,7 +414,7 @@ export default function CommandPalette() {
       },
       {
         path: '/hub',
-        title: 'Connect Hub',
+        title: 'Connect. Hub',
         keywords: ['sudoku', 'connect', 'hub'],
         icon: <ToolOutlined />,
       },
@@ -605,7 +597,7 @@ export default function CommandPalette() {
         id: 'act-cycle-theme',
         category: 'actions',
         title: t('menu.theme'),
-        subtitle: isUltra ? 'Ultra Dark' : isDark ? 'Dark' : 'Light',
+        subtitle: isDark ? 'Dark' : 'Light',
         keywords: ['theme', 'light', 'dark', 'ultra'],
         icon: isDark ? <SunOutlined /> : <MoonOutlined />,
         action: cycleTheme,
@@ -644,7 +636,6 @@ export default function CommandPalette() {
     clientSearch,
     inbounds,
     isDark,
-    isUltra,
     allSetting.subURI,
     t,
     close,

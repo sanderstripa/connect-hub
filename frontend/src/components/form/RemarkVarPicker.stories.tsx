@@ -41,7 +41,7 @@ function TemplateBuilderDemo() {
         value={template}
         onChange={(e) => setTemplate(e.target.value)}
         aria-label="Remark template"
-        style={{ fontFamily: 'monospace' }}
+        style={{ fontFamily: 'Montserrat, sans-serif' }}
       />
       <Typography.Paragraph type="secondary" style={{ margin: '8px 0 16px' }}>
         Preview: {previewRemark(template)}

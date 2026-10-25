@@ -11,7 +11,7 @@
 
 .qr-token {
   font-size: 12px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: Montserrat, sans-serif;
   word-break: break-all;
   text-align: center;
 }

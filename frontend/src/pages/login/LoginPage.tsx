@@ -38,7 +38,7 @@ const basePath = window.X_UI_BASE_PATH || '';
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const { isDark, isUltra, toggleTheme, toggleUltra, antdThemeConfig } = useTheme();
+  const { isDark, isUltra, toggleTheme, antdThemeConfig } = useTheme();
   const [messageApi, messageContextHolder] = message.useMessage();
 
   useEffect(() => {
@@ -93,16 +93,8 @@ export default function LoginPage() {
 
   const cycleTheme = useCallback(() => {
     pauseAnimationsUntilLeave('login-theme-cycle');
-    if (!isDark) {
-      toggleTheme();
-      if (isUltra) toggleUltra();
-    } else if (!isUltra) {
-      toggleUltra();
-    } else {
-      toggleUltra();
-      toggleTheme();
-    }
-  }, [isDark, isUltra, toggleTheme, toggleUltra]);
+    toggleTheme();
+  }, [toggleTheme]);
 
   const pageClass = useMemo(() => {
     const classes = ['login-app'];
@@ -179,7 +171,7 @@ export default function LoginPage() {
             ) : (
               <div className="login-card">
                 <div className="brand">
-                  <span className="brand-name">Connect Hub</span>
+                  <span className="brand-name">Connect. Hub</span>
                   <span className="brand-accent" aria-hidden="true" />
                 </div>
                 <h2 className="welcome">

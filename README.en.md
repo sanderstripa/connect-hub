@@ -1,4 +1,6 @@
-# Connect Hub
+![Connect. Hub](docs/brand/wordmark.svg)
+
+# Connect. Hub
 
 **[Русский](README.md) · [English](README.en.md)**
 
@@ -17,7 +19,7 @@ Sudoku is not required to use the panel's standard features.
 On a **Linux amd64 / x86_64 systemd server**, run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash
+sh -c 'set -e; t=$(mktemp); trap '\''rm -f "$t"'\'' EXIT; u=https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh; if command -v curl >/dev/null 2>&1 && [ -s /etc/ssl/certs/ca-certificates.crt ]; then curl -fsSL "$u" -o "$t"; elif command -v wget >/dev/null 2>&1 && [ -s /etc/ssl/certs/ca-certificates.crt ]; then wget -qO "$t" "$u"; else s=; [ "$(id -u)" -eq 0 ] || s=sudo; $s apt-get update; $s apt-get install -y curl ca-certificates; curl -fsSL "$u" -o "$t"; fi; bash "$t"'
 ```
 
 The bootstrap downloads a fixed tested release, verifies its pinned SHA-256 and invokes its installer. No archive, IP or checksum substitution is needed. Requires bash, curl, Python 3, OpenSSL, tar, sha256sum and systemd. Missing prerequisites are installed through the OS package manager. The bootstrap does not currently offer ARM64.
@@ -37,6 +39,19 @@ free. If validation is unavailable, other services are left running and an
 explicitly identified temporary certificate is used; the browser will warn
 until trusted issuance succeeds. **LOCAL_URL** is an
 additional address for checks performed on the server itself.
+
+## A setup flow for your server
+
+The copy/paste command uses an available `curl` or `wget`. When neither exists, it installs curl and CA certificates with apt, using root or sudo. The main installer detects Ubuntu/Debian and installs missing dependencies.
+
+1. **Connect. Hub → language**: Russian or English, followed immediately by the real OS, CPU, RAM and disk summary.
+2. **BBR**: inspect kernel support and current settings before offering an opt-in change. No replacement kernel or reboot. BBR affects system-wide TCP defaults; it is not a universal VPN or UDP accelerator.
+3. **Swap**: show existing swap and offer an additional owned file with a selected size for small-memory servers. Keep the current setup by default. Existing swap stays intact; free-space and filesystem checks precede allocation, including Btrfs-specific handling.
+4. **Panel address**: detected IP or a domain with HTTPS. Check DNS and the local validation port before issuance. Let’s Encrypt performs the final external reachability check. Failed domain setup offers retry or a return to IP, and automatic certificate renewal is configured.
+
+Exactly two visual themes, **light and dark**, follow the CONNECT visual style. **Montserrat** is served locally, including Cyrillic and italics, throughout settings, tables, dialogs, links, logs and configuration editors. No Google Fonts request is needed in the browser.
+
+Host tuning is applied only after explicit installer choices. Updating an existing panel does not repeat BBR/swap changes, and retains its database and device keys.
 
 ## Parallel installation and updates
 

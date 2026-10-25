@@ -18,6 +18,10 @@ if [[ ${XUI_NONINTERACTIVE:-0} != 1 && ! -t 0 && -t 2 && -r /dev/tty ]];then
 fi
 NONINTERACTIVE=0
 if [[ ${XUI_NONINTERACTIVE:-0} == 1 || ! -t 0 ]];then NONINTERACTIVE=1;fi
+if [[ -f $data/setup.env ]];then
+ while IFS='=' read -r key value;do case $key in CONNECT_HUB_LANGUAGE|CONNECT_HUB_HOST|CONNECT_HUB_DOMAIN|CONNECT_HUB_ADDRESS_MODE) export "$key=$value";;esac;done < "$data/setup.env"
+ NONINTERACTIVE=1
+fi
 export NONINTERACTIVE
 source "$xui_folder/hub/upstream-install-functions.sh"
 for option in USERNAME PASSWORD WEB_BASE_PATH PANEL_PORT SSL_MODE DOMAIN SSL_IPV6 DB_TYPE DB_DSN;do
@@ -69,6 +73,25 @@ PY
 prompt_and_setup_ssl() {
  local panel_port=$1 web_path=$2 server_ip=$3
  printf 'URL=http://%s:%s/%s\nLOCAL_URL=http://127.0.0.1:%s/%s\nUSERNAME=%s\nPASSWORD=%s\n' "$server_ip" "$panel_port" "${web_path#/}" "$panel_port" "${web_path#/}" "$config_username" "$config_password" > "$data/initial-access.txt"
+ if [[ -f $data/setup.env ]];then
+  local selected=${CONNECT_HUB_DOMAIN:-$server_ip} state choice
+  while true;do
+   CONNECT_HUB_PREFIX="$prefix" CONNECT_HUB_DATA="$data" CONNECT_HUB_DOMAIN="$selected" bash "$xui_folder/hub/cert.sh" || true
+   state=$(sed -n 's/^CERTIFICATE=//p' "$data/initial-access.txt")
+   [[ ${CONNECT_HUB_ADDRESS_MODE:-ip} == domain && $state != trusted && ${CONNECT_HUB_TLS_MODE:-auto} != selfsigned ]] || break
+   choice=2
+   if [[ -r /dev/tty ]] && { : </dev/tty; } 2>/dev/null;then
+    if [[ ${CONNECT_HUB_LANGUAGE:-en} == ru ]];then
+     printf '\nНе удалось выпустить доверенный сертификат домена. 1 — повторить, 2 — вернуться к IP [2]: ' >/dev/tty
+    else printf '\nDomain certificate issuance failed. 1 — retry, 2 — return to IP [2]: ' >/dev/tty;fi
+    read -r choice </dev/tty || true;choice=${choice:-2}
+   fi
+   if [[ $choice != 1 ]];then selected=$server_ip;CONNECT_HUB_DOMAIN=;CONNECT_HUB_ADDRESS_MODE=ip;fi
+  done
+  SSL_SCHEME=https;SSL_HOST=$selected
+  [[ -s $prefix/tls/fullchain.pem && -s $prefix/tls/privkey.pem ]] || return 1
+  return 0
+ fi
  if [[ ${CONNECT_HUB_TLS_MODE:-auto} == selfsigned ]];then
   CONNECT_HUB_DOMAIN="$server_ip" bash "$xui_folder/hub/cert.sh"
   SSL_SCHEME=https;SSL_HOST=$server_ip

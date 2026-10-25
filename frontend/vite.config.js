@@ -211,6 +211,9 @@ export default defineConfig({
   },
   experimental: {
     renderBuiltUrl(filename, { hostType }) {
+      // CSS cannot evaluate X_UI_BASE_PATH. Relative font/image URLs work at
+      // every random panel path, on subscription pages and behind a proxy.
+      if (hostType === 'css') return { relative: true };
       if (hostType === 'js') {
         return {
           runtime: `((window.X_UI_BASE_PATH||'/')+${JSON.stringify(filename)})`,

@@ -162,7 +162,7 @@ function saveSidebarPinned(pinned: boolean) {
 
 export default function AppSidebar() {
   const { t } = useTranslation();
-  const { isDark, isUltra, toggleTheme, toggleUltra } = useTheme();
+  const { isDark, isUltra, toggleTheme } = useTheme();
   const { open: openCommandPalette } = useCommandPalette();
   const navigate = useNavigate();
   const { pathname, hash } = useLocation();
@@ -214,7 +214,7 @@ export default function AppSidebar() {
       { key: '/routing', icon: 'routing', title: t('menu.routing') },
       { key: '/settings', icon: 'setting', title: t('menu.settings') },
       { key: '/xray', icon: 'tool', title: t('menu.xray') },
-      { key: '/hub', icon: 'tool', title: 'Connect Hub' },
+      { key: '/hub', icon: 'tool', title: 'Connect. Hub' },
       { key: '/api-docs', icon: 'apidocs', title: t('menu.apiDocs') },
       { key: LOGOUT_KEY, icon: 'logout', title: t('logout') },
     ],
@@ -333,17 +333,9 @@ export default function AppSidebar() {
   const cycleTheme = useCallback(
     (id: string) => {
       pauseAnimationsUntilLeave(id);
-      if (!isDark) {
-        toggleTheme();
-        if (isUltra) toggleUltra();
-      } else if (!isUltra) {
-        toggleUltra();
-      } else {
-        toggleUltra();
-        toggleTheme();
-      }
+      toggleTheme();
     },
-    [isDark, isUltra, toggleTheme, toggleUltra],
+    [toggleTheme],
   );
 
   return (
@@ -362,7 +354,7 @@ export default function AppSidebar() {
       >
         <div className="sider-brand">
           <div className="brand-block">
-            <span className="brand-text">{railCollapsed ? 'CH' : 'Connect Hub'}</span>
+            <span className="brand-text">{railCollapsed ? 'CH' : 'Connect. Hub'}</span>
           </div>
           {!railCollapsed && (
             <div className="brand-actions">
@@ -450,7 +442,7 @@ export default function AppSidebar() {
       >
         <div className="drawer-header">
           <div className="brand-block">
-            <span className="drawer-brand">Connect Hub</span>
+            <span className="drawer-brand">Connect. Hub</span>
           </div>
           <div className="drawer-header-actions">
             <DocsButton ariaLabel={t('menu.docs') || 'Documentation'} />

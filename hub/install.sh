@@ -137,7 +137,13 @@ export XUI_NODE_TOKEN_KEY_FILE=$data/node_token_key.json
 ln -s "$target" "$prefix/current.new";mv -Tf "$prefix/current.new" "$prefix/current";activated=1
 if ((service)) && ! id connect-hub >/dev/null 2>&1;then useradd --system --user-group --no-create-home --home-dir "$data" --shell /usr/sbin/nologin connect-hub;fi
 if ((!update && service));then
- CONNECT_HUB_PREFIX="$prefix" CONNECT_HUB_DATA="$data" CONNECT_HUB_HOST="${CONNECT_HUB_HOST:-}" bash "$target/hub/configure.sh"
+ python3 "$target/hub/setup-wizard.py" --prefix "$prefix" --data "$data"
+ while IFS='=' read -r key value;do
+  case $key in CONNECT_HUB_LANGUAGE|CONNECT_HUB_HOST|CONNECT_HUB_DOMAIN|CONNECT_HUB_ADDRESS_MODE) export "$key=$value";;esac
+ done < "$data/setup.env"
+ if ! CONNECT_HUB_PREFIX="$prefix" CONNECT_HUB_DATA="$data" bash "$target/hub/configure.sh" > "$data/install-config.log" 2>&1;then
+  tail -n 25 "$data/install-config.log" >&2;die 'Configuration failed; diagnostic log retained in the owned data directory'
+ fi
  if [[ -f $data/panel.env ]];then
   while IFS='=' read -r key value;do case $key in XUI_DB_TYPE|XUI_DB_DSN) export "$key=$value";; esac;done < "$data/panel.env"
  fi
