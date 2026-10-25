@@ -2,7 +2,7 @@
 
 # Connect. Hub
 
-**[Русский](README.md) · [English](README.en.md)**
+**[English](README.md) · [Русский](README.ru.md)**
 
 Independent server panel based on [3x-ui](https://github.com/MHSanaei/3x-ui), with its own identity, clean storage and no active advertising blocks. Complete upstream Git ancestry, authorship and GPL-3.0 are retained. **0.1 alpha** is a test release.
 
