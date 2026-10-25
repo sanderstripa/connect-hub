@@ -110,7 +110,7 @@ describe('CommandPalette component', () => {
     const input = screen.getByPlaceholderText(/Type a command or search/i);
     fireEvent.change(input, { target: { value: 'settings' } });
 
-    expect(screen.getAllByText(/Panel Settings/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/^Settings$/i).length).toBeGreaterThan(0);
   });
 
   it('resets query on close and does not persist query on reopen', async () => {

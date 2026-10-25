@@ -91,6 +91,77 @@ jobs:
             dist/unified-inbounds-*.png
             dist/connect-hub-*.png
             dist/connect-font-audit.json
+            dist/connect-density-*.png
+            dist/connect-density-audit.json
+  windows-installer:
+    if: ${{ !inputs.release_check && !inputs.runtime_artifact_run }}
+    runs-on: windows-2025
+    timeout-minutes: 30
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      CONNECT_HUB_EXPECTED_REVISION: ${{ github.sha }}
+      ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
+      ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
+    defaults:
+      run:
+        working-directory: apps/windows-installer
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: apps/windows-installer/package-lock.json
+      - run: npm ci --ignore-scripts --omit=optional
+      - run: node node_modules/electron/install.js
+      - run: npm run prepare-assets
+      - run: npm test
+      - name: Actual Windows GUI, encrypted SSH and address-only QR
+        run: node test/ui-smoke.cjs
+      - run: npm run build
+      - name: Test the packaged application and the actual portable EXE
+        run: |
+          node test/ui-smoke.cjs "../../dist/windows-installer/win-unpacked/Connect Hub Setup.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node test/portable-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $digest = (Get-FileHash -Algorithm SHA256 ../../dist/windows-installer/Connect-Hub-Setup.exe).Hash.ToLowerInvariant()
+          [IO.File]::WriteAllText((Join-Path (Resolve-Path ../../dist/windows-installer) 'SHA256SUMS'), "$digest  Connect-Hub-Setup.exe`n", [Text.UTF8Encoding]::new($false))
+          Copy-Item assets/BUILD.json ../../dist/windows-installer/BUILD.json
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: connect-hub-windows-installer
+          path: |
+            dist/windows-installer/Connect-Hub-Setup.exe
+            dist/windows-installer/SHA256SUMS
+            dist/windows-installer/BUILD.json
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: connect-hub-windows-evidence
+          path: |
+            dist/desktop-evidence/*.png
+  desktop-ssh:
+    if: ${{ !inputs.release_check && !inputs.runtime_artifact_run }}
+    needs: linux
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/download-artifact@v6
+        with:
+          name: connect-hub-linux-amd64
+          path: dist
+      - run: npm ci --ignore-scripts --omit=optional
+        working-directory: apps/windows-installer
+      - run: npm run prepare-assets
+        working-directory: apps/windows-installer
+      - name: Actual detached SSH installation, reconnect and preserved-key traffic
+        run: sudo --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT "$(command -v node)" apps/windows-installer/test/linux-install-smoke.cjs
   upstream-baseline:
     if: ${{ !inputs.release_check && !inputs.runtime_artifact_run }}
     runs-on: ubuntu-24.04

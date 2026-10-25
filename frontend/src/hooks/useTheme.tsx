@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { theme as antdTheme } from 'antd';
 import type { ThemeConfig } from 'antd';
 import '@/styles/connect-brand.css';
+import '@/styles/connect-density.css';
 const initialDark = localStorage.getItem('dark-mode') !== 'false';
 function applyDom(dark: boolean) {
   document.body.classList.remove('dark', 'light'); document.body.classList.add(dark ? 'dark' : 'light');
@@ -25,12 +26,23 @@ export function buildAntdThemeConfig(dark: boolean, _legacyUltra = false): Theme
       colorBorder: border, colorBorderSecondary: border, colorPrimary: primary,
       colorPrimaryHover: dark ? '#ffffff' : '#363b40', colorPrimaryActive: dark ? '#c6c9ce' : '#000000',
       colorLink: text, colorLinkHover: muted, colorTextLightSolid: dark ? '#101214' : '#ffffff',
-      colorPrimaryBg: dark ? '#232629' : '#e9eaec', borderRadius: 8, controlHeight: 34 },
+      colorPrimaryBg: dark ? '#232629' : '#e9eaec', borderRadius: 8,
+      controlHeight: 34, controlHeightSM: 34, controlHeightLG: 34, fontSize: 13, lineHeight: 1.54 },
     components: {
       Layout: { bodyBg: bg, headerBg: bg, footerBg: bg, siderBg: bg, headerColor: text },
       Menu: { darkItemBg: bg, darkSubMenuItemBg: bg, darkPopupBg: card, darkItemSelectedBg: '#232629', darkItemSelectedColor: '#ffffff', itemSelectedBg: dark ? '#232629' : '#e9eaec', itemSelectedColor: text },
       Button: { primaryColor: dark ? '#101214' : '#ffffff', primaryShadow: 'none' },
-      Switch: { colorPrimary: primary, colorPrimaryHover: primary, colorTextQuaternary: border },
+      Switch: { colorPrimary: primary, colorPrimaryHover: primary, colorTextQuaternary: border,
+        trackHeight: 22, trackHeightSM: 22, trackMinWidth: 44, trackMinWidthSM: 44,
+        handleSize: 18, handleSizeSM: 18, trackPadding: 2,
+        innerMinMargin: 9, innerMinMarginSM: 9, innerMaxMargin: 24, innerMaxMarginSM: 24 },
+      Table: { cellPaddingBlock: 8, cellPaddingBlockMD: 8, cellPaddingBlockSM: 8,
+        cellPaddingInline: 12, cellPaddingInlineMD: 12, cellPaddingInlineSM: 12 },
+      Card: { bodyPadding: 16, bodyPaddingSM: 16, headerPadding: 16, headerPaddingSM: 16,
+        headerHeight: 50, headerHeightSM: 50 },
+      Form: { itemMarginBottom: 16, verticalLabelPadding: '0 0 8px' },
+      Select: { optionHeight: 34 },
+      Pagination: { itemSize: 34, itemSizeSM: 34 },
       Statistic: { contentFontSize: 17, titleFontSize: 11 },
     },
   };

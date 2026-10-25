@@ -208,7 +208,14 @@
 
 .email-cell .email {
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
+
+.client-secondary { display: flex; gap: 8px; min-width: 0; max-width: 220px; line-height: 16px; overflow: hidden; }
+.client-secondary > .sub { min-width: 0; flex: 0 1 auto; }
 
 .email-cell .sub {
   font-size: 11px;

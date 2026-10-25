@@ -1,0 +1,14 @@
+{
+  "name": "connect-hub-installer", "version": "0.1.0-alpha.8", "private": true,
+  "description": "Connect. Hub server installation wizard", "author": "Sander Stripa and Connect Hub contributors", "license": "GPL-3.0-only", "main": "main.cjs",
+  "scripts": { "prepare-assets": "node scripts/prepare-assets.cjs", "start": "electron .", "test": "node --test test/*.test.cjs", "build": "npm run prepare-assets && electron-builder --win portable --x64" },
+  "dependencies": { "ssh2": "1.17.0", "qrcode": "1.5.4" },
+  "devDependencies": { "electron": "45.0.0", "electron-builder": "26.18.0", "playwright": "1.64.1" },
+  "build": {
+    "appId": "com.sanderstripa.connecthub.installer", "productName": "Connect Hub Setup", "artifactName": "Connect-Hub-Setup.exe", "asar": true,
+    "directories": { "output": "../../dist/windows-installer" },
+    "files": ["main.cjs", "preload.cjs", "backend.cjs", "remote-job.sh", "ui/**", "assets/**", "package.json"],
+    "win": { "target": ["portable"], "icon": "assets/icon.ico", "signAndEditExecutable": true },
+    "portable": { "requestExecutionLevel": "user" }
+  }
+}
