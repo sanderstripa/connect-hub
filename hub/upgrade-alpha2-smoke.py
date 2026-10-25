@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Upgrade the public alpha.2 on a fresh disposable hosted runner."""
-import hashlib,http.cookiejar,io,json,os,pathlib,secrets,socket,ssl,subprocess,tarfile,tempfile,time,urllib.parse,urllib.request
+import hashlib,http.cookiejar,io,json,os,pathlib,secrets,socket,ssl,subprocess,tarfile,tempfile,time,urllib.error,urllib.parse,urllib.request
 assert os.environ.get('GITHUB_ACTIONS')=='true' and os.environ.get('RUNNER_ENVIRONMENT')=='github-hosted'
 assert not pathlib.Path('/opt/connect-hub').exists()
 root=pathlib.Path(__file__).resolve().parent.parent
@@ -19,7 +19,12 @@ def session(creds,certificate=None):
  return request
 with tempfile.TemporaryDirectory(prefix='hub-alpha2-upgrade-')as raw:
  temp=pathlib.Path(raw)
- data=urllib.request.urlopen('https://github.com/sanderstripa/connect-hub/releases/download/v0.1.0-alpha.2/connect-hub-linux-amd64.tar.gz',timeout=120).read()
+ try:
+  data=urllib.request.urlopen('https://github.com/sanderstripa/connect-hub/releases/download/v0.1.0-alpha.2/connect-hub-linux-amd64.tar.gz',timeout=120).read()
+ except urllib.error.HTTPError as error:
+  if error.code!=404:raise
+  print('SKIP: the historical public alpha.2 archive was removed (HTTP 404). Legacy migration unit tests remain enabled; current-release upgrades are verified separately.',flush=True)
+  raise SystemExit(0)
  assert hashlib.sha256(data).hexdigest()=='ba757cce6ded902274f8da904d26007d58659f6317d14006789b1e34a51ae81d'
  archive=temp/'alpha2.tar.gz';archive.write_bytes(data)
  with tarfile.open(fileobj=io.BytesIO(data))as t:installer=t.extractfile('connect-hub/hub/install.sh').read()

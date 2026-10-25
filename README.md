@@ -2,104 +2,85 @@
 
 # Connect. Hub
 
-**[Русский](README.md) · [English](README.en.md)**
+**[English](README.md) · [Русский](README.ru.md)**
 
-Самостоятельная серверная панель на основе [3x-ui](https://github.com/MHSanaei/3x-ui): своё название, чистая установка, без рекламных блоков. История upstream, авторство и GPL-3.0 сохранены. Версия **0.1 alpha** предназначена для проверки.
+Independent server panel based on [3x-ui](https://github.com/MHSanaei/3x-ui), with its own identity, clean storage and no active advertising blocks. Complete upstream Git ancestry, authorship and GPL-3.0 are retained. **0.1 alpha** is a test release.
 
-## Полная панель на основе 3x-ui
+## The complete 3x-ui-based panel
 
-Connect Hub сохраняет привычные разделы и возможности исходной панели:
+The original inbound/outbound and client management, standard protocols,
+subscriptions, routing/DNS, statistics, Xray settings, API, backups and node
+management are retained. Changes are Connect Hub branding, no advertising or
+sponsor blocks, isolated installation and the additional Sudoku protocol.
+Sudoku is not required to use the panel's standard features.
 
-- inbound/outbound и клиенты для штатных протоколов 3x-ui;
-- подписки и ссылки подключения, маршрутизация и DNS;
-- статистика, настройки Xray, API, резервные копии и работа с узлами;
-- управление подключениями через обычный веб-интерфейс.
+## Install with one command
 
-Изменения: название Connect Hub, отсутствие рекламы и спонсорских блоков,
-отдельная безопасная установка и дополнительный протокол Sudoku. Это форк всей
-панели 3x-ui. Для обычной работы устанавливать или включать Sudoku не требуется.
-
-## Установить одной командой
-
-На сервере **Linux amd64 / x86_64 с systemd** выполните:
+On a **Linux amd64 / x86_64 systemd server**, run:
 
 ```bash
 sh -c 'set -e; t=$(mktemp); trap '\''rm -f "$t"'\'' EXIT; u=https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh; if command -v curl >/dev/null 2>&1 && [ -s /etc/ssl/certs/ca-certificates.crt ]; then curl -fsSL "$u" -o "$t"; elif command -v wget >/dev/null 2>&1 && [ -s /etc/ssl/certs/ca-certificates.crt ]; then wget -qO "$t" "$u"; else s=; [ "$(id -u)" -eq 0 ] || s=sudo; $s apt-get update; $s apt-get install -y curl ca-certificates; curl -fsSL "$u" -o "$t"; fi; bash "$t"'
 ```
 
-Установщик сам скачивает фиксированный проверенный релиз, проверяет SHA-256 и устанавливает панель. Не нужно подставлять IP или контрольную сумму. Требуются bash, curl, Python 3, OpenSSL, tar, sha256sum и systemd; отсутствующие компоненты устанавливаются автоматически через пакетный менеджер системы. ARM64 этой командой пока не устанавливается.
+The bootstrap downloads a fixed tested release, verifies its pinned SHA-256 and invokes its installer. No archive, IP or checksum substitution is needed. Requires bash, curl, Python 3, OpenSSL, tar, sha256sum and systemd. Missing prerequisites are installed through the OS package manager. The bootstrap does not currently offer ARM64.
 
-В конце выводятся адрес, логин и пароль. Посмотреть их повторно:
+The installer prints a random URL, username and password. Retrieve them again with:
 
 ```bash
 sudo cat /etc/connect-hub/initial-access.txt
 ```
 
-Откройте адрес из **URL** в браузере: установщик определяет IP сервера и выбирает
-свободный порт. SSH-туннель для обычной установки не нужен. Если firewall сервера
-или провайдера блокирует порт, разрешите только указанный новый TCP-порт. При установке автоматически запрашивается сертификат Let’s Encrypt для IP (или указанного домена) и включается HTTPS с автоматическим продлением. Для проверки сертификата нужен доступный снаружи TCP-порт 80. Если он занят или недоступен, чужая служба остаётся работающей: включается временный сертификат, а установщик явно сообщает о предупреждении браузера и способе повторного выпуска.
-**LOCAL_URL** — дополнительный адрес для проверки непосредственно на сервере.
+Open **URL** in your browser: the installer detects the server IPv4 address and
+chooses a free port. Normal native installation needs no SSH tunnel. If a server
+or provider firewall blocks it, allow only the printed new TCP port. Initial
+access uses HTTPS. Setup requests a trusted Let's Encrypt IP/domain certificate
+and configures automatic renewal. External TCP port 80 must be reachable and
+free. If validation is unavailable, other services are left running and an
+explicitly identified temporary certificate is used; the browser will warn
+until trusted issuance succeeds. **LOCAL_URL** is an
+additional address for checks performed on the server itself.
 
-## Установка под ваш сервер
+## A setup flow for your server
 
-Первая команда выбирает доступный `curl` или `wget`. Если обоих нет, она устанавливает `curl` и CA-сертификаты через `apt`, работая как от root, так и через sudo. Основной установщик определяет Ubuntu/Debian и устанавливает недостающие зависимости.
+The copy/paste command uses an available `curl` or `wget`. When neither exists, it installs curl and CA certificates with apt, using root or sudo. The main installer detects Ubuntu/Debian and installs missing dependencies.
 
-1. **Connect. Hub → язык**: русский или английский. Сразу выводятся ОС, CPU, RAM и размер диска, например `Debian 13 · 1 CPU · 1 GB RAM · 10 GB disk` — фактические данные вашего сервера.
-2. **BBR**: сначала проверяются ядро, доступные алгоритмы и текущая настройка. Включение только по вашему выбору, без установки другого ядра или перезагрузки. Это общесистемная настройка TCP, а не универсальный ускоритель VPN и UDP.
-3. **Подкачка**: показывается существующая; для небольшой RAM предлагается дополнительный файл с выбранным размером. Можно оставить всё без изменений. Чужая подкачка не отключается и не меняется. Проверяются свободное место и файловая система; Btrfs использует штатное безопасное создание swap-файла.
-4. **Адрес**: обнаруженный IP или ваш домен с HTTPS. Для домена проверяются DNS и свободный локальный порт 80; окончательную доступность извне проверяет Let’s Encrypt при выпуске. При ошибке можно повторить или вернуться к IP, продолжив установку. Сертификат получает автоматическое продление.
+1. **Connect. Hub → language**: Russian or English, followed immediately by the real OS, CPU, RAM and disk summary.
+2. **BBR**: inspect kernel support and current settings before offering an opt-in change. No replacement kernel or reboot. BBR affects system-wide TCP defaults; it is not a universal VPN or UDP accelerator.
+3. **Swap**: show existing swap and offer an additional owned file with a selected size for small-memory servers. Keep the current setup by default. Existing swap stays intact; free-space and filesystem checks precede allocation, including Btrfs-specific handling.
+4. **Panel address**: detected IP or a domain with HTTPS. Check DNS and the local validation port before issuance. Let’s Encrypt performs the final external reachability check. Failed domain setup offers retry or a return to IP, and automatic certificate renewal is configured.
 
-В интерфейсе используются только **светлая и тёмная темы** в стиле CONNECT. Шрифт **Montserrat** встроен локально, включая кириллицу и курсив: он применяется также к настройкам, таблицам, диалогам, ссылкам, журналам и редакторам конфигурации. Внешнего подключения к Google Fonts нет.
+Exactly two visual themes, **light and dark**, follow the CONNECT visual style. **Montserrat** is served locally, including Cyrillic and italics, throughout settings, tables, dialogs, links, logs and configuration editors. No Google Fonts request is needed in the browser.
 
-Настройки BBR и подкачки применяются только при явном выборе в установщике. Обновление существующей панели повторно их не включает. База и ключи устройств сохраняются.
+Host tuning is applied only after explicit installer choices. Updating an existing panel does not repeat BBR/swap changes, and retains its database and device keys.
 
-## Установка рядом с другими панелями
+## Parallel installation and updates
 
-Панель использует свои `/opt/connect-hub`, `/etc/connect-hub`, `/var/log/connect-hub`, пользователя и службу `connect-hub`. Дополнительная подкачка по вашему выбору создаётся в `/var/lib/connect-hub-swap`, BBR — в своём `/etc/sysctl.d/90-connect-hub-bbr.conf` и меняет общесистемную настройку TCP. Оба действия требуют отдельного выбора в установщике. Чужие базы, ключи и сертификаты не импортируются. При существующих одноимённых папках, пользователе или чужой службе установка откажется продолжать. Firewall, DNS и маршруты не меняются; чужие службы не перезапускаются. Внутренние порты Xray выбираются отдельно, настройки подписок сохранены как в 3x-ui, с отдельным свободным портом.
+The panel uses its own `/opt/connect-hub`, `/etc/connect-hub`, `/var/log/connect-hub`, account and service. Existing names/paths are refused. Optional swap uses `/var/lib/connect-hub-swap`; optional BBR writes its own `/etc/sysctl.d/90-connect-hub-bbr.conf` and affects system-wide TCP. Both require explicit installer choices. No foreign database, keys or certificates are imported; no firewall, DNS, routes or other services are changed. Internal Xray ports are independently allocated and subscription defaults are preserved with a separate free port. The service runs as root, as in upstream 3x-ui.
 
-Остановить только Connect Hub:
+Stop only this panel: `sudo systemctl stop connect-hub`.
 
-```bash
-sudo systemctl stop connect-hub
-```
-
-Обновить проверенным релизом:
+Update a managed installation:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/install.sh | bash -s -- --update
 ```
 
-Перед обновлением сохраняется полная копия данных. При неудаче запуска восстанавливается предыдущая версия. Копии автоматически не удаляются. Повторная установка уже установленной ревизии не требуется. Служба запускается от root, как в 3x-ui. Обновление из веб-панели использует только пакет Connect Hub с проверкой SHA-256.
+Updates retain a complete data backup and restore the previous binary/data after a failed launch. Backups are never automatically deleted. Reinstalling an already installed revision is unnecessary. Web updates install only a checksum-verified Connect Hub release and cannot replace the fork with upstream binaries.
 
-## Sudoku: inbound → устройства → ключи
+## Build from source
 
-Совместимый Sudoku Core входит в пакет. В обычном разделе **Подключения** нажмите **Создать подключение**, затем на вкладке **Основное** выберите **Протокол → Sudoku**. Отдельной вкладки протокола нет: подключения всех протоколов находятся в общем списке.
+Native Linux amd64/arm64 builds require Go 1.27.3, CGO/C compiler, Node 26.12.1/npm 11+, Python 3 and Git. Only amd64 receives full release validation. Dependency/source digests are pinned in `hub/dependencies.json`; frontend and Go dependencies use their lockfiles.
 
-1. Создайте подключение: выберите Sudoku и свободный порт. Поля названия, адреса прослушивания и лимитов — обычные поля 3x-ui; отдельный обязательный адрес сервера не добавляется.
-2. В обычном разделе **Клиенты** создайте клиента и выберите это подключение. Для каждого устройства создавайте отдельного клиента.
-3. Откройте штатную кнопку **QR-код** клиента: получите ссылку `sudoku://` и QR для совместимого приложения.
+```bash
+cd frontend
+npm ci --ignore-scripts
+npm run build
+cd ..
+python3 hub/package.py
+```
 
-Ключи создаются автоматически и сохраняются при редактировании. Работают обычные операции клиентов, ссылки подписки, счётчики трафика и резервная копия базы панели. Уже созданные в предыдущих альфах подключения Connect Hub переносятся в ту же базу с сохранением ключей; чужие установки не импортируются. Изменение состава клиентов может переподключить устройства только этого инбаунда. Порт подключения должен быть доступен устройствам; в Docker его нужно опубликовать отдельно.
+Artifacts include BUILD.json with exact build/upstream revisions, third-party licenses and the corresponding compatible Sudoku source/patch. Byte-identical archive reproducibility has not been established. Build/package/install checks run in [Actions](https://github.com/sanderstripa/connect-hub/actions); inspect the run linked to each release for precise coverage.
 
-## Connect Core и Mist: что доступно
-
-| Раздел | Реальное поведение |
-|---|---|
-| Основные функции 3x-ui / Xray | Подключения, клиенты, маршрутизация, подписки, статистика, API и резервные копии. Служба работает от root, как в исходной панели. |
-| Sudoku | Обычные подключения и клиенты, отдельные ключи устройств, ссылки, QR, подписки, счётчики и резервная копия базы; TCP и UDP-over-TCP, включение/отключение и отзыв. |
-| Connect Core alpha | По отдельному разрешению администратора показывает состояние существующего control plane. Запуск VPN, изменение маршрутов и выдача устройств Core из панели не реализованы. |
-| Mist | Не запускается и не предлагается как рабочий протокол: не подтверждены контракт интеграции и лицензия для поставки. |
-
-## Документация и проверка
-
-- [Подробная установка и Docker](hub/TESTING-RU.md)
-- [Настройки интеграций](hub/INTEGRATIONS.md)
-- [Сборка из исходников (English)](README.en.md#build-from-source)
-- [Безопасное обновление исходной базы 3x-ui](hub/UPSTREAM.md)
-- [Релизы](https://github.com/sanderstripa/connect-hub/releases) · [Проверки CI](https://github.com/sanderstripa/connect-hub/actions)
-- [GPL-3.0](LICENSE) · [Авторство и изменения](NOTICE)
-
-Проверки выполняются в изолированных средах. Реальные VPS и личные установки пользователя при разработке не используются. Основа: MHSanaei и участники 3x-ui; изменения Connect Hub: Sander Stripa и участники, 2026. Sudoku сохраняет свои лицензии и авторские уведомления; соответствующие исходники и изменения прилагаются к пакету. Гарантии отсутствуют.
+Based on 3x-ui by MHSanaei and contributors. Connect Hub modifications by Sander Stripa and contributors, 2026. Original Sudoku authorship/license notices and corresponding source are retained. No endorsement or warranty is implied. Validation uses isolated environments, never the user's live VPS or existing installations.
 
 Management menu: `sudo connect-hub`. The upstream-derived management menu is restored with Connect Hub paths and service names. Certificate retry: `sudo bash /opt/connect-hub/current/hub/cert.sh`, then `sudo systemctl restart connect-hub`. Existing HTTP installations receive HTTPS during this update when no certificate is configured.
-

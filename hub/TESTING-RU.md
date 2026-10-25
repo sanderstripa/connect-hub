@@ -1,6 +1,6 @@
 # Параллельная проверка Connect Hub
 
-**[Русский README](../README.md) · [English README](../README.en.md)**
+**[Русский README](../README.ru.md) · [English README](../README.md)**
 
 Быстрая установка:
 
