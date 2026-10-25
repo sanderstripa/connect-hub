@@ -66,8 +66,12 @@ func TestPWAHeadInjectionUsesRuntimeBasePath(t *testing.T) {
 	}
 }
 
-func TestPWAHeadInjectionSkipsSubscriptionPage(t *testing.T) {
-	if got := pwaHeadInjection("/panel-secret/", "subpage.html"); got != nil {
-		t.Fatalf("subpage injection = %q, want nil", got)
+func TestSubscriptionPageGetsBrandIconWithoutServiceWorker(t *testing.T) {
+	head := string(pwaHeadInjection("/panel-secret/", "subpage.html"))
+	if !strings.Contains(head, `/panel-secret/icons/connect-hub.svg`) {
+		t.Fatalf("subscription favicon missing: %q", head)
+	}
+	if strings.Contains(head, "pwa-register.js") || strings.Contains(head, "manifest.webmanifest") {
+		t.Fatalf("subscription page must not register the panel service worker: %q", head)
 	}
 }
