@@ -1,0 +1,41 @@
+name: Verify published Connect Hub alpha 8 to alpha 9
+on:
+  push:
+    branches: [verify/alpha8-to-alpha9]
+permissions:
+  contents: read
+jobs:
+  upgrade:
+    if: github.repository == 'sanderstripa/connect-hub' && github.ref == 'refs/heads/verify/alpha8-to-alpha9'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: e6ccab537776fd91c16127626b857b6764bbe37b
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --ignore-scripts
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - name: Verify real public alpha 8 to alpha 9 update, existing login, device key and Sudoku traffic
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('hub/public-upgrade-alpha7-smoke.py')
+          contents=path.read_text()
+          replacements={
+              'alpha.7':'alpha.8',
+              'alpha7':'alpha8',
+              '36a9e4e75dd9fdd45cd758759924130bc6507966ccf8bc8578a566a391efbe91':'526fa05cd62c72f0e95e15bf65071e354111a349dfaef75df4b977feab4fd4f6',
+          }
+          for before,after in replacements.items():
+              assert before in contents, before
+              contents=contents.replace(before,after)
+          assert 'alpha.7' not in contents
+          path.write_text(contents)
+          PY
+          python3 hub/public-upgrade-alpha7-smoke.py
