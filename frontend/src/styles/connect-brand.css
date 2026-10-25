@@ -3,7 +3,7 @@
 @font-face { font-family: Montserrat; src: url('../assets/fonts/montserrat-italic.woff2') format('woff2'); font-weight: 100 900; font-style: italic; font-display: swap; }
 html, body, *, *::before, *::after { font-family: Montserrat, sans-serif !important; }
 body { --connect-bg: #f7f7f5; --connect-card: #fff; --connect-text: #171a1d; --connect-muted: #6d747e; --connect-border: #d7d9dd; --font-mono: Montserrat; background: var(--connect-bg); color: var(--connect-text); }
-body.dark { --connect-bg: #0b0b0b; --connect-card: #111213; --connect-text: #eceef0; --connect-muted: #9399a2; --connect-border: #303338; }
+body.dark { --connect-bg: #141618; --connect-card: #1c1f22; --connect-text: #eceef0; --connect-muted: #9399a2; --connect-border: #3c4147; }
 body [class*='-page'], body .login-app, body .login-app.is-dark { --bg-page: var(--connect-bg) !important; --bg-card: var(--connect-card) !important; --bg-card-solid: var(--connect-card); --color-text: var(--connect-text); --color-text-subtle: var(--connect-muted); --color-accent: var(--connect-text); --color-border: var(--connect-border); --shadow-card: none; --grid-color: transparent; background: var(--connect-bg) !important; }
 body .login-app::before, body .login-app::after, body .login-content::before, body .login-content::after, body .login-wrapper::before, body .login-wrapper::after { display: none; }
 body .login-card { background: var(--connect-card); border: 1px solid var(--connect-border); box-shadow: none; backdrop-filter: none; }
@@ -14,7 +14,7 @@ body .sider-nav .ant-menu-item-selected { border: 1px solid var(--connect-border
 body .ant-btn-primary { background: var(--ant-color-primary); color: var(--ant-color-text-light-solid); box-shadow: none; }
 body .ant-switch:not(.ant-switch-checked) { background: var(--connect-border); }
 body .ant-switch:not(.ant-switch-checked) .ant-switch-handle::before { background: var(--connect-muted); }
-body.dark .ant-switch.ant-switch-checked .ant-switch-handle::before { background: #0b0b0b; }
+body.dark .ant-switch.ant-switch-checked .ant-switch-handle::before { background: var(--connect-bg); }
 body .command-palette-modal.dark, body .command-palette-modal.light { background: var(--connect-card); border-color: var(--connect-border); color: var(--connect-text); }
 body .page-title, body .ant-card-head-title { letter-spacing: .035em; font-weight: 500; }
 body .ant-card, body .ant-modal-content, body .ant-table { box-shadow: none; }
@@ -28,4 +28,19 @@ body .sider-nav .ant-menu-item, body .sider-nav .ant-menu-submenu-title,
 body .sider-utility .ant-menu-item { color: var(--connect-muted); }
 body .sider-nav .ant-menu-item-selected { color: var(--connect-text); }
 body .login-app .toolbar-btn { background: var(--connect-bg); color: var(--connect-muted); border: 1px solid var(--connect-border); }
+body .login-app .toolbar-btn { width: 40px; height: 40px; min-width: 40px; max-width: 40px; flex: 0 0 40px; aspect-ratio: 1; border-radius: 50%; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+body .login-app .brand { margin-bottom: 28px; }
 body .login-app .submit-row .ant-btn-primary:not(:disabled) { background: var(--connect-text); color: var(--connect-bg); }
+/* Portalled selects use the same surfaces and text as the current body theme. */
+body .ant-select-dropdown { background: var(--connect-card); color: var(--connect-text); }
+body .ant-select-dropdown .ant-select-item { color: var(--connect-text); }
+body .ant-select-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background: color-mix(in srgb, var(--connect-text) 7%, var(--connect-card));
+}
+body .ant-select-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  color: var(--connect-text) !important;
+  background: color-mix(in srgb, var(--connect-text) 12%, var(--connect-card)) !important;
+}
+body .ant-select-dropdown .ant-select-item-option-disabled { color: var(--connect-muted); }
+body .ant-select:not(.ant-select-disabled) .ant-select-selection-item { color: var(--connect-text); }
+body .ant-select-focused .ant-select-selector { outline: 2px solid var(--connect-muted); outline-offset: 2px; }

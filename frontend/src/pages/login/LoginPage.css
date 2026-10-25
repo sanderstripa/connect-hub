@@ -358,40 +358,6 @@
   background: linear-gradient(90deg, #60a5fa, #1d4ed8);
 }
 
-.welcome {
-  text-align: center;
-  color: var(--color-text);
-  font-size: 32px;
-  font-weight: 700;
-  line-height: 1.2;
-  min-height: 42px;
-  margin: 12px 0 28px;
-  letter-spacing: 0.3px;
-}
-
-.welcome b {
-  display: inline-block;
-  font-weight: inherit;
-  animation: headline-in 280ms ease both;
-}
-
-@keyframes headline-in {
-  0% {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .welcome b {
-    animation: none;
-  }
-}
-
 .login-form .ant-form-item-label > label {
   color: var(--color-text);
   font-weight: 500;

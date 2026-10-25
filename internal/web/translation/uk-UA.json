@@ -108,6 +108,9 @@
     "saveQr": "Зберегти QR"
   },
   "menu": {
+    "clientList": "Список клієнтів",
+    "infrastructure": "Інфраструктура",
+    "network": "Мережа",
     "theme": "Тема",
     "dashboard": "Огляд",
     "inbounds": "Вхідні",
@@ -128,8 +131,6 @@
   },
   "pages": {
     "login": {
-      "hello": "Привіт",
-      "title": "Привітання!",
       "loginAgain": "Ваш сеанс закінчився, увійдіть знову",
       "toasts": {
         "invalidFormData": "Формат вхідних даних недійсний.",
@@ -140,6 +141,9 @@
       }
     },
     "index": {
+      "more": "Додатково",
+      "maintenance": "Обслуговування",
+      "diagnostics": "Діагностика",
       "cpu": "ЦП",
       "swap": "Підкачка",
       "storage": "Сховище",
@@ -155,7 +159,6 @@
       "currentPanelVersion": "Поточна версія панелі",
       "latestPanelVersion": "Остання версія панелі",
       "panelUpToDate": "Панель оновлено",
-      "devChannel": "Канал розробки",
       "devChannelWarning": "Збірки розробки відстежують кожен коміт у main і не є стабільними релізами — автоматичного відкату немає.",
       "currentCommit": "Поточний коміт",
       "latestCommit": "Останній коміт",

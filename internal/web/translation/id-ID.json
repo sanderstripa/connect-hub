@@ -108,6 +108,9 @@
     "saveQr": "Simpan QR"
   },
   "menu": {
+    "clientList": "Daftar klien",
+    "infrastructure": "Infrastruktur",
+    "network": "Jaringan",
     "theme": "Tema",
     "dashboard": "Ikhtisar",
     "inbounds": "Inbound",
@@ -128,8 +131,6 @@
   },
   "pages": {
     "login": {
-      "hello": "Halo",
-      "title": "Selamat Datang",
       "loginAgain": "Sesi Anda telah berakhir, harap masuk kembali",
       "toasts": {
         "invalidFormData": "Format data input tidak valid.",
@@ -140,6 +141,9 @@
       }
     },
     "index": {
+      "more": "Lainnya",
+      "maintenance": "Pemeliharaan",
+      "diagnostics": "Diagnostik",
       "cpu": "CPU",
       "swap": "Swap",
       "storage": "Penyimpanan",
@@ -155,7 +159,6 @@
       "currentPanelVersion": "Versi panel saat ini",
       "latestPanelVersion": "Versi panel terbaru",
       "panelUpToDate": "Panel sudah terbaru",
-      "devChannel": "Kanal dev",
       "devChannelWarning": "Build dev mengikuti setiap commit di main dan bukan rilis stabil — tidak ada penurunan versi otomatis.",
       "currentCommit": "Commit saat ini",
       "latestCommit": "Commit terbaru",

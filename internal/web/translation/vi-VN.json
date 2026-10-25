@@ -108,6 +108,9 @@
     "saveQr": "Lưu QR"
   },
   "menu": {
+    "clientList": "Danh sách khách hàng",
+    "infrastructure": "Hạ tầng",
+    "network": "Mạng",
     "theme": "Chủ đề",
     "dashboard": "Trạng thái hệ thống",
     "inbounds": "Inbound",
@@ -128,8 +131,6 @@
   },
   "pages": {
     "login": {
-      "hello": "Xin chào",
-      "title": "Chào mừng",
       "loginAgain": "Thời hạn đăng nhập đã hết. Vui lòng đăng nhập lại.",
       "toasts": {
         "invalidFormData": "Dạng dữ liệu nhập không hợp lệ.",
@@ -140,6 +141,9 @@
       }
     },
     "index": {
+      "more": "Thêm",
+      "maintenance": "Bảo trì",
+      "diagnostics": "Chẩn đoán",
       "cpu": "CPU",
       "swap": "Swap",
       "storage": "Lưu trữ",
@@ -155,7 +159,6 @@
       "currentPanelVersion": "Phiên bản panel hiện tại",
       "latestPanelVersion": "Phiên bản panel mới nhất",
       "panelUpToDate": "Panel đã được cập nhật",
-      "devChannel": "Kênh phát triển",
       "devChannelWarning": "Bản dev bám theo từng commit trên main và không phải bản ổn định — không có hạ cấp tự động.",
       "currentCommit": "Commit hiện tại",
       "latestCommit": "Commit mới nhất",

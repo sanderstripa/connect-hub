@@ -15,13 +15,13 @@ function applyDom(dark: boolean) {
 }
 applyDom(initialDark);
 export function buildAntdThemeConfig(dark: boolean, _legacyUltra = false): ThemeConfig {
-  const bg = dark ? '#0b0b0b' : '#f7f7f5', card = dark ? '#111213' : '#ffffff';
+  const bg = dark ? '#141618' : '#f7f7f5', card = dark ? '#1c1f22' : '#ffffff';
   const text = dark ? '#eceef0' : '#171a1d', muted = dark ? '#9399a2' : '#6d747e';
-  const border = dark ? '#303338' : '#d7d9dd', primary = dark ? '#e7e8ea' : '#171a1d';
+  const border = dark ? '#3c4147' : '#d7d9dd', primary = dark ? '#e7e8ea' : '#171a1d';
   return {
     hashed: false, cssVar: { key: 'xui' }, algorithm: dark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
     token: { fontFamily: 'Montserrat, sans-serif', fontFamilyCode: 'Montserrat, sans-serif',
-      colorBgBase: bg, colorBgLayout: bg, colorBgContainer: card, colorBgElevated: dark ? '#191b1d' : '#ffffff',
+      colorBgBase: bg, colorBgLayout: bg, colorBgContainer: card, colorBgElevated: dark ? '#25292d' : '#ffffff',
       colorText: text, colorTextSecondary: muted, colorTextDescription: muted, colorTextTertiary: muted, colorTextPlaceholder: muted,
       colorBorder: border, colorBorderSecondary: border, colorPrimary: primary,
       colorPrimaryHover: dark ? '#ffffff' : '#363b40', colorPrimaryActive: dark ? '#c6c9ce' : '#000000',
@@ -41,7 +41,9 @@ export function buildAntdThemeConfig(dark: boolean, _legacyUltra = false): Theme
       Card: { bodyPadding: 16, bodyPaddingSM: 16, headerPadding: 16, headerPaddingSM: 16,
         headerHeight: 50, headerHeightSM: 50 },
       Form: { itemMarginBottom: 16, verticalLabelPadding: '0 0 8px' },
-      Select: { optionHeight: 34 },
+      Select: { optionHeight: 34, optionSelectedColor: text,
+        optionSelectedBg: dark ? '#303338' : '#e9eaec',
+        optionActiveBg: dark ? '#25282c' : '#f0f1f2' },
       Pagination: { itemSize: 34, itemSizeSM: 34 },
       Statistic: { contentFontSize: 17, titleFontSize: 11 },
     },

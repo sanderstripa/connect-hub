@@ -69,8 +69,9 @@ test('returns to the compact rail after unpinning', async () => {
   expect(localStorage.getItem('sidebar-pinned')).toBe('false');
 });
 
-test('labels the palette shortcut with the modifier the platform actually uses', async () => {
+test('hides the shortcut chip while retaining the search button', async () => {
   const view = await renderSidebar();
   const chip = view.container.querySelector('.sidebar-command-kbd');
-  expect(chip?.textContent).toBe('CtrlK');
+  expect(chip).toBeNull();
+  expect(screen.getByRole('button', { name: /Command Palette/ })).not.toBeNull();
 });

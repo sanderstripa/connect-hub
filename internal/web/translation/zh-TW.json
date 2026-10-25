@@ -108,6 +108,9 @@
     "saveQr": "儲存 QR 碼"
   },
   "menu": {
+    "clientList": "用戶端清單",
+    "infrastructure": "基礎設施",
+    "network": "網路",
     "theme": "主題",
     "dashboard": "系統狀態",
     "inbounds": "入站",
@@ -128,8 +131,6 @@
   },
   "pages": {
     "login": {
-      "hello": "你好",
-      "title": "歡迎",
       "loginAgain": "登入時效已過，請重新登入",
       "toasts": {
         "invalidFormData": "資料格式錯誤",
@@ -140,6 +141,9 @@
       }
     },
     "index": {
+      "more": "更多",
+      "maintenance": "維護",
+      "diagnostics": "診斷",
       "cpu": "CPU",
       "swap": "交換空間",
       "storage": "儲存",
@@ -155,7 +159,6 @@
       "currentPanelVersion": "目前面板版本",
       "latestPanelVersion": "最新面板版本",
       "panelUpToDate": "面板已是最新",
-      "devChannel": "開發通道",
       "devChannelWarning": "開發版會追蹤 main 的每次提交，並非穩定版本，且無法自動降級。",
       "currentCommit": "目前提交",
       "latestCommit": "最新提交",
