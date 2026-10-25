@@ -11,12 +11,17 @@ export async function checkDensity(page,output,stage) {
    rows:[...document.querySelectorAll('.ant-table-tbody > tr[data-row-key]')].filter(visible).map(dimensions),
    cells:[...document.querySelectorAll('.ant-table-tbody > tr[data-row-key] > td')].filter(visible).map(el=>({padding:getComputedStyle(el).padding})),
    cards:[...document.querySelectorAll('.ant-card-body')].filter(visible).map(dimensions),
+   brand:[...document.querySelectorAll('.sider-brand')].filter(visible).map(el=>{
+    const text=el.querySelector('.brand-text')?.getBoundingClientRect(),actions=el.querySelector('.brand-actions')?.getBoundingClientRect(),box=el.getBoundingClientRect();
+    return {aligned:!actions||!text||(text.right<=actions.left&&Math.abs((text.top+text.height/2)-(actions.top+actions.height/2))<1&&actions.right<=box.right)};
+   }),
   };
  });
  const badSwitch=proof.switches.filter(x=>Math.abs(x.width-44)>.5||Math.abs(x.height-22)>.5);
- const badRows=proof.rows.filter(x=>x.height<59.5);
+ const badRows=proof.rows.filter(x=>x.height<63.5);
  const badButtons=proof.buttons.filter(x=>/ant-btn|sidebar-pin|sidebar-theme-cycle|ant-tabs-nav-more|opblock-control-arrow|authorization__btn|models-control|expand-operation/.test(x.classes)&&x.height<33.5);
  const badCells=proof.cells.filter(x=>x.padding!=='8px 12px');
+ if(proof.brand.some(x=>!x.aligned))throw Error('Sidebar wordmark and controls must fit one line on '+stage);
  if(badSwitch.length||badRows.length||badCells.length||badButtons.length)throw Error('Inconsistent shared dimensions on '+stage+': '+JSON.stringify({badSwitch,badRows,badCells,badButtons}));
  densityReports.push({stage,...proof});fs.writeFileSync(output+'/connect-density-audit.json',JSON.stringify(densityReports,null,2));
  await page.screenshot({path:output+'/connect-density-'+stage+'.png',fullPage:true});

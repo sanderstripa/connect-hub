@@ -1,5 +1,5 @@
 /* Shared dimensions for the entire panel, including upstream compact controls. */
-:root { --connect-control: 34px; --connect-row: 60px; --connect-gap: 8px; --connect-section: 12px; --connect-padding: 16px; }
+:root { --connect-control: 34px; --connect-row: 64px; --connect-gap: 8px; --connect-section: 12px; --connect-padding: 16px; }
 body .ant-btn:not(.ant-btn-circle) { min-height: var(--connect-control); }
 body .ant-btn-icon-only { min-width: var(--connect-control); }
 body .ant-input:not(textarea), body .ant-input-affix-wrapper,
@@ -26,6 +26,7 @@ body .ant-space-gap-col-small { column-gap: var(--connect-gap); }
 body .ant-table-wrapper .ant-btn { flex-shrink: 0; }
 body .brand-actions .sidebar-pin, body .brand-actions .sidebar-theme-cycle,
 body .brand-actions .sidebar-docs { width: 34px; height: 34px; }
+body .sider-brand { flex-wrap: nowrap; padding: 12px 8px; }
 body .ant-tabs-nav-more, body .swagger-ui button { min-height: 34px !important; }
 body .swagger-ui select, body .swagger-ui input:not([type=checkbox]):not([type=radio]) { min-height: 34px; }
 @media (max-width: 575px) {
