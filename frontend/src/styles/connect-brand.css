@@ -22,8 +22,10 @@ body .login-app .brand-name { color: var(--connect-text); -webkit-text-fill-colo
 body .login-app .login-submit { background: var(--connect-text); color: var(--connect-bg); border: 1px solid var(--connect-border); box-shadow: none; }
 body .login-card::before { display: none; }
 body .login-app .brand-accent { background: var(--connect-text); }
-body .login-app .ant-input-affix-wrapper { background: var(--connect-bg); border-color: var(--connect-border); color: var(--connect-text); }
+body .login-app .ant-input-affix-wrapper { background: var(--connect-bg) !important; border-color: var(--connect-border); color: var(--connect-text); }
 body .login-app input.ant-input { background: transparent; color: var(--connect-text); }
 body .sider-nav .ant-menu-item, body .sider-nav .ant-menu-submenu-title,
 body .sider-utility .ant-menu-item { color: var(--connect-muted); }
 body .sider-nav .ant-menu-item-selected { color: var(--connect-text); }
+body .login-app .toolbar-btn { background: var(--connect-bg); color: var(--connect-muted); border: 1px solid var(--connect-border); }
+body .login-app .submit-row .ant-btn-primary:not(:disabled) { background: var(--connect-text); color: var(--connect-bg); }

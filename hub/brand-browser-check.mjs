@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 const reports=[];
 export async function checkBrand(page,output,stage) {
+ await page.waitForTimeout(350); // Allow the existing theme transitions to settle.
  await page.evaluate(async()=>{await document.fonts.load('400 14px Montserrat','Настройки Connect. Hub');await document.fonts.load('italic 400 14px Montserrat','Настройки');await document.fonts.ready;});
  const proof=await page.evaluate(()=>{
   const visible=[...document.querySelectorAll('body *')].filter(el=>el.getBoundingClientRect().width>0&&el.getBoundingClientRect().height>0&&([...el.childNodes].some(n=>n.nodeType===Node.TEXT_NODE&&n.textContent.trim())||el.matches('input,textarea,select')));

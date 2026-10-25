@@ -55,7 +55,7 @@ Host tuning is applied only after explicit installer choices. Updating an existi
 
 ## Parallel installation and updates
 
-Only `/opt/connect-hub`, `/etc/connect-hub`, `/var/log/connect-hub`, the `connect-hub` account and service are created. Existing names/paths are refused. No foreign database, keys or certificates are imported; no firewall, DNS, routes or other services are changed. Internal Xray ports are independently allocated and subscription defaults are preserved with a separate free port. The service runs as root, as in upstream 3x-ui.
+The panel uses its own `/opt/connect-hub`, `/etc/connect-hub`, `/var/log/connect-hub`, account and service. Existing names/paths are refused. Optional swap uses `/var/lib/connect-hub-swap`; optional BBR writes its own `/etc/sysctl.d/90-connect-hub-bbr.conf` and affects system-wide TCP. Both require explicit installer choices. No foreign database, keys or certificates are imported; no firewall, DNS, routes or other services are changed. Internal Xray ports are independently allocated and subscription defaults are preserved with a separate free port. The service runs as root, as in upstream 3x-ui.
 
 Stop only this panel: `sudo systemctl stop connect-hub`.
 
