@@ -18,7 +18,7 @@ try:
  def req(path,payload=None,csrf=None):
   headers={'X-CSRF-Token':csrf}if csrf else {};body=urllib.parse.urlencode(payload).encode()if payload is not None else None
   with client.open(urllib.request.Request(base+path,data=body,headers=headers),timeout=10)as r:return r.read()
- assert b'Connect Hub' in req('')
+ assert b'Connect. Hub' in req('')
  token=json.loads(req('csrf-token'))['obj'];assert json.loads(req('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},token))['success']
  state=json.loads(req('panel/hub/api/status'))['obj'];assert state['sudoku']['enabled'] and not state['connectCore']['enabled']
  menu=docker('compose','exec','-T','connect-hub','bash','/usr/local/bin/connect-hub','status')
@@ -53,7 +53,7 @@ try:
  base=creds['URL'].replace('http://127.0.0.1:2053','https://127.0.0.1:'+host_port)
  client=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=ssl.create_default_context(cadata=certificate)),urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
  for _ in range(60):
-  try:assert b'Connect Hub' in req('');break
+  try:assert b'Connect. Hub' in req('');break
   except OSError:time.sleep(.5)
  else:raise AssertionError('recreated container did not retain working HTTPS')
  token=json.loads(req('csrf-token'))['obj'];assert json.loads(req('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},token))['success']

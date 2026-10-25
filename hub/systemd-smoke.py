@@ -32,7 +32,7 @@ try:
  certificate=run('sudo','cat','/opt/connect-hub/tls/fullchain.pem').stdout
  context=ssl.create_default_context(cadata=certificate)
  client=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=context))
- assert b'Connect Hub' in client.open(credentials['LOCAL_URL'],timeout=10).read()
+ assert b'Connect. Hub' in client.open(credentials['LOCAL_URL'],timeout=10).read()
  assert run('sudo','systemctl','is-active','connect-hub-cert-renew.timer').stdout.strip()=='active'
  assert 'CONNECT HUB' in r.stdout and 'Username /' in r.stdout and 'Password /' in r.stdout
  menu_status=run('sudo','bash','/usr/local/bin/connect-hub','status',check=False)

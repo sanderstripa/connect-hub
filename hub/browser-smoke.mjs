@@ -5,6 +5,8 @@ const cfg=JSON.parse(input),browser=await chromium.launch({headless:true});
 try {
  const page=await browser.newPage({locale:'en-US',viewport:{width:1440,height:1000}});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ page.on('response',r=>{if(r.status()>=400&&/\.woff2/.test(r.url()))console.log('Font response:',r.status(),r.url());});
+ page.on('requestfailed',r=>{if(/\.woff2/.test(r.url()))console.log('Font request:',r.url(),r.failure()?.errorText);});
  await page.goto(cfg.url);
  await page.locator('input[autocomplete="username"]').waitFor();
  await checkBrand(page,cfg.output,'login');
