@@ -37,7 +37,7 @@ body.light .config-block-text {
 
 .config-block-text {
   display: block;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: Montserrat, sans-serif;
   font-size: 11px;
   word-break: break-all;
   white-space: pre-wrap;

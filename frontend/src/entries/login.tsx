@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import { message } from 'antd';
 import 'antd/dist/reset.css';
+import { readyBrandFonts } from '@/styles/brand-fonts';
 
 import { setupHttp } from '@/api/http-init';
 import { applyDocumentTitle } from '@/utils';
@@ -17,7 +18,7 @@ if (messageContainer) {
   message.config({ getContainer: () => messageContainer });
 }
 
-readyI18n().then(() => {
+Promise.all([readyI18n(), readyBrandFonts()]).then(() => {
   const root = document.getElementById('app');
   if (root) {
     createRoot(root).render(

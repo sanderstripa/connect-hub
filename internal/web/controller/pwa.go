@@ -13,6 +13,13 @@ type pwaAsset struct {
 }
 
 var pwaAssets = map[string]pwaAsset{
+	"icons/connect-hub.svg": {path: "dist/icons/connect-hub.svg", contentType: "image/svg+xml"},
+	"icons/connect-hub-16.png": {path: "dist/icons/connect-hub-16.png", contentType: "image/png"},
+	"icons/connect-hub-24.png": {path: "dist/icons/connect-hub-24.png", contentType: "image/png"},
+	"icons/connect-hub-32.png": {path: "dist/icons/connect-hub-32.png", contentType: "image/png"},
+	"icons/connect-hub-64.png": {path: "dist/icons/connect-hub-64.png", contentType: "image/png"},
+	"icons/connect-hub-192.png": {path: "dist/icons/connect-hub-192.png", contentType: "image/png"},
+	"icons/connect-hub-512.png": {path: "dist/icons/connect-hub-512.png", contentType: "image/png"},
 	"manifest.webmanifest": {path: "dist/manifest.webmanifest", contentType: "application/manifest+json; charset=utf-8"},
 	"pwa-register.js":      {path: "dist/pwa-register.js", contentType: "application/javascript; charset=utf-8"},
 	"service-worker.js":    {path: "dist/service-worker.js", contentType: "application/javascript; charset=utf-8"},

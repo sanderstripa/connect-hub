@@ -13,11 +13,28 @@ for arg in "$@";do
   *) die 'Supported options: [VERSION] --update --no-service';;
  esac
 done
+export CONNECT_HUB_LANGUAGE=${CONNECT_HUB_LANGUAGE:-en}
+printf '\nCONNECT. HUB\n\n'
+if [[ " $* " != *' --update '* && -t 2 && -r /dev/tty ]] && { : </dev/tty; } 2>/dev/null;then
+ printf '1. Русский   2. English [1]: ' >/dev/tty
+ read -r language_choice </dev/tty || true
+ if [[ ${language_choice:-1} == 1 ]];then export CONNECT_HUB_LANGUAGE=ru;else export CONNECT_HUB_LANGUAGE=en;fi
+fi
+if [[ -r /etc/os-release ]];then
+ (. /etc/os-release; printf '%s %s' "$NAME" "${VERSION_ID:-}")
+ printf ' · %s CPU · %s GB RAM · %s GB disk\n\n' "$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN)" "$(awk '/^MemTotal:/ {printf "%.2g", $2/1048576}' /proc/meminfo)" "$(df -kP / | awk 'NR==2 {printf "%.0f", $2/1048576}')"
+ export CONNECT_HUB_INTRO_SHOWN=1
+fi
 runner=(bash)
 if [[ $EUID != 0 && " $* " != *' --no-service '* ]];then
  command -v sudo >/dev/null || die 'Run from a root shell, or install sudo for your account.'
+ sudo -v || die 'sudo authorization failed; run from a root shell.'
  runner=(sudo env "CONNECT_HUB_DOMAIN=${CONNECT_HUB_DOMAIN:-}" "CONNECT_HUB_ACME_EMAIL=${CONNECT_HUB_ACME_EMAIL:-}")
  if [[ -n ${CONNECT_HUB_TLS_MODE+x} ]];then runner+=("CONNECT_HUB_TLS_MODE=$CONNECT_HUB_TLS_MODE");fi
+ for option in LANGUAGE HOST NONINTERACTIVE INTRO_SHOWN;do
+  own_name=CONNECT_HUB_$option
+  if [[ -n ${!own_name+x} ]];then runner+=("$own_name=${!own_name}");fi
+ done
  runner+=(bash)
 fi
 missing=0

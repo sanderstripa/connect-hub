@@ -7,6 +7,10 @@ build and installation instructions: https://github.com/sanderstripa/connect-hub
 Changes: independent identity/storage, advertising removed from active routes,
 isolated installation, reviewed updates, optional integrations and CI.
 Third-party components retain their respective licenses and notices.
+2026-10-25: Connect. Hub monochrome themes and locally bundled Montserrat.
+Montserrat by the Montserrat Project authors is distributed under SIL Open Font
+License 1.1; see frontend/public/fonts/OFL.txt and frontend/src/assets/fonts/SOURCE.json.
+WOFF2 conversion preserves the original outlines, character coverage and font notices.
 2026-10-24: Sudoku inbound/device management added. Bundled compatible Sudoku
 Core retains its original GPL-3.0-or-later license, authorship and naming notice.
 See SUDOKU-LICENSE and hub/third-party/SUDOKU-SOURCE.md for included source,

@@ -46,7 +46,7 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
   log=open(td/'panel.log','ab');p=subprocess.Popen([str(prefix/'current/connect-hub')],cwd=prefix/'current',env=env,stdout=log,stderr=log);log.close()
   for _ in range(120):
    try:
-    if b'Connect Hub' in request('',raw=True):return p
+    if b'Connect. Hub' in request('',raw=True):return p
    except (OSError,urllib.error.URLError):pass
    if p.poll() is not None:raise AssertionError((td/'panel.log').read_text()[-8000:])
    time.sleep(.25)
@@ -73,7 +73,7 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
   except urllib.error.HTTPError as e:assert e.code==403
   else:raise AssertionError('missing CSRF accepted')
   passed('integration mutations require CSRF')
-  assert b'Connect Hub' in request('panel/hub',raw=True);passed('Hub UI route served')
+  assert b'Connect. Hub' in request('panel/hub',raw=True);passed('Hub UI route served')
   backup=request('panel/api/server/getDb',raw=True);assert backup.startswith(b'SQLite format 3');passed('database backup API')
   class Fixture(http.server.BaseHTTPRequestHandler):
    def do_GET(self):self.send_response(200);self.end_headers();self.wfile.write(b'connect-hub-real-xray')

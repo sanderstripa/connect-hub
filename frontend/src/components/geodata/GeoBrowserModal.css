@@ -96,7 +96,7 @@
 .geo-browser-modal .geo-code,
 .geo-browser-modal .geo-entry-value,
 .geo-browser-modal .geo-preview-title {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: Montserrat, sans-serif;
   font-size: 13px;
   overflow: hidden;
   text-overflow: ellipsis;

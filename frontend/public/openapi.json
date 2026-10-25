@@ -1797,6 +1797,9 @@
             "description": "Subscription identifier",
             "type": "string"
           },
+          "sudokuKey": {
+            "type": "string"
+          },
           "tgId": {
             "description": "Telegram user ID for notifications",
             "format": "int64",
@@ -2001,6 +2004,9 @@
             "type": "string"
           },
           "subId": {
+            "type": "string"
+          },
+          "sudokuKey": {
             "type": "string"
           },
           "tgId": {
@@ -3114,6 +3120,7 @@
               "tunnel",
               "tun",
               "mtproto",
+              "sudoku",
               "amneziawg",
               "tuic",
               "masque"

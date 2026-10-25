@@ -288,7 +288,7 @@
   color: var(--ant-color-text-secondary);
   font-size: 13px;
   font-weight: 500;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: Montserrat, sans-serif;
   text-decoration: none;
   transition: color 0.2s;
 }

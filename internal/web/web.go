@@ -89,6 +89,16 @@ type wrapAssetsFile struct {
 	fs.File
 }
 
+// Keep seeking available to http.FileServer for MIME detection and range
+// requests. Embedding only fs.File otherwise hides embed's Seek method.
+func (f *wrapAssetsFile) Seek(offset int64, whence int) (int64, error) {
+	seeker, ok := f.File.(io.Seeker)
+	if !ok {
+		return 0, fmt.Errorf("embedded asset does not support seeking")
+	}
+	return seeker.Seek(offset, whence)
+}
+
 func (f *wrapAssetsFile) Stat() (fs.FileInfo, error) {
 	info, err := f.File.Stat()
 	if err != nil {

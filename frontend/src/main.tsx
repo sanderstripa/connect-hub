@@ -5,6 +5,8 @@ import 'antd/dist/reset.css';
 import '@/styles/utils.css';
 import '@/styles/page-shell.css';
 import '@/styles/page-cards.css';
+import '@/styles/connect-brand.css';
+import { readyBrandFonts } from '@/styles/brand-fonts';
 
 import { setupHttp } from '@/api/http-init';
 import { readyI18n } from '@/i18n/react';
@@ -45,7 +47,7 @@ if (messageContainer) {
   message.config({ getContainer: () => messageContainer });
 }
 
-readyI18n().then(() => {
+Promise.all([readyI18n(), readyBrandFonts()]).then(() => {
   const root = document.getElementById('app');
   if (root) {
     createRoot(root).render(

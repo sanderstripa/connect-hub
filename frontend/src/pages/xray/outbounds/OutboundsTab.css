@@ -82,7 +82,7 @@
 }
 
 .egress-ip {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: Montserrat, sans-serif;
   font-size: 12px;
 }
 
@@ -290,7 +290,7 @@
 }
 
 .outbound-test-popover .endpoint-row .ep-addr {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: Montserrat, sans-serif;
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
@@ -324,7 +324,7 @@
 }
 
 .outbound-test-popover .breakdown-row .bd-value {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: Montserrat, sans-serif;
   opacity: 0.75;
 }
 

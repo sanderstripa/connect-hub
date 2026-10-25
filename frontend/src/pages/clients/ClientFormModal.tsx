@@ -1545,7 +1545,7 @@ export default function ClientFormModal({
                   maxWidth: '100%',
                   marginBottom: 6,
                   padding: '2px 8px',
-                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                  fontFamily: 'Montserrat, sans-serif',
                 }}
               >
                 {entry.ip}
