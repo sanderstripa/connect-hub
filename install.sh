@@ -2,6 +2,7 @@
 # Connect Hub release bootstrap. Modified 2026-10-24. GPL-3.0.
 set -Eeuo pipefail
 umask 077
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
 die(){ echo "Connect Hub: $*" >&2;exit 1; }
 [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || die 'This tested release requires Linux amd64 (x86_64).'
 requested_version=
@@ -38,7 +39,11 @@ if [[ $EUID != 0 && " $* " != *' --no-service '* ]];then
  runner+=(bash)
 fi
 missing=0
-for tool in curl sha256sum tar python3 openssl realpath sysctl modprobe findmnt mkswap swapon swapoff;do command -v "$tool" >/dev/null || missing=1;done
+required_tools=(curl sha256sum tar python3 openssl realpath)
+if [[ " $* " != *' --update '* && " $* " != *' --no-service '* ]];then
+ required_tools+=(sysctl modprobe findmnt mkswap swapon swapoff)
+fi
+for tool in "${required_tools[@]}";do command -v "$tool" >/dev/null || missing=1;done
 if ((missing));then
  [[ " $* " != *' --no-service '* ]] || die 'Install curl, Python 3, OpenSSL, tar and coreutils before a user-only installation.'
  echo 'Installing required components / Установка необходимых компонентов...'
@@ -53,7 +58,7 @@ else echo 'Install curl, ca-certificates, Python 3, OpenSSL, tar, coreutils, pro
 fi
 DEPENDENCIES
 fi
-for tool in curl sha256sum tar python3 openssl realpath sysctl modprobe findmnt mkswap swapon swapoff;do command -v "$tool" >/dev/null || die "Required tool missing after dependency installation: $tool";done
+for tool in "${required_tools[@]}";do command -v "$tool" >/dev/null || die "Required tool missing after dependency installation: $tool";done
 version=$(python3 - amd64 "$requested_version" <<'CONNECT_HUB_RELEASE_PY'
 """Resolve an installable Connect Hub GitHub release; never execute remote scripts."""
 import json,re,sys,urllib.error,urllib.request
