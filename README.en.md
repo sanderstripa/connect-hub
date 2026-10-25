@@ -67,20 +67,6 @@ curl -fsSL https://raw.githubusercontent.com/sanderstripa/connect-hub/main/insta
 
 Updates retain a complete data backup and restore the previous binary/data after a failed launch. Backups are never automatically deleted. Reinstalling an already installed revision is unnecessary. Web updates install only a checksum-verified Connect Hub release and cannot replace the fork with upstream binaries.
 
-## Sudoku inbounds and devices
-
-A pinned compatible Sudoku Core is included. In the normal **Inbounds** page,
-click **Add Inbound → Basic → Protocol → Sudoku**. All protocols use the same
-inbound list and the original client controls:
-
-1. Choose Sudoku and a free port. The remark, listen address and limits are ordinary 3x-ui fields; no additional mandatory server-address field is introduced.
-2. Open the standard **Clients** page, create a client and attach it to this inbound. Create a separate client for each device.
-3. Open the client's standard **QR Code** button to copy its `sudoku://` link or scan its QR in a compatible application.
-
-Keys are generated automatically and preserved on edits. The ordinary client operations, subscription links, traffic counters and panel database backups include Sudoku. Earlier Connect Hub alpha inbounds migrate into that database without changing device keys; unrelated installations are never imported. A client-set change may reconnect devices on that inbound only. Its port must be reachable; Docker needs an explicit port mapping.
-
-Connect Core alpha remains an opt-in, read-only status adapter for an existing protected control plane: it cannot start VPN/TUN, modify routes or issue Core devices. Mist remains unavailable until its integration contract and redistribution license are verified. Neither experimental transport is claimed as implemented.
-
 ## Build from source
 
 Native Linux amd64/arm64 builds require Go 1.27.3, CGO/C compiler, Node 26.12.1/npm 11+, Python 3 and Git. Only amd64 receives full release validation. Dependency/source digests are pinned in `hub/dependencies.json`; frontend and Go dependencies use their lockfiles.
@@ -94,14 +80,6 @@ python3 hub/package.py
 ```
 
 Artifacts include BUILD.json with exact build/upstream revisions, third-party licenses and the corresponding compatible Sudoku source/patch. Byte-identical archive reproducibility has not been established. Build/package/install checks run in [Actions](https://github.com/sanderstripa/connect-hub/actions); inspect the run linked to each release for precise coverage.
-
-## Documentation
-
-- [Russian parallel installation and Docker](hub/TESTING-RU.md)
-- [Integration configuration and limits](hub/INTEGRATIONS.md)
-- [Reviewed upstream updates](hub/UPSTREAM.md)
-- [Releases](https://github.com/sanderstripa/connect-hub/releases)
-- [GPL-3.0](LICENSE) and [authorship/modifications](NOTICE)
 
 Based on 3x-ui by MHSanaei and contributors. Connect Hub modifications by Sander Stripa and contributors, 2026. Original Sudoku authorship/license notices and corresponding source are retained. No endorsement or warranty is implied. Validation uses isolated environments, never the user's live VPS or existing installations.
 
