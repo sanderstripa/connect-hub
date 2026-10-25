@@ -1,0 +1,95 @@
+# One specific release only. Replace the two immutable values after main CI passes.
+name: Publish tested Connect Hub alpha 7 once
+on:
+  push:
+    branches: [release/alpha7-once]
+permissions:
+  contents: read
+jobs:
+  publish:
+    if: github.repository == 'sanderstripa/connect-hub' && github.ref == 'refs/heads/release/alpha7-once'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: 03d5df16ccfd793dc9bd465a5b34a1aa27d9b0dd
+          persist-credentials: false
+      - name: Require this exact successful main build
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const {data: run} = await github.rest.actions.getWorkflowRun({owner:context.repo.owner,repo:context.repo.repo,run_id: 40175778553});
+            if(run.head_sha !== '03d5df16ccfd793dc9bd465a5b34a1aa27d9b0dd' || run.head_branch !== 'main' || run.event !== 'push' || run.conclusion !== 'success') throw Error('The fixed main build has not passed');
+            const {data: branch} = await github.rest.repos.getBranch({owner:context.repo.owner,repo:context.repo.repo,branch:'main'});
+            if(branch.commit.sha !== '03d5df16ccfd793dc9bd465a5b34a1aa27d9b0dd') throw Error('Main moved; do not publish a different revision');
+      - uses: actions/download-artifact@v6
+        with:
+          github-token: ${{ github.token }}
+          run-id: 40175778553
+          name: connect-hub-linux-amd64
+          path: dist
+      - name: Verify exact native build and publish only alpha 7
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist
+          sha256sum --check SHA256SUMS
+          tar -xOf connect-hub-linux-amd64.tar.gz connect-hub/BUILD.json > BUILD.json
+          python3 -c "import json; assert json.load(open('BUILD.json'))['revision']=='03d5df16ccfd793dc9bd465a5b34a1aa27d9b0dd'"
+          gh release create v0.1.0-alpha.7 --repo sanderstripa/connect-hub --target 03d5df16ccfd793dc9bd465a5b34a1aa27d9b0dd --prerelease --title 'Connect. Hub v0.1.0-alpha.7' --notes-file ../hub/RELEASE.md connect-hub-linux-amd64.tar.gz SHA256SUMS
+  verify-public-installation:
+    needs: publish
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: 03d5df16ccfd793dc9bd465a5b34a1aa27d9b0dd
+          persist-credentials: false
+      - name: Exact README command, HTTPS, device connections and web update
+        env:
+          CONNECT_HUB_TLS_MODE: selfsigned
+        run: python3 hub/release-smoke.py
+      - name: Require the exact public installation revision
+        run: |
+          test "$(sudo /opt/connect-hub/current/connect-hub -v)" = "0.1.0-alpha.7"
+          sudo python3 -c "import json; assert json.load(open('/opt/connect-hub/current/BUILD.json'))['revision']=='03d5df16ccfd793dc9bd465a5b34a1aa27d9b0dd'"
+
+
+      - name: Real Ubuntu and Debian bootstrap without preinstalled curl or CA bundle
+        run: |
+          python3 - <<'PY'
+          import pathlib,subprocess
+          command=pathlib.Path('hub/INSTALL-COMMAND.txt').read_text().strip()
+          assert command.endswith('bash "$t"\'')
+          probe=command[:-len('bash "$t"\'')]+'bash -n "$t"; echo BOOTSTRAP_DOWNLOAD_VERIFIED\''
+          for image in ['ubuntu:24.04','debian:trixie-slim']:
+              subprocess.run(['docker','run','--rm',image,'sh','-c','if command -v curl >/dev/null 2>&1; then echo Unexpected_preinstalled_curl >&2; exit 1; fi; '+probe],check=True)
+              print('PASS: actual dependency installation and HTTPS bootstrap download on '+image,flush=True)
+          PY
+
+      - name: Published native binary initializes its real SQLite database on Debian 12 and 13
+        run: |
+          docker run --rm --tmpfs /etc/connect-hub --tmpfs /var/log/connect-hub -v /opt/connect-hub/current:/panel:ro -e XUI_DB_FOLDER=/etc/connect-hub -e XUI_DB_TYPE=sqlite -e XUI_DB_DSN= -e XUI_LOG_FOLDER=/var/log/connect-hub -e XUI_MAIN_FOLDER=/panel -e XUI_BIN_FOLDER=/panel/bin -e NODE_TOKEN_ENCRYPTION=off debian:bookworm-slim /panel/connect-hub setting -username debian-smoke -password disposable-ci-password -port 2053 -listenIP 127.0.0.1 -webBasePath /debian-smoke/ -parallelTest
+          docker run --rm --tmpfs /etc/connect-hub --tmpfs /var/log/connect-hub -v /opt/connect-hub/current:/panel:ro -e XUI_DB_FOLDER=/etc/connect-hub -e XUI_DB_TYPE=sqlite -e XUI_DB_DSN= -e XUI_LOG_FOLDER=/var/log/connect-hub -e XUI_MAIN_FOLDER=/panel -e XUI_BIN_FOLDER=/panel/bin -e NODE_TOKEN_ENCRYPTION=off debian:trixie-slim /panel/connect-hub setting -username debian-smoke -password disposable-ci-password -port 2053 -listenIP 127.0.0.1 -webBasePath /debian-smoke/ -parallelTest
+
+  verify-public-alpha6-upgrade:
+    needs: publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: 03d5df16ccfd793dc9bd465a5b34a1aa27d9b0dd
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --ignore-scripts
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - name: Actual published alpha.6 to this published version, ordinary button and real preserved-key traffic
+        run: python3 hub/public-upgrade-alpha6-smoke.py
