@@ -1,0 +1,34 @@
+/* Shared dimensions for the entire panel, including upstream compact controls. */
+:root { --connect-control: 34px; --connect-row: 64px; --connect-gap: 8px; --connect-section: 12px; --connect-padding: 16px; }
+body .ant-btn:not(.ant-btn-circle) { min-height: var(--connect-control); }
+body .ant-btn-icon-only { min-width: var(--connect-control); }
+body .ant-input:not(textarea), body .ant-input-affix-wrapper,
+body .ant-input-number, body .ant-picker, body .ant-select-single { min-height: var(--connect-control); }
+body .ant-input-affix-wrapper input.ant-input { min-height: 0; }
+body .ant-input-number-input { height: 32px; }
+body .ant-table-wrapper .ant-table-thead > tr > th { height: 56px; padding: 8px 12px !important; line-height: 20px; vertical-align: middle; }
+body .ant-table-wrapper .ant-table-tbody > tr > td { height: var(--connect-row); padding: 8px 12px !important; line-height: 20px; vertical-align: middle; }
+body .ant-table-wrapper .ant-table-tbody > tr.ant-table-expanded-row > td { height: auto; padding: 16px !important; }
+body .ant-table-wrapper .ant-table-tbody > tr.ant-table-measure-row > td { height: 0; padding: 0 !important; }
+body .ant-form-item { margin-bottom: 16px; }
+body .ant-form-inline .ant-form-item { margin-bottom: 8px; }
+body .ant-form-vertical .ant-form-item .ant-form-item-label { padding-bottom: 8px; }
+body .ant-card .ant-card-head { padding-inline: var(--connect-padding); }
+body .card-toolbar { min-height: var(--connect-control); gap: var(--connect-gap); }
+body .filter-bar, body .filter-bar.mobile { gap: var(--connect-gap); margin-bottom: 12px; }
+body .summary-card .ant-card-body { min-height: 104px; padding: 16px !important; }
+body .ant-modal-content { padding: 24px; }
+body .ant-modal-header { margin-bottom: 16px; }
+body .ant-modal-footer { margin-top: 24px; }
+body .ant-drawer-body { padding: 24px; }
+body .ant-space-gap-row-small { row-gap: var(--connect-gap); }
+body .ant-space-gap-col-small { column-gap: var(--connect-gap); }
+body .ant-table-wrapper .ant-btn { flex-shrink: 0; }
+body .brand-actions .sidebar-pin, body .brand-actions .sidebar-theme-cycle,
+body .brand-actions .sidebar-docs { width: 34px; height: 34px; }
+body .sider-brand { flex-wrap: nowrap; padding: 12px 8px; }
+body .ant-tabs-nav-more, body .swagger-ui button { min-height: 34px !important; }
+body .swagger-ui select, body .swagger-ui input:not([type=checkbox]):not([type=radio]) { min-height: 34px; }
+@media (max-width: 575px) {
+  body .ant-modal-content, body .ant-drawer-body { padding: 16px; }
+}

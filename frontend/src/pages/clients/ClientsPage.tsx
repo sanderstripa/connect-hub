@@ -1122,13 +1122,15 @@ export default function ClientsPage() {
         width: 220,
         render: (_v, record) => (
           <div className="email-cell">
-            <span className="email">{record.email}</span>
+            <span className="email" title={record.email}>{record.email}</span>
+            {(record.subId || record.comment) && <span className="client-secondary">
             {record.subId && (
               <span className="sub" title={record.subId}>
                 {record.subId}
               </span>
             )}
             <ClientCardComment comment={record.comment} className="sub" />
+            </span>}
           </div>
         ),
       },

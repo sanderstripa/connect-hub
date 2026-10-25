@@ -214,8 +214,6 @@ export default function AppSidebar() {
       { key: '/routing', icon: 'routing', title: t('menu.routing') },
       { key: '/settings', icon: 'setting', title: t('menu.settings') },
       { key: '/xray', icon: 'tool', title: t('menu.xray') },
-      { key: '/hub', icon: 'tool', title: 'Connect. Hub' },
-      { key: '/api-docs', icon: 'apidocs', title: t('menu.apiDocs') },
       { key: LOGOUT_KEY, icon: 'logout', title: t('logout') },
     ],
     [t],
@@ -267,6 +265,7 @@ export default function AppSidebar() {
         label: t('pages.settings.subBalancers.menu'),
       });
     }
+    children.push({ key: '/api-docs', icon: <ApiOutlined />, label: t('menu.apiDocs') });
     return children;
   }, [t, showSubFormats, showSubBalancers]);
 
@@ -281,6 +280,7 @@ export default function AppSidebar() {
   );
 
   const settingsActive = pathname === '/settings';
+  const settingsMenuActive = settingsActive || pathname === '/api-docs';
   const xrayActive = pathname === '/xray';
   const selectedKey = settingsActive
     ? `/settings${hash || '#general'}`
@@ -290,7 +290,7 @@ export default function AppSidebar() {
         ? '/'
         : pathname;
 
-  const openSubmenu = settingsActive ? '/settings' : xrayActive ? '/xray' : null;
+  const openSubmenu = settingsMenuActive ? '/settings' : xrayActive ? '/xray' : null;
   const [openKeys, setOpenKeys] = useState<string[]>(() => (openSubmenu ? [openSubmenu] : []));
   if (openSubmenu && !openKeys.includes(openSubmenu)) {
     setOpenKeys([...openKeys, openSubmenu]);

@@ -1,5 +1,14 @@
 # Connect Hub requirements
 
+Latest user changes, 25 October 2026:
+- Unify dimensions and spacing throughout the entire panel, not only Inbounds/Clients.
+- Group API documentation under Settings; shorten the Settings menu label in RU/EN.
+- Hide the Connect. Hub sidebar entry for now, preserving its route and functionality.
+- Provide an alternative downloadable Windows EXE for guided SSH installation.
+  Retain the Linux command. Show final URL/login/password; QR contains the URL only.
+- Keep SSH/sudo passwords in session memory; never put them in commands or files.
+  Validate real installation in isolated hosted infrastructure and the actual packaged EXE.
+
 Current user authorization, 25 October 2026, supersedes earlier visual/installer restrictions:
 - Montserrat everywhere in the product, including code/log/QR dialogs and subscription pages.
 - Exactly two themes, light and dark, with the supplied CONNECT screenshots as visual references.

@@ -1,5 +1,5 @@
 import { chromium } from '../frontend/node_modules/playwright/index.mjs';
-import { checkBrand } from './brand-browser-check.mjs';
+import { checkBrand, checkDensity } from './brand-browser-check.mjs';
 let input='';for await(const chunk of process.stdin)input+=chunk;
 const cfg=JSON.parse(input),browser=await chromium.launch({headless:true});
 try {
@@ -65,6 +65,16 @@ try {
  await page.locator('.ant-sidebar').hover();
  await page.locator('#theme-cycle').click();
  await checkBrand(page,cfg.output,'inbounds');
+ await page.evaluate(()=>localStorage.setItem('sidebar-pinned','true'));
+ for(const dark of [false,true]){
+  if(await page.evaluate(()=>document.body.classList.contains('dark'))!==dark){await page.locator('.ant-sidebar').hover();await page.locator('#theme-cycle').click();}
+  for(const route of ['inbounds','clients','groups','nodes','hosts','outbound','routing','settings','xray','api-docs']){
+   await page.goto(cfg.url+'panel/'+route);await page.locator('.ant-sidebar').waitFor();await page.locator('.ant-sidebar').hover();await page.waitForTimeout(400);
+   if(await page.locator('.sider-nav').getByText('Connect. Hub',{exact:true}).count())throw Error('Connect Hub menu must remain hidden');
+   await checkDensity(page,cfg.output,route+'-'+(dark?'dark':'light'));
+  }
+ }
+ await page.goto(cfg.url+'panel/inbounds');await page.getByText('Unified Sudoku edited',{exact:true}).waitFor();
  await page.setViewportSize({width:390,height:844});await page.waitForTimeout(500);
  if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw Error('Mobile overflow');
  await page.screenshot({path:cfg.output+'/unified-inbounds-mobile.png',fullPage:true});

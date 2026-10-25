@@ -18,7 +18,12 @@ try:
  def req(path,payload=None,csrf=None):
   headers={'X-CSRF-Token':csrf}if csrf else {};body=urllib.parse.urlencode(payload).encode()if payload is not None else None
   with client.open(urllib.request.Request(base+path,data=body,headers=headers),timeout=10)as r:return r.read()
- assert b'Connect. Hub' in req('')
+ # The credentials file is written before the HTTP listener starts.
+ for _ in range(120):
+  try:body=req('');break
+  except OSError:time.sleep(.5)
+ else:raise AssertionError('Container HTTP listener did not start')
+ assert b'Connect. Hub' in body
  token=json.loads(req('csrf-token'))['obj'];assert json.loads(req('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},token))['success']
  state=json.loads(req('panel/hub/api/status'))['obj'];assert state['sudoku']['enabled'] and not state['connectCore']['enabled']
  menu=docker('compose','exec','-T','connect-hub','bash','/usr/local/bin/connect-hub','status')

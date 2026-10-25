@@ -17,3 +17,8 @@ See SUDOKU-LICENSE and hub/third-party/SUDOKU-SOURCE.md for included source,
 compatibility modifications, provenance and rebuild instructions.
 
 2026-10-24: Restored the upstream-derived management menu with independent Connect Hub paths and service names; integrated Sudoku into the shared protocol picker/list; added isolated ACME certificate setup. acme.sh and its Cloudflare DNS hook are distributed unmodified under their accompanying GPL license; exact revision and source are in hub/third-party/ACME-SOURCE.md.
+Connect Hub modifications, 25 October 2026:
+Shared panel dimensions and navigation; alternative Windows SSH installation
+wizard with local Montserrat and address-only QR codes. Windows dependencies
+retain their own licenses, included in the application's third-party notices.
+
