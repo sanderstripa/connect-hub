@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Button, Modal, Switch, Tag } from 'antd';
+import { Alert, Button, Modal, Tag } from 'antd';
 import { CloudDownloadOutlined } from '@ant-design/icons';
 
 import { HttpUtil, PromiseUtil } from '@/utils';
@@ -37,13 +36,11 @@ export default function PanelUpdateModal({
   open,
   info,
   devChannelEnable,
-  onChannelChange,
   onClose,
   onBusy,
 }: PanelUpdateModalProps) {
   const { t } = useTranslation();
   const [modal, contextHolder] = Modal.useModal();
-  const [channelBusy, setChannelBusy] = useState(false);
 
   const isDev = info.channel === 'dev';
 
@@ -68,16 +65,6 @@ export default function PanelUpdateModal({
       await PromiseUtil.sleep(2000);
     }
     return 'timeout';
-  }
-
-  async function handleChannel(checked: boolean) {
-    if (!onChannelChange) return;
-    setChannelBusy(true);
-    try {
-      await onChannelChange(checked);
-    } finally {
-      setChannelBusy(false);
-    }
   }
 
   async function runPanelUpdate() {
@@ -140,13 +127,6 @@ export default function PanelUpdateModal({
             showIcon
           />
         )}
-
-        <div className="version-list">
-          <div className="version-list-item">
-            <span>{t('pages.index.devChannel')}</span>
-            <Switch checked={!!devChannelEnable} loading={channelBusy} onChange={handleChannel} />
-          </div>
-        </div>
 
         {devChannelEnable && (
           <Alert

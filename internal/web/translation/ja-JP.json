@@ -108,6 +108,9 @@
     "saveQr": "QR を保存"
   },
   "menu": {
+    "clientList": "クライアント一覧",
+    "infrastructure": "インフラストラクチャ",
+    "network": "ネットワーク",
     "theme": "テーマ",
     "dashboard": "ダッシュボード",
     "inbounds": "インバウンド",
@@ -128,8 +131,6 @@
   },
   "pages": {
     "login": {
-      "hello": "こんにちは",
-      "title": "ようこそ",
       "loginAgain": "ログインセッションが切れました。再度ログインしてください。",
       "toasts": {
         "invalidFormData": "データ形式エラー",
@@ -140,6 +141,9 @@
       }
     },
     "index": {
+      "more": "その他",
+      "maintenance": "メンテナンス",
+      "diagnostics": "診断",
       "cpu": "CPU",
       "swap": "スワップ",
       "storage": "ストレージ",
@@ -155,7 +159,6 @@
       "currentPanelVersion": "現在のパネルバージョン",
       "latestPanelVersion": "最新のパネルバージョン",
       "panelUpToDate": "パネルは最新です",
-      "devChannel": "開発チャンネル",
       "devChannelWarning": "開発ビルドは main の各コミットを追跡し、安定版ではありません。自動ダウングレードはありません。",
       "currentCommit": "現在のコミット",
       "latestCommit": "最新のコミット",

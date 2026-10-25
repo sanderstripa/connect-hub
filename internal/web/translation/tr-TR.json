@@ -108,6 +108,9 @@
     "saveQr": "QR'ı kaydet"
   },
   "menu": {
+    "clientList": "İstemci Listesi",
+    "infrastructure": "Altyapı",
+    "network": "Ağ",
     "theme": "Tema",
     "dashboard": "Genel Bakış",
     "inbounds": "Gelen Bağlantılar",
@@ -128,8 +131,6 @@
   },
   "pages": {
     "login": {
-      "hello": "Merhaba",
-      "title": "Hoş Geldiniz",
       "loginAgain": "Oturum süreniz doldu, lütfen tekrar giriş yapın.",
       "toasts": {
         "invalidFormData": "Veri formatı geçersiz.",
@@ -140,6 +141,9 @@
       }
     },
     "index": {
+      "more": "Daha fazla",
+      "maintenance": "Bakım",
+      "diagnostics": "Tanılama",
       "cpu": "CPU",
       "swap": "Takas",
       "storage": "Depolama",
@@ -155,7 +159,6 @@
       "currentPanelVersion": "Mevcut panel sürümü",
       "latestPanelVersion": "Panelin en son sürümü",
       "panelUpToDate": "Panel güncel",
-      "devChannel": "Geliştirme kanalı",
       "devChannelWarning": "Geliştirme yapıları main üzerindeki her commit'i izler ve kararlı sürüm değildir — otomatik geri alma yoktur.",
       "currentCommit": "Geçerli commit",
       "latestCommit": "Son commit",

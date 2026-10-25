@@ -44,9 +44,6 @@ import { useAllSettings } from '@/api/queries/useAllSettings';
 import { useCommandPalette } from '@/components/command-palette/useCommandPalette';
 import './AppSidebar.css';
 
-// The palette listens for Ctrl as well as Cmd, so the chip must not show a
-// Mac glyph to the Linux and Windows operators who are most of this panel's.
-const SHORTCUT_MODIFIER = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent) ? '⌘' : 'Ctrl';
 const DOCS_URL = 'https://docs.sanaei.dev/';
 const REPO_URL = 'https://github.com/sanderstripa/connect-hub';
 const LOGOUT_KEY = '__logout__';
@@ -206,12 +203,9 @@ export default function AppSidebar() {
     () => [
       { key: '/', icon: 'dashboard', title: t('menu.dashboard') },
       { key: '/inbounds', icon: 'inbound', title: t('menu.inbounds') },
-      { key: '/clients', icon: 'team', title: t('menu.clients') },
-      { key: '/groups', icon: 'groups', title: t('menu.groups') },
-      { key: '/nodes', icon: 'cluster', title: t('menu.nodes') },
-      { key: '/hosts', icon: 'hosts', title: t('menu.hosts') },
-      { key: '/outbound', icon: 'outbound', title: t('menu.outbounds') },
-      { key: '/routing', icon: 'routing', title: t('menu.routing') },
+      { key: '__clients', icon: 'team', title: t('menu.clients') },
+      { key: '__infrastructure', icon: 'cluster', title: t('menu.infrastructure') },
+      { key: '__network', icon: 'routing', title: t('menu.network') },
       { key: '/settings', icon: 'setting', title: t('menu.settings') },
       { key: '/xray', icon: 'tool', title: t('menu.xray') },
       { key: LOGOUT_KEY, icon: 'logout', title: t('logout') },
@@ -290,16 +284,33 @@ export default function AppSidebar() {
         ? '/'
         : pathname;
 
-  const openSubmenu = settingsMenuActive ? '/settings' : xrayActive ? '/xray' : null;
+  const openSubmenu = settingsMenuActive ? '/settings' : xrayActive ? '/xray'
+    : ['/clients', '/groups'].includes(pathname) ? '__clients'
+    : ['/nodes', '/hosts'].includes(pathname) ? '__infrastructure'
+    : ['/outbound', '/routing'].includes(pathname) ? '__network' : null;
   const [openKeys, setOpenKeys] = useState<string[]>(() => (openSubmenu ? [openSubmenu] : []));
-  if (openSubmenu && !openKeys.includes(openSubmenu)) {
-    setOpenKeys([...openKeys, openSubmenu]);
+  const routeKey = pathname + hash;
+  const [lastRoute, setLastRoute] = useState(routeKey);
+  if (lastRoute !== routeKey) {
+    setLastRoute(routeKey);
+    if (openSubmenu && !openKeys.includes(openSubmenu)) setOpenKeys([...openKeys, openSubmenu]);
   }
 
   const toMenuItems = useCallback(
     (items: typeof tabs): MenuProps['items'] =>
       items.map((tab) => {
         const Icon = iconByName[tab.icon];
+        const groups: Record<string, [string, IconName, string][]> = {
+          __clients: [['/clients', 'team', 'menu.clientList'], ['/groups', 'groups', 'menu.groups']],
+          __infrastructure: [['/nodes', 'cluster', 'menu.nodes'], ['/hosts', 'hosts', 'menu.hosts']],
+          __network: [['/outbound', 'outbound', 'menu.outbounds'], ['/routing', 'routing', 'menu.routing']],
+        };
+        if (groups[tab.key]) return { key: tab.key, icon: <Icon />, label: tab.title,
+          children: groups[tab.key].map(([key, icon, label]) => {
+            const ChildIcon = iconByName[icon];
+            return { key, icon: <ChildIcon />, label: t(label) };
+          }) };
+
         if (tab.key === '/settings') {
           return { key: tab.key, icon: <Icon />, label: tab.title, children: settingsChildren };
         }
@@ -308,7 +319,7 @@ export default function AppSidebar() {
         }
         return { key: tab.key, icon: <Icon />, label: tab.title, title: '' };
       }),
-    [settingsChildren, xrayChildren],
+    [settingsChildren, xrayChildren, t],
   );
 
   const openLink = useCallback(
@@ -398,10 +409,6 @@ export default function AppSidebar() {
                 {t('commandPalette.search') || 'Search...'}
               </span>
             </span>
-            <span className="sidebar-command-kbd">
-              <span className="kbd-cmd">{SHORTCUT_MODIFIER}</span>
-              <span className="kbd-key">K</span>
-            </span>
           </button>
         </Tooltip>
         <Menu
@@ -477,10 +484,6 @@ export default function AppSidebar() {
           <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <SearchOutlined className="sidebar-command-icon" />
             <span>{t('commandPalette.search') || 'Search...'}</span>
-          </span>
-          <span className="sidebar-command-kbd">
-            <span className="kbd-cmd">{SHORTCUT_MODIFIER}</span>
-            <span className="kbd-key">K</span>
           </span>
         </button>
         <Menu

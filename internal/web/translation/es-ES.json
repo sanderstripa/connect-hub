@@ -108,6 +108,9 @@
     "saveQr": "Guardar QR"
   },
   "menu": {
+    "clientList": "Lista de clientes",
+    "infrastructure": "Infraestructura",
+    "network": "Red",
     "theme": "Tema",
     "dashboard": "Estado del Sistema",
     "inbounds": "Entradas",
@@ -128,8 +131,6 @@
   },
   "pages": {
     "login": {
-      "hello": "Hola",
-      "title": "Bienvenido",
       "loginAgain": "El límite de tiempo de inicio de sesión ha expirado. Por favor, inicia sesión nuevamente.",
       "toasts": {
         "invalidFormData": "El formato de los datos de entrada es inválido.",
@@ -140,6 +141,9 @@
       }
     },
     "index": {
+      "more": "Más",
+      "maintenance": "Mantenimiento",
+      "diagnostics": "Diagnóstico",
       "cpu": "CPU",
       "swap": "Swap",
       "storage": "Almacenamiento",
@@ -155,7 +159,6 @@
       "currentPanelVersion": "Versión actual del panel",
       "latestPanelVersion": "Última versión del panel",
       "panelUpToDate": "El panel está actualizado",
-      "devChannel": "Canal de desarrollo",
       "devChannelWarning": "Las compilaciones de desarrollo siguen cada commit en main y no son versiones estables; no hay reversión automática.",
       "currentCommit": "Commit actual",
       "latestCommit": "Último commit",

@@ -108,6 +108,9 @@
     "saveQr": "Save QR"
   },
   "menu": {
+    "clientList": "Client List",
+    "infrastructure": "Infrastructure",
+    "network": "Network",
     "theme": "Theme",
     "dashboard": "Overview",
     "inbounds": "Inbounds",
@@ -128,8 +131,6 @@
   },
   "pages": {
     "login": {
-      "hello": "Hello",
-      "title": "Welcome",
       "loginAgain": "Your session has expired, please log in again",
       "toasts": {
         "invalidFormData": "The input data format is invalid.",
@@ -140,6 +141,9 @@
       }
     },
     "index": {
+      "more": "More",
+      "maintenance": "Maintenance",
+      "diagnostics": "Diagnostics",
       "cpu": "CPU",
       "swap": "Swap",
       "storage": "Storage",
@@ -155,7 +159,6 @@
       "currentPanelVersion": "Current panel version",
       "latestPanelVersion": "Latest panel version",
       "panelUpToDate": "Panel is up to date",
-      "devChannel": "Dev channel",
       "devChannelWarning": "Dev builds track every commit on main and aren't stable releases — there is no automatic downgrade.",
       "currentCommit": "Current commit",
       "latestCommit": "Latest commit",

@@ -1,8 +1,10 @@
-Connect. Hub alpha 8
+Connect. Hub alpha 9
 
-- Shared dimensions across the panel: controls, switches, table rows/cells, cards, dialogs and form spacing. Compact client metadata keeps ordinary rows aligned without removing the full values.
-- API documentation is grouped under Settings. The Connect. Hub sidebar entry is hidden; the existing route and functionality remain available for future use.
-- Alternative portable Windows x64 installer: local Montserrat light/dark interface, RU/EN, SSH host-key confirmation, server detection, IP/domain HTTPS, opt-in BBR/swap and access details.
-- QR codes contain only the panel address. SSH/sudo passwords stay in memory; server jobs continue across disconnects. Existing installations are detected for safe updating.
-- Linux command installation remains available. GPL, authorship, Montserrat OFL and bundled dependency notices are retained.
-- CI covers both themes across the panel, Windows source/packaged/portable GUI paths, real SSH installation on a disposable Linux VM and preserved-key traffic after updates. No live VPS is used.
+- Simplified login: no rotating greetings, monochrome branding, strictly round theme/language buttons.
+- Existing routes grouped under Clients, Infrastructure and Network; Settings and Xray configuration remain available. Search and Ctrl+K are preserved without a permanent shortcut chip.
+- Restart, Stop and Logs stay directly visible. More groups the original maintenance and diagnostic tools without changing their handlers or Dashboard cards/blue graphs.
+- Distinct graphite dark surfaces and readable shared Select states, including all log levels. Selected log text contrast: 13.67:1 light and 10.16:1 dark.
+- Removed the update-channel row/switch. Previously enabled channel settings are preserved, with a read-only warning; no silent channel changes.
+- Updated all 13 localizations. Protocol, database, backup, installation and server-update behavior remain unchanged.
+- Frontend: 1760 tests plus RU/EN read-only browser acceptance in both themes at six widths. Native, container, Windows and SSH regression checks are included.
+- The portable Windows installer remains available; its version metadata and bundled source notices match this release. It is unsigned.

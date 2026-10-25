@@ -108,6 +108,9 @@
     "saveQr": "ذخیره QR"
   },
   "menu": {
+    "clientList": "فهرست کاربران",
+    "infrastructure": "زیرساخت",
+    "network": "شبکه",
     "theme": "تم",
     "dashboard": "نمای کلی",
     "inbounds": "ورودی‌ها",
@@ -128,8 +131,6 @@
   },
   "pages": {
     "login": {
-      "hello": "سلام",
-      "title": "خوش‌آمدید",
       "loginAgain": "مدت زمان استفاده به‌اتمام‌رسیده، لطفا دوباره وارد شوید",
       "toasts": {
         "invalidFormData": "اطلاعات به‌درستی وارد نشده‌است",
@@ -140,6 +141,9 @@
       }
     },
     "index": {
+      "more": "بیشتر",
+      "maintenance": "نگهداری",
+      "diagnostics": "عیب‌یابی",
       "cpu": "پردازنده",
       "swap": "سواپ",
       "storage": "ذخیره‌سازی",
@@ -155,7 +159,6 @@
       "currentPanelVersion": "نسخه فعلی پنل",
       "latestPanelVersion": "آخرین نسخه پنل",
       "panelUpToDate": "پنل به‌روز است",
-      "devChannel": "کانال توسعه (Dev)",
       "devChannelWarning": "بیلدهای توسعه هر کامیت روی main را دنبال می‌کنند و نسخهٔ پایدار نیستند — بازگشت خودکار به نسخهٔ قبلی وجود ندارد.",
       "currentCommit": "کامیت فعلی",
       "latestCommit": "آخرین کامیت",

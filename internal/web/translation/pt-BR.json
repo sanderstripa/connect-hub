@@ -108,6 +108,9 @@
     "saveQr": "Salvar QR"
   },
   "menu": {
+    "clientList": "Lista de clientes",
+    "infrastructure": "Infraestrutura",
+    "network": "Rede",
     "theme": "Tema",
     "dashboard": "Visão Geral",
     "inbounds": "Entradas",
@@ -128,8 +131,6 @@
   },
   "pages": {
     "login": {
-      "hello": "Olá",
-      "title": "Bem-vindo",
       "loginAgain": "Sua sessão expirou, faça login novamente",
       "toasts": {
         "invalidFormData": "O formato dos dados de entrada é inválido.",
@@ -140,6 +141,9 @@
       }
     },
     "index": {
+      "more": "Mais",
+      "maintenance": "Manutenção",
+      "diagnostics": "Diagnóstico",
       "cpu": "CPU",
       "swap": "Swap",
       "storage": "Armazenamento",
@@ -155,7 +159,6 @@
       "currentPanelVersion": "Versão atual do painel",
       "latestPanelVersion": "Última versão do painel",
       "panelUpToDate": "O painel está atualizado",
-      "devChannel": "Canal de desenvolvimento",
       "devChannelWarning": "As builds de desenvolvimento acompanham cada commit na main e não são versões estáveis — não há downgrade automático.",
       "currentCommit": "Commit atual",
       "latestCommit": "Último commit",

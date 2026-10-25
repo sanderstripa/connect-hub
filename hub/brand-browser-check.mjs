@@ -36,7 +36,7 @@ export async function checkBrand(page,output,stage) {
   return {wrong,checked:visible.length,dark:document.body.classList.contains('dark'),background:getComputedStyle(document.body).backgroundColor,loaded:[...document.fonts].filter(f=>f.family==='Montserrat'&&f.status==='loaded').length,thirdTheme:document.documentElement.hasAttribute('data-theme')};
  });
  if(proof.wrong.length||proof.loaded<2||proof.thirdTheme)throw Error('Brand font/theme regression: '+JSON.stringify(proof));
- const expected=proof.dark?'rgb(11, 11, 11)':'rgb(247, 247, 245)';
+ const expected=proof.dark?'rgb(20, 22, 24)':'rgb(247, 247, 245)';
  if(proof.background!==expected)throw Error('Unexpected reference theme background: '+proof.background);
  const externalFonts=await page.evaluate(()=>performance.getEntriesByType('resource').filter(e=>/\.woff2/.test(e.name)&&new URL(e.name).origin!==location.origin).map(e=>e.name));
  if(externalFonts.length)throw Error('Fonts must remain local');

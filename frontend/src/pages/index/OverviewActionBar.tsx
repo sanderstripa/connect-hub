@@ -1,7 +1,7 @@
-import { Fragment } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Tag, Tooltip } from 'antd';
+import { Button, Dropdown, Tag, Tooltip } from 'antd';
 import {
   ApiOutlined,
   ArrowUpOutlined,
@@ -11,6 +11,7 @@ import {
   CloudServerOutlined,
   ControlOutlined,
   FileTextOutlined,
+  MoreOutlined,
   PoweroffOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
@@ -76,6 +77,13 @@ export default function OverviewActionBar({
   const hasVersion = !!status.xray.version && status.xray.version !== 'Unknown';
   const size = isMobile ? ('small' as const) : ('middle' as const);
 
+  const [moreOpen, setMoreOpen] = useState(false);
+  useEffect(() => {
+    if (!moreOpen) return;
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setMoreOpen(false); };
+    document.addEventListener('keydown', close);
+    return () => document.removeEventListener('keydown', close);
+  }, [moreOpen]);
   const actionGroups: BarAction[][] = [
     [
       {
@@ -191,25 +199,28 @@ export default function OverviewActionBar({
       )}
 
       <div className="ov-bar-actions">
-        {actionGroups.map((group, groupIndex) => (
-          <Fragment key={group[0].key}>
-            {groupIndex > 0 && <span className="ov-bar-sep" />}
-            {group.map((action) => (
-              <Button
-                key={action.key}
-                type={action.primary ? undefined : 'text'}
-                color={action.primary ? 'primary' : undefined}
-                variant={action.primary ? 'outlined' : undefined}
-                size={size}
-                icon={action.icon}
-                aria-label={action.text}
-                onClick={action.onClick}
-              >
-                {isMobile ? undefined : action.text}
-              </Button>
-            ))}
-          </Fragment>
+        {[...actionGroups[0], actionGroups[1][0]].map(action => (
+          <Button key={action.key} type={action.primary ? undefined : 'text'}
+            color={action.primary ? 'primary' : undefined} variant={action.primary ? 'outlined' : undefined}
+            size={size} icon={action.icon} aria-label={action.text} onClick={action.onClick}>
+            {isMobile ? undefined : action.text}
+          </Button>
         ))}
+        <Dropdown trigger={['click']} open={moreOpen} onOpenChange={setMoreOpen}
+          menu={{ items: [
+            { type: 'group', key: 'maintenance', label: t('pages.index.maintenance'),
+              children: actionGroups[1].filter(a => ['config', 'backup'].includes(a.key)).map(a =>
+                ({ key: a.key, icon: a.icon, label: a.text, onClick: a.onClick })) },
+            { type: 'divider' },
+            { type: 'group', key: 'diagnostics', label: t('pages.index.diagnostics'),
+              children: [...actionGroups[2], ...actionGroups[1].filter(a => ['accessLogs', 'amneziawgLogs'].includes(a.key))].map(a =>
+                ({ key: a.key, icon: a.icon, label: a.text, onClick: a.onClick })) },
+          ] }}>
+          <Button size={size} icon={<MoreOutlined />} aria-label={t('pages.index.more')}
+            aria-expanded={moreOpen} onKeyDown={event => { if (event.key === 'Escape') setMoreOpen(false); }}>
+            {t('pages.index.more')}
+          </Button>
+        </Dropdown>
       </div>
     </div>
   );

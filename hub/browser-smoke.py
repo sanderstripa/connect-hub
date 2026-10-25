@@ -20,4 +20,5 @@ with tempfile.TemporaryDirectory(prefix='hub-browser-')as raw:
     except OSError:time.sleep(.25)
    else:raise RuntimeError('Panel did not start')
    subprocess.run(['node',str(root/'hub/browser-smoke.mjs')],input=json.dumps({'url':base,'user':'browser','password':password,'port':port(),'standardPort':port(),'output':str(root/'dist')}),text=True,check=True)
+   subprocess.run(['node',str(root/'hub/ui-refinement-browser.mjs')],input=json.dumps({'url':base,'user':'browser','password':password,'output':str(root/'dist')}),text=True,check=True)
   finally:process.terminate();process.wait(timeout=30)
