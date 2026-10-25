@@ -38,22 +38,22 @@ if [[ $EUID != 0 && " $* " != *' --no-service '* ]];then
  runner+=(bash)
 fi
 missing=0
-for tool in curl sha256sum tar python3 openssl realpath;do command -v "$tool" >/dev/null || missing=1;done
+for tool in curl sha256sum tar python3 openssl realpath sysctl modprobe findmnt mkswap swapon swapoff;do command -v "$tool" >/dev/null || missing=1;done
 if ((missing));then
  [[ " $* " != *' --no-service '* ]] || die 'Install curl, Python 3, OpenSSL, tar and coreutils before a user-only installation.'
  echo 'Installing required components / Установка необходимых компонентов...'
  "${runner[@]}" -s <<'DEPENDENCIES'
 set -e
-if command -v apt-get >/dev/null;then apt-get update;apt-get install -y curl ca-certificates python3 openssl tar coreutils
-elif command -v dnf >/dev/null;then dnf install -y curl ca-certificates python3 openssl tar coreutils
-elif command -v yum >/dev/null;then yum install -y curl ca-certificates python3 openssl tar coreutils
-elif command -v pacman >/dev/null;then pacman -Sy --noconfirm curl ca-certificates python openssl tar coreutils
-elif command -v zypper >/dev/null;then zypper --non-interactive install curl ca-certificates python3 openssl tar coreutils
-else echo 'Install curl, ca-certificates, Python 3, OpenSSL, tar and coreutils with your OS package manager.' >&2;exit 1
+if command -v apt-get >/dev/null;then apt-get update;apt-get install -y curl ca-certificates python3 openssl tar coreutils procps kmod util-linux
+elif command -v dnf >/dev/null;then dnf install -y curl ca-certificates python3 openssl tar coreutils procps-ng kmod util-linux
+elif command -v yum >/dev/null;then yum install -y curl ca-certificates python3 openssl tar coreutils procps-ng kmod util-linux
+elif command -v pacman >/dev/null;then pacman -Sy --noconfirm curl ca-certificates python openssl tar coreutils procps-ng kmod util-linux
+elif command -v zypper >/dev/null;then zypper --non-interactive install curl ca-certificates python3 openssl tar coreutils procps kmod util-linux
+else echo 'Install curl, ca-certificates, Python 3, OpenSSL, tar, coreutils, procps, kmod and util-linux with your OS package manager.' >&2;exit 1
 fi
 DEPENDENCIES
 fi
-for tool in curl sha256sum tar python3 openssl realpath;do command -v "$tool" >/dev/null || die "Required tool missing after dependency installation: $tool";done
+for tool in curl sha256sum tar python3 openssl realpath sysctl modprobe findmnt mkswap swapon swapoff;do command -v "$tool" >/dev/null || die "Required tool missing after dependency installation: $tool";done
 version=$(python3 - amd64 "$requested_version" <<'CONNECT_HUB_RELEASE_PY'
 """Resolve an installable Connect Hub GitHub release; never execute remote scripts."""
 import json,re,sys,urllib.error,urllib.request
