@@ -44,6 +44,8 @@ jobs:
     env:
       CGO_ENABLED: '1'
       STORYBOOK_DISABLE_TELEMETRY: '1'
+      # Private experimental Core is not a dependency of the stable public panel.
+      CONNECT_HUB_TEST_CORE: '0'
     steps:
       - uses: actions/checkout@v7
         with:

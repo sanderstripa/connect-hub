@@ -112,21 +112,29 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  finally:stop(p)
  # Exercise actual optional engine binaries, while the data plane stays local.
  tools=root/'dist/test-tools';sudoku=tools/'sudoku';control=tools/'connect-control'
- assert sudoku.is_file() and control.is_file(),'prepare-test-engines.py must run before smoke'
+ test_core=os.environ.get('CONNECT_HUB_TEST_CORE','1')!='0'
+ assert sudoku.is_file() and (not test_core or control.is_file()),'prepare-test-engines.py must run before smoke'
+ core=None;core_log=None
  core_dir=td/'core-state'
- subprocess.run([str(control),'init-vps',str(core_dir),f'127.0.0.1:{port()}','https://127.0.0.1:17900'],check=True,stdout=subprocess.DEVNULL)
- core_config=json.loads((core_dir/'control.json').read_text());core_port=port();core_config.update(listen=f'127.0.0.1:{core_port}',enrollment_listen='',owned_tun=False,auto_start=False)
- (core_dir/'control.json').write_text(json.dumps(core_config))
- core_log=open(td/'core.log','wb');core=subprocess.Popen([str(control),'serve',str(core_dir/'control.json')],stdout=core_log,stderr=core_log)
+ if test_core:
+  subprocess.run([str(control),'init-vps',str(core_dir),f'127.0.0.1:{port()}','https://127.0.0.1:17900'],check=True,stdout=subprocess.DEVNULL)
+  core_config=json.loads((core_dir/'control.json').read_text());core_port=port();core_config.update(listen=f'127.0.0.1:{core_port}',enrollment_listen='',owned_tun=False,auto_start=False)
+  (core_dir/'control.json').write_text(json.dumps(core_config))
+  core_log=open(td/'core.log','wb');core=subprocess.Popen([str(control),'serve',str(core_dir/'control.json')],stdout=core_log,stderr=core_log)
+  env.update(CONNECT_HUB_CORE_ALPHA='1',CONNECT_HUB_CORE_URL=f'http://127.0.0.1:{core_port}',CONNECT_HUB_CORE_TOKEN_FILE=str(core_dir/'control-token'))
  # The panel serves with its newly built bundled core. The separate pinned
  # previous core remains the CLIENT, proving wire compatibility across versions.
  server_sudoku=prefix/'current/bin/sudoku-linux-amd64'
- env.update(CONNECT_HUB_CORE_ALPHA='1',CONNECT_HUB_CORE_URL=f'http://127.0.0.1:{core_port}',CONNECT_HUB_CORE_TOKEN_FILE=str(core_dir/'control-token'),CONNECT_HUB_SUDOKU='1',CONNECT_HUB_SUDOKU_BINARY=str(server_sudoku),CONNECT_HUB_SUDOKU_SHA256=hashlib.sha256(server_sudoku.read_bytes()).hexdigest())
+ env.update(CONNECT_HUB_SUDOKU='1',CONNECT_HUB_SUDOKU_BINARY=str(server_sudoku),CONNECT_HUB_SUDOKU_SHA256=hashlib.sha256(server_sudoku.read_bytes()).hexdigest())
  p=launch();sudoku_client=None;fixture=None
  try:
   jar.clear();csrf=request('csrf-token')['obj'];assert request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf)['success']
-  state=request('panel/hub/api/status')['obj'];assert state['connectCore']['enabled'] and state['connectCore']['status']=='stopped',state
-  assert not any(k in state['connectCore'] for k in ('devices','token','private_key'));passed('real Connect Core alpha status, no TUN start or secret export')
+  state=request('panel/hub/api/status')['obj']
+  if test_core:
+   assert state['connectCore']['enabled'] and state['connectCore']['status']=='stopped',state
+   assert not any(k in state['connectCore'] for k in ('devices','token','private_key'));passed('real Connect Core alpha status, no TUN start or secret export')
+  else:
+   assert not state['connectCore']['enabled'];report['experimentalCore']='not tested: private source unavailable; disabled-by-default status verified'
   sp=port();profile={'host':'127.0.0.1','port':sp,'aead':'chacha20-poly1305','table':'prefer_ascii'}
   created=request('panel/hub/api/sudoku/create',profile,csrf,json_body=True);assert created['success'],created
   secret=created['obj']['privateKey'];assert secret and secret not in json.dumps(request('panel/hub/api/status'))
@@ -161,7 +169,7 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
    print('Client log:',(td/'sudoku-client.log').read_text().replace(secret,'[redacted]')[-8000:],flush=True)
   assert traffic,'real Sudoku TCP/SOCKS round trip failed';passed('real Sudoku client -> managed server -> loopback HTTP traffic')
   assert request('panel/hub/api/sudoku/stop',{},csrf)['success'];assert not request('panel/hub/api/status')['obj']['sudoku']['running'];passed('managed Sudoku stop leaves Core control plane running')
-  assert core.poll() is None
+  if core:assert core.poll() is None
   suite=runpy.run_path(str(root/'hub/sudoku-inbounds-smoke.py'))['run']
   a,b,laptop,laptop_cfg,tablet_cfg,phone_cfg,check=suite(request,csrf,sudoku,td,fixture.server_port,passed)
   runpy.run_path(str(root/'hub/native-sudoku-smoke.py'))['run'](request,csrf,sudoku,td,passed,(a,b,laptop,laptop_cfg,tablet_cfg,phone_cfg,check))
@@ -177,7 +185,8 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  finally:
   if sudoku_client:stop(sudoku_client)
   if fixture:fixture.shutdown()
-  stop(p);stop(core);core_log.close()
+  stop(p)
+  if core:stop(core);core_log.close()
  env.pop('CONNECT_HUB_CORE_ALPHA',None);env.pop('CONNECT_HUB_SUDOKU',None)
  initial=(data/'initial-access.txt').read_bytes()
  # Construct a second revision of the same tested package to exercise update
