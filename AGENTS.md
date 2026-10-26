@@ -42,3 +42,5 @@ User requirements restated explicitly on 2026-10-24:
   Only the user's explicit instruction "остановись" requests stopping.
 - Report verified results. Do not call partial parity or merely passing internal
   tests a completed product. Validate the actual published installation path.
+
+Latest user specification, 26 October 2026: four palettes (Classic Monochrome, Graphite & Sage, Obsidian & Champagne, Midnight & Steel), each with light/dark mode. Keep Classic as the migration default and retain saved mode, geometry, data and backend behavior. Palette choice is local to the browser.

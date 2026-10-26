@@ -1,4 +1,13 @@
 {
+  "appearance": {
+    "title": "外观",
+    "subtitle": "选择配色和显示模式。",
+    "palette": "配色",
+    "mode": "显示模式",
+    "local": "保存在此浏览器中，不更改服务器设置。",
+    "light": "浅色",
+    "dark": "深色"
+  },
   "username": "用户名",
   "password": "密码",
   "login": "登录",

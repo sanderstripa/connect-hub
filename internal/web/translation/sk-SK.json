@@ -1,4 +1,13 @@
 {
+  "appearance": {
+    "title": "Vzhľad",
+    "subtitle": "Vyberte paletu a režim zobrazenia.",
+    "palette": "Paleta",
+    "mode": "Režim zobrazenia",
+    "local": "Uložené v tomto prehliadači. Nastavenia servera sa nemenia.",
+    "light": "Svetlý",
+    "dark": "Tmavý"
+  },
   "username": "Používateľské meno",
   "password": "Heslo",
   "login": "Prihlásiť sa",

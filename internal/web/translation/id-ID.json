@@ -1,4 +1,13 @@
 {
+  "appearance": {
+    "title": "Tampilan",
+    "subtitle": "Pilih palet dan mode tampilan.",
+    "palette": "Palet",
+    "mode": "Mode tampilan",
+    "local": "Disimpan di peramban ini. Pengaturan server tidak berubah.",
+    "light": "Terang",
+    "dark": "Gelap"
+  },
   "username": "Nama Pengguna",
   "password": "Kata Sandi",
   "login": "Masuk",

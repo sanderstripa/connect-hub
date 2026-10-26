@@ -219,6 +219,7 @@ export default function AppSidebar() {
 
   const settingsChildren = useMemo<NonNullable<MenuProps['items']>>(() => {
     const children: NonNullable<MenuProps['items']> = [
+      {key: '/settings#appearance', icon: <SettingOutlined aria-hidden />, label: t('appearance.title')},
       {
         key: '/settings#general',
         icon: <SettingOutlined aria-hidden />,

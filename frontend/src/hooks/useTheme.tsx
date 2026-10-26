@@ -3,22 +3,28 @@ import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useSt
 import type { ReactNode } from 'react';
 import { theme as antdTheme } from 'antd';
 import type { ThemeConfig } from 'antd';
+import { PALETTE_KEY, parsePalette, themeTokens, themeVariables } from '@/lib/theme-palettes';
+import type { PaletteId } from '@/lib/theme-palettes';
 import '@/styles/connect-brand.css';
 import '@/styles/connect-density.css';
-const initialDark = localStorage.getItem('dark-mode') !== 'false';
-function applyDom(dark: boolean) {
+import '@/styles/palettes.css';
+const initialDark = (()=>{try{return localStorage.getItem('dark-mode') !== 'false';}catch{return true;}})();
+function applyDom(dark: boolean, palette: PaletteId = 'classic') {
+  const root = document.documentElement;
+  root.dataset.palette = palette; root.dataset.mode = dark ? 'dark' : 'light';
+  for (const [key,value] of Object.entries(themeVariables(palette,dark))) root.style.setProperty('--'+key,value);
   document.body.classList.remove('dark', 'light'); document.body.classList.add(dark ? 'dark' : 'light');
   document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
-  document.documentElement.removeAttribute('data-theme'); localStorage.removeItem('isUltraDarkThemeEnabled');
+  document.documentElement.removeAttribute('data-theme'); try {localStorage.removeItem('isUltraDarkThemeEnabled');} catch { /* Storage can be blocked. */ }
   const msg = document.getElementById('message');
   if (msg) { msg.classList.remove('dark', 'light'); msg.classList.add(dark ? 'dark' : 'light'); }
 }
-applyDom(initialDark);
-export function buildAntdThemeConfig(dark: boolean, _legacyUltra = false): ThemeConfig {
-  const bg = dark ? '#141618' : '#f7f7f5', card = dark ? '#1c1f22' : '#ffffff';
-  const text = dark ? '#eceef0' : '#171a1d', muted = dark ? '#9399a2' : '#6d747e';
-  const border = dark ? '#3c4147' : '#d7d9dd', primary = dark ? '#e7e8ea' : '#171a1d';
-  return {
+function savedPalette(): PaletteId { try {return parsePalette(localStorage.getItem(PALETTE_KEY));} catch {return 'classic';} }
+applyDom(initialDark, savedPalette());
+export function buildAntdThemeConfig(dark: boolean, _legacyUltra = false, palette: PaletteId = 'classic'): ThemeConfig {
+  const colors=themeTokens(palette,dark);
+  const {bg,surface:card,text,secondary:muted,border,accent:primary}=colors;
+  const config: ThemeConfig = {
     hashed: false, cssVar: { key: 'xui' }, algorithm: dark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
     token: { fontFamily: 'Montserrat, sans-serif', fontFamilyCode: 'Montserrat, sans-serif',
       colorBgBase: bg, colorBgLayout: bg, colorBgContainer: card, colorBgElevated: dark ? '#25292d' : '#ffffff',
@@ -48,22 +54,42 @@ export function buildAntdThemeConfig(dark: boolean, _legacyUltra = false): Theme
       Statistic: { contentFontSize: 17, titleFontSize: 11 },
     },
   };
+  if (palette !== 'classic') {
+    Object.assign(config.token!, {colorBgElevated:colors.raised, colorPrimaryHover:colors.hover,
+      colorPrimaryActive:colors.hover,colorPrimaryBg:colors.subtle,colorTextLightSolid:colors.foreground,
+      colorLink:colors.text,colorLinkHover:colors.hover,colorBorder:colors.controlBorder,colorBorderSecondary:border,
+      colorSuccess:colors.success,colorWarning:colors.warning,colorError:colors.error,colorInfo:colors.info,
+      colorTextDisabled:muted,colorFillAlter:colors.raised,colorFillSecondary:colors.subtle});
+    Object.assign(config.components!.Menu!, {darkItemBg:card,darkSubMenuItemBg:card,darkPopupBg:colors.raised,
+      darkItemSelectedBg:colors.subtle,darkItemSelectedColor:text,itemSelectedBg:colors.subtle,itemSelectedColor:text,
+      itemHoverBg:colors.subtle, darkItemColor:muted, darkItemHoverColor:text});
+    Object.assign(config.components!.Layout!, {siderBg:card});
+    Object.assign(config.components!.Button!, {primaryColor:colors.foreground});
+    config.components!.Tooltip = {colorBgSpotlight:colors.raised,colorTextLightSolid:colors.text};
+    Object.assign(config.components!.Switch!, {colorPrimaryHover:colors.hover,colorTextQuaternary:colors.controlBorder});
+    Object.assign(config.components!.Select!, {optionSelectedBg:colors.subtle,optionActiveBg:colors.raised});
+    Object.assign(config.components!.Table!, {headerBg:colors.raised,rowHoverBg:colors.subtle,rowSelectedBg:colors.subtle});
+  }
+  return config;
 }
 export function pauseAnimationsUntilLeave(elementId: string): void {
   document.documentElement.setAttribute('data-theme-animations', 'off'); const el = document.getElementById(elementId); if (!el) return;
   const restore = () => { document.documentElement.removeAttribute('data-theme-animations'); el.removeEventListener('mouseleave', restore); el.removeEventListener('touchend', restore); };
   el.addEventListener('mouseleave', restore); el.addEventListener('touchend', restore);
 }
-interface ThemeContextValue { isDark: boolean; isUltra: boolean; toggleTheme: () => void; toggleUltra: () => void; antdThemeConfig: ThemeConfig; }
+interface ThemeContextValue { isDark: boolean; isUltra: boolean; palette: PaletteId; setPalette: (id: PaletteId) => void; toggleTheme: () => void; toggleUltra: () => void; antdThemeConfig: ThemeConfig; }
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState(initialDark);
-  useLayoutEffect(() => { applyDom(isDark); localStorage.setItem('dark-mode', String(isDark)); }, [isDark]);
+  const [palette,setPaletteState] = useState<PaletteId>(savedPalette);
+  const setPalette=useCallback((id: PaletteId)=>setPaletteState(parsePalette(id)),[]);
+  useLayoutEffect(() => { applyDom(isDark,palette); try {localStorage.setItem('dark-mode', String(isDark)); localStorage.setItem(PALETTE_KEY,palette);} catch { /* Private storage must not break rendering. */ } }, [isDark,palette]);
   const toggleTheme = useCallback(() => setIsDark(v => !v), []);
   // Compatibility for upstream consumers; no third theme remains selectable.
   const toggleUltra = useCallback(() => {}, []);
-  const antdThemeConfig = useMemo(() => buildAntdThemeConfig(isDark), [isDark]);
-  const value = useMemo(() => ({ isDark, isUltra: false, toggleTheme, toggleUltra, antdThemeConfig }), [isDark, toggleTheme, toggleUltra, antdThemeConfig]);
+  const antdThemeConfig = useMemo(() => buildAntdThemeConfig(isDark,false,palette), [isDark,palette]);
+  const value = useMemo(() => ({ isDark, isUltra: false, palette,setPalette,toggleTheme, toggleUltra, antdThemeConfig }), [isDark,palette,setPalette, toggleTheme, toggleUltra, antdThemeConfig]);
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 export function useTheme(): ThemeContextValue { const ctx = useContext(ThemeContext); if (!ctx) throw new Error('useTheme must be used inside <ThemeProvider>'); return ctx; }
+export function useChartTheme() { const ctx=useContext(ThemeContext);const palette=ctx?.palette ?? 'classic';return {palette,colors:themeTokens(palette,ctx?.isDark ?? document.body.classList.contains('dark'))}; }
