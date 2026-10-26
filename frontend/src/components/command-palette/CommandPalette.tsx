@@ -83,7 +83,7 @@ export const PALETTE_KEYWORDS: Record<string, string[]> = {
   '/settings': ['settings', 'config', 'port', 'password', 'ssl', 'telegram'],
   '/xray': ['xray', 'templates', 'balancer', 'dns'],
   '/api-docs': ['api', 'api docs', 'swagger', 'rest api', 'endpoints'],
-  '/sponsors': ['sponsors', 'sponsor', 'partners'],
+  '/hub': ['sudoku', 'connect', 'hub'],
 };
 
 export default function CommandPalette() {
@@ -359,7 +359,7 @@ export default function CommandPalette() {
       });
     });
 
-    const pages = PANEL_ROUTES.filter((route) => !route.hidden).map((route) => ({
+    const pages = PANEL_ROUTES.filter((route) => !route.hidden || route.path === '/hub').map((route) => ({
       path: route.path,
       title: t(route.titleKey),
       keywords: PALETTE_KEYWORDS[route.path] ?? [],
