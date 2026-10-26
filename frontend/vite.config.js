@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import { themeCSS, PALETTE_IDS } from './src/lib/theme-palettes.ts';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'node:fs';
@@ -202,8 +204,22 @@ const SWAGGER_ONLY_DEPS = [
   'zenscroll',
 ];
 
+
+function paletteBootstrapPlugin() {
+  const source='(()=>{let p="classic",d=true;try{const v=localStorage.getItem("connect-hub-palette");if('+JSON.stringify(PALETTE_IDS)+'.includes(v))p=v;d=localStorage.getItem("dark-mode")!=="false";}catch{}const r=document.documentElement;r.dataset.palette=p;r.dataset.mode=d?"dark":"light";r.style.colorScheme=d?"dark":"light";})()';
+  const fileName='assets/palette-bootstrap-'+createHash('sha256').update(source).digest('hex').slice(0,12)+'.js';
+  return {name:'connect-palette-first-paint',
+    generateBundle(){this.emitFile({type:'asset',fileName,source});},
+    configureServer(server){server.middlewares.use((req,res,next)=>{if(req.url?.split('?')[0].endsWith('/'+fileName)){res.setHeader('Content-Type','text/javascript');res.end(source);}else next();});},
+    transformIndexHtml:{order:'post',handler(){return [
+      {tag:'style',children:themeCSS(),injectTo:'head-prepend'},
+      {tag:'script',attrs:{src:'/'+fileName},injectTo:'head-prepend'}
+    ];}}
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), injectBasePathPlugin(), rocketLoaderOptOutPlugin()],
+  plugins: [paletteBootstrapPlugin(), react(), injectBasePathPlugin(), rocketLoaderOptOutPlugin()],
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, 'src'),

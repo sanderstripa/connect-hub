@@ -1,4 +1,13 @@
 {
+  "appearance": {
+    "title": "Apariencia",
+    "subtitle": "Elige una paleta y un modo de visualización.",
+    "palette": "Paleta",
+    "mode": "Modo de visualización",
+    "local": "Se guarda en este navegador. No cambia la configuración del servidor.",
+    "light": "Claro",
+    "dark": "Oscuro"
+  },
   "username": "Nombre de Usuario",
   "password": "Contraseña",
   "login": "Acceder",

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 import './Sparkline.css';
+import { useChartTheme } from '@/hooks/useTheme';
 
 export interface SparklineReferenceLine {
   y: number;
@@ -128,6 +129,8 @@ function dprOf(u: uPlot): number {
 }
 
 export default function Sparkline(props: SparklineProps) {
+  const {palette,colors}=useChartTheme();
+  const themedProps=palette!=='classic'?{...props,stroke:colors.chartPrimary,stroke2:colors.chartSecondary,stroke3:colors.chartThird,referenceLines:props.referenceLines?.map((line,i)=>({...line,color:i===0?colors.chartSecondary:colors.chartPrimary}))}:props;
   const {
     data,
     data2 = [],
@@ -158,7 +161,7 @@ export default function Sparkline(props: SparklineProps) {
     tooltipLabelFormatter = null,
     referenceLines,
     extrema,
-  } = props;
+  } = themedProps;
 
   const hasSeries2 = data2.length > 0;
   const hasSeries3 = data3.length > 0;
@@ -276,6 +279,7 @@ export default function Sparkline(props: SparklineProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const plotRef = useRef<uPlot | null>(null);
+  useEffect(()=>{plotRef.current?.redraw(false);},[stroke,stroke2,stroke3]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -362,7 +366,7 @@ export default function Sparkline(props: SparklineProps) {
       const { ctx, bbox } = u;
       const dpr = dprOf(u);
       ctx.save();
-      ctx.strokeStyle = GRID_COLOR;
+      ctx.strokeStyle = cssVar(u.root, '--chart-grid', GRID_COLOR);
       ctx.lineWidth = dpr;
       ctx.setLineDash([3 * dpr, 4 * dpr]);
       ctx.beginPath();
@@ -573,7 +577,7 @@ export default function Sparkline(props: SparklineProps) {
     const moBody = new MutationObserver(redraw);
     moBody.observe(document.body, { attributes: true, attributeFilter: ['class'] });
     const moRoot = new MutationObserver(redraw);
-    moRoot.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    moRoot.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme','data-palette','data-mode'] });
     return () => {
       moBody.disconnect();
       moRoot.disconnect();
@@ -583,6 +587,8 @@ export default function Sparkline(props: SparklineProps) {
   return (
     <div
       className="sparkline-container"
+      data-chart-palette={palette}
+      data-chart-stroke={stroke}
       role={ariaSummary ? 'img' : undefined}
       aria-label={ariaSummary || undefined}
     >
