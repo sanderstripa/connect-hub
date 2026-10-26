@@ -11,8 +11,8 @@ try{
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/panel/api/inbounds/list/slim',route=>route.fulfill({json:{success:true,obj:[{id:1,protocol:'vless',remark:'UI density fixture',enable:false,port:12345,up:0,down:0,total:0,expiryTime:0,settings:'{"clients":[]}',streamSettings:'{"network":"tcp","security":"none"}',sniffing:'{}',tag:'ui-fixture'}]}}));
   await page.goto(cfg.url);await page.locator('input[autocomplete=username]').fill(cfg.user);await page.locator('input[autocomplete=current-password]').fill(cfg.password);await page.locator('button[type=submit]').click();await page.waitForURL('**/panel/');
-  const clients=page.locator('.sider-nav [data-menu-id$="-__clients"]');await clients.click();await page.waitForURL('**/panel/clients');
-  const groups=page.locator('.sider-nav').getByRole('menuitem',{name:/Groups/});await groups.waitFor({state:'visible'});await groups.click();await page.waitForURL('**/panel/groups');await clients.click();await page.waitForURL('**/panel/clients');
+  const clients=page.locator('.sider-nav [data-menu-id$="-/clients"]');await clients.click();await page.waitForURL('**/panel/clients');
+  assert.equal(await page.locator('.sider-nav').getByRole('menuitem',{name:/Groups|Client List/}).count(),0);await page.goto(cfg.url+'panel/groups');await page.waitForURL('**/panel/clients');
   const folders=page.locator('.sider-nav .ant-menu-submenu-title:visible');
   for(let n=0;n<await folders.count();n++){const title=folders.nth(n);if(await title.getAttribute('aria-expanded')!=='true')await title.click();}
   await page.waitForTimeout(350);
@@ -26,7 +26,7 @@ try{
   await page.goto(cfg.url+'panel/inbounds');const row=page.locator('.ant-table-tbody > tr[data-row-key]').first();await row.waitFor();await page.waitForTimeout(200);
   const height=(await row.boundingBox()).height;assert.ok(height>=42&&height<64,'Compact inbound row '+height);assert.ok(await row.getByRole('switch').isVisible());assert.ok(await page.getByText('UI density fixture',{exact:true}).isVisible());
   await page.screenshot({path:cfg.output+'/point-inbounds-'+dark+'.png',fullPage:true});
-  assert.deepEqual(errors,[]);report.push({dark,oneClickClients:true,groupsAccessible:true,menuItems:colors.length,searchColor:search,inboundRowHeight:height,consoleErrors:errors});await context.close();
+  assert.deepEqual(errors,[]);report.push({dark,oneClickClients:true,groupsHidden:true,menuItems:colors.length,searchColor:search,inboundRowHeight:height,consoleErrors:errors});await context.close();
  }
  fs.writeFileSync(cfg.output+'/ui-point-fixes-report.json',JSON.stringify(report,null,2));console.log('PASS: CH-01 through CH-04 in light and dark themes; '+JSON.stringify(report));
 }finally{await browser.close();}

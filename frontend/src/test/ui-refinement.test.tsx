@@ -10,30 +10,30 @@ import { renderWithProviders } from './test-utils';
 
 vi.mock('@/api/queries/useAllSettings', () => ({ useAllSettings: () => ({ allSetting: {} }) }));
 
-test('Clients title navigates in one click and keeps Groups available', async () => {
+test('Clients is a standalone item with no group navigation', async () => {
   localStorage.setItem('sidebar-pinned', 'true');
   function Location() { return <output data-testid="current-route">{useLocation().pathname}</output>; }
   const view = renderWithProviders(<MemoryRouter initialEntries={['/']}><AppSidebar /><Location /></MemoryRouter>);
   await act(async () => {});
-  fireEvent.click(view.container.querySelector('[data-menu-id$="-__clients"]')!);
+  const item = view.container.querySelector('[data-menu-id$="-/clients"]')!;
+  expect(item.closest('.ant-menu-submenu')).toBeNull();
+  fireEvent.click(item);
   await waitFor(() => expect(screen.getByTestId('current-route').textContent).toBe('/clients'));
-  expect(screen.getByRole('menuitem', { name: /Groups/ })).not.toBeNull();
-  fireEvent.click(screen.getByRole('menuitem', { name: /Groups/ }));
-  await waitFor(() => expect(screen.getByTestId('current-route').textContent).toBe('/groups'));
+  expect(screen.queryByRole('menuitem', { name: /Groups|Client List/ })).toBeNull();
   localStorage.clear();
 });
 
 test('groups existing routes, supports manual collapse and reopens on navigation', async () => {
   localStorage.setItem('sidebar-pinned', 'true');
-  function Navigate() { const go = useNavigate(); return <button onClick={() => go('/groups')}>Go groups</button>; }
-  const view = renderWithProviders(<MemoryRouter initialEntries={['/clients']}><AppSidebar /><Navigate /></MemoryRouter>);
+  function Navigate() { const go = useNavigate(); return <button onClick={() => go('/nodes')}>Go nodes</button>; }
+  const view = renderWithProviders(<MemoryRouter initialEntries={['/hosts']}><AppSidebar /><Navigate /></MemoryRouter>);
   await act(async () => {});
-  const clientGroup = view.container.querySelector('[data-menu-id$="-__clients"]')?.closest('.ant-menu-submenu');
+  const clientGroup = view.container.querySelector('[data-menu-id$="-__infrastructure"]')?.closest('.ant-menu-submenu');
   expect(clientGroup?.classList.contains('ant-menu-submenu-open')).toBe(true);
-  expect(screen.getByRole('menuitem', { name: /Client List/ })).not.toBeNull();
+  expect(screen.getByRole('menuitem', { name: /Nodes/ })).not.toBeNull();
   fireEvent.click(clientGroup!.querySelector('.ant-menu-submenu-title')!);
   expect(clientGroup?.classList.contains('ant-menu-submenu-open')).toBe(false);
-  fireEvent.click(screen.getByRole('button', { name: 'Go groups' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Go nodes' }));
   await waitFor(() => expect(clientGroup?.classList.contains('ant-menu-submenu-open')).toBe(true));
   expect(screen.getByRole('menuitem', { name: /Infrastructure/ })).not.toBeNull();
   expect(screen.getByRole('menuitem', { name: /Network/ })).not.toBeNull();

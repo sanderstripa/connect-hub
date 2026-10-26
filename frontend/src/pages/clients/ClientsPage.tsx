@@ -1,3 +1,4 @@
+import { CLIENT_GROUPS_UI_ENABLED } from '@/lib/client-groups-ui';
 import { lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useLocation, useSearchParams } from 'react-router';
@@ -233,7 +234,7 @@ function readFilterState(): PersistedFilterState {
         protocols: Array.isArray(fromRaw.protocols) ? fromRaw.protocols : [],
         inboundIds: Array.isArray(fromRaw.inboundIds) ? fromRaw.inboundIds : [],
         nodeIds: Array.isArray(fromRaw.nodeIds) ? fromRaw.nodeIds : [],
-        groups: Array.isArray(fromRaw.groups) ? fromRaw.groups : [],
+        groups: [],
       },
       sort: typeof raw.sort === 'string' ? raw.sort : '',
       pageSize: typeof raw.pageSize === 'number' && raw.pageSize > 0 ? raw.pageSize : null,
@@ -526,7 +527,7 @@ export default function ClientsPage() {
       autoRenew: filters.autoRenew || undefined,
       hasTgId: filters.hasTgId || undefined,
       hasComment: filters.hasComment || undefined,
-      group: filters.groups.join(',') || undefined,
+      group: CLIENT_GROUPS_UI_ENABLED ? filters.groups.join(',') || undefined : undefined,
       sort: sortColumn || undefined,
       order: sortOrder || undefined,
     });
@@ -636,7 +637,7 @@ export default function ClientsPage() {
 
   function remainingColor(row: ClientRecord): string {
     const total = row.totalGB || 0;
-    if (total <= 0) return 'purple';
+    if (total <= 0) return 'default';
     const used = (row.traffic?.up || 0) + (row.traffic?.down || 0);
     const ratio = used / total;
     if (ratio >= 1) return 'red';
@@ -663,7 +664,7 @@ export default function ClientsPage() {
   }
 
   function expiryColor(row: ClientRecord): string {
-    if (!row.expiryTime) return 'purple';
+    if (!row.expiryTime) return 'default';
     if (row.expiryTime < 0) return 'blue';
     const now = Date.now();
     if (row.expiryTime <= now) return 'red';
@@ -1138,7 +1139,7 @@ export default function ClientsPage() {
         title: t('pages.clients.group'),
         key: 'group',
         width: 130,
-        hidden: allGroups.length === 0,
+        hidden: !CLIENT_GROUPS_UI_ENABLED || allGroups.length === 0,
         render: (_v, record) => {
           if (!record.group) return <Typography.Text type="secondary">—</Typography.Text>;
           const isActive = filters.groups.includes(record.group);
@@ -1322,6 +1323,7 @@ export default function ClientsPage() {
                 />
               ) : (
                 <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 12]}>
+                  <Col span={24}><h1 className="section-page-title">{t('menu.clients')}</h1></Col>
                   <Col span={24}>
                     <Card size="small" hoverable className="summary-card">
                       <Row gutter={[16, 12]}>
@@ -1431,7 +1433,7 @@ export default function ClientsPage() {
                                         danger: true,
                                         onClick: () => setBulkDetachOpen(true),
                                       },
-                                      {
+                                      ...(CLIENT_GROUPS_UI_ENABLED ? [{
                                         key: 'addToGroup',
                                         icon: <TagsOutlined />,
                                         label: t('pages.clients.addToGroup'),
@@ -1443,7 +1445,7 @@ export default function ClientsPage() {
                                         label: t('pages.clients.ungroup'),
                                         danger: true,
                                         onClick: onBulkUngroup,
-                                      },
+                                      }] : []),
                                       { type: 'divider' as const },
                                       {
                                         key: 'enable',
@@ -1631,7 +1633,7 @@ export default function ClientsPage() {
                               {inboundLabel(id)}
                             </Tag>
                           ))}
-                          {filters.groups.map((g) => (
+                          {CLIENT_GROUPS_UI_ENABLED && filters.groups.map((g) => (
                             <Tag
                               key={`g-${g}`}
                               closable
@@ -1970,7 +1972,7 @@ export default function ClientsPage() {
             onOpenChange={setSubLinksOpen}
           />
         </LazyMount>
-        <LazyMount when={bulkGroupOpen}>
+        <LazyMount when={CLIENT_GROUPS_UI_ENABLED && bulkGroupOpen}>
           <BulkAddToGroupModal
             open={bulkGroupOpen}
             count={selectedRowKeys.length}

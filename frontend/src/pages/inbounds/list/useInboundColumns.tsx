@@ -411,7 +411,7 @@ export function useInboundColumns({
               </table>
             }
           >
-            <Tag color={ColorUtils.usageColor(record.up + record.down, trafficDiff, record.total)}>
+            <Tag color={record.total > 0 ? ColorUtils.usageColor(record.up + record.down, trafficDiff, record.total) : 'default'}>
               {SizeFormatter.sizeFormat(record.up + record.down)} /{' '}
               {record.total > 0 ? SizeFormatter.sizeFormat(record.total) : <InfinityIcon />}
             </Tag>
@@ -456,7 +456,7 @@ export function useInboundColumns({
             );
           }
           return (
-            <Tag color="purple">
+            <Tag>
               <InfinityIcon />
             </Tag>
           );

@@ -203,7 +203,7 @@ export default function AppSidebar() {
     () => [
       { key: '/', icon: 'dashboard', title: t('menu.dashboard') },
       { key: '/inbounds', icon: 'inbound', title: t('menu.inbounds') },
-      { key: '__clients', icon: 'team', title: t('menu.clients') },
+      { key: '/clients', icon: 'team', title: t('menu.clients') },
       { key: '__infrastructure', icon: 'cluster', title: t('menu.infrastructure') },
       { key: '__network', icon: 'routing', title: t('menu.network') },
       { key: '/settings', icon: 'setting', title: t('menu.settings') },
@@ -285,7 +285,7 @@ export default function AppSidebar() {
         : pathname;
 
   const openSubmenu = settingsMenuActive ? '/settings' : xrayActive ? '/xray'
-    : ['/clients', '/groups'].includes(pathname) ? '__clients'
+
     : ['/nodes', '/hosts'].includes(pathname) ? '__infrastructure'
     : ['/outbound', '/routing'].includes(pathname) ? '__network' : null;
   const [openKeys, setOpenKeys] = useState<string[]>(() => (openSubmenu ? [openSubmenu] : []));
@@ -301,19 +301,10 @@ export default function AppSidebar() {
       items.map((tab) => {
         const Icon = iconByName[tab.icon];
         const groups: Record<string, [string, IconName, string][]> = {
-          __clients: [['/clients', 'team', 'menu.clientList'], ['/groups', 'groups', 'menu.groups']],
           __infrastructure: [['/nodes', 'cluster', 'menu.nodes'], ['/hosts', 'hosts', 'menu.hosts']],
           __network: [['/outbound', 'outbound', 'menu.outbounds'], ['/routing', 'routing', 'menu.routing']],
         };
         if (groups[tab.key]) return { key: tab.key, icon: <Icon />, label: tab.title,
-          onTitleClick: tab.key === '__clients' ? ({ domEvent }) => {
-            if ((domEvent.target as Element).closest('.ant-menu-submenu-arrow')) return;
-            const title = (domEvent.target as Element).closest('.ant-menu-submenu-title');
-            const bounds = title?.getBoundingClientRect();
-            if ('clientX' in domEvent && bounds && bounds.width > 0 && domEvent.clientX >= bounds.right - 34) return;
-            navigate('/clients');
-            setDrawerOpen(false);
-          } : undefined,
           children: groups[tab.key].map(([key, icon, label]) => {
             const ChildIcon = iconByName[icon];
             return { key, icon: <ChildIcon />, label: t(label) };
@@ -325,9 +316,9 @@ export default function AppSidebar() {
         if (tab.key === '/xray') {
           return { key: tab.key, icon: <Icon />, label: tab.title, children: xrayChildren };
         }
-        return { key: tab.key, icon: <Icon />, label: tab.title, title: '' };
+        return { key: tab.key, icon: <Icon />, label: tab.title, title: tab.title };
       }),
-    [settingsChildren, xrayChildren, t, navigate],
+    [settingsChildren, xrayChildren, t],
   );
 
   const openLink = useCallback(

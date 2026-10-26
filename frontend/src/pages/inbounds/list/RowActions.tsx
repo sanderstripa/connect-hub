@@ -1,3 +1,4 @@
+import { CLIENT_GROUPS_UI_ENABLED } from '@/lib/client-groups-ui';
 import { useTranslation } from 'react-i18next';
 import { Button, Dropdown, type MenuProps } from 'antd';
 import {
@@ -87,7 +88,7 @@ export function buildRowActionsMenu({
       icon: <UsergroupDeleteOutlined />,
       label: t('pages.inbounds.detachClients'),
     });
-    items.push({
+    if (CLIENT_GROUPS_UI_ENABLED) items.push({
       key: 'addToGroup',
       icon: <TagsOutlined />,
       label: t('pages.inbounds.addClientsToGroup'),

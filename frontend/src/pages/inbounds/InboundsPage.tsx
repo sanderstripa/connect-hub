@@ -1,3 +1,4 @@
+import { CLIENT_GROUPS_UI_ENABLED } from '@/lib/client-groups-ui';
 import { lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -745,6 +746,7 @@ export default function InboundsPage() {
                 />
               ) : (
                 <Row gutter={[isMobile ? 8 : 16, 12]}>
+                  <Col span={24}><h1 className="section-page-title">{t('menu.inbounds')}</h1></Col>
                   <Col span={24}>
                     <Card size="small" hoverable className="summary-card">
                       <Row gutter={[16, 12]}>
@@ -861,7 +863,7 @@ export default function InboundsPage() {
             source={detachSource}
           />
         </LazyMount>
-        <LazyMount when={groupOpen}>
+        <LazyMount when={CLIENT_GROUPS_UI_ENABLED && groupOpen}>
           <AddClientsToGroupModal
             open={groupOpen}
             onClose={() => setGroupOpen(false)}

@@ -108,7 +108,6 @@
     "saveQr": "Guardar QR"
   },
   "menu": {
-    "clientList": "Lista de clientes",
     "infrastructure": "Infraestructura",
     "network": "Red",
     "theme": "Tema",

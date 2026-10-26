@@ -1,7 +1,7 @@
-Connect. Hub alpha 10
+Connect. Hub alpha 11
 
-- CH-01: Clicking Clients opens the client list immediately. The disclosure arrow still expands/collapses its existing subpages, including Groups.
-- CH-02: Nested sidebar/drawer/popup menus use the current theme surfaces and readable active, open and inactive states.
-- CH-03: Compact Inbounds rows and container spacing use the existing control/gap sizes; all data and actions remain available.
-- CH-04: Search icons, selection, hover and keyboard focus use existing monochrome theme variables.
-- Dashboard, protocols, APIs, routing and server operations are unchanged.
+- Standalone Clients navigation; group management removed from navigation, palette, forms and bulk controls. Legacy /groups links redirect to Clients. Stored groups, clients and bindings are preserved.
+- Compact, aligned Inbounds/Clients summaries with small section headings and readable typography; table density from alpha 10 is retained.
+- Consistent neutral unlimited-traffic indicators; success/warning/error semantics and Dashboard graphs remain unchanged.
+- Compact, content-sized command palette, equal text weights in both themes, localized footer and preserved keyboard/search behavior.
+- Long sidebar labels wrap or expose their full title, with existing folder structure retained.

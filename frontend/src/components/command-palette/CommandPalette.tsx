@@ -31,7 +31,6 @@ import {
   SettingOutlined,
   SunOutlined,
   SwapOutlined,
-  TagsOutlined,
   TeamOutlined,
   ToolOutlined,
 } from '@ant-design/icons';
@@ -322,7 +321,7 @@ export default function CommandPalette() {
         category: 'inbounds',
         title: ib.remark || ib.tag || `Inbound #${ib.id}`,
         subtitle: `Port ${ib.port || ''}`,
-        icon: <ImportOutlined style={{ color: '#1677ff' }} />,
+        icon: <ImportOutlined />,
         tag:
           tags.length > 0 ? (
             <div style={{ display: 'inline-flex', gap: 4, flexWrap: 'wrap' }}>{tags}</div>
@@ -363,12 +362,6 @@ export default function CommandPalette() {
         title: t('menu.clients'),
         keywords: ['clients', 'users', 'sub', 'traffic', 'quota'],
         icon: <TeamOutlined />,
-      },
-      {
-        path: '/groups',
-        title: t('menu.groups'),
-        keywords: ['groups', 'tags', 'batch'],
-        icon: <TagsOutlined />,
       },
       {
         path: '/nodes',
@@ -802,7 +795,7 @@ export default function CommandPalette() {
                 {t('close')}
               </span>
             </div>
-            <span>Connect Hub Command Palette</span>
+            <span>{`Connect. Hub · ${t('commandPalette.title')}`}</span>
           </div>
         </div>
       </div>
