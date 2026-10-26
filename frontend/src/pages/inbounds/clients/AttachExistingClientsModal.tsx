@@ -1,3 +1,4 @@
+import { CLIENT_GROUPS_UI_ENABLED } from '@/lib/client-groups-ui';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Input, Modal, Select, Space, Spin, Table, Tag, Typography, message } from 'antd';
@@ -119,6 +120,7 @@ export default function AttachExistingClientsModal({
         title: t('pages.clients.group'),
         dataIndex: 'group',
         key: 'group',
+        hidden: !CLIENT_GROUPS_UI_ENABLED,
         width: 150,
         ellipsis: true,
         render: (group: string) =>
@@ -212,7 +214,7 @@ export default function AttachExistingClientsModal({
                   placeholder={t('pages.inbounds.attachClientsSearchPlaceholder')}
                   style={{ width: 260 }}
                 />
-                {groupOptions.length > 0 && (
+                {CLIENT_GROUPS_UI_ENABLED && groupOptions.length > 0 && (
                   <Select
                     allowClear
                     aria-label={t('pages.clients.group')}

@@ -1,3 +1,4 @@
+import { CLIENT_GROUPS_UI_ENABLED } from '@/lib/client-groups-ui';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -155,7 +156,7 @@ export default function FilterDrawer({
           </Form.Item>
         )}
 
-        <Form.Item label={t('pages.clients.group')}>
+        {CLIENT_GROUPS_UI_ENABLED && (<Form.Item label={t('pages.clients.group')}>
           <Select
             mode="multiple"
             value={filters.groups}
@@ -167,7 +168,7 @@ export default function FilterDrawer({
             showSearch={{ optionFilterProp: 'label' }}
             listHeight={220}
           />
-        </Form.Item>
+        </Form.Item>)}
 
         <Form.Item label={t('pages.clients.expiryTime')}>
           <DatePicker.RangePicker

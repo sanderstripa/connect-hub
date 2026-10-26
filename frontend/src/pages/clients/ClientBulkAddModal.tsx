@@ -1,3 +1,4 @@
+import { CLIENT_GROUPS_UI_ENABLED } from '@/lib/client-groups-ui';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -338,7 +339,7 @@ export default function ClientBulkAddModal({
               </Space.Compact>
             </Form.Item>
 
-            <FormField
+            {CLIENT_GROUPS_UI_ENABLED && (<FormField
               name="group"
               label={t('pages.clients.group')}
               tooltip={t('pages.clients.groupDesc')}
@@ -349,7 +350,7 @@ export default function ClientBulkAddModal({
                 options={groups.map((g) => ({ value: g }))}
                 allowClear
               />
-            </FormField>
+            </FormField>)}
 
             <FormField
               name="limitHwid"

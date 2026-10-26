@@ -406,3 +406,9 @@ body .sider-nav .ant-menu-submenu-title:hover,
 body .drawer-nav .ant-menu-submenu-title:hover,
 body .sider-nav .ant-menu-item:hover,
 body .drawer-nav .ant-menu-item:hover { color: var(--connect-text) !important; }
+
+/* Keep the rail width; long labels use its existing two-line space. */
+body .sider-nav .ant-menu-title-content,
+body .drawer-nav .ant-menu-title-content {
+  white-space: normal; text-overflow: clip; line-height: 16px; font-size: 13px;
+}

@@ -73,7 +73,7 @@ const ClientTrafficCell = memo(function ClientTrafficCell({
           aria-label={`${SizeFormatter.sizeFormat(display.used)} / ${display.isUnlimited ? t('subscription.unlimited') : SizeFormatter.sizeFormat(total)}`}
           percent={display.percent}
           showInfo={false}
-          strokeColor={display.strokeColor}
+          strokeColor={display.isUnlimited && enabled ? 'var(--connect-muted)' : display.strokeColor}
           status={display.status}
           size={compact ? 'small' : 'medium'}
         />

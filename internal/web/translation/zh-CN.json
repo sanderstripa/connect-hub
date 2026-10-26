@@ -108,7 +108,6 @@
     "saveQr": "保存二维码"
   },
   "menu": {
-    "clientList": "客户端列表",
     "infrastructure": "基础设施",
     "network": "网络",
     "theme": "主题",

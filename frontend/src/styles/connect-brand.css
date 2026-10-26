@@ -44,3 +44,20 @@ body .ant-select-dropdown .ant-select-item-option-selected:not(.ant-select-item-
 body .ant-select-dropdown .ant-select-item-option-disabled { color: var(--connect-muted); }
 body .ant-select:not(.ant-select-disabled) .ant-select-selection-item { color: var(--connect-text); }
 body .ant-select-focused .ant-select-selector { outline: 2px solid var(--connect-muted); outline-offset: 2px; }
+
+/* Section hierarchy is scoped to lists; Dashboard proportions are preserved. */
+body .clients-page .section-page-title, body .inbounds-page .section-page-title {
+  margin: 0; font-size: 18px; line-height: 24px; font-weight: 500; color: var(--connect-text);
+}
+body .clients-page .summary-card .ant-card-body,
+body .inbounds-page .summary-card .ant-card-body { min-height: 0; padding: 12px 16px !important; }
+body .clients-page .summary-card .ant-statistic-title,
+body .inbounds-page .summary-card .ant-statistic-title {
+  font-size: 12px; line-height: 18px; margin-bottom: 4px; color: var(--connect-muted);
+}
+body .clients-page .summary-card .ant-statistic-content,
+body .inbounds-page .summary-card .ant-statistic-content { font-size: 20px; line-height: 26px; font-weight: 500; }
+body .clients-page .summary-card .dot-blue { background: var(--ant-color-success); }
+@media (max-width: 767px) {
+  body .clients-page .section-page-title, body .inbounds-page .section-page-title { padding-inline-start: 48px; }
+}

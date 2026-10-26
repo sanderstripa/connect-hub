@@ -1,3 +1,4 @@
+import { CLIENT_GROUPS_UI_ENABLED } from '@/lib/client-groups-ui';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -1014,13 +1015,13 @@ export default function ClientFormModal({
                       />
 
                       <Row gutter={16}>
-                        <Col xs={24} md={12}>
+                        <Col xs={24} md={CLIENT_GROUPS_UI_ENABLED ? 12 : 24}>
                           <FormField name="comment" label={t('pages.clients.comment')}>
                             <Input />
                           </FormField>
                         </Col>
                         <Col xs={24} md={12}>
-                          <FormField
+                          {CLIENT_GROUPS_UI_ENABLED && (<FormField
                             name="group"
                             label={t('pages.clients.group')}
                             tooltip={t('pages.clients.groupDesc')}
@@ -1031,7 +1032,7 @@ export default function ClientFormModal({
                               options={groups.map((g) => ({ value: g }))}
                               allowClear
                             />
-                          </FormField>
+                          </FormField>)}
                         </Col>
                       </Row>
 

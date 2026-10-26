@@ -24,6 +24,7 @@ const CLIENT = {
   flow: 'xtls-rprx-vision',
   uuid: '11111111-1111-1111-1111-111111111111',
   subId: 'subid123',
+  group: 'existing-group-must-survive',
   enable: true,
 } as unknown as ClientRecord;
 
@@ -53,6 +54,8 @@ describe('ClientFormModal — Vision flow preservation', () => {
     fireEvent.click(await screen.findByRole('button', { name: /save/i }));
     await waitFor(() => expect(save).toHaveBeenCalled());
     expect(savedFlow(save)).toBe('xtls-rprx-vision');
+    expect((save.mock.calls[0][0] as Record<string, unknown>).group).toBe('existing-group-must-survive');
+    expect(screen.queryByLabelText(/^Group$/)).toBeNull();
   });
 
   it('does not drop a selected Vision flow while the inbound options momentarily reload', async () => {

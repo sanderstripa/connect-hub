@@ -1,3 +1,4 @@
+import { CLIENT_GROUPS_UI_ENABLED } from '@/lib/client-groups-ui';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Divider, Modal, Popover, Tag, Tooltip, message } from 'antd';
@@ -510,7 +511,7 @@ export default function ClientInfoModal({
                     <Tag>{dateLabel(client.updatedAt)}</Tag>
                   </td>
                 </tr>
-                {client.group && (
+                {CLIENT_GROUPS_UI_ENABLED && client.group && (
                   <tr>
                     <td>{t('pages.clients.group')}</td>
                     <td>

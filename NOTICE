@@ -23,3 +23,4 @@ wizard with local Montserrat and address-only QR codes. Windows dependencies
 retain their own licenses, included in the application's third-party notices.
 2026-10-26: Login, navigation and shared Select contrast refined by Sander Stripa and contributors. Existing server/protocol behavior retained.
 2026-10-26: One-click client navigation, theme-consistent nested menus/search, and compact inbound-list spacing.
+2026-10-26: Client-group controls retired from UI without deleting stored groups; compact summaries, typography, navigation labels and command palette refined.

@@ -626,3 +626,20 @@ body .sidebar-command-trigger:focus-visible, body .command-palette-input:focus-v
   outline: 2px solid var(--connect-muted); outline-offset: 2px;
 }
 body .command-palette-item:hover { background: color-mix(in srgb, var(--connect-text) 7%, var(--connect-card)); }
+
+body .command-palette-header { padding: 12px 16px; gap: 8px; border-color: var(--connect-border); }
+body .command-palette-input {
+  min-height: 34px; padding: 6px 10px; font-size: 13px; font-weight: 400;
+  color: var(--connect-text); background: var(--connect-bg);
+  border: 1px solid var(--connect-border); border-radius: 8px;
+}
+body .command-palette-search-icon { width: 20px; height: 20px; font-size: 18px; }
+body .command-palette-body { flex: 0 1 auto; max-height: min(52vh, 480px); padding: 8px; }
+body .command-palette-group { margin-bottom: 4px; }
+body .command-palette-group-title { padding: 4px 8px; font-size: 11px; font-weight: 500; color: var(--connect-muted); }
+body .command-palette-item { min-height: 34px; padding: 6px 10px; border-radius: 8px; }
+body .command-palette-item-main { gap: 8px; }
+body .command-palette-item-icon { width: 20px; height: 20px; font-size: 16px; }
+body .command-palette-item-title { font-size: 13px; line-height: 18px; font-weight: 500 !important; }
+body .command-palette-item-subtitle { font-size: 12px; line-height: 16px; color: var(--connect-muted) !important; }
+body .command-palette-footer { padding: 8px 12px; font-size: 11px; color: var(--connect-muted); }
