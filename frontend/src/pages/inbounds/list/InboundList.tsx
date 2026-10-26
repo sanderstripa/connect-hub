@@ -215,6 +215,7 @@ export default function InboundList({
 
   return (
     <Card
+      className="inbound-list-panel"
       hoverable
       title={
         <Space>
@@ -372,7 +373,7 @@ export default function InboundList({
             }}
             pagination={paginationFor(visibleInbounds)}
             scroll={{ x: tableScrollX }}
-            style={{ marginTop: 10 }}
+            style={{ marginTop: 0 }}
             size="small"
             locale={{
               emptyText: (

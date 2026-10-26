@@ -5,6 +5,13 @@
   gap: 4px;
 }
 
+/* Match the existing client-list spacing without changing its controls. */
+body .inbounds-page .inbound-list-panel .ant-card-body { padding: 12px; }
+body .inbounds-page .inbound-list-panel .ant-table-tbody > tr[data-row-key] > td,
+body .inbounds-page .inbound-list-panel .ant-table-thead > tr > th {
+  height: calc(var(--connect-control) + 2 * var(--connect-gap));
+}
+
 .protocol-tags {
   display: inline-flex;
   flex-wrap: wrap;

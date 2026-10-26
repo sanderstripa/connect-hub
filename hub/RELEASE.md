@@ -1,10 +1,7 @@
-Connect. Hub alpha 9
+Connect. Hub alpha 10
 
-- Simplified login: no rotating greetings, monochrome branding, strictly round theme/language buttons.
-- Existing routes grouped under Clients, Infrastructure and Network; Settings and Xray configuration remain available. Search and Ctrl+K are preserved without a permanent shortcut chip.
-- Restart, Stop and Logs stay directly visible. More groups the original maintenance and diagnostic tools without changing their handlers or Dashboard cards/blue graphs.
-- Distinct graphite dark surfaces and readable shared Select states, including all log levels. Selected log text contrast: 13.67:1 light and 10.16:1 dark.
-- Removed the update-channel row/switch. Previously enabled channel settings are preserved, with a read-only warning; no silent channel changes.
-- Updated all 13 localizations. Protocol, database, backup, installation and server-update behavior remain unchanged.
-- Frontend: 1760 tests plus RU/EN read-only browser acceptance in both themes at six widths. Native, container, Windows and SSH regression checks are included.
-- The portable Windows installer remains available; its version metadata and bundled source notices match this release. It is unsigned.
+- CH-01: Clicking Clients opens the client list immediately. The disclosure arrow still expands/collapses its existing subpages, including Groups.
+- CH-02: Nested sidebar/drawer/popup menus use the current theme surfaces and readable active, open and inactive states.
+- CH-03: Compact Inbounds rows and container spacing use the existing control/gap sizes; all data and actions remain available.
+- CH-04: Search icons, selection, hover and keyboard focus use existing monochrome theme variables.
+- Dashboard, protocols, APIs, routing and server operations are unchanged.

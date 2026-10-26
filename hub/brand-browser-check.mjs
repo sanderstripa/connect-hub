@@ -18,7 +18,7 @@ export async function checkDensity(page,output,stage) {
   };
  });
  const badSwitch=proof.switches.filter(x=>Math.abs(x.width-44)>.5||Math.abs(x.height-22)>.5);
- const badRows=proof.rows.filter(x=>x.height<63.5);
+ const badRows=proof.rows.filter(x=>x.height<(stage.startsWith('inbounds-')?49.5:63.5));
  const badButtons=proof.buttons.filter(x=>/ant-btn|sidebar-pin|sidebar-theme-cycle|ant-tabs-nav-more|opblock-control-arrow|authorization__btn|models-control|expand-operation/.test(x.classes)&&x.height<33.5);
  const badCells=proof.cells.filter(x=>x.padding!=='8px 12px');
  if(proof.brand.some(x=>!x.aligned))throw Error('Sidebar wordmark and controls must fit one line on '+stage);
