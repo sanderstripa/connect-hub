@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { themeCSS, PALETTE_IDS } from './src/lib/theme-palettes.ts';
+import { themeCSS, PALETTE_IDS, DEFAULT_PALETTE } from './src/lib/theme-palettes.ts';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'node:fs';
@@ -206,7 +206,7 @@ const SWAGGER_ONLY_DEPS = [
 
 
 function paletteBootstrapPlugin() {
-  const source='(()=>{let p="classic",d=true;try{const v=localStorage.getItem("connect-hub-palette");if('+JSON.stringify(PALETTE_IDS)+'.includes(v))p=v;d=localStorage.getItem("dark-mode")!=="false";}catch{}const r=document.documentElement;r.dataset.palette=p;r.dataset.mode=d?"dark":"light";r.style.colorScheme=d?"dark":"light";})()';
+  const source='(()=>{let p="'+DEFAULT_PALETTE+'",d=true;try{const v=localStorage.getItem("connect-hub-palette");if('+JSON.stringify(PALETTE_IDS)+'.includes(v))p=v;d=localStorage.getItem("dark-mode")!=="false";}catch{}const r=document.documentElement;r.dataset.palette=p;r.dataset.mode=d?"dark":"light";r.style.colorScheme=d?"dark":"light";})()';
   const fileName='assets/palette-bootstrap-'+createHash('sha256').update(source).digest('hex').slice(0,12)+'.js';
   return {name:'connect-palette-first-paint',
     generateBundle(){this.emitFile({type:'asset',fileName,source});},

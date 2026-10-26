@@ -28,3 +28,5 @@ retain their own licenses, included in the application's third-party notices.
 Connect Hub alpha.12 integrates upstream 3x-ui v3.11.0 (c621ba9014a6aa21fd7c9ecf45655e44e24ebf13), preserving Connect Hub branding, parallel installation, Sudoku and UI customizations.
 
 Connect Hub alpha.13 adds four local visual palettes with independent light/dark modes, centralized tokens, themed charts and CSP-compatible first-paint initialization. No VPN or authentication logic changed.
+
+Connect Hub alpha.14 selects Midnight & Steel by default and refines light-mode primary button contrast in the panel and Windows installer.

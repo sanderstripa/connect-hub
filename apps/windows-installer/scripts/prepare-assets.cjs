@@ -26,3 +26,5 @@ dependency('ssh2');dependency('qrcode');
 notices.push('Electron 45.0.0\n'+fs.readFileSync(path.join(base,'node_modules/electron/LICENSE'),'utf8'));
 fs.writeFileSync(path.join(base,'assets/THIRD-PARTY-NOTICES.txt'),notices.join('\n\n--------------------\n\n'));
 console.log('Prepared exact Connect assets, local Montserrat and GPL/OFL notices.');
+
+execFileSync(process.execPath,[path.join(__dirname,'prepare-theme.cjs')],{stdio:'inherit'});
