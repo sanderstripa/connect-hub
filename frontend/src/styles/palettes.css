@@ -22,6 +22,7 @@ html:not([data-palette="classic"]) body .ant-select-dropdown { background:var(--
 html:not([data-palette="classic"]) body .ant-btn.ant-btn-background-ghost:not(.ant-btn-dangerous) { background:transparent; color:var(--text-primary); border-color:var(--control-border); }
 html:not([data-palette="classic"]) body .ant-btn.ant-btn-background-ghost:not(.ant-btn-dangerous):hover { background:var(--accent-subtle); }
 html:not([data-palette="classic"]) body :is(.ant-radio-button-wrapper-checked,.ant-tabs-tab-active .ant-tabs-tab-btn) { color:var(--text-primary); }
+html:not([data-palette="classic"]) body .ant-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn { color:var(--text-primary)!important; }
 html:not([data-palette="classic"]) body .ant-btn-color-primary:not(.ant-btn-variant-solid):not(:disabled) { color:var(--text-primary); }
 html:not([data-palette="classic"]) body :is(.ant-btn-primary.ant-btn-dangerous,.ant-btn-color-dangerous.ant-btn-variant-solid):not(:disabled) { background:var(--status-error); color:var(--status-error-foreground); border-color:var(--status-error); }
 html:not([data-palette="classic"]) body :is(.ant-tooltip-inner,.ant-tooltip-container) { background:var(--surface-raised); color:var(--text-primary); border:1px solid var(--border); }
