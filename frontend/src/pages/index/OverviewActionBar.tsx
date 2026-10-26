@@ -17,6 +17,7 @@ import {
 } from '@ant-design/icons';
 
 import { formatPanelVersion } from '@/lib/panel-version';
+import { activateOnKey } from '@/utils/a11y';
 import type { Status } from '@/models/status';
 
 interface OverviewActionBarProps {
@@ -88,25 +89,30 @@ export default function OverviewActionBar({
     [
       {
         key: 'restart',
-        icon: <ReloadOutlined />,
+        icon: <ReloadOutlined aria-hidden />,
         text: t('pages.index.restartXray'),
         onClick: onRestartXray,
         primary: true,
       },
       {
         key: 'stop',
-        icon: <PoweroffOutlined />,
+        icon: <PoweroffOutlined aria-hidden />,
         text: t('pages.index.stopXray'),
         onClick: onStopXray,
       },
     ],
     [
-      { key: 'logs', icon: <BarsOutlined />, text: t('pages.index.logs'), onClick: onOpenLogs },
+      {
+        key: 'logs',
+        icon: <BarsOutlined aria-hidden />,
+        text: t('pages.index.logs'),
+        onClick: onOpenLogs,
+      },
       ...(accessLogEnable
         ? [
             {
               key: 'accessLogs',
-              icon: <FileTextOutlined />,
+              icon: <FileTextOutlined aria-hidden />,
               text: t('pages.index.accessLogs'),
               onClick: onOpenXrayLogs,
             },
@@ -116,7 +122,7 @@ export default function OverviewActionBar({
         ? [
             {
               key: 'amneziawgLogs',
-              icon: <ApiOutlined />,
+              icon: <ApiOutlined aria-hidden />,
               text: t('pages.index.amneziawgLogs'),
               onClick: onOpenAmneziaWGLogs,
             },
@@ -124,13 +130,13 @@ export default function OverviewActionBar({
         : []),
       {
         key: 'config',
-        icon: <ControlOutlined />,
+        icon: <ControlOutlined aria-hidden />,
         text: t('pages.index.config'),
         onClick: onOpenConfig,
       },
       {
         key: 'backup',
-        icon: <CloudServerOutlined />,
+        icon: <CloudServerOutlined aria-hidden />,
         text: t('pages.index.backupTitle'),
         onClick: onOpenBackup,
       },
@@ -138,13 +144,13 @@ export default function OverviewActionBar({
     [
       {
         key: 'history',
-        icon: <AreaChartOutlined />,
+        icon: <AreaChartOutlined aria-hidden />,
         text: t('pages.index.systemHistoryTitle'),
         onClick: onOpenSystemHistory,
       },
       {
         key: 'metrics',
-        icon: <ArrowUpOutlined />,
+        icon: <ArrowUpOutlined aria-hidden />,
         text: t('pages.index.xrayMetricsTitle'),
         onClick: onOpenXrayMetrics,
       },
@@ -185,8 +191,11 @@ export default function OverviewActionBar({
         <Tag
           className="ov-update-tag"
           color="warning"
-          icon={<CloudDownloadOutlined />}
+          icon={<CloudDownloadOutlined aria-hidden />}
+          role="button"
+          tabIndex={0}
           onClick={onOpenPanelUpdate}
+          onKeyDown={activateOnKey(onOpenPanelUpdate)}
         >
           {`${t('update')} ${formatPanelVersion(latestVersion)}`}
         </Tag>
@@ -216,7 +225,7 @@ export default function OverviewActionBar({
               children: [...actionGroups[2], ...actionGroups[1].filter(a => ['accessLogs', 'amneziawgLogs'].includes(a.key))].map(a =>
                 ({ key: a.key, icon: a.icon, label: a.text, onClick: a.onClick })) },
           ] }}>
-          <Button size={size} icon={<MoreOutlined />} aria-label={t('pages.index.more')}
+          <Button size={size} icon={<MoreOutlined aria-hidden />} aria-label={t('pages.index.more')}
             aria-expanded={moreOpen} onKeyDown={event => { if (event.key === 'Escape') setMoreOpen(false); }}>
             {t('pages.index.more')}
           </Button>

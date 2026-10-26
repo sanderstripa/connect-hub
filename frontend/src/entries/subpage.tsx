@@ -4,6 +4,7 @@ import 'antd/dist/reset.css';
 import { readyBrandFonts } from '@/styles/brand-fonts';
 
 import { readyI18n } from '@/i18n/react';
+import { AntdRootConfig } from '@/i18n/AntdRootConfig';
 import { ThemeProvider } from '@/hooks/useTheme';
 import { QueryProvider } from '@/api/QueryProvider';
 import SubPage from '@/pages/sub/SubPage';
@@ -17,11 +18,13 @@ Promise.all([readyI18n('subscription'), readyBrandFonts()]).then(() => {
   const root = document.getElementById('app');
   if (root) {
     createRoot(root).render(
-      <ThemeProvider>
-        <QueryProvider>
-          <SubPage />
-        </QueryProvider>
-      </ThemeProvider>,
+      <AntdRootConfig>
+        <ThemeProvider>
+          <QueryProvider>
+            <SubPage />
+          </QueryProvider>
+        </ThemeProvider>
+      </AntdRootConfig>,
     );
   }
 });

@@ -16,7 +16,7 @@ Sudoku is not required to use the panel's standard features.
 
 ## Windows installer
 
-[Download Connect-Hub-Setup.exe](https://github.com/sanderstripa/connect-hub/releases/download/v0.1.0-alpha.11/Connect-Hub-Setup.exe) — a portable Windows 10/11 x64 wizard, offered alongside the Linux command below.
+[Download Connect-Hub-Setup.exe](https://github.com/sanderstripa/connect-hub/releases/download/v0.1.0-alpha.12/Connect-Hub-Setup.exe) — a portable Windows 10/11 x64 wizard, offered alongside the Linux command below.
 
 1. Enter your server IP/hostname, SSH port, username and password. Confirm the server key fingerprint. Use `root` or an account with `sudo` access.
 2. Choose the panel address, optional BBR and additional swap. The wizard uses the same verified server installer and detects an existing Connect Hub installation for updating.
