@@ -306,6 +306,14 @@ export default function AppSidebar() {
           __network: [['/outbound', 'outbound', 'menu.outbounds'], ['/routing', 'routing', 'menu.routing']],
         };
         if (groups[tab.key]) return { key: tab.key, icon: <Icon />, label: tab.title,
+          onTitleClick: tab.key === '__clients' ? ({ domEvent }) => {
+            if ((domEvent.target as Element).closest('.ant-menu-submenu-arrow')) return;
+            const title = (domEvent.target as Element).closest('.ant-menu-submenu-title');
+            const bounds = title?.getBoundingClientRect();
+            if ('clientX' in domEvent && bounds && bounds.width > 0 && domEvent.clientX >= bounds.right - 34) return;
+            navigate('/clients');
+            setDrawerOpen(false);
+          } : undefined,
           children: groups[tab.key].map(([key, icon, label]) => {
             const ChildIcon = iconByName[icon];
             return { key, icon: <ChildIcon />, label: t(label) };
@@ -319,7 +327,7 @@ export default function AppSidebar() {
         }
         return { key: tab.key, icon: <Icon />, label: tab.title, title: '' };
       }),
-    [settingsChildren, xrayChildren, t],
+    [settingsChildren, xrayChildren, t, navigate],
   );
 
   const openLink = useCallback(

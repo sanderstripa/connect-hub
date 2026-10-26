@@ -1,5 +1,5 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, useNavigate } from 'react-router';
+import { MemoryRouter, useLocation, useNavigate } from 'react-router';
 import { expect, test, vi } from 'vitest';
 import AppSidebar from '@/layouts/AppSidebar';
 import OverviewActionBar from '@/pages/index/OverviewActionBar';
@@ -9,6 +9,19 @@ import { HttpUtil } from '@/utils';
 import { renderWithProviders } from './test-utils';
 
 vi.mock('@/api/queries/useAllSettings', () => ({ useAllSettings: () => ({ allSetting: {} }) }));
+
+test('Clients title navigates in one click and keeps Groups available', async () => {
+  localStorage.setItem('sidebar-pinned', 'true');
+  function Location() { return <output data-testid="current-route">{useLocation().pathname}</output>; }
+  const view = renderWithProviders(<MemoryRouter initialEntries={['/']}><AppSidebar /><Location /></MemoryRouter>);
+  await act(async () => {});
+  fireEvent.click(view.container.querySelector('[data-menu-id$="-__clients"]')!);
+  await waitFor(() => expect(screen.getByTestId('current-route').textContent).toBe('/clients'));
+  expect(screen.getByRole('menuitem', { name: /Groups/ })).not.toBeNull();
+  fireEvent.click(screen.getByRole('menuitem', { name: /Groups/ }));
+  await waitFor(() => expect(screen.getByTestId('current-route').textContent).toBe('/groups'));
+  localStorage.clear();
+});
 
 test('groups existing routes, supports manual collapse and reopens on navigation', async () => {
   localStorage.setItem('sidebar-pinned', 'true');

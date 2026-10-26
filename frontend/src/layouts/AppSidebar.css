@@ -378,3 +378,31 @@ body.dark .ant-drawer-body .drawer-menu .ant-menu-item-group-list {
 .brand-actions .sidebar-docs {
   display: none;
 }
+
+/* Nested menus and popup folders follow the same current theme as the rail. */
+body .sider-nav .ant-menu-sub,
+body .drawer-nav .ant-menu-sub,
+body .ant-menu-submenu-popup .ant-menu-sub {
+  background: var(--connect-card) !important;
+  color: var(--connect-text);
+}
+body .sider-nav .ant-menu-sub .ant-menu-item,
+body .drawer-nav .ant-menu-sub .ant-menu-item,
+body .ant-menu-submenu-popup .ant-menu-item { color: var(--connect-muted); }
+body .sider-nav .ant-menu-submenu-open > .ant-menu-submenu-title,
+body .sider-nav .ant-menu-submenu-selected > .ant-menu-submenu-title,
+body .drawer-nav .ant-menu-submenu-open > .ant-menu-submenu-title,
+body .drawer-nav .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  color: var(--connect-text);
+  background: color-mix(in srgb, var(--connect-text) 7%, transparent);
+}
+body .sider-nav .ant-menu-item-selected,
+body .drawer-nav .ant-menu-item-selected,
+body .ant-menu-submenu-popup .ant-menu-item-selected {
+  color: var(--connect-text) !important;
+  background: color-mix(in srgb, var(--connect-text) 12%, var(--connect-card)) !important;
+}
+body .sider-nav .ant-menu-submenu-title:hover,
+body .drawer-nav .ant-menu-submenu-title:hover,
+body .sider-nav .ant-menu-item:hover,
+body .drawer-nav .ant-menu-item:hover { color: var(--connect-text) !important; }
