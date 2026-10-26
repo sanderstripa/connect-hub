@@ -21,7 +21,7 @@ Connect Hub сохраняет привычные разделы и возмож
 
 ## Установка из Windows
 
-[Скачать Connect-Hub-Setup.exe](https://github.com/sanderstripa/connect-hub/releases/download/v0.1.0-alpha.11/Connect-Hub-Setup.exe) — переносимый мастер для Windows 10/11 x64, как альтернатива команде ниже.
+[Скачать Connect-Hub-Setup.exe](https://github.com/sanderstripa/connect-hub/releases/download/v0.1.0-alpha.12/Connect-Hub-Setup.exe) — переносимый мастер для Windows 10/11 x64, как альтернатива команде ниже.
 
 1. Укажите адрес сервера, порт SSH, пользователя и пароль. Подтвердите отпечаток ключа сервера. Нужен `root` или пользователь с доступом к `sudo`.
 2. Выберите адрес панели, BBR и дополнительную подкачку по необходимости. Мастер использует тот же проверенный установщик и распознаёт уже установленный Connect Hub для обновления.

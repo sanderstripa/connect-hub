@@ -170,7 +170,7 @@ export default function PanelUpdateModal({
             type="primary"
             disabled={!info.updateAvailable}
             onClick={updatePanel}
-            icon={<CloudDownloadOutlined />}
+            icon={<CloudDownloadOutlined aria-hidden />}
           >
             {t('pages.index.updatePanel')}
           </Button>

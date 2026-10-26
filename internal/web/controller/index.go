@@ -45,9 +45,9 @@ func (a *IndexController) initRouter(g *gin.RouterGroup) {
 	g.GET("/", a.index)
 	g.GET("/csrf-token", a.csrfToken)
 
-	g.POST("/login", middleware.CSRFMiddleware(), a.login)
-	g.POST("/logout", middleware.CSRFMiddleware(), a.logout)
-	g.POST("/getTwoFactorEnable", middleware.CSRFMiddleware(), a.getTwoFactorEnable)
+	g.POST("/login", middleware.CSRFMiddleware(getRemoteIp), a.login)
+	g.POST("/logout", middleware.CSRFMiddleware(getRemoteIp), a.logout)
+	g.POST("/getTwoFactorEnable", middleware.CSRFMiddleware(getRemoteIp), a.getTwoFactorEnable)
 }
 
 // sponsors is public so the login page can render its slot; failures stay silent.
