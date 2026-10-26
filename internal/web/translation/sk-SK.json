@@ -120,8 +120,6 @@
     "routing": "Smerovanie",
     "outbounds": "Výstupy",
     "apiDocs": "Dokumentácia API",
-    "donate": "Podporiť projekt",
-    "sponsors": "Sponzori",
     "docs": "Dokumentácia",
     "openMenu": "Otvoriť menu",
     "pinSidebar": "Pripnúť bočné menu",
@@ -132,8 +130,6 @@
   },
   "pages": {
     "login": {
-      "hello": "Dobrý deň",
-      "title": "Vitajte",
       "loginAgain": "Platnosť prihlásenia vypršala. Prihláste sa znova.",
       "toasts": {
         "invalidFormData": "Zadané údaje majú neplatný formát.",
@@ -159,7 +155,6 @@
       "currentPanelVersion": "Aktuálna verzia panelu",
       "latestPanelVersion": "Najnovšia verzia panelu",
       "panelUpToDate": "Panel je aktuálny",
-      "devChannel": "Vývojové vydania",
       "devChannelWarning": "Vývojové zostavy sledujú každú zmenu vo vetve main a nie sú stabilnými vydaniami. Automatický návrat na staršiu verziu nie je dostupný.",
       "currentCommit": "Aktuálny commit",
       "latestCommit": "Najnovší commit",
