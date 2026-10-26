@@ -1,3 +1,4 @@
+export const DEFAULT_PALETTE = 'midnight-steel' as const;
 export const PALETTE_KEY = 'connect-hub-palette';
 export const PALETTE_IDS = [
   'classic',
@@ -123,7 +124,7 @@ export const PALETTES: Record<PaletteId, { light: Base; dark: Base }> = {
   },
 };
 export function parsePalette(value: unknown): PaletteId {
-  return PALETTE_IDS.includes(value as PaletteId) ? (value as PaletteId) : 'classic';
+  return PALETTE_IDS.includes(value as PaletteId) ? (value as PaletteId) : DEFAULT_PALETTE;
 }
 const rgb = (hex: string) =>
   hex
@@ -169,13 +170,17 @@ export function themeTokens(id: PaletteId, dark: boolean) {
       ? dark
         ? '#101214'
         : '#ffffff'
-      : contrast(b.accent, '#ffffff') > contrast(b.accent, '#000000')
+      : !dark
         ? '#ffffff'
-        : '#000000';
+        : contrast(b.accent, '#ffffff') > contrast(b.accent, '#000000')
+          ? '#ffffff'
+          : '#000000';
   return {
     ...b,
     secondary,
     foreground,
+    button: id === 'classic' || dark ? b.accent : readable(b.accent, ['#ffffff'], false),
+    buttonHover: id === 'classic' || dark ? b.hover : readable(b.hover, ['#ffffff'], false),
     subtle:
       id === 'classic'
         ? dark
@@ -209,8 +214,13 @@ export function themeVariables(id: PaletteId, dark: boolean): Record<string, str
     'accent-hover': t.hover,
     'accent-subtle': t.subtle,
     'accent-foreground': t.foreground,
-    'accent-hover-foreground':
-      contrast(t.hover, '#ffffff') > contrast(t.hover, '#000000') ? '#ffffff' : '#000000',
+    'button-bg': t.button,
+    'button-hover': t.buttonHover,
+    'accent-hover-foreground': !dark
+      ? '#ffffff'
+      : contrast(t.hover, '#ffffff') > contrast(t.hover, '#000000')
+        ? '#ffffff'
+        : '#000000',
     'control-bg': t.surface,
     'control-border': t.controlBorder,
     'control-disabled': t.raised,

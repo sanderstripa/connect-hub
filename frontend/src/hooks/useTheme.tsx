@@ -3,13 +3,13 @@ import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useSt
 import type { ReactNode } from 'react';
 import { theme as antdTheme } from 'antd';
 import type { ThemeConfig } from 'antd';
-import { PALETTE_KEY, parsePalette, themeTokens, themeVariables } from '@/lib/theme-palettes';
+import { DEFAULT_PALETTE, PALETTE_KEY, parsePalette, themeTokens, themeVariables } from '@/lib/theme-palettes';
 import type { PaletteId } from '@/lib/theme-palettes';
 import '@/styles/connect-brand.css';
 import '@/styles/connect-density.css';
 import '@/styles/palettes.css';
 const initialDark = (()=>{try{return localStorage.getItem('dark-mode') !== 'false';}catch{return true;}})();
-function applyDom(dark: boolean, palette: PaletteId = 'classic') {
+function applyDom(dark: boolean, palette: PaletteId = DEFAULT_PALETTE) {
   const root = document.documentElement;
   root.dataset.palette = palette; root.dataset.mode = dark ? 'dark' : 'light';
   for (const [key,value] of Object.entries(themeVariables(palette,dark))) root.style.setProperty('--'+key,value);
@@ -19,9 +19,9 @@ function applyDom(dark: boolean, palette: PaletteId = 'classic') {
   const msg = document.getElementById('message');
   if (msg) { msg.classList.remove('dark', 'light'); msg.classList.add(dark ? 'dark' : 'light'); }
 }
-function savedPalette(): PaletteId { try {return parsePalette(localStorage.getItem(PALETTE_KEY));} catch {return 'classic';} }
+function savedPalette(): PaletteId { try {return parsePalette(localStorage.getItem(PALETTE_KEY));} catch {return DEFAULT_PALETTE;} }
 applyDom(initialDark, savedPalette());
-export function buildAntdThemeConfig(dark: boolean, _legacyUltra = false, palette: PaletteId = 'classic'): ThemeConfig {
+export function buildAntdThemeConfig(dark: boolean, _legacyUltra = false, palette: PaletteId = DEFAULT_PALETTE): ThemeConfig {
   const colors=themeTokens(palette,dark);
   const {bg,surface:card,text,secondary:muted,border,accent:primary}=colors;
   const config: ThemeConfig = {
@@ -64,7 +64,7 @@ export function buildAntdThemeConfig(dark: boolean, _legacyUltra = false, palett
       darkItemSelectedBg:colors.subtle,darkItemSelectedColor:text,itemSelectedBg:colors.subtle,itemSelectedColor:text,
       itemHoverBg:colors.subtle, darkItemColor:muted, darkItemHoverColor:text});
     Object.assign(config.components!.Layout!, {siderBg:card});
-    Object.assign(config.components!.Button!, {primaryColor:colors.foreground});
+    Object.assign(config.components!.Button!, {primaryColor:colors.foreground,colorPrimary:colors.button,colorPrimaryHover:colors.buttonHover});
     config.components!.Tooltip = {colorBgSpotlight:colors.raised,colorTextLightSolid:colors.text};
     Object.assign(config.components!.Switch!, {colorPrimaryHover:colors.hover,colorTextQuaternary:colors.controlBorder});
     Object.assign(config.components!.Select!, {optionSelectedBg:colors.subtle,optionActiveBg:colors.raised});
@@ -92,4 +92,4 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 export function useTheme(): ThemeContextValue { const ctx = useContext(ThemeContext); if (!ctx) throw new Error('useTheme must be used inside <ThemeProvider>'); return ctx; }
-export function useChartTheme() { const ctx=useContext(ThemeContext);const palette=ctx?.palette ?? 'classic';return {palette,colors:themeTokens(palette,ctx?.isDark ?? document.body.classList.contains('dark'))}; }
+export function useChartTheme() { const ctx=useContext(ThemeContext);const palette=ctx?.palette ?? DEFAULT_PALETTE;return {palette,colors:themeTokens(palette,ctx?.isDark ?? document.body.classList.contains('dark'))}; }

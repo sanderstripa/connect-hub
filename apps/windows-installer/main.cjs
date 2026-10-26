@@ -42,7 +42,7 @@ app.whenReady().then(async()=>{
   return net.fetch(pathToFileURL(target).href);
  });
  session.defaultSession.setPermissionRequestHandler((_webContents,_permission,callback)=>callback(false));
- window=new BrowserWindow({width:860,height:760,minWidth:720,minHeight:650,frame:false,show:process.env.CONNECT_HUB_UI_TEST!=='1',backgroundColor:'#0b0b0b',title:'Connect. Hub',icon:path.join(__dirname,'assets/icon.ico'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,spellcheck:false,backgroundThrottling:false,offscreen:process.env.CONNECT_HUB_UI_TEST==='1'}});
+ window=new BrowserWindow({width:860,height:760,minWidth:720,minHeight:650,frame:false,show:process.env.CONNECT_HUB_UI_TEST!=='1',backgroundColor:'#10161e',title:'Connect. Hub',icon:path.join(__dirname,'assets/icon.ico'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,spellcheck:false,backgroundThrottling:false,offscreen:process.env.CONNECT_HUB_UI_TEST==='1'}});
  window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
  window.webContents.on('will-navigate',(event,url)=>{if(url!==origin)event.preventDefault();});
  window.on('close',event=>{

@@ -1,9 +1,5 @@
-Connect. Hub alpha 13 — four palettes, eight variants
+Connect. Hub alpha 14 — Midnight & Steel by default
 
-- Classic Monochrome, Graphite & Sage, Obsidian & Champagne and Midnight & Steel, each with independent light/dark mode.
-- Settings → Appearance with palette previews and local persistence. Existing users retain Classic and their saved mode.
-- Central semantic tokens cover controls, navigation, forms, overlays, editor chrome, protocol labels and chart colors without changing layout or table density.
-- Charts recolor in place, retaining their data and canvas. A synchronous same-origin bootstrap applies the saved palette before the main bundle without weakening CSP.
-- Localized appearance settings in all 14 languages. Error, warning and success colors remain independent of decorative accents.
-- No protocol, API, authentication, data or server-configuration changes.
-- Release screenshots and an offline gallery are attached as palette-screenshots.zip after public-package verification.
+- Midnight & Steel is the default for a fresh browser, login, first setup and Windows SSH installer. Explicit saved web palette/mode choices remain available.
+- Colored primary buttons in light palettes use white semibold labels, with a slightly deeper button fill for readable contrast. Core palette colors, graphs and layout remain unchanged.
+- The Windows installer generates its light/dark colors from the same palette tokens as the panel.

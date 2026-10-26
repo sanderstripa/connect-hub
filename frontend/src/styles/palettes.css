@@ -1,4 +1,5 @@
 /* Color only: preserve layout, density and control geometry. */
+body.light .ant-btn-primary:not(:disabled) { font-weight:600; }
 .palette-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; max-width:800px; }
 .palette-option.ant-radio-wrapper { margin:0; padding:14px; border:1px solid var(--border); border-radius:8px; align-items:center; }
 .palette-option > span:last-child { display:flex; align-items:center; flex-wrap:wrap; gap:12px; min-width:0; }
@@ -10,8 +11,8 @@ html:not([data-palette="classic"]) body [class*='-page'], html:not([data-palette
 html:not([data-palette="classic"]) body :is(.ant-layout-sider,.ant-drawer-content,.sider-nav .ant-menu,.sider-utility .ant-menu) { background:var(--surface); }
 html:not([data-palette="classic"]) body .sider-nav .ant-menu-item-selected { background:var(--accent-subtle); border-color:var(--border); color:var(--text-primary); }
 html:not([data-palette="classic"]) body .sider-nav .ant-menu-item-selected .anticon { color:var(--accent); }
-html:not([data-palette="classic"]) body .ant-btn-primary:not(.ant-btn-dangerous):not(:disabled), html:not([data-palette="classic"]) body .login-app .submit-row .ant-btn-primary:not(:disabled) { background:var(--accent); color:var(--accent-foreground); border-color:var(--accent); }
-html:not([data-palette="classic"]) body .ant-btn-primary:not(.ant-btn-dangerous):not(:disabled):hover { background:var(--accent-hover); color:var(--accent-hover-foreground); border-color:var(--accent-hover); }
+html:not([data-palette="classic"]) body .ant-btn-primary:not(.ant-btn-dangerous):not(:disabled), html:not([data-palette="classic"]) body .login-app .submit-row .ant-btn-primary:not(:disabled) { background:var(--button-bg); color:var(--accent-foreground); border-color:var(--button-bg); font-weight:600; }
+html:not([data-palette="classic"]) body .ant-btn-primary:not(.ant-btn-dangerous):not(:disabled):hover { background:var(--button-hover); color:var(--accent-hover-foreground); border-color:var(--button-hover); }
 html:not([data-palette="classic"]) body .ant-switch-checked .ant-switch-handle::before { background:var(--accent-foreground); }
 html:not([data-palette="classic"]) body .ant-switch:not(.ant-switch-checked) { background:var(--control-border); }
 html:not([data-palette="classic"]) body .ant-switch:not(.ant-switch-checked) .ant-switch-handle::before { background:var(--surface); }

@@ -21,7 +21,7 @@ Connect Hub сохраняет привычные разделы и возмож
 
 ## Установка из Windows
 
-[Скачать Connect-Hub-Setup.exe](https://github.com/sanderstripa/connect-hub/releases/download/v0.1.0-alpha.13/Connect-Hub-Setup.exe) — переносимый мастер для Windows 10/11 x64, как альтернатива команде ниже.
+[Скачать Connect-Hub-Setup.exe](https://github.com/sanderstripa/connect-hub/releases/download/v0.1.0-alpha.14/Connect-Hub-Setup.exe) — переносимый мастер для Windows 10/11 x64, как альтернатива команде ниже.
 
 1. Укажите адрес сервера, порт SSH, пользователя и пароль. Подтвердите отпечаток ключа сервера. Нужен `root` или пользователь с доступом к `sudo`.
 2. Выберите адрес панели, BBR и дополнительную подкачку по необходимости. Мастер использует тот же проверенный установщик и распознаёт уже установленный Connect Hub для обновления.
@@ -86,4 +86,4 @@ Management menu: `sudo connect-hub`. The upstream-derived management menu is res
 
 ### Оформление
 
-В «Настройки → Оформление» доступны Classic Monochrome, Graphite & Sage, Obsidian & Champagne и Midnight & Steel, каждая в светлом и тёмном режиме. Кнопка режима в боковом меню работает независимо от палитры. Выбор сохраняется в браузере; после обновления сохраняются Classic и прежний режим. [Реализация и проверки](docs/palettes.md).
+В «Настройки → Оформление» доступны Classic Monochrome, Graphite & Sage, Obsidian & Champagne и Midnight & Steel, каждая в светлом и тёмном режиме. Кнопка режима в боковом меню работает независимо от палитры. Выбор сохраняется в браузере; при первом запуске используется Midnight & Steel; выбранные ранее палитра и режим сохраняются. [Реализация и проверки](docs/palettes.md).

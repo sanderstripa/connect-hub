@@ -41,14 +41,14 @@ describe('palette contracts', () => {
           expect(contrast(t.secondary, surface), `${id} secondary`).toBeGreaterThanOrEqual(4.5);
           expect(contrast(t.controlBorder, surface), `${id} controls`).toBeGreaterThanOrEqual(3);
         }
-        expect(contrast(t.accent, t.foreground)).toBeGreaterThanOrEqual(4.5);
-        expect(contrast(t.hover, v['accent-hover-foreground'])).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(t.button, t.foreground)).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(t.buttonHover, v['accent-hover-foreground'])).toBeGreaterThanOrEqual(4.5);
         expect(new Set([t.success, t.warning, t.error, t.info]).size).toBe(4);
       }
   });
-  it('uses Classic for missing or invalid storage and includes all first-paint selectors', () => {
+  it('uses Midnight for missing or invalid storage and includes all first-paint selectors', () => {
     for (const value of [null, undefined, '', 'garbage', '__proto__'])
-      expect(parsePalette(value)).toBe('classic');
+      expect(parsePalette(value)).toBe('midnight-steel');
     for (const id of PALETTE_IDS)
       for (const mode of ['dark', 'light'])
         expect(themeCSS()).toContain(`data-palette="${id}"][data-mode="${mode}"`);
