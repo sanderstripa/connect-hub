@@ -1,0 +1,146 @@
+name: Build and publish Connect Hub alpha 14
+on:
+  push:
+    branches: [release/alpha14-midnight]
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      CONNECT_HUB_TEST_CORE: '0'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: 9557c129ca711f00df2810854c884160fc921e62
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --ignore-scripts && npm run typecheck && npm run lint && npm test -- --project unit --project components && npm run build
+        working-directory: frontend
+      - run: go test ./internal/web/controller ./internal/config ./internal/hub
+      - run: python3 -m py_compile hub/palettes-smoke.py
+      - run: python3 -m unittest discover -s hub -p '*_test.py'
+      - run: python3 hub/package.py
+      - uses: actions/upload-artifact@v6
+        with:
+          name: alpha14-linux
+          path: |
+            dist/connect-hub-linux-amd64.tar.gz
+            dist/SHA256SUMS
+  windows:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
+      ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
+    defaults:
+      run:
+        working-directory: apps/windows-installer
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: 9557c129ca711f00df2810854c884160fc921e62
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --ignore-scripts --omit=optional
+      - run: node node_modules/electron/install.js
+      - run: npm run build
+      - name: Actual Windows wizard and packaged EXE theme
+        env:
+          CONNECT_HUB_EXPECTED_REVISION: 9557c129ca711f00df2810854c884160fc921e62
+        run: node test/ui-smoke.cjs; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; node test/portable-smoke.cjs ../../dist/windows-installer/Connect-Hub-Setup.exe
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: alpha14-windows-theme-evidence
+          path: dist/desktop-evidence
+      - shell: pwsh
+        run: |
+          $digest = (Get-FileHash -Algorithm SHA256 ../../dist/windows-installer/Connect-Hub-Setup.exe).Hash.ToLowerInvariant()
+          [IO.File]::WriteAllText((Join-Path (Resolve-Path ../../dist/windows-installer) 'SHA256SUMS'), "$digest  Connect-Hub-Setup.exe`n", [Text.UTF8Encoding]::new($false))
+          Copy-Item assets/BUILD.json ../../dist/windows-installer/BUILD.json
+      - uses: actions/upload-artifact@v6
+        with:
+          name: alpha14-windows
+          path: |
+            dist/windows-installer/Connect-Hub-Setup.exe
+            dist/windows-installer/SHA256SUMS
+            dist/windows-installer/BUILD.json
+  publish:
+    needs: [linux, windows]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: 9557c129ca711f00df2810854c884160fc921e62
+          persist-credentials: false
+      - uses: actions/download-artifact@v6
+        with:
+          name: alpha14-linux
+          path: dist
+      - uses: actions/download-artifact@v6
+        with:
+          name: alpha14-windows
+          path: dist/windows
+      - name: Publish the requested alpha 14 files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist
+          cp windows/Connect-Hub-Setup.exe .
+          cat windows/SHA256SUMS >> SHA256SUMS
+          gh release create v0.1.0-alpha.14 --repo sanderstripa/connect-hub --target 9557c129ca711f00df2810854c884160fc921e62 --prerelease --title 'Connect. Hub v0.1.0-alpha.14' --notes-file ../hub/RELEASE.md connect-hub-linux-amd64.tar.gz Connect-Hub-Setup.exe SHA256SUMS
+          gh release view v0.1.0-alpha.14 --repo sanderstripa/connect-hub --json tagName,assets,url
+
+  verify-public:
+    needs: publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: 9557c129ca711f00df2810854c884160fc921e62
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --ignore-scripts
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - name: Download and verify the public release
+        run: |
+          mkdir -p dist/public
+          curl -fL --retry 3 https://github.com/sanderstripa/connect-hub/releases/download/v0.1.0-alpha.14/connect-hub-linux-amd64.tar.gz -o dist/connect-hub-linux-amd64.tar.gz
+          curl -fL --retry 3 https://github.com/sanderstripa/connect-hub/releases/download/v0.1.0-alpha.14/SHA256SUMS -o dist/SHA256SUMS
+          (cd dist && sha256sum --check --ignore-missing SHA256SUMS)
+          tar -xzf dist/connect-hub-linux-amd64.tar.gz -C dist/public
+          python3 -c 'import json,subprocess; b=json.load(open("dist/public/connect-hub/BUILD.json")); assert b["revision"] == subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()'
+          test "$(dist/public/connect-hub/connect-hub -v)" = "$(cat internal/config/version)"
+      - name: Eight actual published palette variants
+        run: CONNECT_HUB_TEST_PACKAGE="$PWD/dist/public/connect-hub" python3 hub/palettes-smoke.py
+      - name: Attach verified screenshots and offline gallery
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node hub/palettes-gallery.mjs dist/palette-screenshots
+          (cd dist/palette-screenshots && zip -qr ../palette-screenshots.zip .)
+          gh release upload v0.1.0-alpha.14 --repo sanderstripa/connect-hub dist/palette-screenshots.zip dist/palette-screenshots/palettes-report.json
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: alpha14-published-palette-evidence
+          path: dist/palette-screenshots
