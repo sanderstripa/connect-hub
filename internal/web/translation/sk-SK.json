@@ -126,7 +126,9 @@
     "openMenu": "Otvoriť menu",
     "pinSidebar": "Pripnúť bočné menu",
     "unpinSidebar": "Odopnúť bočné menu",
-    "subFormats": "Formáty odberu"
+    "subFormats": "Formáty odberu",
+    "infrastructure": "Infraštruktúra",
+    "network": "Sieť"
   },
   "pages": {
     "login": {
@@ -293,7 +295,10 @@
       "importKeepHostSettings": "Ponechať nastavenia tohto servera",
       "importKeepHostSettingsDesc": "Ponechajú sa adresy počúvania, porty, základná cesta, certifikáty a identita tohto servera namiesto nastavení z nahraného súboru.",
       "logLines": "Počet riadkov",
-      "timeRange": "Časový rozsah"
+      "timeRange": "Časový rozsah",
+      "more": "Viac",
+      "maintenance": "Údržba",
+      "diagnostics": "Diagnostika"
     },
     "inbounds": {
       "totalDownUp": "Celkom odoslané/prijaté",
@@ -767,7 +772,9 @@
         "autoSystemWfpBlockLeakTooltip": "Iba pre Windows s automatickými systémovými trasami: dns ponechá DNS v TUN (vyžaduje DNS servery), misconfigtun zablokuje verziu IP, pre ktorú nevedie žiadna trasa do TUN.",
         "maxVersion": "Maximálna verzia",
         "headerName": "Názov hlavičky",
-        "headerValue": "Hodnota hlavičky"
+        "headerValue": "Hodnota hlavičky",
+        "sudokuEncryption": "Šifrovanie Sudoku",
+        "sudokuTable": "Režim tabuľky Sudoku"
       },
       "info": {
         "mode": "Režim",
