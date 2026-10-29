@@ -79,6 +79,7 @@ jobs:
       - run: npm run typecheck && npm run lint && npm test -- --project unit --project components && npm run build
         working-directory: frontend
       - run: go test ./internal/web -run TestEmbeddedFontsAndRangeRequests -count=1
+      - run: python3 apps/windows-installer/test/uninstall-smoke.py
       - run: python3 hub/package.py
       - name: Real native advanced connection creation and editing
         run: python3 apps/windows-installer/test/panel-api-smoke.py "$PWD/dist/connect-hub-linux-amd64.tar.gz"
