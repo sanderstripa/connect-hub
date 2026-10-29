@@ -10,7 +10,7 @@ export default function AppearanceTab() {
     <section className="appearance-settings">
       <Typography.Title level={4}>{t('appearance.title')}</Typography.Title>
       <Typography.Paragraph type="secondary">{t('appearance.subtitle')}</Typography.Paragraph>
-      <div className="soulu-preview" aria-label="Soulu">
+      <div className="soulu-preview" aria-label={t('appearance.palette')}>
         <span className="palette-preview" aria-hidden="true">
           {[themeTokens(palette,isDark).bg,themeTokens(palette,isDark).surface,themeTokens(palette,isDark).input,themeTokens(palette,isDark).accent].map((color,i)=><i key={i} style={{background:color}} />)}
         </span><span>Soulu</span>
