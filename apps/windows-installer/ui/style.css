@@ -12,3 +12,5 @@ body{font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}header{he
 .editor-tabs{position:sticky;top:-1px;background:var(--card);z-index:2}.editor-field input[type=checkbox]{appearance:none;cursor:pointer;background:var(--border);border:0;border-radius:20px;position:relative;padding:0}.editor-field input[type=checkbox]::before{content:'';position:absolute;width:16px;height:16px;left:2px;top:2px;border-radius:50%;background:#fff;transition:transform .15s}.editor-field input[type=checkbox]:checked{background:var(--accent)}.editor-field input[type=checkbox]:checked::before{transform:translateX(18px)}.editor-field input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offset:3px}#create-connection:has(#quick-settings[hidden]) #advanced-editor{margin-top:8px}#create-connection:has(#quick-settings[hidden]) .advanced-mode{display:none}#create-connection:has(#quick-settings[hidden]) h1{font-size:24px}
 
 #create-connection:has(#quick-settings[hidden]) label:has(#device-name){display:none}
+
+main:has(#advanced-editor:not([hidden])){padding-top:0}.editor-tabs{top:0;box-shadow:0 4px 0 var(--card)}
