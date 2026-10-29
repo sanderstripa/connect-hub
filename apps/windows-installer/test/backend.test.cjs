@@ -30,3 +30,17 @@ test('incorrect SSH password fails without issuing remote commands',async()=>{
  const server=await fixture(),client=new InstallerConnection({trustHost:async()=>true});
  try{await assert.rejects(client.connect({...server,password:'incorrect'}),{code:'AUTH_FAILED'});assert.equal(server.commands.length,0);}finally{client.disconnect();await server.close();}
 });
+
+test('removal uses encrypted SSH, clears panel state and permits a fresh install',async()=>{
+ const server=await fixture(),client=new InstallerConnection({trustHost:async()=>true});
+ try{
+  await client.connect(server);await client.start({});
+  await assert.rejects(client.uninstall(),{code:'JOB_RUNNING'});
+  await client.poll();client.panelAuth={username:'u',password:'p'};
+  assert.deepEqual(await client.uninstall(),{removed:true});
+  assert.equal(client.installed,false);assert.equal(client.job,null);assert.equal(client.panelAuth,null);
+  const command=server.commands.find(x=>x.includes('CH_UNINSTALLED=1'));
+  assert.ok(command);assert.ok(!command.includes(server.password));
+  assert.equal((await client.connect(server)).installed,false);
+ }finally{client.disconnect();await server.close();}
+});

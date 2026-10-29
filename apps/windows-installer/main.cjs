@@ -29,13 +29,14 @@ register('rememberedServer',async()=>{
  try{const value=JSON.parse(await fs.promises.readFile(rememberedPath,'utf8'));const checked=credentials({...value,password:'validation'});return {host:checked.host,port:checked.port,username:checked.username};}catch{return null;}
 });
 register('connect',async input=>{
+ if(connectionBusy)throw Object.assign(new Error(),{code:'BUSY'});
  connectionRows=[];lastResult=null;
  const result=await connection.connect(input);
  const value={host:connection.secret.host,port:connection.secret.port,username:connection.secret.username};
  try{await fs.promises.mkdir(path.dirname(rememberedPath),{recursive:true});await fs.promises.writeFile(rememberedPath,JSON.stringify(value),{mode:0o600});}catch{}
  return result;
 });
-register('install',async input=>{const result=await connection.start(input);busy=true;lastResult=null;return result;});
+register('install',async input=>{if(connectionBusy||busy)throw Object.assign(new Error(),{code:'BUSY'});const result=await connection.start(input);busy=true;lastResult=null;return result;});
 register('status',async()=>{const state=await connection.poll();busy=state.state==='running';if(state.state==='complete')lastResult=state;return state;});
 register('access',async()=>{lastResult=await connection.access();return lastResult;});
 register('qr',async()=>{if(!lastResult)throw new Error('No result');return QRCode.toDataURL(panelURL(lastResult.url),{width:176,margin:2,errorCorrectionLevel:'M',color:{dark:'#111213',light:'#ffffff'}});});
@@ -47,6 +48,14 @@ async function withConnections(action){
  connectionBusy=true;
  try{return await action();}finally{connectionBusy=false;}
 }
+register('uninstall',()=>withConnections(async()=>{
+ if(busy)throw Object.assign(new Error(),{code:'BUSY'});
+ if(!connection.connected)throw Object.assign(new Error(),{code:'DISCONNECTED'});
+ const ru=language==='ru';
+ const answer=await dialog.showMessageBox(window,{type:'warning',title:ru?'Удалить Connect Hub':'Remove Connect Hub',message:(ru?'Удалить Connect Hub с сервера ':'Remove Connect Hub from ')+connection.secret.host+'?',detail:ru?'Будут удалены панель, все её подключения, ключи, данные и сертификаты в каталогах Connect Hub. VPN перестанет работать. Сначала сохраните резервную копию базы через панель, если хотите восстановить настройки. BBR, подкачка, внешние базы данных и другие службы сохранятся.':'The panel, all its connections, keys, data and certificates in Connect Hub directories will be deleted. VPN will stop working. Save a database backup in the panel first if you want to restore settings. BBR, swap, external databases and other services are retained.',buttons:ru?['Отмена','Удалить с сервера']:['Cancel','Remove from server'],defaultId:0,cancelId:0,noLink:true});
+ if(answer.response!==1)return {removed:false};
+ const result=await connection.uninstall();lastResult=null;connectionRows=[];return result;
+}));
 register('connections',()=>withConnections(async()=>{connectionRows=await connection.connections();return connectionRows;}));
 register('createConnections',input=>withConnections(async()=>{const result=await connection.createConnections(input);connectionRows=result.rows;return result;}));
 register('panelAuth',input=>{

@@ -134,6 +134,16 @@ echo CH_STARTED=1`);
   const state=resultState(await this.execRoot(`set -eu;test ! -L ${JOB_ROOT};test -f ${JOB_ROOT}/.connect-hub-owned;test ! -L ${JOB_ROOT}/${this.job};cat ${JOB_ROOT}/${this.job}/state.json`));
   this.lastState=state.state;return state;
  }
+ async uninstall(){
+  if(!this.connected)throw failure('DISCONNECTED');
+  if(this.lastState==='running')throw failure('JOB_RUNNING');
+  const source=fs.readFileSync(path.join(__dirname,'uninstall.sh'),'utf8').replace(/\r\n?/g,'\n');
+  let output;
+  try{output=await this.execRoot(source);}catch(error){throw failure(error.code==='REMOTE_TIMEOUT'?'REMOTE_TIMEOUT':'UNINSTALL_FAILED');}
+  if(!output.includes('CH_UNINSTALLED=1'))throw failure('UNINSTALL_FAILED');
+  this.installed=false;this.job=null;this.lastState=null;this.panelAuth=null;
+  return {removed:true};
+ }
  async access(){
   return resultState(await this.execRoot(`python3 - <<'CH_ACCESS'
 import json,pathlib

@@ -1,4 +1,4 @@
-name: Soulu redesign release
+name: Connect Hub release
 on:
   push:
     branches: [main]
@@ -121,8 +121,9 @@ jobs:
           cp panel-assets/connect-hub-linux-amd64.tar.gz release-assets/
           cat panel-assets/SHA256SUMS >> release-assets/SHA256SUMS
           cat > release-notes.md <<'NOTES'
-          Connect Hub: Soulu redesign for the panel and Windows application.
+          Connect Hub: server removal from the Windows application.
 
+          - Remove a managed Connect Hub server installation from Panel management, with a native confirmation naming the server. Deletes panel files, connections, keys, bundled certificates and installer job credentials. Preserves BBR, swap, external databases and unrelated services. Refuses foreign services and active installation jobs.
           - Local Onest 400/500/600, neutral white/graphite light/dark surfaces, blue actions and green connection states. Saved legacy palettes migrate while retaining the selected light/dark mode and panel data.
           - Advanced desktop create/edit sections: Basic, Protocol, Transport, Security, Sniffing and raw templates. Configure XHTTP modes, padding, headers, placements, XMUX, Sockopt, final masks and QUIC settings.
           - Native Reality X25519, ML-KEM encryption and ML-DSA key generation. TLS certificate paths refer to server files. Preserve existing client identities and unedited parameters on ordinary edits.
@@ -136,7 +137,7 @@ jobs:
             echo 'A release already exists for this installer version; refusing to replace published binaries.'
             exit 1
           fi
-          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — Soulu redesign" --notes-file release-notes.md --prerelease --latest=false
+          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — server management" --notes-file release-notes.md --prerelease --latest=false
   public-install:
     needs: publish
     runs-on: ubuntu-24.04

@@ -14,3 +14,5 @@ body{font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}header{he
 #create-connection:has(#quick-settings[hidden]) label:has(#device-name){display:none}
 
 main:has(#advanced-editor:not([hidden])){padding-top:0}.editor-tabs{top:0;box-shadow:0 4px 0 var(--card)}
+
+.remove-panel{margin-top:32px;padding-top:20px;border-top:1px solid var(--border)}button.danger{color:#d93c48;border-color:currentColor}

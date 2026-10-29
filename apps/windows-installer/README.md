@@ -101,3 +101,7 @@ on the server. Changes are applied through the authenticated panel API; original
 client keys and unedited fields are retained. Explicit key generation or raw
 JSON changes can intentionally replace key material. Raw templates replace their
 respective section and must keep existing client credentials to preserve access.
+
+## Remove the server panel
+
+Connect over SSH, open **Panel management**, then **Remove Connect Hub from server**. The native confirmation names the server and defaults to Cancel. Removal deletes the default managed panel installation, its connections, keys, bundled certificates and installer job credentials. Export a database backup in the web panel first if you need recovery. BBR, swap, external databases and unrelated services are retained. Custom paths, foreign units and active setup jobs are refused. Reconnect after removal to install again.

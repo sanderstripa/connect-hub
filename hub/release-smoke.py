@@ -53,6 +53,24 @@ try:
  assert subprocess.check_output(['sudo','cat','/etc/connect-hub/initial-access.txt'],text=True)==raw
  assert request('panel/hub/api/status')['success']
  print('PASS: authenticated root web update installs only the verified public fork release and succeeds without changing current access',flush=True)
+ # Exercise the same bundled removal script used over SSH by the Windows app.
+ removal=root/'apps/windows-installer/uninstall.sh'
+ # A foreign renewal unit must block removal before stopping the running panel.
+ foreign=pathlib.Path('/etc/systemd/system/connect-hub-cert-renew.service')
+ subprocess.run(['sudo','sh','-c',"printf '# foreign test fixture\\n' > /etc/systemd/system/connect-hub-cert-renew.service"],check=True)
+ refused=subprocess.run(['sudo','bash',str(removal)],capture_output=True,text=True)
+ assert refused.returncode!=0 and request('panel/hub/api/status')['success']
+ subprocess.run(['sudo','rm',str(foreign)],check=True)
+ tuning=subprocess.check_output(['sysctl','-n','net.ipv4.tcp_congestion_control'],text=True)
+ swap=subprocess.check_output(['swapon','--show','--noheadings'],text=True)
+ removed=subprocess.run(['sudo','bash',str(removal)],capture_output=True,text=True)
+ assert removed.returncode==0 and 'CH_UNINSTALLED=1' in removed.stdout,removed.stderr
+ for path in ('/opt/connect-hub','/etc/connect-hub','/var/log/connect-hub','/usr/local/bin/connect-hub','/etc/systemd/system/connect-hub.service'):
+  assert not pathlib.Path(path).exists(),path
+ assert subprocess.check_output(['sysctl','-n','net.ipv4.tcp_congestion_control'],text=True)==tuning
+ assert subprocess.check_output(['swapon','--show','--noheadings'],text=True)==swap
+ assert len(occupied)==4 and all(s.fileno()>=0 for s in occupied)
+ print('PASS: actual managed server removal, foreign-unit refusal, preserved BBR/swap and unrelated listening sockets',flush=True)
 finally:
  subprocess.run(['sudo','systemctl','stop','connect-hub'],check=False)
  for s in occupied:s.close()

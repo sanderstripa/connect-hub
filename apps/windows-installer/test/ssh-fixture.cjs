@@ -31,6 +31,7 @@ async function fixture(){
 
    if(info.command==='id -u')output='0\n';
    else if(info.command.includes('CH_PRIVILEGED'))output='CH_PRIVILEGED=1\nCH_OS64='+Buffer.from('Debian GNU/Linux 13').toString('base64')+'\nCH_CPU=1\nCH_RAM=1\nCH_DISK=10\n'+(installed?'CH_INSTALLED=1\n':'');
+   else if(info.command.includes('CH_UNINSTALLED=1')){installed=false;inbounds.length=0;output='CH_UNINSTALLED=1\n';}
    else if(info.command.includes('CH_ACCESS'))output=JSON.stringify(result);
    else if(info.command.includes('nohup bash')){installed=true;const encoded=info.command.match(/'([A-Za-z0-9+/=]{100,})'/);if(encoded)sources.push(Buffer.from(encoded[1],'base64').toString());output='CH_STARTED=1\n';}
    else if(info.command.includes('/state.json'))output=JSON.stringify(result);
