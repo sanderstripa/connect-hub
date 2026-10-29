@@ -70,6 +70,10 @@ try:
  assert subprocess.check_output(['sysctl','-n','net.ipv4.tcp_congestion_control'],text=True)==tuning
  assert subprocess.check_output(['swapon','--show','--noheadings'],text=True)==swap
  assert len(occupied)==4 and all(s.fileno()>=0 for s in occupied)
+ assert subprocess.run(['getent','passwd','connect-hub'],capture_output=True).returncode!=0
+ reinstall=subprocess.run(['bash','-c',command],capture_output=True,text=True)
+ assert reinstall.returncode==0,'Fresh install after removal failed: '+reinstall.stderr[-6000:]
+ print('PASS: fresh public installation after panel removal',flush=True)
  print('PASS: actual managed server removal, foreign-unit refusal, preserved BBR/swap and unrelated listening sockets',flush=True)
 finally:
  subprocess.run(['sudo','systemctl','stop','connect-hub'],check=False)

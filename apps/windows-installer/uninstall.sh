@@ -29,6 +29,16 @@ if [[ -e /var/lib/connect-hub-installer ]];then
  # Never race a detached installation/update.
  if grep -q '"state":"running"' /var/lib/connect-hub-installer/job.*/state.json 2>/dev/null;then fail;fi
 fi
+# Fresh installs reserve this account; refuse an unrelated account before changing anything.
+account=$(getent passwd connect-hub || true)
+group=$(getent group connect-hub || true)
+if [[ -n $account ]];then
+ IFS=: read -r name pass uid gid gecos home login <<< "$account"
+ [[ $name == connect-hub && $uid -gt 0 && $uid -lt 1000 && $home == /etc/connect-hub && $login == /usr/sbin/nologin ]] || fail
+ IFS=: read -r group_name group_pass group_gid members <<< "$group"
+ [[ $group_name == connect-hub && $group_gid == "$gid" && -z $members ]] || fail
+elif [[ -n $group ]];then fail
+fi
 # Stop renewal first so it cannot restart the panel during removal.
 for name in connect-hub-cert-renew.timer connect-hub-cert-renew.service;do
  if [[ -f /etc/systemd/system/$name ]];then
@@ -41,7 +51,11 @@ systemctl disable connect-hub.service
 rm -f -- /etc/systemd/system/connect-hub.service /etc/systemd/system/connect-hub-cert-renew.service /etc/systemd/system/connect-hub-cert-renew.timer
 rm -rf -- /etc/systemd/system/connect-hub.service.d
 systemctl daemon-reload
-# Keep the service account, external databases, BBR and swap intact.
+# Remove the reserved service account so a fresh installation can reserve it again.
+# No -r: only explicitly owned directories below may be removed.
+if [[ -n $account ]];then userdel connect-hub;fi
+if getent group connect-hub >/dev/null;then groupdel connect-hub;fi
+# Keep external databases, BBR and swap intact.
 rm -rf -- /opt/connect-hub /etc/connect-hub /var/log/connect-hub
 if [[ -f /var/lib/connect-hub-installer/.connect-hub-owned ]];then rm -rf -- /var/lib/connect-hub-installer;fi
 rm -f -- /usr/local/bin/connect-hub

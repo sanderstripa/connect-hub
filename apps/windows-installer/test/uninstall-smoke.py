@@ -12,6 +12,8 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-uninstall-') as tmp:
  bin=root/'bin';bin.mkdir();calls=root/'calls'
  (bin/'systemctl').write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> '+str(calls)+'\n')
  (bin/'systemctl').chmod(0o755)
+ for name in ('getent','userdel','groupdel'):
+  stub=bin/name;stub.write_text('#!/bin/sh\nexit 2\n');stub.chmod(0o755)
  env={**os.environ,'PATH':str(bin)+os.pathsep+os.environ['PATH']}
  def file(path,body=''):
   p=root/path.lstrip('/');p.parent.mkdir(parents=True,exist_ok=True);p.write_text(body);return p
