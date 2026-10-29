@@ -1,0 +1,106 @@
+name: Desktop installer release
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/windows-installer/**'
+      - '.github/workflows/desktop-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  windows:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      CONNECT_HUB_EXPECTED_REVISION: ${{ github.sha }}
+      ELECTRON_BUILDER_COMPRESSION_LEVEL: '1'
+    defaults:
+      run:
+        working-directory: apps/windows-installer
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: apps/windows-installer/package-lock.json
+      - run: npm ci --ignore-scripts --omit=optional
+      - run: node node_modules/electron/install.js
+      - run: npm run prepare-assets
+      - run: npm test
+      - name: Five presets, links, QR and reconnect in the real Windows GUI
+        run: node test/ui-smoke.cjs
+      - run: npm run build
+      - name: Packaged Windows GUI and downloadable portable EXE
+        run: |
+          node test/ui-smoke.cjs "../../dist/windows-installer/win-unpacked/Connect Hub Setup.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node test/portable-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $digest = (Get-FileHash -Algorithm SHA256 ../../dist/windows-installer/Connect-Hub-Setup.exe).Hash.ToLowerInvariant()
+          [IO.File]::WriteAllText((Join-Path (Resolve-Path ../../dist/windows-installer) 'SHA256SUMS'), "$digest  Connect-Hub-Setup.exe`n", [Text.UTF8Encoding]::new($false))
+      - uses: actions/upload-artifact@v6
+        with:
+          name: desktop-release-binary
+          path: |
+            dist/windows-installer/Connect-Hub-Setup.exe
+            dist/windows-installer/SHA256SUMS
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: desktop-release-evidence
+          path: dist/desktop-evidence/*.png
+  panel-api:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - name: Download the currently supported panel package
+        run: |
+          mkdir -p dist
+          curl --fail --location --retry 3 --output dist/connect-hub-linux-amd64.tar.gz https://github.com/sanderstripa/connect-hub/releases/download/v0.1.0-alpha.14/connect-hub-linux-amd64.tar.gz
+          echo '25a7426222fb871a1f4a6c82eeeeb0bbfeb94d8d023dc6e957bf12f94c4f6fe8  dist/connect-hub-linux-amd64.tar.gz' | sha256sum --check
+      - name: Real panel API, native keys, five listeners and reconnect
+        run: python3 apps/windows-installer/test/panel-api-smoke.py "$PWD/dist/connect-hub-linux-amd64.tar.gz"
+  publish:
+    needs: [windows, panel-api]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v6
+        with:
+          name: desktop-release-binary
+          path: release-assets
+      - name: Publish the tested installer as a separate prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./apps/windows-installer/package.json').version")
+          tag="installer-v${version}"
+          cat > release-notes.md <<'NOTES'
+          Connect Hub desktop installer and VPN connection manager.
+
+          - Install the panel and create one or several connections: VLESS Reality, VLESS XHTTP Reality, native Sudoku, Telegram MTProto FakeTLS, and Shadowsocks.
+          - Copy links, show or save private-key QR codes, and export keys to a text file.
+          - Reconnect to an installed server to see its existing connections. Only the SSH endpoint and username are remembered; passwords remain in session memory.
+          - Keep the ordinary panel inbound/client records and preserve unrelated services. Busy ports fail independently without discarding successful connections.
+
+          Validation: Windows source and packaged GUI tests, actual portable EXE startup, plus real CSRF-protected panel APIs, five native listening sockets, key export and reconnect in isolated Linux infrastructure. External client handshakes and provider firewall reachability are not covered.
+
+          This is an **installer-only alpha release**. The server panel remains on the existing panel release track. Existing complex configurations outside the supported export shapes should be exported through the web panel. Links and QR codes contain private access credentials.
+          NOTES
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo 'A release already exists for this installer version; refusing to replace published binaries.'
+            exit 1
+          fi
+          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub Setup ${version}" --notes-file release-notes.md --prerelease --latest=false

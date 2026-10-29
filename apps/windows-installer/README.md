@@ -36,3 +36,52 @@ HTTPS login, device traffic and update through the production backend.
 GPL-3.0-only. Project authorship and modifications are retained in `NOTICE`.
 Packaged assets include GPL/OFL and dependency license texts; Electron's own
 license and Chromium notices are distributed with its runtime.
+
+## Desktop connection manager (0.2 alpha)
+
+After installing the panel, choose **Set up VPN connections**. Select one or
+several presets, enter a device name and public server address, and create:
+
+- VLESS TCP + Reality + Vision
+- VLESS XHTTP + Reality
+- Native Sudoku (ChaCha20-Poly1305)
+- MTProto FakeTLS for Telegram
+- Shadowsocks ChaCha20-IETF-Poly1305
+
+Each preset creates an ordinary panel inbound and client through the existing
+CSRF-protected API. The server generates Sudoku device keys. No separate key
+registry or direct database edits are used. Creation does not modify firewall,
+swap or TCP settings. The first selected port and consecutive following ports
+must be allowed by the server/provider firewall (TCP; Shadowsocks also UDP).
+The Reality/FakeTLS domain must be reachable and support TLS 1.3.
+
+The result list supports copying a link, showing/saving a QR PNG, and saving all
+supported active keys to a text file. These exports contain private access keys.
+If some presets fail, successful ones stay saved; retry only the failed choices.
+A saved configuration is not an end-to-end reachability guarantee: test it in a
+compatible client and inspect panel engine logs if needed.
+
+On subsequent launches, the last SSH endpoint and username are prefilled.
+Enter your SSH password again; installed servers open the connection list
+immediately. Passwords, session cookies and keys are never persisted locally
+unless you explicitly export keys or QR images. If you changed the panel
+credentials, enter the current credentials under **Changed the panel login?**.
+Panel access details and updates remain available from the connection list.
+
+Existing configurations outside the supported export shapes (including remote
+nodes and fallback children) remain visible and direct users to the web panel
+for their authoritative export. No unsupported protocol is silently rewritten.
+
+Validation:
+
+```sh
+npm test
+node test/ui-smoke.cjs
+python3 test/panel-api-smoke.py /path/to/connect-hub-linux-amd64.tar.gz
+```
+
+The last command installs and starts an isolated panel in a temporary directory
+with `--no-service`, checks actual login/CSRF, all five inbound APIs, generated
+Sudoku keys, native listening sockets, reconnect and busy-port refusal. It does
+not test external networks or client-side handshakes. Windows portable EXE
+execution must additionally be tested on Windows with `test/portable-smoke.cjs`.

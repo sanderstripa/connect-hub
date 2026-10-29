@@ -5,7 +5,7 @@ const {fixture}=require('./ssh-fixture.cjs');
  const base=path.resolve(__dirname,'..'),output=path.resolve(base,'../../dist/desktop-evidence');fs.mkdirSync(output,{recursive:true});
  const server=await fixture();let app;
  try{
-  app=await _electron.launch({executablePath:process.argv[2]?path.resolve(process.argv[2]):require('electron'),args:process.argv[2]?[]:[base],env:{...process.env,CONNECT_HUB_UI_TEST:'1'}});
+  app=await _electron.launch({executablePath:process.argv[2]?path.resolve(process.argv[2]):require('electron'),args:process.argv[2]?[]:[base,...(process.platform==='linux'?['--no-sandbox','--ozone-platform=headless']:[])],env:{...process.env,CONNECT_HUB_UI_TEST:'1'}});
   await app.evaluate(({dialog,clipboard,shell,app})=>{global.wizardTest={copies:[],opened:[],qr:[]};dialog.showMessageBox=async()=>({response:1});clipboard.writeText=text=>global.wizardTest.copies.push(text);shell.openExternal=async url=>{global.wizardTest.opened.push(url);};const require=process.getBuiltinModule('module').createRequire(app.getAppPath()+'/main.cjs');const QR=require('qrcode');const original=QR.toDataURL;QR.toDataURL=(value,...rest)=>{global.wizardTest.qr.push(value);return original(value,...rest);};});
   const page=await app.firstWindow();await page.locator('#host').waitFor();await page.locator('#ru').click();await page.evaluate(()=>document.fonts.ready);
   assert.equal(await page.evaluate(()=>typeof window.require),'undefined');
@@ -23,6 +23,18 @@ const {fixture}=require('./ssh-fixture.cjs');
   const after=await app.evaluate(()=>global.wizardTest);assert.deepEqual(after.copies,[server.result.url]);assert.deepEqual(after.opened,[server.result.url]);
   await page.screenshot({path:path.join(output,'windows-result-light.png')});await page.locator('#theme').click();await page.screenshot({path:path.join(output,'windows-result-dark.png')});
   assert.ok(!server.sources[0].includes(server.password));
-  console.log('PASS: actual Windows window, RU/EN, two local Montserrat themes, encrypted SSH, setup options, masked credentials, address-only QR and explicit clipboard/browser actions');
+  await page.locator('#manage-connections').click();await page.locator('#connection-status').filter({hasText:'Конфигурация'}).waitFor();
+  await page.locator('#new-connection').click();await page.locator('#device-name').fill('iPhone');await page.locator('#first-port').fill('28443');
+  await page.locator('input[value="sudoku"]').check();await page.locator('input[value="xhttp"]').check();await page.locator('input[value="mtproto"]').check();await page.locator('input[value="shadowsocks"]').check();
+  await page.locator('#create-submit').click();await page.locator('.connection-card').nth(4).waitFor();
+  const links=await page.locator('.connection-card>input').evaluateAll(els=>els.map(el=>el.value));assert.equal(links.length,5);assert.ok(links.some(x=>x.startsWith('sudoku://')));assert.ok(links.some(x=>x.startsWith('tg://proxy?')));
+  await page.locator('.connection-card').first().getByRole('button',{name:'Копировать',exact:true}).click();
+  await page.locator('.connection-card').first().getByRole('button',{name:'QR-код',exact:true}).click();await page.locator('.key-qr').waitFor();
+  const keyActions=await app.evaluate(()=>global.wizardTest);assert.equal(keyActions.copies.at(-1),links[0]);assert.equal(keyActions.qr.at(-1),links[0]);
+  await page.screenshot({path:path.join(output,'windows-connections-dark.png')});await page.locator('#theme').click();await page.screenshot({path:path.join(output,'windows-connections-light.png')});
+  await page.locator('#hub-settings').click();await page.locator('#back').click();await page.locator('#ssh-password').fill(server.password);await page.locator('#connect').click();
+  await page.locator('.connection-card').nth(4).waitFor();assert.deepEqual(await page.locator('.connection-card>input').evaluateAll(els=>els.map(el=>el.value)),links);
+  console.log('PASS: five connection presets, canonical links, private-key QR, clipboard and same keys after reconnect');
+  console.log('PASS: Electron window, RU/EN, two local Montserrat themes, encrypted SSH, setup options, masked credentials, address-only QR and explicit clipboard/browser actions');
  }finally{if(app)await app.close();await server.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -4,6 +4,7 @@ const {createHash,randomBytes}=require('node:crypto');
 const {domainToASCII}=require('node:url');
 const {isIP}=require('node:net');
 const fs=require('node:fs'),path=require('node:path');
+const {selection,preset,exportRows}=require('./connections.cjs');
 const JOB_ROOT='/var/lib/connect-hub-installer';
 const quote=value=>"'"+String(value).replaceAll("'","'\\''")+"'";
 function failure(code){const error=new Error(code);error.code=code;return error;}
@@ -140,6 +141,34 @@ v=dict(line.split('=',1)for line in (p/'initial-access.txt').read_text().splitli
 print(json.dumps({'state':'complete','url':v['URL'],'username':v['USERNAME'],'password':v['PASSWORD'],'warnings':[],'certificate':v.get('CERTIFICATE','unknown')}))
 CH_ACCESS`));
  }
- disconnect(){this.connected=false;if(this.client){this.client.end();this.client=null;}this.secret=null;this.job=null;this.root=false;}
+ async panelRequest(request){
+  if(!this.connected)throw failure('DISCONNECTED');
+  const source=fs.readFileSync(path.join(__dirname,'panel-api.py'),'utf8');
+  const command='python3 -c '+quote(source);
+  const raw=await this.exec(this.root?command:"sudo -S -p '' -- "+command,(this.root?'':this.secret.sudoPassword+'\n')+JSON.stringify({...request,auth:this.panelAuth}));
+  let result;try{result=JSON.parse(raw);}catch{throw failure('INVALID_RESULT');}
+  if(!result.ok)throw failure(result.error||'PANEL_REQUEST_FAILED');
+  return result.value;
+ }
+ async connections(){
+  const rows=await this.panelRequest({action:'list'});
+  if(!Array.isArray(rows))throw failure('INVALID_RESULT');
+  return exportRows(rows,this.secret.host);
+ }
+ async createConnections(input){
+  const selected=selection(input),outcomes=[];
+  for(let i=0;i<selected.protocols.length;i++){
+   const kind=selected.protocols[i];
+   try{
+    const keys=['vless','xhttp'].includes(kind)?await this.panelRequest({action:'keys'}):null;
+    const inbound=preset(kind,selected,selected.port+i,keys);
+    await this.panelRequest({action:'create',inbound});
+    outcomes.push({protocol:kind,ok:true,port:inbound.port});
+   }catch(error){outcomes.push({protocol:kind,ok:false,error:error.code||'PANEL_REQUEST_FAILED',port:selected.port+i});}
+  }
+  // Always reread canonical, server-generated client secrets. No second key store.
+  return {outcomes,rows:await this.connections()};
+ }
+ disconnect(){this.panelAuth=null;this.connected=false;if(this.client){this.client.end();this.client=null;}this.secret=null;this.job=null;this.root=false;}
 }
 module.exports={InstallerConnection,credentials,options,panelURL,resultState,quote};

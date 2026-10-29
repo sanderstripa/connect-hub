@@ -3,7 +3,7 @@ const path=require('node:path'),fs=require('node:fs'),os=require('node:os');
 const {pathToFileURL}=require('node:url');
 const {randomBytes}=require('node:crypto');
 const QRCode=require('qrcode');
-const {InstallerConnection,panelURL}=require('./backend.cjs');
+const {InstallerConnection,panelURL,credentials}=require('./backend.cjs');
 protocol.registerSchemesAsPrivileged([{scheme:'ch-install',privileges:{standard:true,secure:true,supportFetchAPI:true}}]);
 const cache=path.join(os.tmpdir(),'connect-hub-installer-'+randomBytes(8).toString('hex'));
 fs.mkdirSync(cache,{recursive:true});app.setPath('userData',cache);app.setPath('sessionData',path.join(cache,'session'));app.setAppLogsPath(path.join(cache,'logs'));
@@ -24,13 +24,49 @@ function register(name,handler){ipcMain.handle('installer:'+name,async(event,...
 register('locale',()=>app.getLocale().startsWith('ru')?'ru':'en');
 register('version',()=>JSON.parse(fs.readFileSync(path.join(__dirname,'assets/BUILD.json'),'utf8')));
 register('language',value=>{language=value==='ru'?'ru':'en';});
-register('connect',async input=>{lastResult=null;return connection.connect(input);});
+const rememberedPath=path.join(app.getPath('appData'),'Connect Hub Setup','server.json');
+register('rememberedServer',async()=>{
+ try{const value=JSON.parse(await fs.promises.readFile(rememberedPath,'utf8'));const checked=credentials({...value,password:'validation'});return {host:checked.host,port:checked.port,username:checked.username};}catch{return null;}
+});
+register('connect',async input=>{
+ connectionRows=[];lastResult=null;
+ const result=await connection.connect(input);
+ const value={host:connection.secret.host,port:connection.secret.port,username:connection.secret.username};
+ try{await fs.promises.mkdir(path.dirname(rememberedPath),{recursive:true});await fs.promises.writeFile(rememberedPath,JSON.stringify(value),{mode:0o600});}catch{}
+ return result;
+});
 register('install',async input=>{const result=await connection.start(input);busy=true;lastResult=null;return result;});
 register('status',async()=>{const state=await connection.poll();busy=state.state==='running';if(state.state==='complete')lastResult=state;return state;});
 register('access',async()=>{lastResult=await connection.access();return lastResult;});
 register('qr',async()=>{if(!lastResult)throw new Error('No result');return QRCode.toDataURL(panelURL(lastResult.url),{width:176,margin:2,errorCorrectionLevel:'M',color:{dark:'#111213',light:'#ffffff'}});});
 register('open',async()=>{if(lastResult)await shell.openExternal(panelURL(lastResult.url));});
 register('copy',field=>{if(lastResult&&['url','username','password'].includes(field))clipboard.writeText(String(lastResult[field]));});
+let connectionRows=[],connectionBusy=false;
+async function withConnections(action){
+ if(connectionBusy)throw Object.assign(new Error(),{code:'BUSY'});
+ connectionBusy=true;
+ try{return await action();}finally{connectionBusy=false;}
+}
+register('connections',()=>withConnections(async()=>{connectionRows=await connection.connections();return connectionRows;}));
+register('createConnections',input=>withConnections(async()=>{const result=await connection.createConnections(input);connectionRows=result.rows;return result;}));
+register('panelAuth',input=>{
+ if(!input||typeof input.username!=='string'||typeof input.password!=='string'||input.username.length>512||input.password.length>4096)throw new Error('Invalid credentials');
+ connection.panelAuth={username:input.username,password:input.password};
+});
+function connectionRow(id){const row=connectionRows.find(row=>row.id===id&&row.enabled&&row.url);if(!row)throw new Error('Unknown connection');return row;}
+register('connectionQR',id=>QRCode.toDataURL(connectionRow(id).url,{width:320,margin:2,errorCorrectionLevel:'M'}));
+register('copyConnection',id=>clipboard.writeText(connectionRow(id).url));
+register('saveConnectionQR',async id=>{
+ const row=connectionRow(id);
+ const file=await dialog.showSaveDialog(window,{defaultPath:'Connect-Hub-'+row.protocol+'-'+row.port+'.png',filters:[{name:'PNG',extensions:['png']}]});
+ if(!file.canceled&&file.filePath)await fs.promises.writeFile(file.filePath,await QRCode.toBuffer(row.url,{width:768,margin:2,errorCorrectionLevel:'M'}));
+});
+register('saveConnections',async()=>{
+ const rows=connectionRows.filter(row=>row.enabled&&row.url);
+ if(!rows.length)throw new Error('No connections');
+ const file=await dialog.showSaveDialog(window,{defaultPath:'Connect-Hub-keys.txt',filters:[{name:'Text',extensions:['txt']}]});
+ if(!file.canceled&&file.filePath)await fs.promises.writeFile(file.filePath,rows.map(row=>row.name+'\n'+row.url).join('\n\n')+'\n',{mode:0o600});
+});
 register('minimize',()=>window.minimize());
 register('close',()=>window.close());
 app.whenReady().then(async()=>{
