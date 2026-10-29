@@ -16,11 +16,16 @@ Sudoku is not required to use the panel's standard features.
 
 ## Windows installer
 
-[Download Connect-Hub-Setup.exe](https://github.com/sanderstripa/connect-hub/releases/download/v0.1.0-alpha.14/Connect-Hub-Setup.exe) — a portable Windows 10/11 x64 wizard, offered alongside the Linux command below.
+[Download Connect-Hub-Setup.exe](https://github.com/sanderstripa/connect-hub/releases/download/installer-v0.2.0-alpha.1/Connect-Hub-Setup.exe) — a portable Windows 10/11 x64 wizard, offered alongside the Linux command below.
 
 1. Enter your server IP/hostname, SSH port, username and password. Confirm the server key fingerprint. Use `root` or an account with `sudo` access.
 2. Choose the panel address, optional BBR and additional swap. The wizard uses the same verified server installer and detects an existing Connect Hub installation for updating.
 3. Copy the resulting panel URL, login and password, or open the URL/scan its QR code. **The QR contains only the address, without a login or password.**
+
+
+4. Choose **Set up VPN connections** and select one or more presets: VLESS Reality, VLESS XHTTP Reality, Sudoku, Telegram MTProto, or Shadowsocks. Copy links, show/save QR codes, or export keys to a text file. **Connection QR codes contain private access keys.**
+
+On later launches, the last SSH endpoint and username are prefilled. Enter the SSH password to open existing connections. Passwords and keys are not saved locally except when you explicitly export keys. Existing complex configurations can be exported through the web panel.
 
 SSH/sudo passwords are kept in memory for the session and are not written to files on Windows or the server. Installation continues on the server if SSH disconnects; reconnect to check progress. HTTPS certificate failures and unsupported optional tuning are shown explicitly. Other panels and their data are kept separate.
 
