@@ -1,56 +1,13 @@
-import { describe, it, expect } from 'vitest';
-import {
-  PALETTE_IDS,
-  PALETTES,
-  parsePalette,
-  themeTokens,
-  themeVariables,
-  contrast,
-  themeCSS,
-} from '@/lib/theme-palettes';
-describe('palette contracts', () => {
-  it('has eight complete variants and preserves the published Classic colors', () => {
-    expect(PALETTE_IDS).toHaveLength(4);
-    expect(themeTokens('classic', false).bg).toBe('#f7f7f5');
-    expect(themeTokens('classic', true).bg).toBe('#141618');
-    for (const id of PALETTE_IDS)
-      for (const dark of [false, true]) {
-        const tokens = themeVariables(id, dark);
-        for (const key of [
-          'app-bg',
-          'surface',
-          'surface-raised',
-          'accent',
-          'accent-foreground',
-          'focus-ring',
-          'control-border',
-          'chart-primary',
-          'chart-grid',
-          'status-error',
-        ])
-          expect(tokens[key]).toBeTruthy();
-        expect(themeTokens(id, dark).accent).toBe(PALETTES[id][dark ? 'dark' : 'light'].accent);
-      }
-  });
-  it('keeps secondary text, button labels and control edges readable in the new palettes', () => {
-    for (const id of PALETTE_IDS.filter((id) => id !== 'classic'))
-      for (const dark of [false, true]) {
-        const t = themeTokens(id, dark),
-          v = themeVariables(id, dark);
-        for (const surface of [t.bg, t.surface, t.raised]) {
-          expect(contrast(t.secondary, surface), `${id} secondary`).toBeGreaterThanOrEqual(4.5);
-          expect(contrast(t.controlBorder, surface), `${id} controls`).toBeGreaterThanOrEqual(3);
-        }
-        expect(contrast(t.button, t.foreground)).toBeGreaterThanOrEqual(4.5);
-        expect(contrast(t.buttonHover, v['accent-hover-foreground'])).toBeGreaterThanOrEqual(4.5);
-        expect(new Set([t.success, t.warning, t.error, t.info]).size).toBe(4);
-      }
-  });
-  it('uses Midnight for missing or invalid storage and includes all first-paint selectors', () => {
-    for (const value of [null, undefined, '', 'garbage', '__proto__'])
-      expect(parsePalette(value)).toBe('midnight-steel');
-    for (const id of PALETTE_IDS)
-      for (const mode of ['dark', 'light'])
-        expect(themeCSS()).toContain(`data-palette="${id}"][data-mode="${mode}"`);
-  });
+import {describe,it,expect} from 'vitest';
+import {PALETTE_IDS,parsePalette,themeTokens,themeVariables,themeCSS} from '@/lib/theme-palettes';
+describe('Soulu visual contract',()=>{
+ it('migrates saved palettes without losing light/dark support',()=>{
+ expect(PALETTE_IDS).toEqual(['soulu']);
+ for(const value of [null,undefined,'classic','midnight-steel','graphite-sage','garbage'])expect(parsePalette(value)).toBe('soulu');
+ });
+ it('uses supplied neutral surfaces, blue actions and green VPN states',()=>{
+ expect(themeTokens('soulu',false)).toMatchObject({bg:'#F6F6F8',surface:'#F8F8FA',text:'#292A2E',secondary:'#797B81',accent:'#0671FF',success:'#087F5B'});
+ expect(themeTokens('soulu',true)).toMatchObject({bg:'#08090B',surface:'#111215',text:'#EEEEEF',secondary:'#96979D',accent:'#0671FF',success:'#57D6A3'});
+ for(const dark of [false,true]){expect(themeVariables('soulu',dark)['accent-foreground']).toBe('#FFFFFF');expect(themeCSS()).toContain(`data-mode="${dark?'dark':'light'}"`);}
+ });
 });

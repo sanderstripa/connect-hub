@@ -13,7 +13,9 @@ with tempfile.TemporaryDirectory(prefix='connect-desktop-proof-',dir=pkg.parent)
  td=pathlib.Path(temp);data=td/'data';prefix=td/'app';logs=td/'logs'
  env={**os.environ,'CONNECT_HUB_PREFIX':str(prefix),'CONNECT_HUB_DATA':str(data),'CONNECT_HUB_LOGS':str(logs),'CONNECT_HUB_LISTEN':'127.0.0.1','CONNECT_HUB_HOST':'127.0.0.1'}
  with (td/'proof.log').open('w') as log:
-  subprocess.run(['bash',str(root/'hub/install.sh'),'--package',str(pkg),'--sha256',hashlib.sha256(pkg.read_bytes()).hexdigest(),'--no-service'],env=env,stdout=log,stderr=log,check=True)
+  install=subprocess.run(['bash',str(root/'hub/install.sh'),'--package',str(pkg),'--sha256',hashlib.sha256(pkg.read_bytes()).hexdigest(),'--no-service'],env=env,stdout=log,stderr=log)
+  if install.returncode:
+   log.flush();print((td/'proof.log').read_text()[-3000:]);raise RuntimeError('Isolated install failed')
   access=dict(line.split('=',1) for line in (data/'initial-access.txt').read_text().splitlines() if '=' in line)
   env.update(XUI_DB_FOLDER=str(data),XUI_LOG_FOLDER=str(logs),XUI_BIN_FOLDER=str(prefix/'current/bin'),XUI_MAIN_FOLDER=str(prefix/'current'),CONNECT_HUB_INTEGRATIONS_DIR=str(data/'integrations'))
   proc=subprocess.Popen([str(prefix/'current/connect-hub')],cwd=prefix/'current',env=env,stdout=log,stderr=log)
@@ -45,6 +47,24 @@ with tempfile.TemporaryDirectory(prefix='connect-desktop-proof-',dir=pkg.parent)
    rows=panel.run({'action':'list'});assert len(rows)==5
    sudo=next(row for row in rows if row['protocol']=='sudoku')
    assert settings(sudo)['clients'][0]['sudokuKey']
+   xhttp=next(row for row in rows if row['protocol']=='vless' and (json.loads(row['streamSettings']) if isinstance(row['streamSettings'],str) else row['streamSettings']).get('network')=='xhttp')
+   before=settings(xhttp)['clients'][0]['id']
+   auths=panel.run({'action':'generate','kind':'vless'})['auths'];assert auths
+   assert panel.run({'action':'generate','kind':'mldsa'})['verify']
+   patch={'streamSettings.xhttpSettings.mode':'stream-one','streamSettings.xhttpSettings.xPaddingBytes':'200-800','streamSettings.xhttpSettings.xPaddingObfsMode':True,'streamSettings.realitySettings.settings.fingerprint':'safari','sniffing.enabled':True,'sniffing.destOverride':['http','tls','quic'],'sniffing.routeOnly':True}
+   patch['settings.decryption']=auths[0]['decryption'];patch['settings.encryption']=auths[0]['encryption']
+   apply="const {applyAdvanced}=require('./advanced.cjs');let b='';process.stdin.on('data',x=>b+=x);process.stdin.on('end',()=>{const q=JSON.parse(b);console.log(JSON.stringify(applyAdvanced(q.inbound,{changes:q.changes})));});"
+   edited=json.loads(subprocess.check_output(['node','-e',apply],input=json.dumps({'inbound':xhttp,'changes':patch}),text=True,cwd=base))
+   panel.run({'action':'update','id':xhttp['id'],'inbound':edited})
+   saved=panel.run({'action':'details','id':xhttp['id']})
+   assert settings(saved)['clients'][0]['id']==before
+   assert settings(saved)['encryption']==auths[0]['encryption']
+   stream=json.loads(saved['streamSettings']) if isinstance(saved['streamSettings'],str) else saved['streamSettings']
+   assert stream['xhttpSettings']['mode']=='stream-one'
+   assert stream['xhttpSettings']['xPaddingObfsMode'] is True
+   assert stream['realitySettings']['settings']['fingerprint']=='safari'
+   rows=panel.run({'action':'list'})
+   print('PASS: real ML-KEM/ML-DSA generation, advanced XHTTP/Reality/sniffing edit and unchanged client key',flush=True)
    encoded=json.dumps(rows)
    export="const c=require('./connections.cjs');let b='';process.stdin.on('data',x=>b+=x);process.stdin.on('end',()=>{const r=c.exportRows(JSON.parse(b),'203.0.113.10');if(r.length!==5||r.some(x=>!x.url))process.exit(1);console.log('PASS: all five real panel client links exported');});"
    subprocess.run(['node','-e',export],input=encoded,text=True,cwd=base,check=True)

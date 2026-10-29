@@ -16,7 +16,7 @@ Sudoku is not required to use the panel's standard features.
 
 ## Windows installer
 
-[Download Connect-Hub-Setup.exe](https://github.com/sanderstripa/connect-hub/releases/download/installer-v0.2.0-alpha.1/Connect-Hub-Setup.exe) — a portable Windows 10/11 x64 wizard, offered alongside the Linux command below.
+[Download Connect-Hub-Setup.exe](https://github.com/sanderstripa/connect-hub/releases/download/v0.3.0-alpha.1/Connect-Hub-Setup.exe) — a portable Windows 10/11 x64 wizard, offered alongside the Linux command below.
 
 1. Enter your server IP/hostname, SSH port, username and password. Confirm the server key fingerprint. Use `root` or an account with `sudo` access.
 2. Choose the panel address, optional BBR and additional swap. The wizard uses the same verified server installer and detects an existing Connect Hub installation for updating.
@@ -64,7 +64,7 @@ The copy/paste command uses an available `curl` or `wget`. When neither exists, 
 3. **Swap**: show existing swap and offer an additional owned file with a selected size for small-memory servers. Keep the current setup by default. Existing swap stays intact; free-space and filesystem checks precede allocation, including Btrfs-specific handling.
 4. **Panel address**: detected IP or a domain with HTTPS. Check DNS and the local validation port before issuance. Let’s Encrypt performs the final external reachability check. Failed domain setup offers retry or a return to IP, and automatic certificate renewal is configured.
 
-Exactly two visual themes, **light and dark**, follow the CONNECT visual style. **Montserrat** is served locally, including Cyrillic and italics, throughout settings, tables, dialogs, links, logs and configuration editors. No Google Fonts request is needed in the browser.
+Exactly two visual themes, **light and dark**, follow the Soulu visual style. **Onest** is served locally, including Cyrillic, throughout settings, tables, dialogs, links, logs and configuration editors. No Google Fonts request is needed in the browser.
 
 Host tuning is applied only after explicit installer choices. Updating an existing panel does not repeat BBR/swap changes, and retains its database and device keys.
 
@@ -102,4 +102,4 @@ Management menu: `sudo connect-hub`. The upstream-derived management menu is res
 
 ### Appearance
 
-Settings → Appearance offers Classic Monochrome, Graphite & Sage, Obsidian & Champagne and Midnight & Steel, each in light/dark mode. The sidebar mode switch remains independent. Choices are stored in your browser; new browsers use Midnight & Steel; saved palette and mode choices are retained. [Theme implementation and checks](docs/palettes.md).
+Settings → Appearance uses the Soulu palette in light/dark mode. Old saved palettes migrate to Soulu while retaining mode and all panel data. Onest uses 400/500/600 weights, blue actions and green connection states.

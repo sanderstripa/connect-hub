@@ -49,7 +49,7 @@ export default function RemarkVarPicker({
                       tabIndex={0}
                       onClick={() => onPick(v.token)}
                       onKeyDown={activateOnKey(() => onPick(v.token))}
-                      style={{ cursor: 'pointer', margin: 0, fontFamily: 'Montserrat, sans-serif' }}
+                      style={{ cursor: 'pointer', margin: 0, fontFamily: 'Onest, sans-serif' }}
                     >
                       {wrapToken(v.token)}
                     </Tag>

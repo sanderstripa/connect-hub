@@ -67,7 +67,7 @@
 }
 
 .api-docs-page .swagger-ui {
-  font-family: Montserrat, sans-serif;
+  font-family: Onest, sans-serif;
 }
 
 /* ──────────────────────────────────────────────────────────────────
@@ -201,7 +201,7 @@
 }
 
 .api-docs-page.is-dark .swagger-ui textarea {
-  font-family: Montserrat, sans-serif;
+  font-family: Onest, sans-serif;
 }
 
 .api-docs-page.is-dark .swagger-ui input::placeholder,

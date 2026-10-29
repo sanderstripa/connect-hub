@@ -54,6 +54,10 @@ register('panelAuth',input=>{
  connection.panelAuth={username:input.username,password:input.password};
 });
 function connectionRow(id){const row=connectionRows.find(row=>row.id===id&&row.enabled&&row.url);if(!row)throw new Error('Unknown connection');return row;}
+register('editorSchema',()=>require('./advanced-fields.cjs'));
+register('connectionDetails',id=>withConnections(()=>connection.connectionDetails(id)));
+register('generateKeys',kind=>withConnections(()=>connection.panelRequest({action:'generate',kind})));
+register('updateConnection',input=>withConnections(async()=>{connectionRows=await connection.updateConnection(input);return connectionRows;}));
 register('connectionQR',id=>QRCode.toDataURL(connectionRow(id).url,{width:320,margin:2,errorCorrectionLevel:'M'}));
 register('copyConnection',id=>clipboard.writeText(connectionRow(id).url));
 register('saveConnectionQR',async id=>{
@@ -78,7 +82,7 @@ app.whenReady().then(async()=>{
   return net.fetch(pathToFileURL(target).href);
  });
  session.defaultSession.setPermissionRequestHandler((_webContents,_permission,callback)=>callback(false));
- window=new BrowserWindow({width:860,height:760,minWidth:720,minHeight:650,frame:false,show:process.env.CONNECT_HUB_UI_TEST!=='1',backgroundColor:'#10161e',title:'Connect. Hub',icon:path.join(__dirname,'assets/icon.ico'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,spellcheck:false,backgroundThrottling:false,offscreen:process.env.CONNECT_HUB_UI_TEST==='1'}});
+ window=new BrowserWindow({width:1100,height:860,minWidth:900,minHeight:700,frame:false,show:process.env.CONNECT_HUB_UI_TEST!=='1',backgroundColor:'#08090b',title:'Connect. Hub',icon:path.join(__dirname,'assets/icon.ico'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,spellcheck:false,backgroundThrottling:false,offscreen:process.env.CONNECT_HUB_UI_TEST==='1'}});
  window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
  window.webContents.on('will-navigate',(event,url)=>{if(url!==origin)event.preventDefault();});
  window.on('close',event=>{

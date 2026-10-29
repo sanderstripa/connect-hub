@@ -888,7 +888,7 @@ export default function ClientInfoModal({
                   maxWidth: '100%',
                   marginBottom: 6,
                   padding: '2px 8px',
-                  fontFamily: 'Montserrat, sans-serif',
+                  fontFamily: 'Onest, sans-serif',
                 }}
               >
                 {entry.ip}

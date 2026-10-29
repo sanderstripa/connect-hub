@@ -409,7 +409,7 @@ export default function NodesPage() {
             value={trustCa}
             onChange={(e) => setTrustCa(e.target.value)}
             placeholder={t('pages.nodes.mtls.trustPlaceholder')}
-            style={{ marginTop: 4, fontFamily: 'Montserrat, sans-serif' }}
+            style={{ marginTop: 4, fontFamily: 'Onest, sans-serif' }}
           />
           <Typography.Paragraph type="secondary" style={{ marginTop: 4 }}>
             {t('pages.nodes.mtls.trustHint')}

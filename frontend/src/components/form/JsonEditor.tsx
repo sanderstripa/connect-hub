@@ -133,7 +133,7 @@ const JsonEditor = forwardRef<JsonEditorHandle, JsonEditorProps>(function JsonEd
           EditorView.theme({
             '&': { height: '100%' },
             '.cm-scroller': {
-              fontFamily: 'Montserrat, sans-serif',
+              fontFamily: 'Onest, sans-serif',
               fontSize: '12px',
               minHeight,
               maxHeight,

@@ -5,6 +5,7 @@ const {domainToASCII}=require('node:url');
 const {isIP}=require('node:net');
 const fs=require('node:fs'),path=require('node:path');
 const {selection,preset,exportRows}=require('./connections.cjs');
+const {applyAdvanced,draft}=require('./advanced.cjs');
 const JOB_ROOT='/var/lib/connect-hub-installer';
 const quote=value=>"'"+String(value).replaceAll("'","'\\''")+"'";
 function failure(code){const error=new Error(code);error.code=code;return error;}
@@ -161,13 +162,29 @@ CH_ACCESS`));
    const kind=selected.protocols[i];
    try{
     const keys=['vless','xhttp'].includes(kind)?await this.panelRequest({action:'keys'}):null;
-    const inbound=preset(kind,selected,selected.port+i,keys);
+    const advanced=structuredClone(input.advanced||{});
+    const first=advanced.changes?.port??selected.port;
+    if(advanced.changes?.port!==undefined)advanced.changes.port=first+i;
+    const inbound=applyAdvanced(preset(kind,selected,first+i,keys),advanced);
     await this.panelRequest({action:'create',inbound});
     outcomes.push({protocol:kind,ok:true,port:inbound.port});
    }catch(error){outcomes.push({protocol:kind,ok:false,error:error.code||'PANEL_REQUEST_FAILED',port:selected.port+i});}
   }
   // Always reread canonical, server-generated client secrets. No second key store.
   return {outcomes,rows:await this.connections()};
+ }
+ async connectionDetails(value){
+  const id=Number(String(value).split(':')[0]);
+  if(!Number.isSafeInteger(id)||id<1)throw failure('INVALID_CONNECTION');
+  return draft(await this.panelRequest({action:'details',id}));
+ }
+ async updateConnection(input){
+  const id=Number(input.id);
+  if(!Number.isSafeInteger(id)||id<1)throw failure('INVALID_CONNECTION');
+  const current=await this.panelRequest({action:'details',id});
+  const inbound=applyAdvanced(current,input.advanced);
+  await this.panelRequest({action:'update',id,inbound});
+  return this.connections();
  }
  disconnect(){this.panelAuth=null;this.connected=false;if(this.client){this.client.end();this.client=null;}this.secret=null;this.job=null;this.root=false;}
 }

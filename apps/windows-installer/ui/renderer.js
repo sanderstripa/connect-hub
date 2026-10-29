@@ -7,10 +7,13 @@ Object.assign(strings.en,{
  connections:'Connections',manageConnections:'Set up VPN connections',yourServer:'YOUR SERVER',connectionsInfo:'Keys are loaded directly from your panel. Reconnect to this server next time to see them again.',createNew:'Create new',refresh:'Refresh',saveKeys:'Save all keys',changedLogin:'Changed the panel login?',retry:'Retry',serverOptions:'Panel update',chooseProtocols:'Choose your connections.',protocolInfo:'Select one or more. Each creates a separate inbound and device key in your panel.',deviceName:'Device / connection name',vlessInfo:'TCP + Vision. General VPN connection.',xhttpInfo:'XHTTP transport. Requires a compatible client.',sudokuInfo:'Native Sudoku. Requires a Sudoku client.',mtprotoInfo:'Telegram proxy, for Telegram traffic only.',connectionOptions:'Connection settings',publicHost:'Server IP or domain for clients',firstPort:'First port',portsInfo:'Following selections use consecutive ports. Busy ports produce an error; existing services stay intact. Allow these TCP ports in your provider firewall; Shadowsocks also uses UDP.',sni:'Reality / FakeTLS target domain',sniInfo:'Must support TLS 1.3 and be reachable from your server. XHTTP is a VLESS transport.',keysPrivate:'Links and QR codes contain private access keys. Share them only with their intended users.',createKeys:'Create connections',loading:'Loading…',creating:'Creating connections…',noConnections:'No connections yet. Create your first connection.',saveQR:'Save QR',showQR:'QR code',enabled:'Enabled',disabled:'Disabled',UNSUPPORTED_EXPORT:'Export this configuration in the web panel.',NO_CLIENTS:'No device keys. Add a client in the panel.',DISABLED:'This key is disabled or expired.',PANEL_ACCESS_FAILED:'Cannot reach the local panel API. Check that Connect Hub is running.',PANEL_AUTH_FAILED:'Panel login failed. Enter your current panel login below.',PANEL_REQUEST_FAILED:'The panel rejected this operation. Check the port, settings and engine logs in the panel.',PORT_IN_USE:'Port already used by another connection or service. Choose another first port.',BUSY:'Wait for the current operation to finish.',created:'Created',partialInfo:'Created connections are saved. Retry only the failed protocols to avoid duplicates.',runtimeInfo:'Creation saves the configuration and asks the panel to apply it. Test the key in your client; external reachability depends on your firewall and network.'});
 Object.assign(strings.ru,{
  connections:'Подключения',manageConnections:'Настроить VPN-подключения',yourServer:'ВАШ СЕРВЕР',connectionsInfo:'Ключи загружаются прямо из панели. При следующем запуске подключитесь к этому серверу, чтобы увидеть их снова.',createNew:'Создать новое',refresh:'Обновить список',saveKeys:'Сохранить все ключи',changedLogin:'Изменили логин или пароль панели?',retry:'Повторить',serverOptions:'Обновление панели',chooseProtocols:'Выберите подключения.',protocolInfo:'Можно выбрать несколько вариантов. Для каждого в панели появятся отдельное подключение и ключ устройства.',deviceName:'Название устройства / подключения',vlessInfo:'TCP + Vision. Универсальное VPN-подключение.',xhttpInfo:'Транспорт XHTTP. Нужен совместимый клиент.',sudokuInfo:'Нативный Sudoku. Нужен клиент с поддержкой Sudoku.',mtprotoInfo:'Прокси только для Telegram.',connectionOptions:'Параметры подключения',publicHost:'IP-адрес или домен сервера для клиентов',firstPort:'Начальный порт',portsInfo:'Следующие варианты используют порты по порядку. Занятые порты дадут ошибку, существующие службы сохранятся. Разрешите эти TCP-порты в файрволе провайдера; для Shadowsocks нужен также UDP.',sni:'Домен назначения Reality / FakeTLS',sniInfo:'Домен должен поддерживать TLS 1.3 и быть доступен с сервера. XHTTP — транспорт VLESS.',keysPrivate:'Ссылки и QR-коды содержат приватные ключи доступа. Передавайте их только нужным пользователям.',createKeys:'Создать подключения',loading:'Загрузка…',creating:'Создание подключений…',noConnections:'Подключений пока нет. Создайте первое.',saveQR:'Сохранить QR',showQR:'QR-код',enabled:'Включено',disabled:'Отключено',UNSUPPORTED_EXPORT:'Экспортируйте эту конфигурацию в веб-панели.',NO_CLIENTS:'Нет ключей устройств. Добавьте клиента в панели.',DISABLED:'Ключ отключён или истёк срок действия.',PANEL_ACCESS_FAILED:'Локальный API панели недоступен. Проверьте, что Connect Hub запущен.',PANEL_AUTH_FAILED:'Не удалось войти в панель. Укажите текущие логин и пароль ниже.',PANEL_REQUEST_FAILED:'Панель отклонила операцию. Проверьте порт, параметры и журналы движка в панели.',PORT_IN_USE:'Порт занят другим подключением или службой. Выберите другой начальный порт.',BUSY:'Дождитесь завершения текущей операции.',created:'Создано',partialInfo:'Успешные подключения сохранены. Повторно выберите только неудачные варианты, чтобы не создать дубликаты.',runtimeInfo:'Конфигурация сохраняется и передаётся панели для применения. Проверьте ключ в клиенте: доступность извне зависит от файрвола и сети.'});
+Object.assign(strings.en,{advancedMode:'Advanced settings',edit:'Edit',saveChanges:'Save changes',INVALID_ADVANCED:'Check the advanced settings and JSON. Reality needs valid target, SNI and matching keys. VLESS encryption requires both decryption and client encryption.'});
+Object.assign(strings.ru,{advancedMode:'Расширенные настройки',edit:'Изменить',saveChanges:'Сохранить изменения',INVALID_ADVANCED:'Проверьте расширенные параметры и JSON. Для Reality нужны цель, SNI и пара ключей. Для шифрования VLESS заполните расшифрование и шифрование клиента.'});
+let editor=null,currentEdit=null;
 let language='en',info=null,activeStep=1,pollTimer=null,clockTimer=null,started=0,stage='preparing',installing=false;
 const t=key=>strings[language][key]||strings[language].OPERATION_FAILED;
 async function api(method,...args){const response=await window.installer[method](...args);if(!response.ok){const error=new Error(response.error);error.code=response.error;throw error;}return response.value;}
-function localize(){document.documentElement.lang=language;document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});$('ru').classList.toggle('selected',language==='ru');$('en').classList.toggle('selected',language==='en');if(info)$('install').textContent=t(info.installed?'update':'install');$('stage-text').textContent=t(stage);if(typeof rows!=='undefined')renderConnections();api('language',language).catch(()=>{});}
+function localize(){if(editor)editor.localize();document.documentElement.lang=language;document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});$('ru').classList.toggle('selected',language==='ru');$('en').classList.toggle('selected',language==='en');if(info)$('install').textContent=t(info.installed?'update':'install');$('stage-text').textContent=t(stage);if(typeof rows!=='undefined')renderConnections();api('language',language).catch(()=>{});}
 function show(section,step){for(const id of ['connection','configuration','progress','result','connections','create-connection'])$(id).hidden=id!==section;document.querySelector('main').scrollTop=0;activeStep=step;document.querySelectorAll('#steps li').forEach(el=>{const n=Number(el.dataset.step);el.classList.toggle('active',n===step);el.classList.toggle('complete',n<step);});$('error').hidden=true;}
 function errorMessage(error){$('error').textContent=t(error.code||'OPERATION_FAILED');$('error').hidden=false;}
 function stopPolling(){clearTimeout(pollTimer);clearInterval(clockTimer);pollTimer=null;clockTimer=null;}
@@ -47,16 +50,17 @@ function renderConnections(){
     const button=document.createElement('button');button.textContent=t(label);button.addEventListener('click',async()=>{try{const value=await api(method,row.id);if(method==='connectionQR'){let img=card.querySelector('img');if(!img){img=document.createElement('img');img.className='key-qr';img.alt=row.name;card.append(img);}img.src=value;}if(method==='copyConnection'){button.textContent=t('copied');setTimeout(()=>button.textContent=t(label),1400);}}catch(error){errorMessage(error);}});actions.append(button);
    }card.append(actions);
   }else{const note=document.createElement('p');note.textContent=t(row.reason);card.append(note);}
+  const edit=document.createElement('button');edit.type='button';edit.className='edit-connection';edit.textContent=t('edit');edit.addEventListener('click',()=>editConnection(row.id));card.append(edit);
   list.append(card);
  }
 }
 async function loadConnections(){
- show('connections',5);connectionsBusy(true);$('connection-status').textContent=t('loading');
+ show('connections',5);connectionsBusy(true);$('connection-list').replaceChildren();$('connection-status').textContent=t('loading');
  try{rows=await api('connections');renderConnections();$('connection-status').textContent=t('runtimeInfo');}catch(error){rows=[];renderConnections();$('connection-status').textContent='';errorMessage(error);}finally{connectionsBusy(false);}
 }
 $('manage-connections').addEventListener('click',loadConnections);
 $('refresh-connections').addEventListener('click',loadConnections);
-$('new-connection').addEventListener('click',()=>{if(connectionWorking)return;$('public-host').value=info?.host||$('host').value;show('create-connection',5);});
+$('new-connection').addEventListener('click',async()=>{if(connectionWorking)return;await editor.ready;currentEdit=null;editor.reset(null);$('quick-settings').hidden=false;$('advanced-mode').checked=false;$('advanced-editor').hidden=true;document.querySelector('.protocols').hidden=false;$('create-submit').textContent=t('createKeys');$('public-host').value=info?.host||$('host').value;show('create-connection',5);});
 $('cancel-create').addEventListener('click',()=>{if(!connectionWorking)show('connections',5);});
 $('hub-settings').addEventListener('click',()=>show('configuration',2));
 $('hub-access').addEventListener('click',async()=>{try{await result(await api('access'));}catch(error){errorMessage(error);}});
@@ -65,13 +69,34 @@ $('panel-auth-form').addEventListener('submit',async event=>{event.preventDefaul
 $('create-form').addEventListener('submit',async event=>{
  event.preventDefault();if(connectionWorking)return;
  const protocols=Array.from(document.querySelectorAll('input[name=protocol]:checked'),el=>el.value);
+ await editor.ready;
  if(!protocols.length){errorMessage({code:'INVALID_OPTIONS'});return;}
  connectionsBusy(true);$('create-submit').textContent=t('creating');$('error').hidden=true;
  try{
-  const result=await api('createConnections',{name:$('device-name').value,host:$('public-host').value,port:Number($('first-port').value),sni:$('target-sni').value,protocols});
+  let advanced;try{advanced=$('advanced-mode').checked?editor.read():{};}catch{throw {code:'INVALID_ADVANCED'};}
+  if(currentEdit){
+   advanced.changes||={};
+   if($('device-name').value!==currentEdit.remark)advanced.changes.remark=$('device-name').value;
+   if(Number($('first-port').value)!==currentEdit.port)advanced.changes.port=Number($('first-port').value);
+   if($('public-host').value!==(currentEdit.shareAddr||info?.host||$('host').value)){advanced.changes.shareAddr=$('public-host').value;advanced.changes.shareAddrStrategy='custom';}
+   rows=await api('updateConnection',{id:currentEdit.id,advanced});currentEdit=null;show('connections',5);renderConnections();$('connection-status').textContent=t('runtimeInfo');return;
+  }
+  const result=await api('createConnections',{advanced,name:$('device-name').value,host:$('public-host').value,port:Number($('first-port').value),sni:$('target-sni').value,protocols});
   rows=result.rows;show('connections',5);renderConnections();
   $('connection-status').textContent=result.outcomes.map(o=>o.protocol.toUpperCase()+' · '+o.port+' — '+t(o.ok?'created':o.error)).join('\n')+'\n\n'+(result.outcomes.some(o=>!o.ok)?t('partialInfo')+'\n':'')+t('runtimeInfo');
  }catch(error){errorMessage(error);}finally{connectionsBusy(false);$('create-submit').textContent=t('createKeys');}
 });
 
 api('rememberedServer').then(value=>{if(value){$('host').value=value.host;$('port').value=value.port;$('username').value=value.username;}}).catch(()=>{});
+
+editor=new window.AdvancedEditor($('advanced-editor'),api,()=>language);
+editor.ready.catch(errorMessage);
+$('advanced-mode').addEventListener('change',()=>{$('advanced-editor').hidden=!$('advanced-mode').checked;});
+async function editConnection(id){
+ if(connectionWorking)return;connectionsBusy(true);
+ try{
+  const value=await api('connectionDetails',id);await editor.ready;currentEdit=value;editor.reset(value);
+  $('quick-settings').hidden=true;$('device-name').value=value.remark;$('public-host').value=value.shareAddr||info?.host||$('host').value;$('first-port').value=value.port;
+  $('advanced-mode').checked=true;$('advanced-editor').hidden=false;document.querySelector('.protocols').hidden=true;$('create-submit').textContent=t('saveChanges');show('create-connection',5);
+ }catch(error){errorMessage(error);}finally{connectionsBusy(false);}
+}

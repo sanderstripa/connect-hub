@@ -4,7 +4,7 @@ Portable Windows x64 alternative to the existing Linux command. The panel still
 runs on a Linux server; Windows only provides the SSH installation interface.
 Use root or a sudo-capable account with password authentication.
 
-The local interface uses bundled Montserrat and two themes, with RU/EN text.
+The local interface uses bundled Onest and two themes, with RU/EN text.
 SSH server fingerprints require confirmation. Passwords are held in memory,
 never added to remote commands, logs or Windows configuration files. A detached,
 root-owned server job preserves progress across a lost SSH connection. Its access
@@ -85,3 +85,19 @@ with `--no-service`, checks actual login/CSRF, all five inbound APIs, generated
 Sudoku keys, native listening sockets, reconnect and busy-port refusal. It does
 not test external networks or client-side handshakes. Windows portable EXE
 execution must additionally be tested on Windows with `test/portable-smoke.cjs`.
+
+## Soulu redesign and advanced editor (0.3 alpha)
+
+Both panel and desktop app now use locally bundled Onest 400/500/600, neutral
+light/dark surfaces, blue actions and green connection states. Saved legacy
+palette choices migrate to Soulu without resetting the selected light/dark mode.
+
+Enable Advanced settings when creating connections, or choose Edit on an
+existing connection. The editor provides Basic, Protocol, Transport, Security,
+Sniffing and Advanced template sections. It includes XHTTP padding, placements,
+headers, XMUX, Sockopt, final masks and QUIC JSON; Reality/TLS, native X25519,
+ML-KEM encryption and ML-DSA key generation. TLS certificate paths refer to files
+on the server. Changes are applied through the authenticated panel API; original
+client keys and unedited fields are retained. Explicit key generation or raw
+JSON changes can intentionally replace key material. Raw templates replace their
+respective section and must keep existing client credentials to preserve access.

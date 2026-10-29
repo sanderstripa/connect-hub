@@ -1,8 +1,7 @@
 /* Connect. Hub visual system, 25 October 2026. */
-@font-face { font-family: Montserrat; src: url('../assets/fonts/montserrat.woff2') format('woff2'); font-weight: 100 900; font-style: normal; font-display: swap; }
-@font-face { font-family: Montserrat; src: url('../assets/fonts/montserrat-italic.woff2') format('woff2'); font-weight: 100 900; font-style: italic; font-display: swap; }
-html, body, *, *::before, *::after { font-family: Montserrat, sans-serif !important; }
-body { --font-mono: Montserrat; background: var(--connect-bg); color: var(--connect-text); }
+@font-face { font-family: Onest; src: url('../assets/fonts/onest.woff2') format('woff2'); font-weight: 100 900; font-style: normal; font-display: swap; }
+html, body, *, *::before, *::after { font-family: Onest, sans-serif !important; }
+body { --font-mono: Onest; background: var(--connect-bg); color: var(--connect-text); }
 body [class*='-page'], body .login-app, body .login-app.is-dark { --bg-page: var(--connect-bg) !important; --bg-card: var(--connect-card) !important; --bg-card-solid: var(--connect-card); --color-text: var(--connect-text); --color-text-subtle: var(--connect-muted); --color-accent: var(--connect-text); --color-border: var(--connect-border); --shadow-card: none; --grid-color: transparent; background: var(--connect-bg) !important; }
 body .login-app::before, body .login-app::after, body .login-content::before, body .login-content::after, body .login-wrapper::before, body .login-wrapper::after { display: none; }
 body .login-card { background: var(--connect-card); border: 1px solid var(--connect-border); box-shadow: none; backdrop-filter: none; }
@@ -60,3 +59,26 @@ body .clients-page .summary-card .dot-blue { background: var(--ant-color-success
 @media (max-width: 767px) {
   body .clients-page .section-page-title, body .inbounds-page .section-page-title { padding-inline-start: 48px; }
 }
+
+/* Soulu: quiet surfaces, blue actions, green connection state. */
+html {font-size:14px;}
+body {font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+body :is(h1,h2,h3,h4,h5,h6,.page-title,.ant-card-head-title,.ant-modal-title){font-weight:600;letter-spacing:-.015em;}
+body :is(button,.ant-btn,.ant-menu-item,.ant-tabs-tab){font-weight:500;}
+body :is(.ant-input,.ant-select,.ant-form,.ant-table,.ant-tabs){font-size:13px;}
+body :is(.ant-layout-header,.ant-layout-sider){background:var(--surface);}
+body :is(.ant-card,.ant-modal-content,.ant-drawer-content){border-color:var(--border);border-radius:12px;}
+body :is(.ant-input,.ant-input-affix-wrapper,.ant-input-number,.ant-picker,.ant-select-selector){background:var(--control-bg);border-color:var(--border);}
+body .ant-input-affix-wrapper .ant-input{background:transparent;}
+body :is(.ant-tabs-tab-active .ant-tabs-tab-btn,.ant-menu-item-selected){color:var(--accent)!important;}
+body .ant-switch-checked .ant-switch-handle::before{background:#fff!important;}
+body .ant-btn-primary:not(.ant-btn-dangerous):not(:disabled){background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500;}
+body .login-app .submit-row .ant-btn-primary:not(:disabled){background:var(--accent);color:#fff;}
+body.light .settings-page{--bg-page:#FCFCFD;--bg-card:#FCFCFD;--color-text:#242628;--control-bg:#F3F4F5;background:#FCFCFD!important;}
+body .sider-brand{padding:16px;min-height:76px;}
+body .ant-table-wrapper .ant-table-thead>tr>th{font-size:12px;font-weight:500;color:var(--text-secondary);}
+body .ant-tag-green{color:var(--status-success);border-color:color-mix(in srgb,var(--status-success) 20%,transparent);}
+body .ant-tabs-nav{font-size:13px;}
+
+body .login-app.is-dark .brand-name,body .login-app .brand-name{background:none!important;-webkit-text-fill-color:var(--text-primary)!important;color:var(--text-primary)!important;font-weight:600}
+body .login-app .brand-accent,body .login-app.is-dark .brand-accent{background:var(--border)!important}

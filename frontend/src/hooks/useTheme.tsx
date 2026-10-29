@@ -26,18 +26,18 @@ export function buildAntdThemeConfig(dark: boolean, _legacyUltra = false, palett
   const {bg,surface:card,text,secondary:muted,border,accent:primary}=colors;
   const config: ThemeConfig = {
     hashed: false, cssVar: { key: 'xui' }, algorithm: dark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
-    token: { fontFamily: 'Montserrat, sans-serif', fontFamilyCode: 'Montserrat, sans-serif',
-      colorBgBase: bg, colorBgLayout: bg, colorBgContainer: card, colorBgElevated: dark ? '#25292d' : '#ffffff',
+    token: { fontFamily: 'Onest, sans-serif', fontFamilyCode: 'Onest, sans-serif',
+      colorBgBase: bg, colorBgLayout: bg, colorBgContainer: card, colorBgElevated: colors.raised,
       colorText: text, colorTextSecondary: muted, colorTextDescription: muted, colorTextTertiary: muted, colorTextPlaceholder: muted,
       colorBorder: border, colorBorderSecondary: border, colorPrimary: primary,
       colorPrimaryHover: dark ? '#ffffff' : '#363b40', colorPrimaryActive: dark ? '#c6c9ce' : '#000000',
-      colorLink: text, colorLinkHover: muted, colorTextLightSolid: dark ? '#101214' : '#ffffff',
+      colorLink: primary, colorLinkHover: colors.hover, colorTextLightSolid: '#ffffff',
       colorPrimaryBg: dark ? '#232629' : '#e9eaec', borderRadius: 8,
-      controlHeight: 34, controlHeightSM: 34, controlHeightLG: 34, fontSize: 13, lineHeight: 1.54 },
+      controlHeight: 34, controlHeightSM: 34, controlHeightLG: 34, fontSize: 14, lineHeight: 1.54 },
     components: {
       Layout: { bodyBg: bg, headerBg: bg, footerBg: bg, siderBg: bg, headerColor: text },
       Menu: { darkItemBg: bg, darkSubMenuItemBg: bg, darkPopupBg: card, darkItemSelectedBg: '#232629', darkItemSelectedColor: '#ffffff', itemSelectedBg: dark ? '#232629' : '#e9eaec', itemSelectedColor: text },
-      Button: { primaryColor: dark ? '#101214' : '#ffffff', primaryShadow: 'none' },
+      Button: { primaryColor: '#ffffff', primaryShadow: 'none' },
       Switch: { colorPrimary: primary, colorPrimaryHover: primary, colorTextQuaternary: border,
         trackHeight: 22, trackHeightSM: 22, trackMinWidth: 44, trackMinWidthSM: 44,
         handleSize: 18, handleSizeSM: 18, trackPadding: 2,
@@ -54,7 +54,6 @@ export function buildAntdThemeConfig(dark: boolean, _legacyUltra = false, palett
       Statistic: { contentFontSize: 17, titleFontSize: 11 },
     },
   };
-  if (palette !== 'classic') {
     Object.assign(config.token!, {colorBgElevated:colors.raised, colorPrimaryHover:colors.hover,
       colorPrimaryActive:colors.hover,colorPrimaryBg:colors.subtle,colorTextLightSolid:colors.foreground,
       colorLink:colors.text,colorLinkHover:colors.hover,colorBorder:colors.controlBorder,colorBorderSecondary:border,
@@ -69,7 +68,6 @@ export function buildAntdThemeConfig(dark: boolean, _legacyUltra = false, palett
     Object.assign(config.components!.Switch!, {colorPrimaryHover:colors.hover,colorTextQuaternary:colors.controlBorder});
     Object.assign(config.components!.Select!, {optionSelectedBg:colors.subtle,optionActiveBg:colors.raised});
     Object.assign(config.components!.Table!, {headerBg:colors.raised,rowHoverBg:colors.subtle,rowSelectedBg:colors.subtle});
-  }
   return config;
 }
 export function pauseAnimationsUntilLeave(elementId: string): void {

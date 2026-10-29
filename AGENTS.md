@@ -46,3 +46,5 @@ User requirements restated explicitly on 2026-10-24:
 Latest user specification, 26 October 2026: four palettes (Classic Monochrome, Graphite & Sage, Obsidian & Champagne, Midnight & Steel), each with light/dark mode. Keep Classic as the migration default and retain saved mode, geometry, data and backend behavior. Palette choice is local to the browser.
 
 Latest user instruction: Midnight & Steel is the default everywhere, including first launch and the Windows panel installer. Light colored primary buttons have white semibold labels with readable contrast.
+
+Current specification, 29 October 2026: replace previous palettes and Montserrat with Soulu design: Onest 400/500/600, neutral white/graphite surfaces, #0671FF actions, #087F5B/#57D6A3 connection state. Migrate saved palettes to Soulu while retaining light/dark mode and all data. Extend the Windows app with structured advanced connection creation/editing for Basic, Protocol, Transport, Security, Sniffing and raw advanced settings. Preserve keys and fields on edits. User authorizes updating and releasing both panel and installer.

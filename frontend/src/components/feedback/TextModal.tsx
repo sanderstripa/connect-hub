@@ -95,7 +95,7 @@ export default function TextModal({
             readOnly
             autoSize={{ minRows: 10, maxRows: 20 }}
             style={{
-              fontFamily: 'Montserrat, sans-serif',
+              fontFamily: 'Onest, sans-serif',
               fontSize: 12,
               overflowY: 'auto',
             }}

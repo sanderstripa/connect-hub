@@ -1,9 +1,11 @@
-name: Desktop installer release
+name: Soulu redesign release
 on:
   push:
     branches: [main]
     paths:
       - 'apps/windows-installer/**'
+      - 'frontend/**'
+      - 'internal/config/version'
       - '.github/workflows/desktop-release.yml'
   workflow_dispatch:
 permissions:
@@ -57,19 +59,44 @@ jobs:
           path: dist/desktop-evidence/*.png
   panel-api:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 40
+    env:
+      CGO_ENABLED: '1'
+      STORYBOOK_DISABLE_TELEMETRY: '1'
+      CONNECT_HUB_TEST_CORE: '0'
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-      - name: Download the currently supported panel package
-        run: |
-          mkdir -p dist
-          curl --fail --location --retry 3 --output dist/connect-hub-linux-amd64.tar.gz https://github.com/sanderstripa/connect-hub/releases/download/v0.1.0-alpha.14/connect-hub-linux-amd64.tar.gz
-          echo '25a7426222fb871a1f4a6c82eeeeb0bbfeb94d8d023dc6e957bf12f94c4f6fe8  dist/connect-hub-linux-amd64.tar.gz' | sha256sum --check
-      - name: Real panel API, native keys, five listeners and reconnect
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --ignore-scripts
+        working-directory: frontend
+      - run: npm run typecheck && npm run lint && npm test -- --project unit --project components && npm run build
+        working-directory: frontend
+      - run: go test ./internal/web -run TestEmbeddedFontsAndRangeRequests -count=1
+      - run: python3 hub/package.py
+      - name: Real native advanced connection creation and editing
         run: python3 apps/windows-installer/test/panel-api-smoke.py "$PWD/dist/connect-hub-linux-amd64.tar.gz"
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - name: Real panel Soulu light/dark, Onest and palette migration
+        run: python3 hub/soulu-smoke.py
+      - uses: actions/upload-artifact@v6
+        with:
+          name: panel-release-binary
+          path: |
+            dist/connect-hub-linux-amd64.tar.gz
+            dist/SHA256SUMS
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: soulu-panel-evidence
+          path: dist/soulu-*.png
   publish:
     needs: [windows, panel-api]
     runs-on: ubuntu-24.04
@@ -81,26 +108,42 @@ jobs:
         with:
           name: desktop-release-binary
           path: release-assets
-      - name: Publish the tested installer as a separate prerelease
+      - uses: actions/download-artifact@v6
+        with:
+          name: panel-release-binary
+          path: panel-assets
+      - name: Publish the tested panel and installer together
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           version=$(node -p "require('./apps/windows-installer/package.json').version")
-          tag="installer-v${version}"
+          tag="v${version}"
+          cp panel-assets/connect-hub-linux-amd64.tar.gz release-assets/
+          cat panel-assets/SHA256SUMS >> release-assets/SHA256SUMS
           cat > release-notes.md <<'NOTES'
-          Connect Hub desktop installer and VPN connection manager.
+          Connect Hub: Soulu redesign for the panel and Windows application.
 
-          - Install the panel and create one or several connections: VLESS Reality, VLESS XHTTP Reality, native Sudoku, Telegram MTProto FakeTLS, and Shadowsocks.
-          - Copy links, show or save private-key QR codes, and export keys to a text file.
-          - Reconnect to an installed server to see its existing connections. Only the SSH endpoint and username are remembered; passwords remain in session memory.
-          - Keep the ordinary panel inbound/client records and preserve unrelated services. Busy ports fail independently without discarding successful connections.
+          - Local Onest 400/500/600, neutral white/graphite light/dark surfaces, blue actions and green connection states. Saved legacy palettes migrate while retaining the selected light/dark mode and panel data.
+          - Advanced desktop create/edit sections: Basic, Protocol, Transport, Security, Sniffing and raw templates. Configure XHTTP modes, padding, headers, placements, XMUX, Sockopt, final masks and QUIC settings.
+          - Native Reality X25519, ML-KEM encryption and ML-DSA key generation. TLS certificate paths refer to server files. Preserve existing client identities and unedited parameters on ordinary edits.
+          - Advanced client parameters are propagated into supported share links and QR codes. Private server keys stay out of share links.
 
-          Validation: Windows source and packaged GUI tests, actual portable EXE startup, plus real CSRF-protected panel APIs, five native listening sockets, key export and reconnect in isolated Linux infrastructure. External client handshakes and provider firewall reachability are not covered.
+          Validated: actual Windows GUI and portable EXE, native CSRF-protected panel APIs, advanced XHTTP/Reality/sniffing editing, ML-KEM/ML-DSA generation, preserved keys and listening sockets; real panel routes in both Soulu themes. External client handshakes and provider firewall reachability are not covered.
 
-          This is an **installer-only alpha release**. The server panel remains on the existing panel release track. Existing complex configurations outside the supported export shapes should be exported through the web panel. Links and QR codes contain private access credentials.
+          Alpha release. Update an existing server with the panel update menu or the installer. Links/QR codes contain private access credentials. Explicit key generation or raw client JSON edits can intentionally change credentials; ordinary field edits preserve them.
           NOTES
           if gh release view "$tag" >/dev/null 2>&1; then
             echo 'A release already exists for this installer version; refusing to replace published binaries.'
             exit 1
           fi
-          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub Setup ${version}" --notes-file release-notes.md --prerelease --latest=false
+          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — Soulu redesign" --notes-file release-notes.md --prerelease --latest=false
+  public-install:
+    needs: publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CONNECT_HUB_TLS_MODE: selfsigned
+    steps:
+      - uses: actions/checkout@v7
+      - name: Exact public install command and preserved-key server update
+        run: python3 hub/release-smoke.py

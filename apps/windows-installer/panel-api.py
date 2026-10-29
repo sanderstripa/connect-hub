@@ -52,6 +52,28 @@ class Panel:
             return self.request('panel/api/inbounds/list')
         if action == 'keys':
             return self.request('panel/api/server/getNewX25519Cert')
+        key_routes = {'vless': 'getNewVlessEnc', 'mldsa': 'getNewmldsa65', 'reality': 'getNewX25519Cert'}
+        if action == 'generate' and request.get('kind') in key_routes:
+            return self.request('panel/api/server/' + key_routes[request['kind']])
+        if action in ('details', 'update'):
+            ident = request.get('id')
+            if not isinstance(ident, int) or ident < 1:
+                raise PanelError('INVALID_CONNECTION')
+            current = self.request('panel/api/inbounds/get/' + str(ident))
+            if current.get('nodeId'):
+                raise PanelError('INVALID_CONNECTION')
+            if action == 'details':
+                return current
+            inbound = request['inbound']
+            if inbound.get('protocol') != current.get('protocol'):
+                raise PanelError('INVALID_CONNECTION')
+            if inbound.get('port') != current.get('port'):
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as check:
+                    try:
+                        check.bind(('0.0.0.0', inbound['port']))
+                    except OSError as exc:
+                        raise PanelError('PORT_IN_USE') from exc
+            return self.request('panel/api/inbounds/update/' + str(ident), inbound)
         if action != 'create':
             raise PanelError('INVALID_CONNECTION')
         inbound = request['inbound']

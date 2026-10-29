@@ -34,5 +34,5 @@ func TestEmbeddedFontsAndRangeRequests(t *testing.T) {
 		if _, ok := file.(io.Seeker); !ok { t.Fatal("embedded font lost seeking") }
 		file.Close()
 	}
-	if checked < 2 { t.Fatal("normal and italic bundled Montserrat fonts missing; build frontend first") }
+	if checked < 1 { t.Fatal("bundled Onest font missing; build frontend first") }
 }

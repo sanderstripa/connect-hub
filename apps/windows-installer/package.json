@@ -1,6 +1,6 @@
 {
   "name": "connect-hub-installer",
-  "version": "0.2.0-alpha.1",
+  "version": "0.3.0-alpha.1",
   "private": true,
   "description": "Connect. Hub server installation wizard",
   "author": "Sander Stripa and Connect Hub contributors",
@@ -38,7 +38,9 @@
       "assets/**",
       "package.json",
       "connections.cjs",
-      "panel-api.py"
+      "panel-api.py",
+      "advanced.cjs",
+      "advanced-fields.cjs"
     ],
     "win": {
       "target": [

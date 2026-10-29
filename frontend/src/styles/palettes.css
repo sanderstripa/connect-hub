@@ -1,5 +1,5 @@
 /* Color only: preserve layout, density and control geometry. */
-body.light .ant-btn-primary:not(:disabled) { font-weight:600; }
+body.light .ant-btn-primary:not(:disabled) { font-weight:500; }
 .palette-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; max-width:800px; }
 .palette-option.ant-radio-wrapper { margin:0; padding:14px; border:1px solid var(--border); border-radius:8px; align-items:center; }
 .palette-option > span:last-child { display:flex; align-items:center; flex-wrap:wrap; gap:12px; min-width:0; }
@@ -11,14 +11,14 @@ html:not([data-palette="classic"]) body [class*='-page'], html:not([data-palette
 html:not([data-palette="classic"]) body :is(.ant-layout-sider,.ant-drawer-content,.sider-nav .ant-menu,.sider-utility .ant-menu) { background:var(--surface); }
 html:not([data-palette="classic"]) body .sider-nav .ant-menu-item-selected { background:var(--accent-subtle); border-color:var(--border); color:var(--text-primary); }
 html:not([data-palette="classic"]) body .sider-nav .ant-menu-item-selected .anticon { color:var(--accent); }
-html:not([data-palette="classic"]) body .ant-btn-primary:not(.ant-btn-dangerous):not(:disabled), html:not([data-palette="classic"]) body .login-app .submit-row .ant-btn-primary:not(:disabled) { background:var(--button-bg); color:var(--accent-foreground); border-color:var(--button-bg); font-weight:600; }
+html:not([data-palette="classic"]) body .ant-btn-primary:not(.ant-btn-dangerous):not(:disabled), html:not([data-palette="classic"]) body .login-app .submit-row .ant-btn-primary:not(:disabled) { background:var(--button-bg); color:var(--accent-foreground); border-color:var(--button-bg); font-weight:500; }
 html:not([data-palette="classic"]) body .ant-btn-primary:not(.ant-btn-dangerous):not(:disabled):hover { background:var(--button-hover); color:var(--accent-hover-foreground); border-color:var(--button-hover); }
 html:not([data-palette="classic"]) body .ant-switch-checked .ant-switch-handle::before { background:var(--accent-foreground); }
 html:not([data-palette="classic"]) body .ant-switch:not(.ant-switch-checked) { background:var(--control-border); }
 html:not([data-palette="classic"]) body .ant-switch:not(.ant-switch-checked) .ant-switch-handle::before { background:var(--surface); }
 html:not([data-palette="classic"]) body :is(.ant-input,.ant-input-affix-wrapper,.ant-input-number,.ant-select-selector,.ant-picker) { border-color:var(--control-border); }
 html:not([data-palette="classic"]) body .ant-input-affix-wrapper > .ant-input { background:transparent; }
-html:not([data-palette="classic"]) body .ant-select-dropdown :is(.ant-select-item-option-active,.ant-select-item-option-selected) { background:var(--accent-subtle)!important; color:var(--text-primary)!important; }
+html:not([data-palette="classic"]) body .ant-select-dropdown :is(.ant-select-item-option-active,.ant-select-item-option-selected) { background:var(--accent-subtle)!important; color:var(--accent)!important; }
 html:not([data-palette="classic"]) body .ant-select-dropdown { background:var(--surface-raised); }
 html:not([data-palette="classic"]) body .ant-btn.ant-btn-background-ghost:not(.ant-btn-dangerous) { background:transparent; color:var(--text-primary); border-color:var(--control-border); }
 html:not([data-palette="classic"]) body .ant-btn.ant-btn-background-ghost:not(.ant-btn-dangerous):hover { background:var(--accent-subtle); }
@@ -49,3 +49,5 @@ html:not([data-palette="classic"]) body .api-docs-page { --sw-bg:var(--surface);
 html:not([data-palette="classic"]) body .swagger-ui .opblock .opblock-summary-method { background:var(--accent-subtle); color:var(--text-primary); border:1px solid var(--border); text-shadow:none; }
 html:not([data-palette="classic"]) body :is(.log-container,.log-modal) { --log-stamp:var(--status-info); --log-debug:var(--status-info); --log-info:var(--status-success); --log-notice:var(--status-success); --log-warning:var(--status-warning); --log-error:var(--status-error); --log-unknown:var(--text-secondary); --log-blocked:var(--status-error); --log-proxy:var(--status-info); --log-divider:var(--border); }
 @media(prefers-reduced-motion:reduce) { .appearance-settings *, html[data-palette] body .ant-radio-wrapper { transition:none!important; animation:none!important; } }
+
+.soulu-preview{display:flex;align-items:center;gap:12px;padding:12px 0;margin-bottom:16px}

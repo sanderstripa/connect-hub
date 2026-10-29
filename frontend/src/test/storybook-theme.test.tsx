@@ -19,7 +19,7 @@ function ThemeToggle() {
   return <button onClick={toggleTheme}>toggle</button>;
 }
 
-test('only light and dark are selectable and both use Montserrat for every token', () => {
+test('only light and dark are selectable and both use Onest for every token', () => {
   localStorage.setItem('isUltraDarkThemeEnabled', 'true');
   const { getByRole } = render(<ThemeProvider><ThemeToggle /></ThemeProvider>);
   expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
@@ -30,8 +30,8 @@ test('only light and dark are selectable and both use Montserrat for every token
   expect(localStorage.getItem('isUltraDarkThemeEnabled')).toBeNull();
   for (const dark of [false, true]) {
     const config = buildAntdThemeConfig(dark);
-    expect(config.token?.fontFamily).toBe('Montserrat, sans-serif');
-    expect(config.token?.fontFamilyCode).toBe('Montserrat, sans-serif');
+    expect(config.token?.fontFamily).toBe('Onest, sans-serif');
+    expect(config.token?.fontFamilyCode).toBe('Onest, sans-serif');
   }
 });
 

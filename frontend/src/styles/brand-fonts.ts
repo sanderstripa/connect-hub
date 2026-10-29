@@ -4,7 +4,7 @@ import './connect-brand.css';
 export function readyBrandFonts(): Promise<unknown> {
   if (!document.fonts?.load) return Promise.resolve();
   return Promise.all([
-    document.fonts.load('400 14px Montserrat', 'Connect. Hub Настройки'),
-    document.fonts.load('600 14px Montserrat', 'Connect. Hub Настройки'),
+    document.fonts.load('400 14px Onest', 'Connect. Hub Настройки'),
+    document.fonts.load('600 14px Onest', 'Connect. Hub Настройки'),
   ]).catch(() => undefined);
 }

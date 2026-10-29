@@ -14,6 +14,9 @@ async function fixture(){
      try{
       const req=JSON.parse(body);let value;
       if(req.action==='list')value=inbounds;
+      else if(req.action==='details')value=inbounds.find(x=>x.id===req.id);
+      else if(req.action==='update'){const i=inbounds.findIndex(x=>x.id===req.id);inbounds[i]={...req.inbound,id:req.id};value=inbounds[i];}
+      else if(req.action==='generate')value=req.kind==='reality'?{privateKey:'fixture-private',publicKey:'fixture-public'}:req.kind==='mldsa'?{seed:'fixture-seed',verify:'fixture-verify'}:{auths:[{label:'ML-KEM-768 native',decryption:'mlkem-server',encryption:'mlkem-client'}]};
       else if(req.action==='keys')value={privateKey:'fixture-private',publicKey:'fixture-public'};
       else if(req.action==='create'){
        const ib={...req.inbound,id:inbounds.length+1},settings=JSON.parse(ib.settings);

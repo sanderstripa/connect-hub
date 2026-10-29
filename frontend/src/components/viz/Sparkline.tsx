@@ -24,8 +24,8 @@ const DEFAULT_STROKE3 = '#a0d911';
 const DEFAULT_MIN_COLOR = '#52c41a';
 const DEFAULT_MAX_COLOR = '#fa541c';
 const GRID_COLOR = 'rgba(128, 128, 140, 0.35)';
-const AXIS_FONT = '10px Montserrat';
-const LABEL_FONT = 'Montserrat';
+const AXIS_FONT = '10px Onest';
+const LABEL_FONT = 'Onest';
 
 interface SparklineProps {
   data: number[];

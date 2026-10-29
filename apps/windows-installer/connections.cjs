@@ -54,13 +54,39 @@ function exportRows(inbounds,defaultHost){
     if(ib.protocol==='sudoku'&&client.sudokuKey){url='sudoku://'+Buffer.from(JSON.stringify({h:address,p:ib.port,k:client.sudokuKey,a:(settings.table||'prefer_ascii').replace(/^prefer_/,''),e:settings.aead||'chacha20-poly1305',m:1080,x:true,hd:true,hm:'auto',hx:'off',hy:'',n:name})).toString('base64url');}
     if(ib.protocol==='mtproto'&&client.secret)url='tg://proxy?'+new URLSearchParams({server:address,port:String(ib.port),secret:client.secret});
     if(ib.protocol==='shadowsocks'&&settings.method==='chacha20-ietf-poly1305'&&client.password&&(!stream.network||['tcp','raw'].includes(stream.network))&&(!stream.security||stream.security==='none'))url='ss://'+Buffer.from(settings.method+':'+client.password).toString('base64url')+'@'+host+':'+ib.port+'#'+encodeURIComponent(name);
-    if(ib.protocol==='vless'&&['tcp','raw','xhttp'].includes(stream.network)&&stream.security==='reality'){
-     const r=stream.realitySettings||{},publicKey=r.settings?.publicKey;
-     if(publicKey&&!r.settings?.mldsa65Verify&&(!settings.encryption||settings.encryption==='none')&&!(settings.fallbacks||[]).length&&!ib.fallbackParent){
-      const params=new URLSearchParams({type:stream.network,security:'reality',encryption:'none',pbk:publicKey,fp:r.settings?.fingerprint||'chrome',sni:r.settings?.serverName||r.serverNames?.[0]||'',sid:r.shortIds?.[0]||'',spx:r.settings?.spiderX||'/'});
-      if(client.flow)params.set('flow',client.flow);
-      if(stream.network==='xhttp'){params.set('path',stream.xhttpSettings?.path||'/');params.set('mode',stream.xhttpSettings?.mode||'auto');if(stream.xhttpSettings?.host)params.set('host',stream.xhttpSettings.host);if(stream.xhttpSettings?.extra)params.set('extra',JSON.stringify(stream.xhttpSettings.extra));}
-      url='vless://'+client.id+'@'+host+':'+ib.port+'?'+params+'#'+encodeURIComponent(name);
+    if(ib.protocol==='vless'&&['tcp','raw','xhttp','ws','grpc','httpupgrade'].includes(stream.network)&&['reality','tls','none',undefined].includes(stream.security)){
+     const r=stream.realitySettings||{},tls=stream.tlsSettings||{};
+     if(!(settings.fallbacks||[]).length){
+      const params=new URLSearchParams({type:stream.network,security:stream.security||'none',encryption:settings.encryption||'none'});
+      if(stream.security==='reality'){
+       params.set('pbk',r.settings?.publicKey||'');params.set('fp',r.settings?.fingerprint||'chrome');params.set('sni',r.settings?.serverName||r.serverNames?.[0]||'');params.set('sid',r.shortIds?.[0]||'');params.set('spx',r.settings?.spiderX||'/');
+       if(r.settings?.mldsa65Verify)params.set('pqv',r.settings.mldsa65Verify);
+      }
+      if(stream.security==='tls'){
+       if(tls.serverName)params.set('sni',tls.serverName);
+       if(tls.alpn?.length)params.set('alpn',tls.alpn.join(','));
+       if(tls.settings?.fingerprint)params.set('fp',tls.settings.fingerprint);
+       if(tls.settings?.pinnedPeerCertSha256?.length)params.set('pcs',tls.settings.pinnedPeerCertSha256.join(','));
+       if(tls.settings?.echConfigList)params.set('ech',tls.settings.echConfigList);
+       if(tls.settings?.verifyPeerCertByName)params.set('vcn',tls.settings.verifyPeerCertByName);
+      }
+      if(stream.finalmask){const fm=structuredClone(stream.finalmask);for(const layer of ['tcp','udp'])if(Array.isArray(fm[layer]))fm[layer]=fm[layer].filter(m=>m.type!=='filter');if(Object.keys(fm).length)params.set('fm',JSON.stringify(fm));}
+      if(client.flow&&['tcp','raw'].includes(stream.network)&&stream.security!=='none'&&!ib.disableFlow)params.set('flow',client.flow);
+      if(stream.network==='xhttp'){
+       const x=stream.xhttpSettings||{};params.set('path',x.path||'/');params.set('mode',x.mode||'auto');if(x.host)params.set('host',x.host);
+       const extra={};
+       for(const key of ['mode','xPaddingBytes','uplinkHTTPMethod','sessionIDPlacement','sessionIDKey','sessionIDTable','sessionIDLength','seqPlacement','seqKey','uplinkDataPlacement','uplinkDataKey','scMaxEachPostBytes'])if(x[key]&&x[key]!=='1000000')extra[key]=x[key];
+       if(x.xPaddingBytes)params.set('x_padding_bytes',x.xPaddingBytes);
+       if(x.xPaddingObfsMode){extra.xPaddingObfsMode=true;for(const key of ['xPaddingKey','xPaddingHeader','xPaddingPlacement','xPaddingMethod'])if(x[key])extra[key]=x[key];}
+       if(x.headers&&Object.keys(x.headers).length)extra.headers=x.headers;
+       if(extra.sessionIDPlacement)extra.sessionPlacement=extra.sessionIDPlacement;
+       if(extra.sessionIDKey)extra.sessionKey=extra.sessionIDKey;
+       for(const key of ['xmux','noSSEHeader','scMinPostsIntervalMs'])if(x[key])extra[key]=x[key];
+       if(Object.keys(extra).length)params.set('extra',JSON.stringify(extra));
+      }
+      if(['ws','httpupgrade'].includes(stream.network)){const n=stream[stream.network+'Settings']||{};params.set('path',n.path||'/');if(n.host)params.set('host',n.host);}
+      if(stream.network==='grpc'){const g=stream.grpcSettings||{};params.set('serviceName',g.serviceName||'');if(g.authority)params.set('authority',g.authority);if(g.multiMode)params.set('mode','multi');}
+      if(stream.security!=='reality'||r.settings?.publicKey)url='vless://'+client.id+'@'+host+':'+ib.port+'?'+params+'#'+encodeURIComponent(name);
      }
     }
    }
