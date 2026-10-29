@@ -78,7 +78,7 @@ export function pauseAnimationsUntilLeave(elementId: string): void {
 interface ThemeContextValue { isDark: boolean; isUltra: boolean; palette: PaletteId; setPalette: (id: PaletteId) => void; toggleTheme: () => void; toggleUltra: () => void; antdThemeConfig: ThemeConfig; }
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [isDark, setIsDark] = useState(initialDark);
+  const [isDark, setIsDark] = useState(()=>{try{return localStorage.getItem('dark-mode')!=='false';}catch{return initialDark;}});
   const [palette,setPaletteState] = useState<PaletteId>(savedPalette);
   const setPalette=useCallback((id: PaletteId)=>setPaletteState(parsePalette(id)),[]);
   useLayoutEffect(() => { applyDom(isDark,palette); try {localStorage.setItem('dark-mode', String(isDark)); localStorage.setItem(PALETTE_KEY,palette);} catch { /* Private storage must not break rendering. */ } }, [isDark,palette]);

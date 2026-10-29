@@ -81,6 +81,7 @@ test('preserves unrelated body classes when applying the Storybook theme', () =>
 });
 
 test('preserves unrelated body classes when applying the panel theme', () => {
+  localStorage.setItem('dark-mode', 'true');
   document.body.className = 'panel-fixture';
   const message = document.createElement('div');
   message.id = 'message';
