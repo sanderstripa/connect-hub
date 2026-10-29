@@ -8,7 +8,7 @@ protocol.registerSchemesAsPrivileged([{scheme:'ch-install',privileges:{standard:
 const cache=path.join(os.tmpdir(),'connect-hub-installer-'+randomBytes(8).toString('hex'));
 fs.mkdirSync(cache,{recursive:true});app.setPath('userData',cache);app.setPath('sessionData',path.join(cache,'session'));app.setAppLogsPath(path.join(cache,'logs'));
 app.setAppUserModelId('com.sanderstripa.connecthub.installer');
-let window,language='en',lastResult=null,busy=false;
+let window,language='en',lastResult=null,busy=false,removing=false;
 const trusted=new Map();
 const connection=new InstallerConnection({trustHost:async({host,port,fingerprint})=>{
  const target=host+':'+port;if(trusted.get(target)===fingerprint)return true;
@@ -54,7 +54,7 @@ register('uninstall',()=>withConnections(async()=>{
  const ru=language==='ru';
  const answer=await dialog.showMessageBox(window,{type:'warning',title:ru?'Удалить Connect Hub':'Remove Connect Hub',message:(ru?'Удалить Connect Hub с сервера ':'Remove Connect Hub from ')+connection.secret.host+'?',detail:ru?'Будут удалены панель, все её подключения, ключи, данные и сертификаты в каталогах Connect Hub. VPN перестанет работать. Сначала сохраните резервную копию базы через панель, если хотите восстановить настройки. BBR, подкачка, внешние базы данных и другие службы сохранятся.':'The panel, all its connections, keys, data and certificates in Connect Hub directories will be deleted. VPN will stop working. Save a database backup in the panel first if you want to restore settings. BBR, swap, external databases and other services are retained.',buttons:ru?['Отмена','Удалить с сервера']:['Cancel','Remove from server'],defaultId:0,cancelId:0,noLink:true});
  if(answer.response!==1)return {removed:false};
- const result=await connection.uninstall();lastResult=null;connectionRows=[];return result;
+ removing=true;try{const result=await connection.uninstall();lastResult=null;connectionRows=[];return result;}finally{removing=false;}
 }));
 register('connections',()=>withConnections(async()=>{connectionRows=await connection.connections();return connectionRows;}));
 register('createConnections',input=>withConnections(async()=>{const result=await connection.createConnections(input);connectionRows=result.rows;return result;}));
@@ -95,6 +95,7 @@ app.whenReady().then(async()=>{
  window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
  window.webContents.on('will-navigate',(event,url)=>{if(url!==origin)event.preventDefault();});
  window.on('close',event=>{
+  if(removing){event.preventDefault();return;}
   if(!busy)return;
   event.preventDefault();const ru=language==='ru';
   dialog.showMessageBox(window,{type:'question',message:ru?'Установка продолжится на сервере. Закрыть окно?':'Installation will continue on the server. Close this window?',detail:ru?'Повторно подключитесь к серверу, чтобы увидеть результат.':'Reconnect to the server to see the result.',buttons:ru?['Остаться','Закрыть']:['Stay','Close'],defaultId:0,cancelId:0}).then(answer=>{if(answer.response===1){busy=false;window.close();}});

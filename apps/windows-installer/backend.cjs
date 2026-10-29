@@ -132,7 +132,7 @@ echo CH_STARTED=1`);
  async poll(){
   if(!/^job\.[a-f0-9]{32}$/.test(this.job||''))throw failure('NO_JOB');
   const state=resultState(await this.execRoot(`set -eu;test ! -L ${JOB_ROOT};test -f ${JOB_ROOT}/.connect-hub-owned;test ! -L ${JOB_ROOT}/${this.job};cat ${JOB_ROOT}/${this.job}/state.json`));
-  this.lastState=state.state;return state;
+  this.lastState=state.state;if(state.state==='complete')this.installed=true;return state;
  }
  async uninstall(){
   if(!this.connected)throw failure('DISCONNECTED');
