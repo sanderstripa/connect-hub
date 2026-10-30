@@ -46,13 +46,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $digest = (Get-FileHash -Algorithm SHA256 ../../dist/windows-installer/Connect-Hub-Setup.exe).Hash.ToLowerInvariant()
           [IO.File]::WriteAllText((Join-Path (Resolve-Path ../../dist/windows-installer) 'SHA256SUMS'), "$digest  Connect-Hub-Setup.exe`n", [Text.UTF8Encoding]::new($false))
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: desktop-release-binary
           path: |
             dist/windows-installer/Connect-Hub-Setup.exe
             dist/windows-installer/SHA256SUMS
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: desktop-release-evidence
@@ -88,13 +88,13 @@ jobs:
         working-directory: frontend
       - name: Real panel Soulu light/dark, Onest and palette migration
         run: python3 hub/soulu-smoke.py
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: panel-release-binary
           path: |
             dist/connect-hub-linux-amd64.tar.gz
             dist/SHA256SUMS
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: soulu-panel-evidence
