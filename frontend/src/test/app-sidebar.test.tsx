@@ -67,7 +67,7 @@ test('keeps all navigation groups and footer actions and opens the existing sear
     expect(screen.getByRole('button', { name })).not.toBeNull();
   expect(
     view.container.querySelector('.rail-utilities')?.querySelectorAll('.rail-button').length,
-  ).toBe(3);
+  ).toBe(4);
   fireEvent.click(screen.getByRole('button', { name: /Command Palette/ }));
   expect(commandPaletteStore.getSnapshot()).toBe(true);
 });

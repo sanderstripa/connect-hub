@@ -1454,7 +1454,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                               {t('pages.clients.selectedCount', { count: selectedRowKeys.length })}
                             </Tag>
                           )}
-                          <Dropdown
+                          {(!explorer || selectedRowKeys.length > 0) && (<Dropdown
                             disabled={inboundId !== undefined && selectedRowKeys.length === 0}
                             trigger={['click']}
                             placement="bottomRight"
@@ -1561,7 +1561,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                             <Button icon={<MoreOutlined aria-hidden />} aria-label={t('more')}>
                               {!isMobile && t('more')}
                             </Button>
-                          </Dropdown>
+                          </Dropdown>) }
                           {selectedRowKeys.length > 0 && (
                             <Button
                               danger

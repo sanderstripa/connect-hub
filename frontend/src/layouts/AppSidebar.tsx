@@ -66,11 +66,6 @@ export default function AppSidebar() {
   const settingsChildren = useMemo<NonNullable<MenuProps['items']>>(() => {
     const children: NonNullable<MenuProps['items']> = [
       {
-        key: '/settings#appearance',
-        icon: <SettingOutlined aria-hidden />,
-        label: t('appearance.title'),
-      },
-      {
         key: '/settings#general',
         icon: <SettingOutlined aria-hidden />,
         label: t('pages.settings.panelSettings'),
@@ -260,6 +255,20 @@ export default function AppSidebar() {
             })}
           </nav>
           <div className="rail-utilities">
+            <Tooltip title={t('commandPalette.title')} placement="right">
+              <button
+                type="button"
+                className="global-search-trigger rail-button"
+                aria-label={t('commandPalette.title')}
+                aria-keyshortcuts="Control+k Meta+k"
+                onClick={() => {
+                  setOpenMenu(null);
+                  openSearch();
+                }}
+              >
+                <SearchOutlined aria-hidden />
+              </button>
+            </Tooltip>
             <Tooltip title={t('menu.theme')} placement="right">
               <button
                 id="theme-cycle"
@@ -301,20 +310,6 @@ export default function AppSidebar() {
           </div>
         </div>
       </aside>
-      <Tooltip title={t('commandPalette.title')} placement="bottomRight">
-        <button
-          type="button"
-          className="global-search-trigger rail-button"
-          aria-label={t('commandPalette.title')}
-          aria-keyshortcuts="Control+k Meta+k"
-          onClick={() => {
-            setOpenMenu(null);
-            openSearch();
-          }}
-        >
-          <SearchOutlined aria-hidden />
-        </button>
-      </Tooltip>
     </>
   );
 }

@@ -176,7 +176,7 @@ CH_ACCESS`));
    try{
     const profiles=await this.panelRequest({action:'profiles',profiles:requests.slice(0,500)});
     const access=await this.access(),base=panelURL(access.url);
-    for(const row of exported){const req=row.profileRequest,profile=req&&profiles[req.inboundId+':'+req.clientId];if(profile?.path?.startsWith('sudoku-import/'))row.shadowrocketUrl='shadowrocket://add/'+new URL(profile.path,base).href;}
+    for(const row of exported){const req=row.profileRequest,profile=req&&profiles[req.inboundId+':'+req.clientId];if(profile?.path?.startsWith('sudoku-import/'))row.shadowrocketUrl=new URL(profile.path,base).href;}
    }catch{} // Old panels still expose their original Sudoku links; prompt to update for profile export.
   }
   return exported;

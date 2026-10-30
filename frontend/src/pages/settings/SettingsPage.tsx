@@ -24,7 +24,6 @@ import { useAllSettings } from '@/api/queries/useAllSettings';
 import { AllSettingSchema } from '@/schemas/setting';
 import AppSidebar from '@/layouts/AppSidebar';
 import GeneralTab from './GeneralTab';
-import AppearanceTab from './AppearanceTab';
 import SecurityTab from './SecurityTab';
 import TelegramTab from './TelegramTab';
 import EmailTab from './EmailTab';
@@ -39,7 +38,6 @@ interface ApiMsg {
 }
 
 const tabSlugs = [
-  'appearance',
   'general',
   'security',
   'telegram',
@@ -209,7 +207,6 @@ export default function SettingsPage() {
 
   const categoryBody = useMemo(() => {
     switch (activeSlug) {
-      case 'appearance': return <AppearanceTab />;
       case 'security':
         return (
           <SecurityTab
@@ -275,7 +272,7 @@ export default function SettingsPage() {
                   )}
 
                   <Row gutter={[isMobile ? 8 : 16, isMobile ? 0 : 12]}>
-                    {activeSlug !== 'appearance' && <Col span={24}>
+                    <Col span={24}>
                       <Card hoverable>
                         <Row className="header-row">
                           <Col xs={24} sm={10} className="header-actions">
@@ -299,7 +296,7 @@ export default function SettingsPage() {
                           </Col>
                         </Row>
                       </Card>
-                    </Col>}
+                    </Col>
 
                     <Col span={24}>
                       <Card hoverable>{categoryBody}</Card>

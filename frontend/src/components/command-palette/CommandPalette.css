@@ -644,8 +644,8 @@ body .command-palette-item-title { font-size: 13px; line-height: 18px; font-weig
 body .command-palette-item-subtitle { font-size: 12px; line-height: 16px; color: var(--connect-muted) !important; }
 body .command-palette-footer { padding: 8px 12px; font-size: 11px; color: var(--connect-muted); }
 
-/* Global search opens beside its top-right trigger, reusing the real index. */
-.command-palette-backdrop{justify-content:flex-end;padding:56px 20px 16px 68px;background:rgba(0,0,0,.12);backdrop-filter:none;-webkit-backdrop-filter:none}
+/* Global search opens beside the bottom-left utility rail, reusing the real index. */
+.command-palette-backdrop{justify-content:flex-start;align-items:flex-end;padding:16px 16px 16px 68px;background:rgba(0,0,0,.12);backdrop-filter:none;-webkit-backdrop-filter:none}
 .command-palette-backdrop.light{background:rgba(0,0,0,.06)}
-.command-palette-modal{width:520px;max-width:100%;max-height:calc(100dvh - 72px)}
+.command-palette-modal{width:520px;max-width:100%;max-height:calc(100dvh - 32px)}
 @media(max-width:575px){.command-palette-backdrop{padding-right:12px;padding-left:64px}.command-palette-header{padding:12px}.command-palette-footer{flex-wrap:wrap}}

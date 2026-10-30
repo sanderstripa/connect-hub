@@ -203,11 +203,11 @@ function SudokuQrPanel(props: QrPanelProps) {
     setAttempt(value => value + 1);
   }
   return <div>
-    <Segmented block value={variant} onChange={setVariant} options={[{label: 'Sudoku', value: 'standard'}, {label: 'Shadowrocket · Clash', value: 'shadowrocket'}]} style={{ marginBottom: 16 }} />
+    <Segmented block value={variant} onChange={setVariant} options={[{label: 'Sudoku', value: 'standard'}, {label: 'YAML · Shadowrocket', value: 'shadowrocket'}]} style={{ marginBottom: 16 }} />
     {variant === 'standard' ? <QrPanelContent {...props} /> : <Spin spinning={loading}>
       <Alert type="info" showIcon title={t('connections.shadowrocketHint')} style={{ marginBottom: 16 }} />
       {profile ? <>
-        <QrPanelContent {...props} value={'shadowrocket://add/' + profile.url} remark={(props.remark || 'Sudoku') + ' · Shadowrocket'} />
+        <QrPanelContent {...props} value={profile.url} remark={(props.remark || 'Sudoku') + ' · Shadowrocket'} />
         <Button onClick={() => void ClipboardManager.copyText(profile.url)}>{t('connections.copyProfileURL')}</Button>{' '}
         <Button onClick={() => FileManager.downloadTextFile(profile.config, 'Connect-Hub-Sudoku.yaml')}>{t('download')} YAML</Button>
       </> : !loading && <Alert type="warning"

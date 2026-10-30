@@ -14,7 +14,7 @@ async function fixture(){
      try{
       const req=JSON.parse(body);let value;
       if(req.action==='list')value=inbounds;
-      else if(req.action==='profiles')value=Object.fromEntries(req.profiles.map(p=>[p.inboundId+':'+p.clientId,{path:'sudoku-import/fixture/signed',config:'proxies: []'}]));
+      else if(req.action==='profiles')value=Object.fromEntries(req.profiles.map(p=>[p.inboundId+':'+p.clientId,{path:'sudoku-import/fixture/signed.yaml',config:'proxies: []'}]));
       else if(req.action==='details')value=inbounds.find(x=>x.id===req.id);
       else if(req.action==='update'){const i=inbounds.findIndex(x=>x.id===req.id);inbounds[i]={...req.inbound,id:req.id};value=inbounds[i];}
       else if(req.action==='generate')value=req.kind==='reality'?{privateKey:'fixture-private',publicKey:'fixture-public'}:req.kind==='mldsa'?{seed:'fixture-seed',verify:'fixture-verify'}:{auths:[{label:'ML-KEM-768 native',decryption:'mlkem768x25519plus.native.600s.server',encryption:'mlkem768x25519plus.native.0rtt.client'}]};

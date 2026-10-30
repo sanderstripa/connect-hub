@@ -78,7 +78,7 @@ register('saveConnections',async()=>{
  const rows=connectionRows.filter(row=>row.enabled&&row.url);
  if(!rows.length)throw new Error('No connections');
  const file=await dialog.showSaveDialog(window,{defaultPath:'Connect-Hub-keys.txt',filters:[{name:'Text',extensions:['txt']}]});
- if(!file.canceled&&file.filePath)await fs.promises.writeFile(file.filePath,rows.map(row=>row.name+'\n'+row.url+(row.shadowrocketUrl?'\nShadowrocket · Clash\n'+row.shadowrocketUrl:'')).join('\n\n')+'\n',{mode:0o600});
+ if(!file.canceled&&file.filePath)await fs.promises.writeFile(file.filePath,rows.map(row=>row.name+'\n'+row.url+(row.shadowrocketUrl?'\nYAML · Shadowrocket\n'+row.shadowrocketUrl:'')).join('\n\n')+'\n',{mode:0o600});
 });
 register('minimize',()=>window.minimize());
 register('close',()=>window.close());

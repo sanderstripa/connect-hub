@@ -123,20 +123,20 @@ jobs:
           cp panel-assets/connect-hub-linux-amd64.tar.gz release-assets/
           cat panel-assets/SHA256SUMS >> release-assets/SHA256SUMS
           cat > release-notes.md <<'NOTES'
-          Compact navigation for Connect Hub.
+          Simplify the interface and match Sudoku UI subscription export.
 
-          - Keep a permanent 56px icon rail with the C. brand. Hover shows labels without expanding the rail; click opens nested menus with keyboard, outside-click and Escape dismissal.
-          - Move theme, GitHub and logout to the footer. Theme changes immediately and stays saved.
-          - Move the existing global search to the upper-right corner. Keep Ctrl+K, real section/settings/client/inbound results and keyboard selection; include Appearance settings.
-          - Preserve the two-column Connections workspace, inline client details, local searches and every existing route. Dashboard graphs, backend APIs and protocol configuration are unchanged.
+          - Move global search into the bottom-left utility rail above theme, GitHub and logout; retain Ctrl+K and real search results. Remove redundant Appearance settings.
+          - Remove the Dashboard connections-count block, inbound search, All keys button and the unselected-key More menu beside Create key. Preserve inbound cards, client details, local client search and selected-key bulk actions.
+          - Export Sudoku as two links: original compact URI and direct .yaml subscription URL, following sanderstripa/sudoku-ui at a47140ffe8099392c4b14e23e7956f96fbf19dba. The second QR contains the URL itself, without a shadowrocket://add/ wrapper. The YAML includes the proxy group and MATCH routing rule.
+          - Apply the same export to the web panel and Windows app. Existing signed profile URLs and device keys remain valid; access and revocation checks are preserved.
 
-          Validation: all nested menu routes, selected state, tooltips, click/repeat-click/outside/Escape dismissal, live theme and persisted preference, global search, 390/768/1024px viewport bounds, scoped Connections clients and QR in both themes. Includes the full frontend suite, packaged Windows EXE and public installation/update/removal checks with existing keys preserved.
+          Validation includes frontend tests/typecheck/lint/build, complete YAML/credential/revocation regressions, real browser navigation and QR in both themes, Windows source/packaged GUI and public installation/update/removal. Real iPhone import/handshake is not claimed; this matches the user's working Sudoku UI export.
           NOTES
           if gh release view "$tag" >/dev/null 2>&1; then
             echo 'A release already exists for this installer version; refusing to replace published binaries.'
             exit 1
           fi
-          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — Compact navigation" --notes-file release-notes.md --prerelease --latest=false
+          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — Sudoku subscriptions and cleaner interface" --notes-file release-notes.md --prerelease --latest=false
   public-install:
     needs: publish
     runs-on: ubuntu-24.04

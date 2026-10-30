@@ -1,13 +1,4 @@
 {
-  "appearance": {
-    "title": "Giao diện",
-    "subtitle": "Chọn bảng màu và chế độ hiển thị.",
-    "palette": "Bảng màu",
-    "mode": "Chế độ hiển thị",
-    "local": "Lưu trong trình duyệt này. Không thay đổi cài đặt máy chủ.",
-    "light": "Sáng",
-    "dark": "Tối"
-  },
   "username": "Tên người dùng",
   "password": "Mật khẩu",
   "login": "Đăng nhập",
@@ -2865,14 +2856,13 @@
   },
   "connections": {
     "keys": "Keys and clients",
-    "shadowrocketHint": "For Shadowrocket 2.2.92+. The QR code adds a single-connection profile. This panel address must be reachable from the iPhone.",
+    "shadowrocketHint": "Direct YAML subscription, as in Sudoku UI. Add the URL as a subscription in Shadowrocket. The panel must be reachable from your phone; HTTPS requires a trusted certificate.",
     "copyProfileURL": "Copy profile URL",
     "profileUnavailable": "This key profile is unavailable. Check that the inbound and key are enabled, not revoked and not expired.",
     "intro": "Choose an inbound on the left. Manage its keys, clients and settings on the right.",
     "profileRequestFailed": "Could not load the profile. Try again.",
     "profileLinkUnavailable": "This saved link has no profile export identity. Reopen the QR code from the key list.",
     "addInbound": "Create inbound",
-    "findInbound": "Find inbound",
     "allKeys": "All keys",
     "allKeysHint": "Search and bulk-manage keys across all inbounds.",
     "keyCount": "Keys: {count}",

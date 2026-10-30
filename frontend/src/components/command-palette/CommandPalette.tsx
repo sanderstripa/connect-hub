@@ -410,13 +410,6 @@ export default function CommandPalette() {
 
     const settingsSubSections = [
       {
-        path: '/settings#appearance',
-        title: `${t('menu.settings')} · ${t('appearance.title')}`,
-        subtitle: t('appearance.title'),
-        keywords: ['appearance', 'theme', 'light', 'dark', 'оформление', 'тема'],
-        icon: <SettingOutlined aria-hidden />,
-      },
-      {
         path: '/settings#general',
         title: `${t('menu.settings')} · ${t('pages.settings.panelSettings')}`,
         subtitle: t('pages.settings.panelSettings'),

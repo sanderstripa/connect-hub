@@ -32,8 +32,8 @@ function profileVisibility(){
  if(recommended){$('target-sni').value='booking.com';}else if($('target-sni').value==='booking.com')$('target-sni').value='www.cloudflare.com';
  $('target-sni').readOnly=recommended;
 }
-Object.assign(strings.en,{shadowrocketInfo:'Shadowrocket 2.2.92+: Clash profile import. Requires a reachable panel HTTPS address and a trusted certificate. iPhone import needs device validation.',profileUnavailable:'Update the panel to generate the additional import link.'});
-Object.assign(strings.ru,{shadowrocketInfo:'Shadowrocket 2.2.92+: импорт Clash-профиля. Нужны доступ к HTTPS-адресу панели и доверенный сертификат. Импорт на iPhone требует проверки.',profileUnavailable:'Обновите панель для получения дополнительной ссылки импорта.'});
+Object.assign(strings.en,{shadowrocketInfo:'Direct YAML subscription, as in Sudoku UI. Add its URL as a subscription in Shadowrocket. The panel must be reachable; HTTPS needs a trusted certificate.',profileUnavailable:'Update the panel to generate the additional import link.'});
+Object.assign(strings.ru,{shadowrocketInfo:'Прямая подписка YAML, как в Sudoku UI. Добавьте URL как подписку в Shadowrocket. Панель должна быть доступна; для HTTPS нужен доверенный сертификат.',profileUnavailable:'Обновите панель для получения дополнительной ссылки импорта.'});
 let editor=null,currentEdit=null;
 let language='en',info=null,activeStep=1,pollTimer=null,clockTimer=null,started=0,stage='preparing',installing=false;
 const t=key=>strings[language][key]||strings[language].OPERATION_FAILED;
@@ -76,7 +76,7 @@ function renderConnections(){
    }card.append(actions);
   }else{const note=document.createElement('p');note.textContent=t(row.reason);card.append(note);}
   if(row.protocol==='sudoku'&&row.enabled){
-   const title=document.createElement('strong');title.textContent='Shadowrocket · Clash';card.append(title);
+   const title=document.createElement('strong');title.textContent='YAML · Shadowrocket';card.append(title);
    const note=document.createElement('small');note.textContent=t('shadowrocketInfo');card.append(note);
    if(row.shadowrocketUrl){
     const field=document.createElement('input');field.className='shadowrocket-key';field.readOnly=true;field.value=row.shadowrocketUrl;card.append(field);

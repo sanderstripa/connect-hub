@@ -11,7 +11,7 @@ vi.mock('antd', async (original) => ({
 }));
 
 const compact = { i: 7, c: 'existing-client', h: '203.0.113.7', p: 18443, k: 'existing-private-device-key', n: 'iPhoneSudoku' };
-const path = 'sudoku-import/device-payload/signed-token';
+const path = 'sudoku-import/device-payload/signed-token.yaml';
 const profile = { path, config: 'proxies:\n  - type: sudoku\n    key: existing-private-device-key\n' };
 let network: ReturnType<typeof vi.fn>;
 
@@ -31,13 +31,13 @@ afterEach(() => { vi.unstubAllGlobals(); delete window.X_UI_BASE_PATH; document.
 
 function open(value = 'sudoku://' + Base64.encode(JSON.stringify(compact), true)) {
   renderWithProviders(<QrPanel value={value} remark="iPhoneSudoku" />);
-  fireEvent.click(screen.getByText('Shadowrocket · Clash', { exact: true }));
+  fireEvent.click(screen.getByText('YAML · Shadowrocket', { exact: true }));
 }
 
 test('existing Sudoku key exports from the QR window using JSON, CSRF and the private panel base path', async () => {
   open();
   await screen.findByRole('button', { name: 'Copy profile URL' });
-  expect(screen.getByTestId('encoded-qr').textContent).toBe('shadowrocket://add/' + window.location.origin + '/private-panel/' + path);
+  expect(screen.getByTestId('encoded-qr').textContent).toBe(window.location.origin + '/private-panel/' + path);
   const [url, init] = network.mock.calls[0] as [string, RequestInit];
   expect(url).toBe('/private-panel/panel/hub/api/sudoku-profiles');
   expect(new Headers(init.headers).get('X-CSRF-Token')).toBe('session-token');

@@ -9,19 +9,15 @@
 .rail-button.is-active{color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--bg-card))}
 .rail-button:focus-visible,.rail-brand:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .rail-utilities{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--border);width:100%;align-items:center}
-.global-search-trigger{position:fixed;top:12px;right:20px;z-index:220;background:var(--bg-card);border-color:var(--border);width:34px;height:34px}
-/* Reserve only the title's trailing corner, without changing page content. */
-.content-area>.section-page-title,.content-area>.page-title{padding-right:44px}
 .rail-submenu{max-width:calc(100vw - 68px)}
 .rail-submenu .ant-dropdown-menu{max-height:calc(100dvh - 24px);overflow-y:auto;min-width:min(220px,calc(100vw - 68px));background:var(--surface-raised);border:1px solid var(--border)}
 .rail-submenu .ant-dropdown-menu-item{white-space:normal;overflow-wrap:anywhere;font-size:13px}
-@media(max-width:575px){.global-search-trigger{right:12px}.rail-brand{height:52px}.rail-nav{gap:4px}.rail-submenu .ant-dropdown-menu{min-width:min(200px,calc(100vw - 68px))}}
+@media(max-width:575px){.rail-brand{height:52px}.rail-nav{gap:4px}.rail-submenu .ant-dropdown-menu{min-width:min(200px,calc(100vw - 68px))}}
 @media(max-height:500px){.rail-nav{gap:0;padding:2px 0}.rail-brand{height:40px;min-height:40px}.rail-button{height:34px}.rail-utilities{gap:0;padding:2px 0}}
 /* Ant Layout previously inferred this from Layout.Sider; the semantic rail
    keeps the same horizontal shell explicitly, including mobile widths. */
 .ant-layout:has(>.ant-sidebar){flex-direction:row}
 .ant-layout:has(>.ant-sidebar)>.content-shell{min-width:0;flex:1}
 @media(max-width:575px){
-  .ant-layout:has(>.ant-sidebar)>.content-shell .section-page-title{padding-inline-start:0;padding-inline-end:44px}
-  .connections-intro{padding-right:40px}
+  .ant-layout:has(>.ant-sidebar)>.content-shell .section-page-title{padding-inline-start:0;padding-inline-end:0}
 }
