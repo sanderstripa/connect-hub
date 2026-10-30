@@ -101,6 +101,7 @@ try{
   assert.equal(Math.round((await rail.boundingBox()).width),56);
   await rail.hover();await page.waitForTimeout(250);assert.equal(Math.round((await rail.boundingBox()).width),56);
   assert.equal(await page.locator('.rail-brand').textContent(),'C.');
+  const menuLabels={'/nodes':'Nodes','/hosts':'Hosts','/outbound':'Outbounds','/routing':'Routing','/settings#appearance':'Appearance','/settings#general':'General','/settings#security':'Authentication','/settings#telegram':'Telegram Bot','/settings#email':'Email','/settings#discord':'Discord Bot','/settings#subscription':'Subscription','/api-docs':'API Docs','/xray#basic':'Basics','/xray#balancer':'Balancers','/xray#dns':'DNS','/xray#advanced':'Advanced'};
   const groups=[
    ['Infrastructure',['/nodes','/hosts']],
    ['Network',['/outbound','/routing']],
@@ -111,8 +112,9 @@ try{
    for(let i=0;i<routes.length;i++){
     const trigger=rail.getByRole('button',{name,exact:true});await trigger.hover();assert.equal(await trigger.getAttribute('aria-expanded'),'false');
     await trigger.click();const menu=page.locator('.rail-submenu:visible');await menu.waitFor();
+    assert.notEqual(await menu.locator('.ant-dropdown-menu').evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(0, 0, 0, 0)');
     const bounds=await menu.boundingBox(),vp=page.viewportSize();assert.ok(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=vp.width+1&&bounds.y+bounds.height<=vp.height+1);
-    await menu.getByRole('menuitem').nth(i).click();try{await page.waitForURL(cfg.url+'panel'+routes[i]);}catch(error){throw new Error('Expected '+routes[i]+' but got '+page.url(),{cause:error});}await page.locator('.rail-submenu:visible').waitFor({state:'hidden'});
+    await menu.getByRole('menuitem',{name:menuLabels[routes[i]],exact:true}).click();try{await page.waitForURL(cfg.url+'panel'+routes[i]);}catch(error){throw new Error('Expected '+routes[i]+' but got '+page.url(),{cause:error});}await page.locator('.rail-submenu:visible').waitFor({state:'hidden'});
    }
   }
   await page.goto(cfg.url+'panel/connections');
@@ -131,7 +133,7 @@ try{
    const rb=await rail.boundingBox(),ib=await page.locator('#connection-inbounds').boundingBox();assert.equal(Math.round(rb.width),56);assert.ok(ib.x>=rb.x+rb.width,JSON.stringify({width,rb,ib}));
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Navigation must not cause page-wide overflow at '+width);
    const pane=await page.locator('#connection-keys').boundingBox();assert.ok(pane.x+pane.width<=width+1,'Work pane clipped at '+width);
-   await trigger.click();const menu=page.locator('.rail-submenu:visible');await menu.waitFor();const b=await menu.boundingBox();assert.ok(b.x>=0&&b.x+b.width<=width+1&&b.y>=0&&b.y+b.height<=801);await page.keyboard.press('Escape');
+   await trigger.click();const menu=page.locator('.rail-submenu:visible');await menu.waitFor();const b=await menu.boundingBox();assert.ok(b.x>=0&&b.x+b.width<=width+1&&b.y>=0&&b.y+b.height<=801);await page.keyboard.press('Escape');await page.locator('.rail-submenu:visible').waitFor({state:'hidden'});
    await page.screenshot({path:path.join(cfg.output,'navigation-'+width+'-'+(dark?'dark':'light')+'.png'),fullPage:true});
   }
   await page.setViewportSize({width:1440,height:1000});

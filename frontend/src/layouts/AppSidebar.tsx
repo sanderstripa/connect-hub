@@ -237,7 +237,7 @@ export default function AppSidebar() {
                 >
                   {item.children ? (
                     <Dropdown
-                      autoFocus
+                      destroyOnHidden
                       trigger={['click']}
                       placement="rightTop"
                       open={openMenu === item.key}
