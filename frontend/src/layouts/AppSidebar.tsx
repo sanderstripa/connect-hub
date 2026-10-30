@@ -1,13 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ComponentType, CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Drawer, Layout, Menu, Tooltip } from 'antd';
+import { Dropdown, Tooltip } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   ApiOutlined,
   ApartmentOutlined,
-  CloseOutlined,
   CloudServerOutlined,
   ClusterOutlined,
   CodeOutlined,
@@ -20,205 +18,58 @@ import {
   ImportOutlined,
   LogoutOutlined,
   MailOutlined,
-  MenuOutlined,
-  TelegramFilled,
-  MoonFilled,
   MoonOutlined,
-  PushpinFilled,
-  PushpinOutlined,
-  ReadOutlined,
   SafetyOutlined,
   SearchOutlined,
   SettingOutlined,
   SunOutlined,
   SwapOutlined,
-  TagsOutlined,
-  TeamOutlined,
+  TelegramFilled,
   ToolOutlined,
 } from '@ant-design/icons';
-
 import { HttpUtil } from '@/utils';
 import { formatPanelVersion } from '@/lib/panel-version';
-import { pauseAnimationsUntilLeave, useTheme } from '@/hooks/useTheme';
+import { useTheme } from '@/hooks/useTheme';
 import { useAllSettings } from '@/api/queries/useAllSettings';
 import { useCommandPalette } from '@/components/command-palette/useCommandPalette';
-import { PANEL_ROUTES, PANEL_TITLE_KEYS } from '@/routes/panelRoutes';
 import './AppSidebar.css';
 
-const DOCS_URL = 'https://docs.sanaei.dev/';
 const REPO_URL = 'https://github.com/sanderstripa/connect-hub';
-const LOGOUT_KEY = '__logout__';
-const RAIL_WIDTH = 72;
-const SIDER_WIDTH = 220;
-const SIDEBAR_PINNED_KEY = 'sidebar-pinned';
-
-let hoveredAcrossRemounts = false;
-
-type IconName =
-  | 'dashboard'
-  | 'inbound'
-  | 'team'
-  | 'groups'
-  | 'setting'
-  | 'tool'
-  | 'cluster'
-  | 'hosts'
-  | 'logout'
-  | 'apidocs'
-  | 'outbound'
-  | 'routing';
-
-const iconByName: Record<IconName, ComponentType> = {
-  dashboard: DashboardOutlined,
-  inbound: ImportOutlined,
-  team: TeamOutlined,
-  groups: TagsOutlined,
-  setting: SettingOutlined,
-  tool: ToolOutlined,
-  cluster: ClusterOutlined,
-  hosts: GlobalOutlined,
-  logout: LogoutOutlined,
-  apidocs: ApiOutlined,
-  outbound: ExportOutlined,
-  routing: SwapOutlined,
-};
-
-function DocsButton({ ariaLabel }: { ariaLabel: string }) {
-  return (
-    <a
-      href={DOCS_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="sidebar-docs"
-      aria-label={ariaLabel}
-      title={ariaLabel}
-    >
-      <ReadOutlined aria-hidden />
-    </a>
-  );
-}
-
-function VersionBadge({ version, collapsed }: { version: string; collapsed?: boolean }) {
-  if (!version) return null;
-  const label = formatPanelVersion(version);
-  return (
-    <a
-      href={REPO_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="sider-version"
-      aria-label={`GitHub ${label}`}
-      title={label}
-    >
-      <GithubOutlined aria-hidden />
-      {!collapsed && <span className="sider-version-text">{label}</span>}
-    </a>
-  );
-}
-
-function ThemeCycleButton({
-  id,
-  isDark,
-  isUltra,
-  onCycle,
-  ariaLabel,
-}: {
-  id: string;
-  isDark: boolean;
-  isUltra: boolean;
-  onCycle: () => void;
-  ariaLabel: string;
-}) {
-  const icon = !isDark ? <SunOutlined aria-hidden /> : !isUltra ? <MoonOutlined aria-hidden /> : <MoonFilled aria-hidden />;
-  return (
-    <button
-      id={id}
-      type="button"
-      className="sidebar-theme-cycle"
-      aria-label={ariaLabel}
-      title={ariaLabel}
-      onClick={onCycle}
-    >
-      {icon}
-    </button>
-  );
-}
-
-function readSidebarPinned() {
-  try {
-    return localStorage.getItem(SIDEBAR_PINNED_KEY) === 'true';
-  } catch {
-    return false;
-  }
-}
-
-function saveSidebarPinned(pinned: boolean) {
-  try {
-    localStorage.setItem(SIDEBAR_PINNED_KEY, String(pinned));
-  } catch {}
-}
 
 export default function AppSidebar() {
   const { t } = useTranslation();
-  const { isDark, isUltra, toggleTheme } = useTheme();
-  const { open: openCommandPalette } = useCommandPalette();
+  const { isDark, toggleTheme } = useTheme();
+  const { open: openSearch } = useCommandPalette();
   const navigate = useNavigate();
   const { pathname, hash } = useLocation();
   const { allSetting } = useAllSettings();
   const showSubFormats = !!(allSetting.subJsonEnable || allSetting.subClashEnable);
   const showSubBalancers = !!allSetting.subJsonEnable;
-
-  const [hovered, setHovered] = useState(() => hoveredAcrossRemounts);
-  const [pinned, setPinned] = useState(readSidebarPinned);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const railCollapsed = !hovered && !pinned;
-  const railStyle = useMemo(
-    () => ({ '--sider-rail': `${pinned ? SIDER_WIDTH : RAIL_WIDTH}px` }) as CSSProperties,
-    [pinned],
-  );
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  const updateHovered = useCallback((value: boolean) => {
-    hoveredAcrossRemounts = value;
-    setHovered(value);
-  }, []);
-
-  const togglePinned = useCallback(() => {
-    const next = !pinned;
-    saveSidebarPinned(next);
-    setPinned(next);
-  }, [pinned]);
-
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const el = rootRef.current;
-      if (el) updateHovered(el.matches(':hover'));
-    }, 150);
-    return () => window.clearTimeout(timer);
-  }, [updateHovered]);
-
-  const currentTheme: 'light' | 'dark' = isDark ? 'dark' : 'light';
-  const panelVersion = window.X_UI_CUR_VER || '';
-
-  const tabs = useMemo<{ key: string; icon: IconName; title: string }[]>(
-    () => [
-      { key: '/', icon: 'dashboard', title: t('menu.dashboard') },
-      { key: '/connections', icon: 'inbound', title: t('menu.connections') },
-      { key: '__infrastructure', icon: 'cluster', title: t('menu.infrastructure') },
-      { key: '__network', icon: 'routing', title: t('menu.network') },
-      { key: '/settings', icon: 'setting', title: t('menu.settings') },
-      { key: '/xray', icon: 'tool', title: t('menu.xray') },
-      { key: LOGOUT_KEY, icon: 'logout', title: t('logout') },
-    ],
-    [t],
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape' && openMenu) {
+        document.querySelector<HTMLElement>(`[data-nav-group="${openMenu}"]`)?.focus();
+        setOpenMenu(null);
+      } else if ((event.ctrlKey || event.metaKey) && event.code === 'KeyK') setOpenMenu(null);
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [openMenu]);
+  const openLink = useCallback(
+    (key: string) => {
+      setOpenMenu(null);
+      navigate(key);
+    },
+    [navigate],
   );
-
-  const navItems = useMemo(() => tabs.filter((tab) => tab.icon !== 'logout'), [tabs]);
-  const utilItems = useMemo(() => tabs.filter((tab) => tab.icon === 'logout'), [tabs]);
-
   const settingsChildren = useMemo<NonNullable<MenuProps['items']>>(() => {
     const children: NonNullable<MenuProps['items']> = [
-      {key: '/settings#appearance', icon: <SettingOutlined aria-hidden />, label: t('appearance.title')},
+      {
+        key: '/settings#appearance',
+        icon: <SettingOutlined aria-hidden />,
+        label: t('appearance.title'),
+      },
       {
         key: '/settings#general',
         icon: <SettingOutlined aria-hidden />,
@@ -234,7 +85,11 @@ export default function AppSidebar() {
         icon: <TelegramFilled aria-hidden />,
         label: t('pages.settings.TGBotSettings'),
       },
-      { key: '/settings#email', icon: <MailOutlined aria-hidden />, label: t('pages.settings.emailSettings') },
+      {
+        key: '/settings#email',
+        icon: <MailOutlined aria-hidden />,
+        label: t('pages.settings.emailSettings'),
+      },
       {
         key: '/settings#discord',
         icon: <DiscordOutlined aria-hidden />,
@@ -260,271 +115,206 @@ export default function AppSidebar() {
         label: t('pages.settings.subBalancers.menu'),
       });
     }
-    children.push({ key: '/api-docs', icon: <ApiOutlined aria-hidden />, label: t('menu.apiDocs') });
+    children.push({
+      key: '/api-docs',
+      icon: <ApiOutlined aria-hidden />,
+      label: t('menu.apiDocs'),
+    });
     return children;
   }, [t, showSubFormats, showSubBalancers]);
 
   const xrayChildren = useMemo<NonNullable<MenuProps['items']>>(
     () => [
-      { key: '/xray#basic', icon: <SettingOutlined aria-hidden />, label: t('pages.xray.basicTemplate') },
-      { key: '/xray#balancer', icon: <ClusterOutlined aria-hidden />, label: t('pages.xray.Balancers') },
+      {
+        key: '/xray#basic',
+        icon: <SettingOutlined aria-hidden />,
+        label: t('pages.xray.basicTemplate'),
+      },
+      {
+        key: '/xray#balancer',
+        icon: <ClusterOutlined aria-hidden />,
+        label: t('pages.xray.Balancers'),
+      },
       { key: '/xray#dns', icon: <DatabaseOutlined aria-hidden />, label: 'DNS' },
-      { key: '/xray#advanced', icon: <CodeOutlined aria-hidden />, label: t('pages.xray.advancedTemplate') },
+      {
+        key: '/xray#advanced',
+        icon: <CodeOutlined aria-hidden />,
+        label: t('pages.xray.advancedTemplate'),
+      },
     ],
     [t],
   );
 
-  const settingsActive = pathname === '/settings';
-  const settingsMenuActive = settingsActive || pathname === '/api-docs';
-  const xrayActive = pathname === '/xray';
-  const selectedKey = settingsActive
-    ? `/settings${hash || '#general'}`
-    : xrayActive
-      ? `/xray${hash || '#basic'}`
-      : pathname === ''
-        ? '/'
-        : pathname;
-
-  const openSubmenu = settingsMenuActive ? '/settings' : xrayActive ? '/xray'
-
-    : ['/nodes', '/hosts'].includes(pathname) ? '__infrastructure'
-    : ['/outbound', '/routing'].includes(pathname) ? '__network' : null;
-  const [openKeys, setOpenKeys] = useState<string[]>(() => (openSubmenu ? [openSubmenu] : []));
-  const routeKey = pathname + hash;
-  const [lastRoute, setLastRoute] = useState(routeKey);
-  if (lastRoute !== routeKey) {
-    setLastRoute(routeKey);
-    if (openSubmenu && !openKeys.includes(openSubmenu)) setOpenKeys([...openKeys, openSubmenu]);
-  }
-
-  const toMenuItems = useCallback(
-    (items: typeof tabs): MenuProps['items'] =>
-      items.map((tab) => {
-        const Icon = PANEL_ROUTES.find(route => route.path === tab.key)?.icon ?? iconByName[tab.icon];
-        const groups: Record<string, [string, IconName, string][]> = {
-          __infrastructure: [['/nodes', 'cluster', 'menu.nodes'], ['/hosts', 'hosts', 'menu.hosts']],
-          __network: [['/outbound', 'outbound', 'menu.outbounds'], ['/routing', 'routing', 'menu.routing']],
-        };
-        if (groups[tab.key]) return { key: tab.key, icon: <Icon />, label: PANEL_TITLE_KEYS[tab.key] ? t(PANEL_TITLE_KEYS[tab.key]) : tab.title,
-          children: groups[tab.key].map(([key, icon, label]) => {
-            const ChildIcon = PANEL_ROUTES.find(route => route.path === key)?.icon ?? iconByName[icon];
-            return { key, icon: <ChildIcon />, label: t(label) };
-          }) };
-
-        if (tab.key === '/settings') {
-          return { key: tab.key, icon: <Icon />, label: tab.title, children: settingsChildren };
-        }
-        if (tab.key === '/xray') {
-          return { key: tab.key, icon: <Icon />, label: tab.title, children: xrayChildren };
-        }
-        return { key: tab.key, icon: <Icon />, label: tab.title, title: tab.title };
-      }),
-    [settingsChildren, xrayChildren, t],
-  );
-
-  const openLink = useCallback(
-    async (key: string) => {
-      if (key === LOGOUT_KEY) {
-        await HttpUtil.post('/logout');
-        window.location.href = window.X_UI_BASE_PATH || '/';
-        return;
-      }
-      navigate(key);
+  const items = [
+    {
+      key: '/',
+      title: t('menu.dashboard'),
+      icon: <DashboardOutlined aria-hidden />,
+      active: pathname === '/',
     },
-    [navigate],
-  );
-
-  const onMenuClick = useCallback<NonNullable<MenuProps['onClick']>>(
-    ({ key }) => {
-      openLink(String(key));
+    {
+      key: '/connections',
+      title: t('menu.connections'),
+      icon: <ImportOutlined aria-hidden />,
+      active: ['/connections', '/inbounds', '/clients'].includes(pathname),
     },
-    [openLink],
-  );
-
-  const cycleTheme = useCallback(
-    (id: string) => {
-      pauseAnimationsUntilLeave(id);
-      toggleTheme();
+    {
+      key: 'infrastructure',
+      title: t('menu.infrastructure'),
+      icon: <ClusterOutlined aria-hidden />,
+      active: ['/nodes', '/hosts'].includes(pathname),
+      children: [
+        { key: '/nodes', icon: <ClusterOutlined aria-hidden />, label: t('menu.nodes') },
+        { key: '/hosts', icon: <GlobalOutlined aria-hidden />, label: t('menu.hosts') },
+      ],
     },
-    [toggleTheme],
-  );
-
+    {
+      key: 'network',
+      title: t('menu.network'),
+      icon: <SwapOutlined aria-hidden />,
+      active: ['/outbound', '/routing'].includes(pathname),
+      children: [
+        { key: '/outbound', icon: <ExportOutlined aria-hidden />, label: t('menu.outbounds') },
+        { key: '/routing', icon: <SwapOutlined aria-hidden />, label: t('menu.routing') },
+      ],
+    },
+    {
+      key: 'settings',
+      title: t('menu.settings'),
+      icon: <SettingOutlined aria-hidden />,
+      active: ['/settings', '/api-docs'].includes(pathname),
+      children: settingsChildren,
+    },
+    {
+      key: 'xray',
+      title: t('menu.xray'),
+      icon: <ToolOutlined aria-hidden />,
+      active: pathname === '/xray',
+      children: xrayChildren,
+    },
+  ];
+  const selected =
+    pathname +
+    (hash || (pathname === '/settings' ? '#general' : pathname === '/xray' ? '#basic' : ''));
   return (
-    <div
-      ref={rootRef}
-      className={`ant-sidebar${pinned ? ' sidebar-pinned' : ''}`}
-      style={railStyle}
-      onMouseEnter={() => updateHovered(true)}
-      onMouseLeave={() => updateHovered(false)}
-    >
-      <Layout.Sider
-        theme={currentTheme}
-        width={SIDER_WIDTH}
-        collapsedWidth={RAIL_WIDTH}
-        collapsed={railCollapsed}
-      >
-        <div className="sider-brand">
-          <div className="brand-block">
-            <span className="brand-text">{railCollapsed ? 'CH' : 'Connect. Hub'}</span>
-          </div>
-          {!railCollapsed && (
-            <div className="brand-actions">
+    <>
+      <aside className="ant-sidebar" aria-label="Connect Hub">
+        <div className="compact-rail">
+          <a
+            className="rail-brand"
+            href={(window.X_UI_BASE_PATH || '/') + 'panel/'}
+            onClick={(event) => {
+              event.preventDefault();
+              openLink('/');
+            }}
+            aria-label="Connect Hub"
+          >
+            C.
+          </a>
+          <nav className="rail-nav">
+            {items.map((item) => {
+              const button = (
+                <button
+                  type="button"
+                  className={'rail-button' + (item.active ? ' is-active' : '')}
+                  aria-label={item.title}
+                  aria-current={item.active ? 'page' : undefined}
+                  data-nav-group={item.key}
+                  aria-haspopup={item.children ? 'menu' : undefined}
+                  aria-expanded={item.children ? openMenu === item.key : undefined}
+                  onClick={() => {
+                    if (!item.children) openLink(item.key);
+                  }}
+                >
+                  {item.icon}
+                </button>
+              );
+              return (
+                <Tooltip
+                  key={item.key}
+                  title={openMenu === item.key ? null : item.title}
+                  placement="right"
+                >
+                  {item.children ? (
+                    <Dropdown
+                      autoFocus
+                      trigger={['click']}
+                      placement="rightTop"
+                      open={openMenu === item.key}
+                      onOpenChange={(open) => setOpenMenu(open ? item.key : null)}
+                      autoAdjustOverflow
+                      overlayClassName="rail-submenu"
+                      menu={{
+                        items: item.children,
+                        selectedKeys: [selected],
+                        onClick: ({ key }) => openLink(key),
+                      }}
+                    >
+                      {button}
+                    </Dropdown>
+                  ) : (
+                    button
+                  )}
+                </Tooltip>
+              );
+            })}
+          </nav>
+          <div className="rail-utilities">
+            <Tooltip title={t('menu.theme')} placement="right">
+              <button
+                id="theme-cycle"
+                type="button"
+                className="rail-button"
+                aria-label={t('menu.theme')}
+                onClick={toggleTheme}
+              >
+                {isDark ? <MoonOutlined aria-hidden /> : <SunOutlined aria-hidden />}
+              </button>
+            </Tooltip>
+            <Tooltip
+              title={'GitHub ' + formatPanelVersion(window.X_UI_CUR_VER || '')}
+              placement="right"
+            >
+              <a
+                className="rail-button"
+                href={REPO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GitHub"
+              >
+                <GithubOutlined aria-hidden />
+              </a>
+            </Tooltip>
+            <Tooltip title={t('logout')} placement="right">
               <button
                 type="button"
-                className="sidebar-pin"
-                aria-label={t('menu.pinSidebar')}
-                aria-pressed={pinned}
-                title={t(pinned ? 'menu.unpinSidebar' : 'menu.pinSidebar')}
-                onClick={togglePinned}
+                className="rail-button"
+                aria-label={t('logout')}
+                onClick={async () => {
+                  await HttpUtil.post('/logout');
+                  window.location.href = window.X_UI_BASE_PATH || '/';
+                }}
               >
-                {pinned ? <PushpinFilled aria-hidden /> : <PushpinOutlined aria-hidden />}
+                <LogoutOutlined aria-hidden />
               </button>
-              <DocsButton ariaLabel={t('menu.docs') || 'Documentation'} />
-
-              <ThemeCycleButton
-                id="theme-cycle"
-                isDark={isDark}
-                isUltra={isUltra}
-                onCycle={() => cycleTheme('theme-cycle')}
-                ariaLabel={t('menu.theme')}
-              />
-            </div>
-          )}
-        </div>
-        <Tooltip
-          title={
-            railCollapsed ? t('commandPalette.title') || 'Command Palette (Ctrl + K)' : undefined
-          }
-          placement="right"
-        >
-          <button
-            type="button"
-            className={`sidebar-command-trigger${railCollapsed ? ' collapsed' : ''}`}
-            onClick={openCommandPalette}
-            aria-label={t('commandPalette.title') || 'Command Palette (Ctrl + K)'}
-          >
-            <span className="sidebar-command-left">
-              <SearchOutlined aria-hidden className="sidebar-command-icon" />
-              <span className="sidebar-command-text">
-                {t('commandPalette.search') || 'Search...'}
-              </span>
-            </span>
-          </button>
-        </Tooltip>
-        <Menu
-          theme={currentTheme}
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          openKeys={railCollapsed ? undefined : openKeys}
-          onOpenChange={(keys) => setOpenKeys(keys as string[])}
-          className="sider-nav"
-          items={toMenuItems(navItems)}
-          onClick={onMenuClick}
-        />
-        <Menu
-          theme={currentTheme}
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          className="sider-utility"
-          items={toMenuItems(utilItems)}
-          onClick={onMenuClick}
-        />
-        <div className="sider-footer">
-          <VersionBadge version={panelVersion} collapsed={railCollapsed} />
-        </div>
-      </Layout.Sider>
-
-      <Drawer
-        placement="left"
-        closable={false}
-        open={drawerOpen}
-        rootClassName={currentTheme}
-        size="min(82vw, 320px)"
-        styles={{
-          wrapper: { padding: 0 },
-          body: { padding: 0, display: 'flex', flexDirection: 'column', height: '100%' },
-          header: { display: 'none' },
-        }}
-        onClose={() => setDrawerOpen(false)}
-      >
-        <div className="drawer-header">
-          <div className="brand-block">
-            <span className="drawer-brand">Connect. Hub</span>
-          </div>
-          <div className="drawer-header-actions">
-            <DocsButton ariaLabel={t('menu.docs') || 'Documentation'} />
-
-            <ThemeCycleButton
-              id="theme-cycle-drawer"
-              isDark={isDark}
-              isUltra={isUltra}
-              onCycle={() => cycleTheme('theme-cycle-drawer')}
-              ariaLabel={t('menu.theme')}
-            />
-            <button
-              className="drawer-close"
-              type="button"
-              aria-label={t('close')}
-              onClick={() => setDrawerOpen(false)}
-            >
-              <CloseOutlined aria-hidden />
-            </button>
+            </Tooltip>
           </div>
         </div>
+      </aside>
+      <Tooltip title={t('commandPalette.title')} placement="bottomRight">
         <button
           type="button"
-          className="sidebar-command-trigger"
+          className="global-search-trigger rail-button"
+          aria-label={t('commandPalette.title')}
+          aria-keyshortcuts="Control+k Meta+k"
           onClick={() => {
-            setDrawerOpen(false);
-            openCommandPalette();
+            setOpenMenu(null);
+            openSearch();
           }}
-          aria-label={t('commandPalette.title') || 'Command Palette (Ctrl + K)'}
-          style={{ margin: '8px 12px 4px', width: 'calc(100% - 24px)' }}
         >
-          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <SearchOutlined aria-hidden className="sidebar-command-icon" />
-            <span>{t('commandPalette.search') || 'Search...'}</span>
-          </span>
+          <SearchOutlined aria-hidden />
         </button>
-        <Menu
-          theme={currentTheme}
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          openKeys={openKeys}
-          onOpenChange={(keys) => setOpenKeys(keys as string[])}
-          className="drawer-menu drawer-nav"
-          items={toMenuItems(navItems)}
-          onClick={(info) => {
-            onMenuClick(info);
-            setDrawerOpen(false);
-          }}
-        />
-        <Menu
-          theme={currentTheme}
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          className="drawer-menu drawer-utility"
-          items={toMenuItems(utilItems)}
-          onClick={(info) => {
-            onMenuClick(info);
-            setDrawerOpen(false);
-          }}
-        />
-        <div className="drawer-footer">
-          <VersionBadge version={panelVersion} />
-        </div>
-      </Drawer>
-
-      {!drawerOpen && (
-        <button
-          className="drawer-handle"
-          type="button"
-          aria-label={t('menu.openMenu')}
-          onClick={() => setDrawerOpen(true)}
-        >
-          <MenuOutlined aria-hidden />
-        </button>
-      )}
-    </div>
+      </Tooltip>
+    </>
   );
 }

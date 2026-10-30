@@ -129,10 +129,6 @@
     "routing": "Smerovanie",
     "outbounds": "Výstupy",
     "apiDocs": "Dokumentácia API",
-    "docs": "Dokumentácia",
-    "openMenu": "Otvoriť menu",
-    "pinSidebar": "Pripnúť bočné menu",
-    "unpinSidebar": "Odopnúť bočné menu",
     "subFormats": "Formáty odberu",
     "infrastructure": "Infraštruktúra",
     "network": "Sieť",
@@ -2858,7 +2854,6 @@
   "commandPalette": {
     "title": "Rýchle vyhľadávanie a príkazy",
     "placeholder": "Zadajte príkaz alebo hľadajte klientov, vstupy či stránky…",
-    "search": "Hľadať…",
     "navigation": "Navigácia",
     "actions": "Akcie",
     "navigate": "Prejsť na",

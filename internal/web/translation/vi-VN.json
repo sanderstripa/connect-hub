@@ -131,10 +131,6 @@
     "outbounds": "Outbound",
     "apiDocs": "Tài liệu API",
     "hosts": "Hosts",
-    "docs": "Tài liệu",
-    "openMenu": "Mở menu",
-    "pinSidebar": "Ghim thanh bên",
-    "unpinSidebar": "Bỏ ghim thanh bên",
     "subFormats": "Sub Formats",
     "connections": "Connections"
   },
@@ -2858,7 +2854,6 @@
   "commandPalette": {
     "title": "Bảng lệnh",
     "placeholder": "Nhập lệnh hoặc tìm kiếm khách hàng, cổng vào, trang...",
-    "search": "Tìm kiếm...",
     "navigation": "Điều hướng",
     "actions": "Hành động",
     "navigate": "Điều hướng",

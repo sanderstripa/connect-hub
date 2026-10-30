@@ -56,3 +56,5 @@ Current user request, 30 October 2026: combine Inbounds and Clients into Connect
 Latest bug report: the Sudoku Shadowrocket QR window in 0.4.0 shows a misleading update instruction instead of a QR. Exercise the actual browser HTTP serializer and saved-client modal against the real server, with no mocked export API, before publishing this fix. Preserve existing keys.
 
 Latest workspace request: compact inbound cards on the left, selected inbound clients/details/QR/settings on the right; inline key creation and Back navigation; separate All keys global search/bulk view. Preserve all original inbound actions and scope links/creation to the selected inbound. Validate two-inbound isolation in the real browser.
+
+Current navigation requirement: fixed 56px icon rail with C. brand, click-only nested menus, tooltips on hover, theme/GitHub/logout at bottom, existing global search at top right and Ctrl+K. No expanding/pinned rail or mobile drawer. Preserve every route, current Soulu styling, Connections workspace and Dashboard; no backend/API/protocol changes. Verify all nested routes and 390/768/1024px viewport bounds in both themes before release.

@@ -131,10 +131,6 @@
     "outbounds": "出站",
     "apiDocs": "API 文件",
     "hosts": "主機",
-    "docs": "文件",
-    "openMenu": "開啟選單",
-    "pinSidebar": "固定側邊欄",
-    "unpinSidebar": "取消固定側邊欄",
     "subFormats": "Sub Formats",
     "connections": "Connections"
   },
@@ -2858,7 +2854,6 @@
   "commandPalette": {
     "title": "命令面板",
     "placeholder": "輸入命令或搜尋客戶端、入站、頁面...",
-    "search": "搜尋...",
     "navigation": "頁面導航",
     "actions": "系統操作",
     "navigate": "導航",

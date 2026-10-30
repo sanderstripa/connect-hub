@@ -45,6 +45,7 @@ try{
   for(const route of ['','connections','inbounds','clients','settings#appearance']){
    await page.goto(cfg.url+'panel/'+route);await page.locator('.ant-sidebar').waitFor();await check(route.split('#')[0]||'dashboard',dark);
    if(route==='connections'){
+    await navigation(dark);
     await page.locator('#connection-keys').waitFor();assert.equal(await page.locator('.ant-sidebar').count(),1);assert.ok(await page.locator('#connection-inbounds').boundingBox());
 
     await page.locator('.inbound-card').filter({hasText:'Other inbound'}).click();
@@ -95,6 +96,46 @@ try{
    }
   }
  }
+ async function navigation(dark){
+  const rail=page.locator('.ant-sidebar');
+  assert.equal(Math.round((await rail.boundingBox()).width),56);
+  await rail.hover();await page.waitForTimeout(250);assert.equal(Math.round((await rail.boundingBox()).width),56);
+  assert.equal(await page.locator('.rail-brand').textContent(),'C.');
+  const groups=[
+   ['Infrastructure',['/nodes','/hosts']],
+   ['Network',['/outbound','/routing']],
+   ['Settings',['/settings#appearance','/settings#general','/settings#security','/settings#telegram','/settings#email','/settings#discord','/settings#subscription','/api-docs']],
+   ['Xray Configs',['/xray#basic','/xray#balancer','/xray#dns','/xray#advanced']],
+  ];
+  for(const [name,routes] of groups){
+   for(let i=0;i<routes.length;i++){
+    const trigger=rail.getByRole('button',{name,exact:true});await trigger.hover();assert.equal(await trigger.getAttribute('aria-expanded'),'false');
+    await trigger.click();const menu=page.locator('.rail-submenu:visible');await menu.waitFor();
+    const bounds=await menu.boundingBox(),vp=page.viewportSize();assert.ok(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=vp.width+1&&bounds.y+bounds.height<=vp.height+1);
+    await menu.getByRole('menuitem').nth(i).click();try{await page.waitForURL(cfg.url+'panel'+routes[i]);}catch(error){throw new Error('Expected '+routes[i]+' but got '+page.url(),{cause:error});}await page.locator('.rail-submenu:visible').waitFor({state:'hidden'});
+   }
+  }
+  await page.goto(cfg.url+'panel/connections');
+  const trigger=rail.getByRole('button',{name:'Settings',exact:true});
+  await trigger.click();await page.keyboard.press('Escape');assert.equal(await trigger.getAttribute('aria-expanded'),'false');
+  await trigger.click();await trigger.click();assert.equal(await trigger.getAttribute('aria-expanded'),'false');
+  await trigger.click();await page.locator('.connections-intro').click();assert.equal(await trigger.getAttribute('aria-expanded'),'false');
+  await page.getByRole('button',{name:'Theme',exact:true}).click();await page.waitForFunction(d=>document.body.classList.contains('dark')===!d,dark);
+  assert.equal(await page.evaluate(()=>localStorage.getItem('dark-mode')),String(!dark));await page.getByRole('button',{name:'Theme',exact:true}).click();
+  await page.keyboard.press('Control+k');const search=page.locator('.command-palette-input');await search.waitFor();await search.fill('appearance');await search.press('Enter');await page.waitForURL('**/settings#appearance');
+  await page.getByRole('button',{name:/Command Palette/}).click();await page.locator('.command-palette-input').waitFor();await page.keyboard.press('Escape');await page.locator('.command-palette-input').waitFor({state:'detached'});
+  await page.goto(cfg.url+'panel/connections');
+  for(const width of [1024,768,390]){
+   await page.setViewportSize({width,height:800});await page.locator('.inbound-card').first().waitFor();
+   await page.screenshot({path:path.join(cfg.output,'navigation-current.png'),fullPage:true});
+   const rb=await rail.boundingBox(),ib=await page.locator('#connection-inbounds').boundingBox();assert.equal(Math.round(rb.width),56);assert.ok(ib.x>=rb.x+rb.width,JSON.stringify({width,rb,ib}));
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Navigation must not cause page-wide overflow at '+width);
+   const pane=await page.locator('#connection-keys').boundingBox();assert.ok(pane.x+pane.width<=width+1,'Work pane clipped at '+width);
+   await trigger.click();const menu=page.locator('.rail-submenu:visible');await menu.waitFor();const b=await menu.boundingBox();assert.ok(b.x>=0&&b.x+b.width<=width+1&&b.y>=0&&b.y+b.height<=801);await page.keyboard.press('Escape');
+   await page.screenshot({path:path.join(cfg.output,'navigation-'+width+'-'+(dark?'dark':'light')+'.png'),fullPage:true});
+  }
+  await page.setViewportSize({width:1440,height:1000});
+ }
  async function check(name,dark){
   await page.evaluate(async()=>{await document.fonts.load('400 14px Onest','Настройки Connect Hub');await document.fonts.ready;});await page.waitForTimeout(300);
   assert.equal(await page.evaluate(()=>document.documentElement.dataset.palette),'soulu');
@@ -102,6 +143,7 @@ try{
   const wrong=await page.locator('input,button,h1,h2,.ant-modal-title').evaluateAll(els=>els.filter(el=>el.getBoundingClientRect().width>0&&!getComputedStyle(el).fontFamily.includes('Onest')).length);assert.equal(wrong,0);
   await page.screenshot({path:path.join(cfg.output,'soulu-'+name+'-'+(dark?'dark':'light')+'.png'),fullPage:true});
  }
+ console.log('PASS: fixed 56px rail, every submenu route, click/Escape/outside close, live theme, Ctrl+K search and 390/768/1024px without navigation overflow');
  console.log('PASS: inbound cards, scoped clients, All keys, inline details/back, scoped key creation and unchanged original keys');
  console.log('PASS: saved Sudoku client → real web QR modal → JSON/CSRF request → Shadowrocket QR and anonymous profile fetch; original key unchanged');
  assert.deepEqual(errors,[]);console.log('PASS: real panel login, dashboard, inbounds, clients, settings and dialogs in both Soulu themes; old palettes migrated; local Onest loaded');

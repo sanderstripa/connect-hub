@@ -131,10 +131,6 @@
     "outbounds": "Giden Bağlantılar",
     "apiDocs": "API Belgeleri",
     "hosts": "Host'lar",
-    "docs": "Belgeler",
-    "openMenu": "Menüyü aç",
-    "pinSidebar": "Kenar çubuğunu sabitle",
-    "unpinSidebar": "Kenar çubuğu sabitlemesini kaldır",
     "subFormats": "Abonelik Formatları",
     "connections": "Connections"
   },
@@ -2858,7 +2854,6 @@
   "commandPalette": {
     "title": "Komut Paleti",
     "placeholder": "Komut yazın veya istemcileri, gelen bağlantıları, sayfaları arayın...",
-    "search": "Ara...",
     "navigation": "Gezinme",
     "actions": "İşlemler",
     "navigate": "Gezin",

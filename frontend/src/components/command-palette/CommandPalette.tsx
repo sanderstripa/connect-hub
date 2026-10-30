@@ -106,6 +106,7 @@ export default function CommandPalette() {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -154,9 +155,31 @@ export default function CommandPalette() {
   }
 
   useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 50);
+    if (!isOpen) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const timer = window.setTimeout(() => inputRef.current?.focus(), 50);
+    function trapFocus(event: KeyboardEvent) {
+      if (event.key !== 'Tab') return;
+      const controls = Array.from(
+        dialogRef.current?.querySelectorAll<HTMLElement>('input,button,a[href],[tabindex="0"]') ??
+          [],
+      ).filter((el) => !el.hasAttribute('disabled'));
+      const first = controls[0],
+        last = controls.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
     }
+    window.addEventListener('keydown', trapFocus);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('keydown', trapFocus);
+      if (previous?.isConnected) previous.focus();
+    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -360,12 +383,14 @@ export default function CommandPalette() {
       });
     });
 
-    const pages = PANEL_ROUTES.filter((route) => !route.hidden || route.path === '/hub').map((route) => ({
-      path: route.path,
-      title: t(route.titleKey),
-      keywords: PALETTE_KEYWORDS[route.path] ?? [],
-      icon: <route.icon aria-hidden />,
-    }));
+    const pages = PANEL_ROUTES.filter((route) => !route.hidden || route.path === '/hub').map(
+      (route) => ({
+        path: route.path,
+        title: t(route.titleKey),
+        keywords: PALETTE_KEYWORDS[route.path] ?? [],
+        icon: <route.icon aria-hidden />,
+      }),
+    );
 
     pages
       .filter((p) => matches(p.title, undefined, p.keywords))
@@ -384,6 +409,13 @@ export default function CommandPalette() {
       });
 
     const settingsSubSections = [
+      {
+        path: '/settings#appearance',
+        title: `${t('menu.settings')} · ${t('appearance.title')}`,
+        subtitle: t('appearance.title'),
+        keywords: ['appearance', 'theme', 'light', 'dark', 'оформление', 'тема'],
+        icon: <SettingOutlined aria-hidden />,
+      },
       {
         path: '/settings#general',
         title: `${t('menu.settings')} · ${t('pages.settings.panelSettings')}`,
@@ -636,6 +668,7 @@ export default function CommandPalette() {
       >
         <div
           className={`command-palette-modal ${themeModeClass}`}
+          ref={dialogRef}
           role="dialog"
           aria-modal="true"
           aria-label={t('commandPalette.title')}

@@ -123,24 +123,20 @@ jobs:
           cp panel-assets/connect-hub-linux-amd64.tar.gz release-assets/
           cat panel-assets/SHA256SUMS >> release-assets/SHA256SUMS
           cat > release-notes.md <<'NOTES'
-          Connections workspace and Sudoku QR fix.
+          Compact navigation for Connect Hub.
 
-          - Browse compact inbound cards on the left and work with selected clients on the right. Create keys in place and open client details, limits, editing and QR without leaving the workspace.
-          - Use All keys for global search and bulk management. Selected inbound views keep their own scope and only export links for that inbound.
+          - Keep a permanent 56px icon rail with the C. brand. Hover shows labels without expanding the rail; click opens nested menus with keyboard, outside-click and Escape dismissal.
+          - Move theme, GitHub and logout to the footer. Theme changes immediately and stays saved.
+          - Move the existing global search to the upper-right corner. Keep Ctrl+K, real section/settings/client/inbound results and keyboard selection; include Appearance settings.
+          - Preserve the two-column Connections workspace, inline client details, local searches and every existing route. Dashboard graphs, backend APIs and protocol configuration are unchanged.
 
-          - Send explicit application/json with the real browser HTTP adapter, preserving CSRF protection and the private panel base path. Version 0.4.0 incorrectly sent a form body to a JSON-only endpoint.
-          - Replace the misleading update-panel warning with separate request/key errors and Retry. Keep standard Sudoku QR available and preserve saved client keys.
-          - Shorten the Shadowrocket import instructions; HTTP panels are no longer incorrectly described as requiring HTTPS.
-
-          Regression coverage: open the saved iPhoneSudoku client in the real bundled web panel, switch the QR modal to Shadowrocket, verify the actual JSON request, rendered QR, anonymous signed-profile fetch and unchanged device key in both themes. Unit coverage uses the real HTTP serializer, tests request failure/retry and legacy links. Windows GUI/portable EXE and public server installation/update/removal are also checked.
-
-          Shadowrocket export still uses Clash profile import; a real iPhone import/handshake has not been verified.
+          Validation: all nested menu routes, selected state, tooltips, click/repeat-click/outside/Escape dismissal, live theme and persisted preference, global search, 390/768/1024px viewport bounds, scoped Connections clients and QR in both themes. Includes the full frontend suite, packaged Windows EXE and public installation/update/removal checks with existing keys preserved.
           NOTES
           if gh release view "$tag" >/dev/null 2>&1; then
             echo 'A release already exists for this installer version; refusing to replace published binaries.'
             exit 1
           fi
-          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — Connections workspace" --notes-file release-notes.md --prerelease --latest=false
+          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — Compact navigation" --notes-file release-notes.md --prerelease --latest=false
   public-install:
     needs: publish
     runs-on: ubuntu-24.04

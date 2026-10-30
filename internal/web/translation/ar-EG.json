@@ -131,10 +131,6 @@
     "outbounds": "الصادرات",
     "apiDocs": "توثيق API",
     "hosts": "المضيفات",
-    "docs": "التوثيق",
-    "openMenu": "فتح القائمة",
-    "pinSidebar": "تثبيت الشريط الجانبي",
-    "unpinSidebar": "إلغاء تثبيت الشريط الجانبي",
     "subFormats": "Sub Formats",
     "connections": "Connections"
   },
@@ -2858,7 +2854,6 @@
   "commandPalette": {
     "title": "لوحة الأوامر",
     "placeholder": "اكتب أمرًا أو ابحث عن العملاء، المنافذ، الصفحات...",
-    "search": "بحث...",
     "navigation": "التنقل",
     "actions": "الإجراءات",
     "navigate": "تنقل",

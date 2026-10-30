@@ -131,10 +131,6 @@
     "outbounds": "خروجی‌ها",
     "apiDocs": "مستندات API",
     "hosts": "میزبان‌ها",
-    "docs": "مستندات",
-    "openMenu": "باز کردن منو",
-    "pinSidebar": "ثابت کردن نوار کناری",
-    "unpinSidebar": "برداشتن تثبیت نوار کناری",
     "subFormats": "Sub Formats",
     "connections": "Connections"
   },
@@ -2858,7 +2854,6 @@
   "commandPalette": {
     "title": "پالت دستورات",
     "placeholder": "جستجوی کلاینت‌ها، اینباندها، صفحات یا تایپ دستور...",
-    "search": "جستجو...",
     "navigation": "ناوبری و صفحات",
     "actions": "دستورات سیستمی",
     "navigate": "پیمایش",

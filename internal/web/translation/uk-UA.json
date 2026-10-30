@@ -131,10 +131,6 @@
     "outbounds": "Вихідні",
     "apiDocs": "Документація API",
     "hosts": "Хости",
-    "docs": "Документація",
-    "openMenu": "Відкрити меню",
-    "pinSidebar": "Закріпити бічну панель",
-    "unpinSidebar": "Відкріпити бічну панель",
     "subFormats": "Формати підписки",
     "connections": "Connections"
   },
@@ -2858,7 +2854,6 @@
   "commandPalette": {
     "title": "Командний рядок",
     "placeholder": "Введіть команду або знайдіть клієнтів, інбаунди, сторінки...",
-    "search": "Пошук...",
     "navigation": "Навігація",
     "actions": "Дії",
     "navigate": "Перейти",
