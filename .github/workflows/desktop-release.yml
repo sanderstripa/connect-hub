@@ -106,11 +106,11 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: desktop-release-binary
           path: release-assets
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: panel-release-binary
           path: panel-assets
