@@ -111,7 +111,7 @@
     "infrastructure": "Infrastructure",
     "network": "Network",
     "theme": "Theme",
-    "dashboard": "Overview",
+    "dashboard": "Monitoring",
     "inbounds": "Inbounds",
     "clients": "Clients",
     "groups": "Groups",
@@ -137,6 +137,10 @@
       }
     },
     "index": {
+      "sudokuUpdates": "Sudoku updates",
+      "sudokuInstalled": "Installed build",
+      "sudokuReleaseError": "Unable to load Sudoku releases. Try again.",
+      "sudokuAllReleases": "All Sudoku builds",
       "more": "More",
       "maintenance": "Maintenance",
       "diagnostics": "Diagnostics",

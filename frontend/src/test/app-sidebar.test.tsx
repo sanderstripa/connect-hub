@@ -63,11 +63,11 @@ test('opens nested navigation only by click, closes on Escape and repeat click, 
 
 test('keeps all navigation groups and footer actions and opens the existing search store', async () => {
   const view = await renderSidebar();
-  for (const name of ['Infrastructure', 'Network', 'Settings', 'Xray Configs'])
+  for (const name of ['Network', 'Settings', 'Xray Configs'])
     expect(screen.getByRole('button', { name })).not.toBeNull();
   expect(
     view.container.querySelector('.rail-utilities')?.querySelectorAll('.rail-button').length,
-  ).toBe(4);
+  ).toBe(5);
   fireEvent.click(screen.getByRole('button', { name: /Command Palette/ }));
   expect(commandPaletteStore.getSnapshot()).toBe(true);
 });

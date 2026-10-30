@@ -31,7 +31,7 @@ test('keeps route groups compact and closed until clicked, then closes after cho
   function Location() { return <output data-testid="group-route">{useLocation().pathname}</output>; }
   const view = renderWithProviders(<MemoryRouter initialEntries={['/hosts']}><AppSidebar /><Location /></MemoryRouter>);
   await act(async () => {});
-  const group = screen.getByRole('button', { name: 'Infrastructure' });
+  const group = screen.getByRole('button', { name: 'Network' });
   expect(group.getAttribute('aria-current')).toBe('page');
   expect(group.getAttribute('aria-expanded')).toBe('false');
   expect(screen.queryByRole('menuitem', { name: /Nodes/ })).toBeNull();

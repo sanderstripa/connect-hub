@@ -44,6 +44,15 @@ try{
   await page.evaluate(d=>localStorage.setItem('dark-mode',String(d)),dark);
   for(const route of ['','connections','inbounds','clients','settings#appearance']){
    await page.goto(cfg.url+'panel/'+route);await page.locator('.ant-sidebar').waitFor();await check(route.split('#')[0]||'dashboard',dark);
+   if(route===''){
+    assert.equal(await page.getByRole('button',{name:'Monitoring',exact:true}).count(),1);
+    const monitor=await page.evaluate(async url=>(await(await fetch(url+'panel/hub/api/sudoku/monitor')).json()),cfg.url);
+    assert.equal(monitor.success,true);assert.equal(monitor.obj.state,'running');assert.equal(monitor.obj.version,'core-v0.7.0');
+    await page.getByRole('button',{name:'Sudoku updates',exact:true}).click();
+    const dialog=page.getByRole('dialog');await dialog.waitFor();
+    await dialog.getByRole('link',{name:/Sudoku Core core-v0.7.0/}).waitFor({timeout:30000});
+    await check('sudoku-releases',dark);await dialog.locator('.ant-modal-close').click();
+   }
    if(route==='connections'){
     await navigation(dark);
     await page.locator('#connection-keys').waitFor();
@@ -102,9 +111,14 @@ try{
   await rail.hover();await page.waitForTimeout(250);assert.equal(Math.round((await rail.boundingBox()).width),56);
   assert.equal(await page.locator('.rail-brand').textContent(),'C.');
   const menuLabels={'/nodes':'Nodes','/hosts':'Hosts','/outbound':'Outbounds','/routing':'Routing','/settings#general':'General','/settings#security':'Authentication','/settings#telegram':'Telegram Bot','/settings#email':'Email','/settings#discord':'Discord Bot','/settings#subscription':'Subscription','/api-docs':'API Docs','/xray#basic':'Basics','/xray#balancer':'Balancers','/xray#dns':'DNS','/xray#advanced':'Advanced'};
+  assert.equal(await rail.getByRole('button',{name:'Infrastructure',exact:true}).count(),0);
+  const footer=rail.locator('.rail-utilities');
+  assert.equal(await footer.locator('button').first().getAttribute('aria-label'),'Settings');
+  const settingsBox=await footer.getByRole('button',{name:'Settings',exact:true}).boundingBox();
+  const searchBox=await footer.getByRole('button',{name:/Command Palette/}).boundingBox();
+  assert.ok(settingsBox.y < searchBox.y);
   const groups=[
-   ['Infrastructure',['/nodes','/hosts']],
-   ['Network',['/outbound','/routing']],
+   ['Network',['/nodes','/hosts','/outbound','/routing']],
    ['Settings',['/settings#general','/settings#security','/settings#telegram','/settings#email','/settings#discord','/settings#subscription','/api-docs']],
    ['Xray Configs',['/xray#basic','/xray#balancer','/xray#dns','/xray#advanced']],
   ];

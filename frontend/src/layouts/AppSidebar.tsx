@@ -154,31 +154,16 @@ export default function AppSidebar() {
       active: ['/connections', '/inbounds', '/clients'].includes(pathname),
     },
     {
-      key: 'infrastructure',
-      title: t('menu.infrastructure'),
-      icon: <ClusterOutlined aria-hidden />,
-      active: ['/nodes', '/hosts'].includes(pathname),
-      children: [
-        { key: '/nodes', icon: <ClusterOutlined aria-hidden />, label: t('menu.nodes') },
-        { key: '/hosts', icon: <GlobalOutlined aria-hidden />, label: t('menu.hosts') },
-      ],
-    },
-    {
       key: 'network',
       title: t('menu.network'),
       icon: <SwapOutlined aria-hidden />,
-      active: ['/outbound', '/routing'].includes(pathname),
+      active: ['/nodes', '/hosts', '/outbound', '/routing'].includes(pathname),
       children: [
+        { key: '/nodes', icon: <ClusterOutlined aria-hidden />, label: t('menu.nodes') },
+        { key: '/hosts', icon: <GlobalOutlined aria-hidden />, label: t('menu.hosts') },
         { key: '/outbound', icon: <ExportOutlined aria-hidden />, label: t('menu.outbounds') },
         { key: '/routing', icon: <SwapOutlined aria-hidden />, label: t('menu.routing') },
       ],
-    },
-    {
-      key: 'settings',
-      title: t('menu.settings'),
-      icon: <SettingOutlined aria-hidden />,
-      active: ['/settings', '/api-docs'].includes(pathname),
-      children: settingsChildren,
     },
     {
       key: 'xray',
@@ -188,9 +173,58 @@ export default function AppSidebar() {
       children: xrayChildren,
     },
   ];
+  const settingsItem = {
+    key: 'settings',
+    title: t('menu.settings'),
+    icon: <SettingOutlined aria-hidden />,
+    active: ['/settings', '/api-docs'].includes(pathname),
+    children: settingsChildren,
+  };
   const selected =
     pathname +
     (hash || (pathname === '/settings' ? '#general' : pathname === '/xray' ? '#basic' : ''));
+  function renderItem(item: typeof settingsItem | (typeof items)[number]) {
+    const button = (
+      <button
+        type="button"
+        className={'rail-button' + (item.active ? ' is-active' : '')}
+        aria-label={item.title}
+        aria-current={item.active ? 'page' : undefined}
+        data-nav-group={item.key}
+        aria-haspopup={item.children ? 'menu' : undefined}
+        aria-expanded={item.children ? openMenu === item.key : undefined}
+        onClick={() => {
+          if (!item.children) openLink(item.key);
+        }}
+      >
+        {item.icon}
+      </button>
+    );
+    return (
+      <Tooltip key={item.key} title={openMenu === item.key ? null : item.title} placement="right">
+        {item.children ? (
+          <Dropdown
+            destroyOnHidden
+            trigger={['click']}
+            placement="rightTop"
+            open={openMenu === item.key}
+            onOpenChange={(open) => setOpenMenu(open ? item.key : null)}
+            autoAdjustOverflow
+            overlayClassName="rail-submenu"
+            menu={{
+              items: item.children,
+              selectedKeys: [selected],
+              onClick: ({ key }) => openLink(key),
+            }}
+          >
+            {button}
+          </Dropdown>
+        ) : (
+          button
+        )}
+      </Tooltip>
+    );
+  }
   return (
     <>
       <aside className="ant-sidebar" aria-label="Connect Hub">
@@ -206,55 +240,9 @@ export default function AppSidebar() {
           >
             C.
           </a>
-          <nav className="rail-nav">
-            {items.map((item) => {
-              const button = (
-                <button
-                  type="button"
-                  className={'rail-button' + (item.active ? ' is-active' : '')}
-                  aria-label={item.title}
-                  aria-current={item.active ? 'page' : undefined}
-                  data-nav-group={item.key}
-                  aria-haspopup={item.children ? 'menu' : undefined}
-                  aria-expanded={item.children ? openMenu === item.key : undefined}
-                  onClick={() => {
-                    if (!item.children) openLink(item.key);
-                  }}
-                >
-                  {item.icon}
-                </button>
-              );
-              return (
-                <Tooltip
-                  key={item.key}
-                  title={openMenu === item.key ? null : item.title}
-                  placement="right"
-                >
-                  {item.children ? (
-                    <Dropdown
-                      destroyOnHidden
-                      trigger={['click']}
-                      placement="rightTop"
-                      open={openMenu === item.key}
-                      onOpenChange={(open) => setOpenMenu(open ? item.key : null)}
-                      autoAdjustOverflow
-                      overlayClassName="rail-submenu"
-                      menu={{
-                        items: item.children,
-                        selectedKeys: [selected],
-                        onClick: ({ key }) => openLink(key),
-                      }}
-                    >
-                      {button}
-                    </Dropdown>
-                  ) : (
-                    button
-                  )}
-                </Tooltip>
-              );
-            })}
-          </nav>
+          <nav className="rail-nav">{items.map((item) => renderItem(item))}</nav>
           <div className="rail-utilities">
+            {renderItem(settingsItem)}
             <Tooltip title={t('commandPalette.title')} placement="right">
               <button
                 type="button"

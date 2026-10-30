@@ -1,6 +1,6 @@
 {
   "name": "connect-hub-installer",
-  "version": "0.4.3-alpha.2",
+  "version": "0.4.3-alpha.3",
   "private": true,
   "description": "Connect. Hub server installation wizard",
   "author": "Sander Stripa and Connect Hub contributors",

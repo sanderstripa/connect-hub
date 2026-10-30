@@ -487,4 +487,15 @@
 }
 
 /* Throughput occupies the row after removal of the connections-count block. */
-.ov-mid{grid-template-columns:minmax(0,1fr)}
+.ov-mid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ov-sudoku-state {
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+}
+.ov-sudoku-state:hover {
+  border-color: var(--accent);
+}

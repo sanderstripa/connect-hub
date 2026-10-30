@@ -16,6 +16,7 @@ import {
   ReloadOutlined,
 } from '@ant-design/icons';
 
+import SudokuMonitor from './SudokuMonitor';
 import { formatPanelVersion } from '@/lib/panel-version';
 import { activateOnKey } from '@/utils/a11y';
 import type { Status } from '@/models/status';
@@ -81,7 +82,9 @@ export default function OverviewActionBar({
   const [moreOpen, setMoreOpen] = useState(false);
   useEffect(() => {
     if (!moreOpen) return;
-    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setMoreOpen(false); };
+    const close = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMoreOpen(false);
+    };
     document.addEventListener('keydown', close);
     return () => document.removeEventListener('keydown', close);
   }, [moreOpen]);
@@ -187,6 +190,8 @@ export default function OverviewActionBar({
         </Tooltip>
       ) : null}
 
+      <SudokuMonitor />
+
       {updateAvailable ? (
         <Tag
           className="ov-update-tag"
@@ -208,25 +213,56 @@ export default function OverviewActionBar({
       )}
 
       <div className="ov-bar-actions">
-        {[...actionGroups[0], actionGroups[1][0]].map(action => (
-          <Button key={action.key} type={action.primary ? undefined : 'text'}
-            color={action.primary ? 'primary' : undefined} variant={action.primary ? 'outlined' : undefined}
-            size={size} icon={action.icon} aria-label={action.text} onClick={action.onClick}>
+        {[...actionGroups[0], actionGroups[1][0]].map((action) => (
+          <Button
+            key={action.key}
+            type={action.primary ? undefined : 'text'}
+            color={action.primary ? 'primary' : undefined}
+            variant={action.primary ? 'outlined' : undefined}
+            size={size}
+            icon={action.icon}
+            aria-label={action.text}
+            onClick={action.onClick}
+          >
             {isMobile ? undefined : action.text}
           </Button>
         ))}
-        <Dropdown trigger={['click']} open={moreOpen} onOpenChange={setMoreOpen}
-          menu={{ items: [
-            { type: 'group', key: 'maintenance', label: t('pages.index.maintenance'),
-              children: actionGroups[1].filter(a => ['config', 'backup'].includes(a.key)).map(a =>
-                ({ key: a.key, icon: a.icon, label: a.text, onClick: a.onClick })) },
-            { type: 'divider' },
-            { type: 'group', key: 'diagnostics', label: t('pages.index.diagnostics'),
-              children: [...actionGroups[2], ...actionGroups[1].filter(a => ['accessLogs', 'amneziawgLogs'].includes(a.key))].map(a =>
-                ({ key: a.key, icon: a.icon, label: a.text, onClick: a.onClick })) },
-          ] }}>
-          <Button size={size} icon={<MoreOutlined aria-hidden />} aria-label={t('pages.index.more')}
-            aria-expanded={moreOpen} onKeyDown={event => { if (event.key === 'Escape') setMoreOpen(false); }}>
+        <Dropdown
+          trigger={['click']}
+          open={moreOpen}
+          onOpenChange={setMoreOpen}
+          menu={{
+            items: [
+              {
+                type: 'group',
+                key: 'maintenance',
+                label: t('pages.index.maintenance'),
+                children: actionGroups[1]
+                  .filter((a) => ['config', 'backup'].includes(a.key))
+                  .map((a) => ({ key: a.key, icon: a.icon, label: a.text, onClick: a.onClick })),
+              },
+              { type: 'divider' },
+              {
+                type: 'group',
+                key: 'diagnostics',
+                label: t('pages.index.diagnostics'),
+                children: [
+                  ...actionGroups[2],
+                  ...actionGroups[1].filter((a) => ['accessLogs', 'amneziawgLogs'].includes(a.key)),
+                ].map((a) => ({ key: a.key, icon: a.icon, label: a.text, onClick: a.onClick })),
+              },
+            ],
+          }}
+        >
+          <Button
+            size={size}
+            icon={<MoreOutlined aria-hidden />}
+            aria-label={t('pages.index.more')}
+            aria-expanded={moreOpen}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') setMoreOpen(false);
+            }}
+          >
             {t('pages.index.more')}
           </Button>
         </Dropdown>

@@ -137,6 +137,10 @@
       }
     },
     "index": {
+      "sudokuUpdates": "Sudoku updates",
+      "sudokuInstalled": "Installed build",
+      "sudokuReleaseError": "Unable to load Sudoku releases. Try again.",
+      "sudokuAllReleases": "All Sudoku builds",
       "more": "Thêm",
       "maintenance": "Bảo trì",
       "diagnostics": "Chẩn đoán",

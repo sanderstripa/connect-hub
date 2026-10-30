@@ -12,6 +12,8 @@ import (
 // Registered only behind the existing session login and CSRF middleware.
 func registerHubRoutes(g *gin.RouterGroup) {
 	api := g.Group("/hub/api")
+	api.GET("/sudoku/monitor", sudokuMonitor)
+	api.GET("/sudoku/releases", sudokuReleases)
 	api.GET("/sudoku/inbounds", func(c *gin.Context) { v, e := (&service.SudokuCompat{}).List(); jsonObj(c, v, e) })
 	api.POST("/sudoku/inbounds", func(c *gin.Context) {
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 16384)

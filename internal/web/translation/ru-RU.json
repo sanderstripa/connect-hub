@@ -111,7 +111,7 @@
     "infrastructure": "Инфраструктура",
     "network": "Сеть",
     "theme": "Тема",
-    "dashboard": "Дашборд",
+    "dashboard": "Мониторинг",
     "inbounds": "Входящие",
     "clients": "Клиенты",
     "groups": "Группы",
@@ -137,6 +137,10 @@
       }
     },
     "index": {
+      "sudokuUpdates": "Обновления Sudoku",
+      "sudokuInstalled": "Установленная сборка",
+      "sudokuReleaseError": "Не удалось загрузить сборки Sudoku. Попробуйте ещё раз.",
+      "sudokuAllReleases": "Все сборки Sudoku",
       "more": "Дополнительно",
       "maintenance": "Обслуживание",
       "diagnostics": "Диагностика",
