@@ -23,9 +23,11 @@ try{
  await page.locator('input[autocomplete=username]').fill(cfg.user);await page.locator('input[autocomplete=current-password]').fill(cfg.password);await page.locator('button[type=submit]').click();await page.waitForURL('**/panel/');
  for(const dark of [false,true]){
   await page.evaluate(d=>localStorage.setItem('dark-mode',String(d)),dark);
-  for(const route of ['','inbounds','clients','settings#appearance']){
+  for(const route of ['','connections','inbounds','clients','settings#appearance']){
    await page.goto(cfg.url+'panel/'+route);await page.locator('.ant-sidebar').waitFor();await check(route.split('#')[0]||'dashboard',dark);
-   if(route==='inbounds'){
+   if(route==='connections'){
+    await page.locator('#connection-keys').waitFor();assert.equal(await page.locator('.ant-sidebar').count(),1);assert.ok(await page.locator('#connection-inbounds').boundingBox());
+
     await page.getByRole('button',{name:'Add Inbound',exact:true}).click();await page.getByRole('dialog').waitFor();await check('inbound-dialog',dark);await page.getByRole('dialog').locator('.ant-modal-close').click();
    }
   }

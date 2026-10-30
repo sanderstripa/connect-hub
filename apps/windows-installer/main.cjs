@@ -39,7 +39,7 @@ register('connect',async input=>{
 register('install',async input=>{if(connectionBusy||busy)throw Object.assign(new Error(),{code:'BUSY'});const result=await connection.start(input);busy=true;lastResult=null;return result;});
 register('status',async()=>{const state=await connection.poll();busy=state.state==='running';if(state.state==='complete')lastResult=state;return state;});
 register('access',async()=>{lastResult=await connection.access();return lastResult;});
-register('qr',async()=>{if(!lastResult)throw new Error('No result');return QRCode.toDataURL(panelURL(lastResult.url),{width:176,margin:2,errorCorrectionLevel:'M',color:{dark:'#111213',light:'#ffffff'}});});
+register('qr',async()=>{if(!lastResult)throw new Error('No result');return QRCode.toDataURL(panelURL(lastResult.url),{width:176,margin:2,errorCorrectionLevel:'L',color:{dark:'#111213',light:'#ffffff'}});});
 register('open',async()=>{if(lastResult)await shell.openExternal(panelURL(lastResult.url));});
 register('copy',field=>{if(lastResult&&['url','username','password'].includes(field))clipboard.writeText(String(lastResult[field]));});
 let connectionRows=[],connectionBusy=false;
@@ -62,23 +62,23 @@ register('panelAuth',input=>{
  if(!input||typeof input.username!=='string'||typeof input.password!=='string'||input.username.length>512||input.password.length>4096)throw new Error('Invalid credentials');
  connection.panelAuth={username:input.username,password:input.password};
 });
-function connectionRow(id){const row=connectionRows.find(row=>row.id===id&&row.enabled&&row.url);if(!row)throw new Error('Unknown connection');return row;}
+function connectionRow(id,variant='standard'){if(!['standard','shadowrocket'].includes(variant))throw new Error('Unknown format');const row=connectionRows.find(row=>row.id===id&&row.enabled&&row.url);if(!row)throw new Error('Unknown connection');const url=variant==='shadowrocket'?row.shadowrocketUrl:row.url;if(!url)throw new Error('Unavailable format');return {...row,url};}
 register('editorSchema',()=>require('./advanced-fields.cjs'));
 register('connectionDetails',id=>withConnections(()=>connection.connectionDetails(id)));
 register('generateKeys',kind=>withConnections(()=>connection.panelRequest({action:'generate',kind})));
 register('updateConnection',input=>withConnections(async()=>{connectionRows=await connection.updateConnection(input);return connectionRows;}));
-register('connectionQR',id=>QRCode.toDataURL(connectionRow(id).url,{width:320,margin:2,errorCorrectionLevel:'M'}));
-register('copyConnection',id=>clipboard.writeText(connectionRow(id).url));
-register('saveConnectionQR',async id=>{
- const row=connectionRow(id);
- const file=await dialog.showSaveDialog(window,{defaultPath:'Connect-Hub-'+row.protocol+'-'+row.port+'.png',filters:[{name:'PNG',extensions:['png']}]});
- if(!file.canceled&&file.filePath)await fs.promises.writeFile(file.filePath,await QRCode.toBuffer(row.url,{width:768,margin:2,errorCorrectionLevel:'M'}));
+register('connectionQR',(id,variant)=>QRCode.toDataURL(connectionRow(id,variant).url,{width:320,margin:2,errorCorrectionLevel:'L'}));
+register('copyConnection',(id,variant)=>clipboard.writeText(connectionRow(id,variant).url));
+register('saveConnectionQR',async(id,variant)=>{
+ const row=connectionRow(id,variant);
+ const file=await dialog.showSaveDialog(window,{defaultPath:'Connect-Hub-'+row.protocol+'-'+row.port+(variant==='shadowrocket'?'-Shadowrocket':'')+'.png',filters:[{name:'PNG',extensions:['png']}]});
+ if(!file.canceled&&file.filePath)await fs.promises.writeFile(file.filePath,await QRCode.toBuffer(row.url,{width:768,margin:2,errorCorrectionLevel:'L'}));
 });
 register('saveConnections',async()=>{
  const rows=connectionRows.filter(row=>row.enabled&&row.url);
  if(!rows.length)throw new Error('No connections');
  const file=await dialog.showSaveDialog(window,{defaultPath:'Connect-Hub-keys.txt',filters:[{name:'Text',extensions:['txt']}]});
- if(!file.canceled&&file.filePath)await fs.promises.writeFile(file.filePath,rows.map(row=>row.name+'\n'+row.url).join('\n\n')+'\n',{mode:0o600});
+ if(!file.canceled&&file.filePath)await fs.promises.writeFile(file.filePath,rows.map(row=>row.name+'\n'+row.url+(row.shadowrocketUrl?'\nShadowrocket · Clash\n'+row.shadowrocketUrl:'')).join('\n\n')+'\n',{mode:0o600});
 });
 register('minimize',()=>window.minimize());
 register('close',()=>window.close());

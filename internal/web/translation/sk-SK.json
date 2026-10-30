@@ -135,7 +135,8 @@
     "unpinSidebar": "Odopnúť bočné menu",
     "subFormats": "Formáty odberu",
     "infrastructure": "Infraštruktúra",
-    "network": "Sieť"
+    "network": "Sieť",
+    "connections": "Connections"
   },
   "pages": {
     "login": {
@@ -2866,5 +2867,12 @@
     "restartXray": "Reštartovať službu Xray",
     "restartXraySuccess": "Xray bol úspešne reštartovaný",
     "settings": "Nastavenia"
+  },
+  "connections": {
+    "keys": "Keys and clients",
+    "shadowrocketHint": "Shadowrocket 2.2.92+: import a Clash profile by link or QR. The panel HTTPS address must be reachable with a trusted certificate. iPhone import needs device validation; download YAML for manual import.",
+    "copyProfileURL": "Copy profile URL",
+    "profileUnavailable": "Update the panel or check that the key is enabled and has not expired.",
+    "intro": "Create an inbound above, then add and manage device keys below."
   }
 }

@@ -69,6 +69,7 @@ func registerHubRoutes(g *gin.RouterGroup) {
 		}
 		jsonMsg(c, "Device updated", (&service.SudokuCompat{}).SetDevice(c.Param("id"), c.Param("device"), c.Param("action")))
 	})
+	api.POST("/sudoku-profiles", createSudokuProfiles)
 	api.GET("/status", func(c *gin.Context) {
 		jsonObj(c, gin.H{"sudoku": hub.Sudoku.State(), "mist": gin.H{"enabled": false, "stage": "alpha / unavailable", "reason": "No verified server adapter or redistribution license; no runtime is started"}, "connectCore": hub.ProbeCore()}, nil)
 	})

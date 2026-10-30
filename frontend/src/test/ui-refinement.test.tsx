@@ -10,15 +10,17 @@ import { renderWithProviders } from './test-utils';
 
 vi.mock('@/api/queries/useAllSettings', () => ({ useAllSettings: () => ({ allSetting: {} }) }));
 
-test('Clients is a standalone item with no group navigation', async () => {
+test('Connections replaces separate Inbounds and Clients navigation', async () => {
   localStorage.setItem('sidebar-pinned', 'true');
   function Location() { return <output data-testid="current-route">{useLocation().pathname}</output>; }
   const view = renderWithProviders(<MemoryRouter initialEntries={['/']}><AppSidebar /><Location /></MemoryRouter>);
   await act(async () => {});
-  const item = view.container.querySelector('[data-menu-id$="-/clients"]')!;
+  const item = view.container.querySelector('[data-menu-id$="-/connections"]')!;
+  expect(view.container.querySelector('[data-menu-id$="-/clients"]')).toBeNull();
+  expect(view.container.querySelector('[data-menu-id$="-/inbounds"]')).toBeNull();
   expect(item.closest('.ant-menu-submenu')).toBeNull();
   fireEvent.click(item);
-  await waitFor(() => expect(screen.getByTestId('current-route').textContent).toBe('/clients'));
+  await waitFor(() => expect(screen.getByTestId('current-route').textContent).toBe('/connections'));
   expect(screen.queryByRole('menuitem', { name: /Groups|Client List/ })).toBeNull();
   localStorage.clear();
 });

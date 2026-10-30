@@ -38,7 +38,7 @@ with tempfile.TemporaryDirectory(prefix='connect-desktop-proof-',dir=pkg.parent)
     finally:
      for s in sockets:s.close()
    script="const c=require('./connections.cjs');const s=c.selection(JSON.parse(process.argv[1]));console.log(JSON.stringify(s.protocols.map((p,i)=>c.preset(p,s,s.port+i,JSON.parse(process.argv[2])))));"
-   selected={'name':'Desktop proof','host':'203.0.113.10','port':first,'protocols':['vless','xhttp','sudoku','mtproto','shadowsocks']}
+   selected={'email':'Alex-Desktop','name':'Desktop proof','host':'203.0.113.10','port':first,'protocols':['vless','xhttp','sudoku','mtproto','shadowsocks']}
    inbounds=json.loads(subprocess.check_output(['node','-e',script,json.dumps(selected),json.dumps(keys)],cwd=base))
    for inbound in inbounds:
     try:panel.run({'action':'create','inbound':inbound})
@@ -49,9 +49,9 @@ with tempfile.TemporaryDirectory(prefix='connect-desktop-proof-',dir=pkg.parent)
    assert settings(sudo)['clients'][0]['sudokuKey']
    xhttp=next(row for row in rows if row['protocol']=='vless' and (json.loads(row['streamSettings']) if isinstance(row['streamSettings'],str) else row['streamSettings']).get('network')=='xhttp')
    before=settings(xhttp)['clients'][0]['id']
-   auths=panel.run({'action':'generate','kind':'vless'})['auths'];assert auths
+   auths=panel.run({'action':'generate','kind':'vless'})['auths'];auths=[a for a in auths if a['decryption'].startswith('mlkem768x25519plus.native.')];assert auths
    assert panel.run({'action':'generate','kind':'mldsa'})['verify']
-   patch={'streamSettings.xhttpSettings.mode':'stream-one','streamSettings.xhttpSettings.xPaddingBytes':'200-800','streamSettings.xhttpSettings.xPaddingObfsMode':True,'streamSettings.realitySettings.settings.fingerprint':'safari','sniffing.enabled':True,'sniffing.destOverride':['http','tls','quic'],'sniffing.routeOnly':True}
+   patch={'streamSettings.xhttpSettings.mode':'stream-one','streamSettings.xhttpSettings.xPaddingBytes':'100-1000','streamSettings.xhttpSettings.xPaddingObfsMode':True,'streamSettings.realitySettings.settings.fingerprint':'safari','sniffing.enabled':True,'sniffing.destOverride':['http','tls','quic'],'sniffing.routeOnly':False,'streamSettings.realitySettings.target':'booking.com:443','streamSettings.realitySettings.serverNames':['booking.com']}
    patch['settings.decryption']=auths[0]['decryption'];patch['settings.encryption']=auths[0]['encryption']
    apply="const {applyAdvanced}=require('./advanced.cjs');let b='';process.stdin.on('data',x=>b+=x);process.stdin.on('end',()=>{const q=JSON.parse(b);console.log(JSON.stringify(applyAdvanced(q.inbound,{changes:q.changes})));});"
    edited=json.loads(subprocess.check_output(['node','-e',apply],input=json.dumps({'inbound':xhttp,'changes':patch}),text=True,cwd=base))
@@ -65,6 +65,14 @@ with tempfile.TemporaryDirectory(prefix='connect-desktop-proof-',dir=pkg.parent)
    assert stream['realitySettings']['settings']['fingerprint']=='safari'
    rows=panel.run({'action':'list'})
    print('PASS: real ML-KEM/ML-DSA generation, advanced XHTTP/Reality/sniffing edit and unchanged client key',flush=True)
+   sudoku_client=settings(sudo)['clients'][0]
+   profiles=panel.run({'action':'profiles','profiles':[{'inboundId':sudo['id'],'clientId':sudoku_client['id'],'host':'203.0.113.10','port':sudo['port'],'name':'Alex Sudoku'}]})
+   profile=profiles[str(sudo['id'])+':'+sudoku_client['id']]
+   assert profile['path'].startswith('sudoku-import/') and sudoku_client['sudokuKey'] not in profile['path']
+   import urllib.request
+   with urllib.request.urlopen(access['LOCAL_URL']+profile['path'],timeout=10) as response:
+    config=response.read().decode();assert sudoku_client['sudokuKey'] in config and 'sudoku' in config and 'enable-pure-downlink: false' in config
+   print('PASS: public signed Sudoku Clash profile matches original device key without panel login',flush=True)
    encoded=json.dumps(rows)
    export="const c=require('./connections.cjs');let b='';process.stdin.on('data',x=>b+=x);process.stdin.on('end',()=>{const r=c.exportRows(JSON.parse(b),'203.0.113.10');if(r.length!==5||r.some(x=>!x.url))process.exit(1);console.log('PASS: all five real panel client links exported');});"
    subprocess.run(['node','-e',export],input=encoded,text=True,cwd=base,check=True)

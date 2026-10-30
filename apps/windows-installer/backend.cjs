@@ -6,6 +6,7 @@ const {isIP}=require('node:net');
 const fs=require('node:fs'),path=require('node:path');
 const {selection,preset,exportRows}=require('./connections.cjs');
 const {applyAdvanced,draft}=require('./advanced.cjs');
+const {recommendSwap}=require('./system-recommendations.cjs');
 const JOB_ROOT='/var/lib/connect-hub-installer';
 const quote=value=>"'"+String(value).replaceAll("'","'\\''")+"'";
 function failure(code){const error=new Error(code);error.code=code;return error;}
@@ -23,7 +24,7 @@ function credentials(input){
 }
 function options(input={}){
  const language=input.language==='en'?'en':'ru',swap=Number(input.swap||0);
- if(![0,1,2,4,8].includes(swap))throw failure('INVALID_OPTIONS');
+ if(!Number.isInteger(swap)||swap<0||swap>32)throw failure('INVALID_OPTIONS');
  let domain='';
  if(input.addressMode==='domain'){
   const raw=String(input.domain||'').trim().toLowerCase();
@@ -78,6 +79,11 @@ printf 'CH_PRIVILEGED=1\\n'
 if [ -r /etc/os-release ];then . /etc/os-release;printf 'CH_OS64=%s\\n' "$(printf '%s' "$PRETTY_NAME" | base64 | tr -d '\\n')";fi
 printf 'CH_CPU=%s\\n' "$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN)"
 awk '/^MemTotal:/ {printf "CH_RAM=%.2f\\n",$2/1048576}' /proc/meminfo
+awk '/^MemAvailable:/ {printf \"CH_AVAILABLE_RAM=%.3f\\n\",$2/1048576} /^SwapTotal:/ {printf \"CH_SWAP_GB=%.3f\\n\",$2/1048576}' /proc/meminfo
+df -kP /var/lib | awk 'NR==2 {printf \"CH_FREE_DISK=%.3f\\nCH_SWAP_DISK=%.3f\\n\",$4/1048576,$2/1048576}'
+fs=$(findmnt -n -o FSTYPE -T /var/lib 2>/dev/null || true)
+case \"$fs\" in ext4|xfs) echo CH_SWAP_SUPPORTED=1;; btrfs) if command -v btrfs >/dev/null;then echo CH_SWAP_SUPPORTED=1;fi;; esac
+if [ -e /var/lib/connect-hub-swap/swapfile ];then echo CH_OWN_SWAP=1;fi
 df -kP / | awk 'NR==2 {printf "CH_DISK=%.0f\\n",$2/1048576}'
 if [ -f /etc/connect-hub/.connect-hub-owned ];then echo CH_INSTALLED=1;fi
 if [ -f ${JOB_ROOT}/.connect-hub-owned ] && [ ! -L ${JOB_ROOT} ];then
@@ -88,7 +94,8 @@ fi`);
    const records=Object.fromEntries(data.split('\n').filter(x=>x.startsWith('CH_')).map(x=>[x.slice(0,x.indexOf('=')),x.slice(x.indexOf('=')+1)]));
    if(records.CH_PRIVILEGED!=='1')throw failure('SUDO_FAILED');
    this.installed=records.CH_INSTALLED==='1';this.job=/^job\.[a-f0-9]{32}$/.test(records.CH_JOB||'')?records.CH_JOB:previousJob;
-   return {installed:this.installed,job:this.job,host:this.secret.host,os:Buffer.from(records.CH_OS64||'','base64').toString('utf8'),cpus:Number(records.CH_CPU)||0,ram:Number(records.CH_RAM)||0,disk:Number(records.CH_DISK)||0};
+   const hardware={ram:Number(records.CH_RAM)||0,availableRam:records.CH_AVAILABLE_RAM===undefined?NaN:Number(records.CH_AVAILABLE_RAM),swapGB:records.CH_SWAP_GB===undefined?NaN:Number(records.CH_SWAP_GB),freeDisk:records.CH_FREE_DISK===undefined?NaN:Number(records.CH_FREE_DISK),swapDisk:records.CH_SWAP_DISK===undefined?NaN:Number(records.CH_SWAP_DISK),swapSupported:records.CH_SWAP_SUPPORTED==='1',ownSwap:records.CH_OWN_SWAP==='1'};
+   return {installed:this.installed,job:this.job,host:this.secret.host,os:Buffer.from(records.CH_OS64||'','base64').toString('utf8'),cpus:Number(records.CH_CPU)||0,disk:Number(records.CH_DISK)||0,...hardware,swapRecommendation:recommendSwap(hardware)};
   }catch(error){this.disconnect();throw failure(['AUTH_FAILED','HOST_NOT_TRUSTED','INVALID_HOST','INVALID_PASSWORD'].includes(error.code)?error.code:error.code==='REMOTE_COMMAND_FAILED'?'SUDO_FAILED':'CONNECTION_FAILED');}
  }
  exec(command,input=''){
@@ -164,18 +171,36 @@ CH_ACCESS`));
  async connections(){
   const rows=await this.panelRequest({action:'list'});
   if(!Array.isArray(rows))throw failure('INVALID_RESULT');
-  return exportRows(rows,this.secret.host);
+  const exported=exportRows(rows,this.secret.host),requests=exported.map(row=>row.profileRequest).filter(Boolean);
+  if(requests.length){
+   try{
+    const profiles=await this.panelRequest({action:'profiles',profiles:requests.slice(0,500)});
+    const access=await this.access(),base=panelURL(access.url);
+    for(const row of exported){const req=row.profileRequest,profile=req&&profiles[req.inboundId+':'+req.clientId];if(profile?.path?.startsWith('sudoku-import/'))row.shadowrocketUrl='shadowrocket://add/'+new URL(profile.path,base).href;}
+   }catch{} // Old panels still expose their original Sudoku links; prompt to update for profile export.
+  }
+  return exported;
  }
  async createConnections(input){
   const selected=selection(input),outcomes=[];
+  const existing=selected.email?await this.panelRequest({action:'list'}):[];
   for(let i=0;i<selected.protocols.length;i++){
    const kind=selected.protocols[i];
    try{
+    const email=selected.protocols.length>1?selected.email+'-'+kind:selected.email;
+    if(selected.email&&existing.some(ib=>{try{return (typeof ib.settings==='string'?JSON.parse(ib.settings):ib.settings).clients?.some(c=>c.email===email);}catch{return false;}}))throw failure('KEY_NAME_IN_USE');
     const keys=['vless','xhttp'].includes(kind)?await this.panelRequest({action:'keys'}):null;
     const advanced=structuredClone(input.advanced||{});
     const first=advanced.changes?.port??selected.port;
     if(advanced.changes?.port!==undefined)advanced.changes.port=first+i;
-    const inbound=applyAdvanced(preset(kind,selected,first+i,keys),advanced);
+    let base=preset(kind,selected,first+i,keys);
+    if(kind==='xhttp'&&selected.xhttpProfile==='recommended'){
+     const enc=await this.panelRequest({action:'generate',kind:'vless'});
+     const pair=enc.auths?.find(p=>String(p.decryption).startsWith('mlkem768x25519plus.native.')&&String(p.encryption).startsWith('mlkem768x25519plus.native.'));
+     if(!pair)throw failure('MLKEM_UNAVAILABLE');
+     base=applyAdvanced(base,{changes:{'settings.decryption':pair.decryption,'settings.encryption':pair.encryption,'streamSettings.xhttpSettings.mode':'stream-one','streamSettings.xhttpSettings.xPaddingBytes':'100-1000','streamSettings.xhttpSettings.xPaddingObfsMode':true,'streamSettings.realitySettings.target':'booking.com:443','streamSettings.realitySettings.serverNames':['booking.com'],'streamSettings.realitySettings.settings.fingerprint':'safari','sniffing.enabled':true,'sniffing.destOverride':['http','tls','quic'],'sniffing.metadataOnly':false,'sniffing.routeOnly':false}});
+    }
+    const inbound=applyAdvanced(base,advanced);
     await this.panelRequest({action:'create',inbound});
     outcomes.push({protocol:kind,ok:true,port:inbound.port});
    }catch(error){outcomes.push({protocol:kind,ok:false,error:error.code||'PANEL_REQUEST_FAILED',port:selected.port+i});}

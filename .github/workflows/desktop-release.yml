@@ -79,6 +79,7 @@ jobs:
       - run: npm run typecheck && npm run lint && npm test -- --project unit --project components && npm run build
         working-directory: frontend
       - run: go test ./internal/web -run TestEmbeddedFontsAndRangeRequests -count=1
+      - run: go test ./internal/web/controller ./internal/sub -run TestSudoku -count=1
       - run: python3 apps/windows-installer/test/uninstall-smoke.py
       - run: python3 hub/package.py
       - name: Real native advanced connection creation and editing
@@ -122,23 +123,22 @@ jobs:
           cp panel-assets/connect-hub-linux-amd64.tar.gz release-assets/
           cat panel-assets/SHA256SUMS >> release-assets/SHA256SUMS
           cat > release-notes.md <<'NOTES'
-          Connect Hub: server removal from the Windows application.
+          Connect Hub 0.4: unified Connections, guided XHTTP and hardware advice.
 
-          - Remove a managed Connect Hub server installation from Panel management, with a native confirmation naming the server. Deletes panel files, connections, keys, bundled certificates and installer job credentials. Preserves BBR, swap, external databases and unrelated services. Refuses foreign services and active installation jobs.
-          - Local Onest 400/500/600, neutral white/graphite light/dark surfaces, blue actions and green connection states. Saved legacy palettes migrate while retaining the selected light/dark mode and panel data.
-          - Advanced desktop create/edit sections: Basic, Protocol, Transport, Security, Sniffing and raw templates. Configure XHTTP modes, padding, headers, placements, XMUX, Sockopt, final masks and QUIC settings.
-          - Native Reality X25519, ML-KEM encryption and ML-DSA key generation. TLS certificate paths refer to server files. Preserve existing client identities and unedited parameters on ordinary edits.
-          - Advanced client parameters are propagated into supported share links and QR codes. Private server keys stay out of share links.
+          - One Connections page: inbounds above, device keys and clients below, retaining all former actions. Old inbounds/client URLs redirect with their query filters.
+          - Read-only RAM, existing swap, filesystem and free disk analysis. Explicit Apply recommendation, keep-current default and a manual 0–32 GB choice.
+          - XHTTP first and marked Recommended. Basic, recommended and manual profiles. Recommended: fresh native ML-KEM-768 keys, stream-one, padding 100–1000, Reality with Safari fingerprint and booking.com:443, HTTP/TLS/QUIC sniffing without Fake DNS.
+          - Optional device key name in the panel e-mail field. Duplicate custom names are refused; existing keys are never silently overwritten.
+          - Original Sudoku URI/QR plus a separate Shadowrocket Clash-profile import link/QR. Signed per-device URLs expose only that device profile and stop working for disabled/revoked/expired keys. No new device keys are created for another export format.
+          - Shadowrocket 2.2.92+ supports Sudoku. This export uses Clash YAML and the documented import callback because its proprietary Sudoku URI is not specified publicly. Actual iPhone import/handshake is not verified; use the YAML download for manual import if needed. Profile fetching needs a reachable panel URL and trusted HTTPS certificate.
 
-          Validated: actual Windows GUI and portable EXE, native CSRF-protected panel APIs, advanced XHTTP/Reality/sniffing editing, ML-KEM/ML-DSA generation, preserved keys and listening sockets; real panel routes in both Soulu themes. External client handshakes and provider firewall reachability are not covered.
-
-          Alpha release. Update an existing server with the panel update menu or the installer. Links/QR codes contain private access credentials. Explicit key generation or raw client JSON edits can intentionally change credentials; ordinary field edits preserve them.
+          Validation: frontend suite and type/lint/build checks, Windows source GUI and packaged portable EXE, native XHTTP/ML-KEM/Sudoku APIs and signed-profile authorization/revocation tests. Existing server update preserves keys and data. BBR/swap stay opt-in.
           NOTES
           if gh release view "$tag" >/dev/null 2>&1; then
             echo 'A release already exists for this installer version; refusing to replace published binaries.'
             exit 1
           fi
-          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — server management" --notes-file release-notes.md --prerelease --latest=false
+          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — guided connections" --notes-file release-notes.md --prerelease --latest=false
   public-install:
     needs: publish
     runs-on: ubuntu-24.04

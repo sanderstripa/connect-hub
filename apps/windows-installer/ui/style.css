@@ -16,3 +16,5 @@ body{font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}header{he
 main:has(#advanced-editor:not([hidden])){padding-top:0}.editor-tabs{top:0;box-shadow:0 4px 0 var(--card)}
 
 .remove-panel{margin-top:32px;padding-top:20px;border-top:1px solid var(--border)}button.danger{color:#d93c48;border-color:currentColor}
+
+.recommended-badge{display:inline-block;background:var(--card);color:var(--accent);font-size:11px;margin-left:8px;padding:2px 6px;border:1px solid currentColor;border-radius:5px}#xhttp-profiles{border:1px solid var(--border);border-radius:10px;padding:16px;margin:20px 0}#xhttp-profiles label{padding:10px;margin:0}#xhttp-profiles input{width:auto;height:auto;margin-right:10px}#xhttp-profiles small{margin-left:24px}#swap-recommendation{margin-top:0}

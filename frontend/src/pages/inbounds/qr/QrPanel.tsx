@@ -1,9 +1,9 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, QRCode, Tag, Tooltip, message } from 'antd';
+import { Alert, Button, QRCode, Segmented, Spin, Tag, Tooltip, message } from 'antd';
 import { CopyOutlined, DownloadOutlined, PictureOutlined } from '@ant-design/icons';
 
-import { ClipboardManager, FileManager } from '@/utils';
+import { Base64, ClipboardManager, FileManager, HttpUtil } from '@/utils';
 import { activateOnKey } from '@/utils/a11y';
 import './QrPanel.css';
 
@@ -55,7 +55,7 @@ function downloadImageBlob(blob: Blob, remark: string) {
   URL.revokeObjectURL(url);
 }
 
-export default function QrPanel({
+function QrPanelContent({
   value,
   remark = '',
   downloadName = '',
@@ -157,4 +157,44 @@ export default function QrPanel({
       )}
     </div>
   );
+}
+
+function SudokuQrPanel(props: QrPanelProps) {
+  const { t } = useTranslation();
+  const [variant, setVariant] = useState('standard');
+  const [profile, setProfile] = useState<{ url: string; config: string } | null>(null);
+  const [loading, setLoading] = useState(() => { try { const v = JSON.parse(Base64.decode(props.value.slice('sudoku://'.length))); return !!v.i && !!v.c; } catch { return false; } });
+  useEffect(() => {
+    let active = true;
+    let compact: { i?: number; c?: string; h: string; p: number; n?: string };
+    try { compact = JSON.parse(Base64.decode(props.value.slice('sudoku://'.length))); } catch { return; }
+    if (!compact.i || !compact.c) return;
+    void (async () => {
+      try {
+        const id = compact.i + ':' + compact.c;
+        const response = await HttpUtil.post<Record<string, { path: string; config: string }>>('/panel/hub/api/sudoku-profiles', [{ inboundId: compact.i, clientId: compact.c, host: compact.h, port: compact.p, name: props.remark || compact.n || 'Sudoku' }], { silent: true });
+        const value = response?.success ? response.obj?.[id] : undefined;
+        if (active && value?.path.startsWith('sudoku-import/')) {
+          const base = new URL(window.X_UI_BASE_PATH || '/', window.location.origin);
+          setProfile({ url: new URL(value.path, base).href, config: value.config });
+        }
+      } finally { if (active) setLoading(false); }
+    })().catch(() => {});
+    return () => { active = false; };
+  }, [props.value, props.remark]);
+  return <div>
+    <Segmented block value={variant} onChange={setVariant} options={[{label: 'Sudoku', value: 'standard'}, {label: 'Shadowrocket · Clash', value: 'shadowrocket'}]} style={{ marginBottom: 16 }} />
+    {variant === 'standard' ? <QrPanelContent {...props} /> : <Spin spinning={loading}>
+      <Alert type="info" showIcon title={t('connections.shadowrocketHint')} style={{ marginBottom: 16 }} />
+      {profile ? <>
+        <QrPanelContent {...props} value={'shadowrocket://add/' + profile.url} remark={(props.remark || 'Sudoku') + ' · Shadowrocket'} />
+        <Button onClick={() => void ClipboardManager.copyText(profile.url)}>{t('connections.copyProfileURL')}</Button>{' '}
+        <Button onClick={() => FileManager.downloadTextFile(profile.config, 'Connect-Hub-Sudoku.yaml')}>{t('download')} YAML</Button>
+      </> : !loading && <Alert type="warning" title={t('connections.profileUnavailable')} />}
+    </Spin>}
+  </div>;
+}
+
+export default function QrPanel(props: QrPanelProps) {
+  return props.value.startsWith('sudoku://') ? <SudokuQrPanel key={props.value} {...props} /> : <QrPanelContent {...props} />;
 }

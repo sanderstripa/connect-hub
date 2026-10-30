@@ -318,7 +318,11 @@ function sortValueFor(column: string | null, order: 'ascend' | 'descend' | null)
   return `${column}:${order}`;
 }
 
-export default function ClientsPage() {
+export default function ClientsPage({ embedded = false }: { embedded?: boolean } = {}) {
+  const Heading = embedded ? 'h2' : 'h1';
+  const Shell = embedded ? 'section' : Layout;
+  const Inner = embedded ? 'div' : Layout;
+  const Content = embedded ? 'div' : Layout.Content;
   const { t } = useTranslation();
   const { isDark, isUltra, antdThemeConfig } = useTheme();
   const { datepicker } = useDatepicker();
@@ -1302,11 +1306,11 @@ export default function ClientsPage() {
     <ConfigProvider theme={antdThemeConfig}>
       {messageContextHolder}
       {modalContextHolder}
-      <Layout className={pageClass}>
-        <AppSidebar />
+      <Shell className={`${embedded ? 'connections-section ' : ''}${pageClass}`}>
+        {!embedded && <AppSidebar />}
 
-        <Layout className="content-shell">
-          <Layout.Content id="content-layout" className="content-area">
+        <Inner className="content-shell">
+          <Content id={embedded ? undefined : 'content-layout'} className="content-area">
             <Spin
               spinning={!fetched || !hostsFetched}
               delay={200}
@@ -1328,7 +1332,7 @@ export default function ClientsPage() {
                 />
               ) : (
                 <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 12]}>
-                  <Col span={24}><h1 className="section-page-title">{t('menu.clients')}</h1></Col>
+                  <Col span={24}><Heading className="section-page-title">{t(embedded ? 'connections.keys' : 'menu.clients')}</Heading></Col>
                   <Col span={24}>
                     <Card size="small" hoverable className="summary-card">
                       <Row gutter={[16, 12]}>
@@ -1900,8 +1904,8 @@ export default function ClientsPage() {
                 </Row>
               )}
             </Spin>
-          </Layout.Content>
-        </Layout>
+          </Content>
+        </Inner>
 
         <LazyMount when={formOpen}>
           <ClientFormModal
@@ -2064,7 +2068,7 @@ export default function ClientsPage() {
             onConfirm={onPromptConfirm}
           />
         </LazyMount>
-      </Layout>
+      </Shell>
     </ConfigProvider>
   );
 }

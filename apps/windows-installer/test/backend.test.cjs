@@ -44,3 +44,16 @@ test('removal uses encrypted SSH, clears panel state and permits a fresh install
   assert.equal((await client.connect(server)).installed,false);
  }finally{client.disconnect();await server.close();}
 });
+test('SSH hardware probe is a valid read-only shell program and supports arbitrary whole GB choices',async()=>{
+ const {spawnSync}=require('node:child_process');
+ const server=await fixture(),client=new InstallerConnection({trustHost:async()=>true});
+ try{
+  const status=await client.connect(server);assert.equal(status.swapRecommendation.size,2);
+  assert.equal(options({swap:3}).swap,3);assert.equal(options({swap:10}).swap,10);assert.throws(()=>options({swap:1.5}));
+  if(process.platform!=='win32'){
+   const command=server.commands.find(c=>c.includes('CH_PRIVILEGED'));
+   const result=spawnSync('bash',['-c',command],{encoding:'utf8'});
+   assert.equal(result.status,0,result.stderr);assert.match(result.stdout,/CH_FREE_DISK=/);assert.match(result.stdout,/CH_SWAP_GB=/);
+  }
+ }finally{client.disconnect();await server.close();}
+});

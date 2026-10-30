@@ -1,0 +1,7 @@
+.connections-page .connections-section{min-height:0;background:transparent;display:block}
+.connections-page .connections-section>.content-shell{margin:0;min-height:0}
+.connections-page .connections-section .content-area{padding:0}
+.connections-page .connections-section .section-page-title{font-size:18px}
+.connections-intro{color:var(--text-secondary);margin:0 0 24px}
+#connection-keys{margin-top:32px;padding-top:24px;border-top:1px solid var(--border-color,rgba(127,127,127,.18));scroll-margin-top:24px}
+.connections-page .connections-section .loading-spacer{min-height:180px}

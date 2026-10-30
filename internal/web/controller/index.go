@@ -44,6 +44,7 @@ func NewIndexController(g *gin.RouterGroup) *IndexController {
 func (a *IndexController) initRouter(g *gin.RouterGroup) {
 	g.GET("/", a.index)
 	g.GET("/csrf-token", a.csrfToken)
+	g.GET("/sudoku-import/:payload/:signature", serveSudokuProfile)
 
 	g.POST("/login", middleware.CSRFMiddleware(getRemoteIp), a.login)
 	g.POST("/logout", middleware.CSRFMiddleware(getRemoteIp), a.logout)

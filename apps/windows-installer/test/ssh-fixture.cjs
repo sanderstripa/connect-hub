@@ -14,9 +14,10 @@ async function fixture(){
      try{
       const req=JSON.parse(body);let value;
       if(req.action==='list')value=inbounds;
+      else if(req.action==='profiles')value=Object.fromEntries(req.profiles.map(p=>[p.inboundId+':'+p.clientId,{path:'sudoku-import/fixture/signed',config:'proxies: []'}]));
       else if(req.action==='details')value=inbounds.find(x=>x.id===req.id);
       else if(req.action==='update'){const i=inbounds.findIndex(x=>x.id===req.id);inbounds[i]={...req.inbound,id:req.id};value=inbounds[i];}
-      else if(req.action==='generate')value=req.kind==='reality'?{privateKey:'fixture-private',publicKey:'fixture-public'}:req.kind==='mldsa'?{seed:'fixture-seed',verify:'fixture-verify'}:{auths:[{label:'ML-KEM-768 native',decryption:'mlkem-server',encryption:'mlkem-client'}]};
+      else if(req.action==='generate')value=req.kind==='reality'?{privateKey:'fixture-private',publicKey:'fixture-public'}:req.kind==='mldsa'?{seed:'fixture-seed',verify:'fixture-verify'}:{auths:[{label:'ML-KEM-768 native',decryption:'mlkem768x25519plus.native.600s.server',encryption:'mlkem768x25519plus.native.0rtt.client'}]};
       else if(req.action==='keys')value={privateKey:'fixture-private',publicKey:'fixture-public'};
       else if(req.action==='create'){
        const ib={...req.inbound,id:inbounds.length+1},settings=JSON.parse(ib.settings);
@@ -30,7 +31,7 @@ async function fixture(){
    }
 
    if(info.command==='id -u')output='0\n';
-   else if(info.command.includes('CH_PRIVILEGED'))output='CH_PRIVILEGED=1\nCH_OS64='+Buffer.from('Debian GNU/Linux 13').toString('base64')+'\nCH_CPU=1\nCH_RAM=1\nCH_DISK=10\n'+(installed?'CH_INSTALLED=1\n':'');
+   else if(info.command.includes('CH_PRIVILEGED'))output='CH_PRIVILEGED=1\nCH_OS64='+Buffer.from('Debian GNU/Linux 13').toString('base64')+'\nCH_CPU=1\nCH_RAM=1\nCH_DISK=10\nCH_AVAILABLE_RAM=.6\nCH_SWAP_GB=0\nCH_FREE_DISK=7\nCH_SWAP_DISK=10\nCH_SWAP_SUPPORTED=1\n'+(installed?'CH_INSTALLED=1\n':'');
    else if(info.command.includes('CH_UNINSTALLED=1')){installed=false;inbounds.length=0;output='CH_UNINSTALLED=1\n';}
    else if(info.command.includes('CH_ACCESS'))output=JSON.stringify(result);
    else if(info.command.includes('nohup bash')){installed=true;const encoded=info.command.match(/'([A-Za-z0-9+/=]{100,})'/);if(encoded)sources.push(Buffer.from(encoded[1],'base64').toString());output='CH_STARTED=1\n';}

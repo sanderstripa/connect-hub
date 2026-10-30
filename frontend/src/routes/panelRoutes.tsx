@@ -1,5 +1,5 @@
 import { lazy } from 'react';
-import { Navigate } from 'react-router';
+import { Navigate, useLocation } from 'react-router';
 import type { ComponentType } from 'react';
 import {
   ApiOutlined,
@@ -15,9 +15,14 @@ import {
 } from '@ant-design/icons';
 
 const IndexPage = lazy(() => import('@/pages/index/IndexPage'));
-const InboundsPage = lazy(() => import('@/pages/inbounds/InboundsPage'));
-const ClientsPage = lazy(() => import('@/pages/clients/ClientsPage'));
-const GroupsPage = () => <Navigate to="/clients" replace />;
+const ConnectionsPage = lazy(() => import('@/pages/connections/ConnectionsPage'));
+function LegacyConnections({ keys = false }: { keys?: boolean }) {
+  const location = useLocation();
+  return <Navigate to={'/connections' + location.search + (keys ? '#keys' : location.hash)} replace />;
+}
+const LegacyInbounds = () => <LegacyConnections />;
+const LegacyClients = () => <LegacyConnections keys />;
+const GroupsPage = LegacyClients;
 const NodesPage = lazy(() => import('@/pages/nodes/NodesPage'));
 const HostsPage = lazy(() => import('@/pages/hosts/HostsPage'));
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
@@ -37,8 +42,9 @@ export interface PanelRoute {
 // page cannot go missing from one of them.
 export const PANEL_ROUTES: PanelRoute[] = [
   { path: '/', titleKey: 'menu.dashboard', icon: DashboardOutlined, component: IndexPage },
-  { path: '/inbounds', titleKey: 'menu.inbounds', icon: ImportOutlined, component: InboundsPage },
-  { path: '/clients', titleKey: 'menu.clients', icon: TeamOutlined, component: ClientsPage },
+  { path: '/connections', titleKey: 'menu.connections', icon: ImportOutlined, component: ConnectionsPage },
+  { path: '/inbounds', titleKey: 'menu.connections', icon: ImportOutlined, component: LegacyInbounds, hidden: true },
+  { path: '/clients', titleKey: 'menu.connections', icon: TeamOutlined, component: LegacyClients, hidden: true },
   { path: '/groups', titleKey: 'menu.groups', icon: TeamOutlined, component: GroupsPage, hidden: true },
   { path: '/nodes', titleKey: 'menu.nodes', icon: ClusterOutlined, component: NodesPage },
   { path: '/hosts', titleKey: 'menu.hosts', icon: GlobalOutlined, component: HostsPage },

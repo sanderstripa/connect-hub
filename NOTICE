@@ -33,3 +33,5 @@ Connect Hub alpha.14 selects Midnight & Steel by default and refines light-mode 
 
 2026-10-29: Soulu-inspired Connect Hub design and advanced desktop editor.
 Onest by The Onest Project Authors is distributed under SIL Open Font License 1.1; see ONEST-OFL.txt.
+
+Connect Hub modifications, 2026-10-30: unified Connections workspace, opt-in hardware-based swap advice, guided XHTTP profiles and credential-scoped Sudoku Clash profile export. Shadowrocket is a separate third-party client; no iOS binary or proprietary implementation is redistributed.

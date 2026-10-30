@@ -105,3 +105,13 @@ respective section and must keep existing client credentials to preserve access.
 ## Remove the server panel
 
 Connect over SSH, open **Panel management**, then **Remove Connect Hub from server**. The native confirmation names the server and defaults to Cancel. Removal deletes the default managed panel installation, its connections, keys, bundled certificates and installer job credentials. Export a database backup in the web panel first if you need recovery. BBR, swap, external databases and unrelated services are retained. Custom paths, foreign units and active setup jobs are refused. Reconnect after removal to install again.
+
+## Guided connections (0.4)
+
+XHTTP is the first suggested transport. Select Basic for the original profile, Recommended for native ML-KEM-768 + stream-one + padding + Reality/Safari/booking.com + HTTP/TLS/QUIC sniffing, or Manual for the structured editor. Every new connection generates independent credentials. An optional key name populates the panel e-mail field; it is a label, not a mailbox. Duplicate custom names are rejected.
+
+Hardware analysis offers a conservative swap suggestion from RAM, existing swap, filesystem and free disk. It does not enable anything automatically. Apply the suggestion or choose a whole 0–32 GB size before installing. Existing swap is retained.
+
+Sudoku keeps its original compact URI. A second export uses a per-device signed Clash-profile URL with the documented Shadowrocket import callback. It requires Shadowrocket 2.2.92+, reachable panel HTTPS and a trusted certificate. The profile uses upstream Mihomo Sudoku field names; actual Shadowrocket/iPhone import and handshake have not been verified. YAML download is available in the web QR dialog for manual import. Disabled, revoked, expired or exhausted devices cannot retrieve the profile.
+
+References: https://apps.apple.com/us/app/shadowrocket/id932747118 ; https://wiki.metacubex.one/en/config/proxies/sudoku/ ; https://github.com/LOWERTOP/Shadowrocket#url-schemes . The proprietary Shadowrocket Sudoku URI is undocumented and is not fabricated.

@@ -203,8 +203,7 @@ export default function AppSidebar() {
   const tabs = useMemo<{ key: string; icon: IconName; title: string }[]>(
     () => [
       { key: '/', icon: 'dashboard', title: t('menu.dashboard') },
-      { key: '/inbounds', icon: 'inbound', title: t('menu.inbounds') },
-      { key: '/clients', icon: 'team', title: t('menu.clients') },
+      { key: '/connections', icon: 'inbound', title: t('menu.connections') },
       { key: '__infrastructure', icon: 'cluster', title: t('menu.infrastructure') },
       { key: '__network', icon: 'routing', title: t('menu.network') },
       { key: '/settings', icon: 'setting', title: t('menu.settings') },

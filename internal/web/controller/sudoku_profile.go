@@ -1,0 +1,161 @@
+// Connect Hub: credential-scoped Sudoku profile import. GPL-3.0.
+package controller
+
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"net"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	yaml "github.com/goccy/go-yaml"
+	"github.com/mhsanaei/3x-ui/v3/internal/database"
+	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/sudoku"
+)
+
+type sudokuProfileRequest struct {
+	InboundID int    `json:"inboundId"`
+	ClientID  string `json:"clientId"`
+	Host      string `json:"host"`
+	Port      int    `json:"port"`
+	Name      string `json:"name"`
+}
+
+func sudokuProfileClient(p sudokuProfileRequest) (model.Inbound, sudoku.Settings, model.Client, bool) {
+	var ib model.Inbound
+	var empty model.Client
+	var settings sudoku.Settings
+	if p.InboundID <= 0 || len(p.ClientID) > 128 || p.ClientID == "" || p.Port < 1 || p.Port > 65535 || len(p.Name) > 200 || len(p.Host) > 253 || p.Host == "" || strings.ContainsAny(p.Host, " \t\r\n/?#@\\") {
+		return ib, settings, empty, false
+	}
+	if net.ParseIP(p.Host) == nil {
+		for _, part := range strings.Split(p.Host, ".") {
+			if part == "" {
+				return ib, settings, empty, false
+			}
+			for _, r := range part {
+				if !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || r == '-') {
+					return ib, settings, empty, false
+				}
+			}
+		}
+	}
+	if database.GetDB().Preload("ClientStats").First(&ib, p.InboundID).Error != nil || ib.Protocol != model.Sudoku || !ib.Enable {
+		return ib, settings, empty, false
+	}
+	now := time.Now().UnixMilli()
+	if ib.ExpiryTime > 0 && ib.ExpiryTime <= now || ib.Total > 0 && ib.Up+ib.Down >= ib.Total {
+		return ib, settings, empty, false
+	}
+	var err error
+	settings, err = sudoku.DecodeSettings(ib.Settings)
+	if err != nil {
+		return ib, settings, empty, false
+	}
+	for _, client := range settings.Clients {
+		if client.ID != p.ClientID {
+			continue
+		}
+		if !client.Enable || client.SudokuKey == "" || client.ExpiryTime > 0 && client.ExpiryTime <= now {
+			break
+		}
+		hash, err := sudoku.UserHash(client.SudokuKey)
+		if err != nil {
+			break
+		}
+		for _, revoked := range settings.RevokedKeyHashes {
+			if hash == revoked {
+				return ib, settings, empty, false
+			}
+		}
+		for _, stat := range ib.ClientStats {
+			if stat.Email == client.Email && (!stat.Enable || client.TotalGB > 0 && stat.Up+stat.Down >= client.TotalGB) {
+				return ib, settings, empty, false
+			}
+		}
+		return ib, settings, client, true
+	}
+	return ib, settings, empty, false
+}
+
+func sudokuProfileSignature(payload, secret string) string {
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write([]byte("connect-hub-sudoku-profile-v1:" + payload))
+	return base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+}
+
+func sudokuProfileYAML(p sudokuProfileRequest, s sudoku.Settings, client model.Client) ([]byte, error) {
+	name := p.Name
+	if name == "" {
+		name = client.Email
+	}
+	if name == "" {
+		name = "Sudoku"
+	}
+	proxy := map[string]any{"name": name, "type": "sudoku", "server": p.Host, "port": p.Port, "key": client.SudokuKey, "aead-method": s.AEAD, "table-type": s.Table, "padding-min": 0, "padding-max": 0, "enable-pure-downlink": false, "multiplex": "off", "udp": true, "httpmask": map[string]any{"disable": true, "mode": "auto", "tls": false, "multiplex": "off"}}
+	return yaml.Marshal(map[string]any{"proxies": []any{proxy}})
+}
+
+// Authenticated operators explicitly obtain per-device bearer URLs. No new
+// credentials or server identities are created. The public URL reveals no key.
+func createSudokuProfiles(c *gin.Context) {
+	var requests []sudokuProfileRequest
+	if c.ShouldBindJSON(&requests) != nil || len(requests) > 500 {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+	out := map[string]any{}
+	for _, p := range requests {
+		_, settings, client, ok := sudokuProfileClient(p)
+		if !ok {
+			continue
+		}
+		raw, _ := json.Marshal(p)
+		payload := base64.RawURLEncoding.EncodeToString(raw)
+		config, err := sudokuProfileYAML(p, settings, client)
+		if err != nil {
+			continue
+		}
+		out[fmt.Sprintf("%d:%s", p.InboundID, p.ClientID)] = gin.H{"path": "sudoku-import/" + payload + "/" + sudokuProfileSignature(payload, client.SudokuKey), "config": string(config)}
+	}
+	c.Header("Cache-Control", "no-store")
+	jsonObj(c, out, nil)
+}
+
+func serveSudokuProfile(c *gin.Context) {
+	c.Header("Cache-Control", "no-store")
+	c.Header("Referrer-Policy", "no-referrer")
+	payload, signature := c.Param("payload"), c.Param("signature")
+	if len(payload) > 2048 || len(signature) != 43 {
+		c.Status(http.StatusNotFound)
+		return
+	}
+	raw, err := base64.RawURLEncoding.DecodeString(payload)
+	if err != nil {
+		c.Status(http.StatusNotFound)
+		return
+	}
+	var p sudokuProfileRequest
+	if json.Unmarshal(raw, &p) != nil {
+		c.Status(http.StatusNotFound)
+		return
+	}
+	_, settings, client, ok := sudokuProfileClient(p)
+	if !ok || !hmac.Equal([]byte(signature), []byte(sudokuProfileSignature(payload, client.SudokuKey))) {
+		c.Status(http.StatusNotFound)
+		return
+	}
+	config, err := sudokuProfileYAML(p, settings, client)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	c.Header("Content-Disposition", `attachment; filename="Connect-Hub-Sudoku.yaml"`)
+	c.Data(http.StatusOK, "application/yaml; charset=utf-8", config)
+}

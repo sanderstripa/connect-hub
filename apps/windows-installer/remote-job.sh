@@ -30,7 +30,7 @@ if os.environ['CH_UPDATE']=='0':
         try:enable_bbr('/opt/connect-hub')
         except Exception:warnings.append('BBR_UNAVAILABLE')
     size=int(os.environ['CH_SWAP'])
-    if size not in (0,1,2,4,8):raise SystemExit('Invalid swap size')
+    if not 0 <= size <= 32:raise SystemExit('Invalid swap size')
     if size:
         try:create_swap(size,'/opt/connect-hub')
         except Exception:warnings.append('SWAP_UNAVAILABLE')

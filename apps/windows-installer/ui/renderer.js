@@ -11,11 +11,34 @@ Object.assign(strings.en,{advancedMode:'Advanced settings',edit:'Edit',saveChang
 Object.assign(strings.ru,{advancedMode:'Расширенные настройки',edit:'Изменить',saveChanges:'Сохранить изменения',INVALID_ADVANCED:'Проверьте расширенные параметры и JSON. Для Reality нужны цель, SNI и пара ключей. Для шифрования VLESS заполните расшифрование и шифрование клиента.'});
 Object.assign(strings.en,{serverOptions:'Panel management',removePanel:'Remove Connect Hub from server',removeInfo:'Permanently delete the panel, its connections and data. Save a database backup in the panel first.',removing:'Removing Connect Hub…',removed:'Connect Hub was removed from the server. You can install it again.',UNINSTALL_FAILED:'Removal did not complete. Reconnect to check the server. Only a default managed Connect Hub installation can be removed; active setup jobs and foreign services prevent removal.',JOB_RUNNING:'Wait for the server installation or update to finish.'});
 Object.assign(strings.ru,{serverOptions:'Управление панелью',removePanel:'Удалить Connect Hub с сервера',removeInfo:'Безвозвратное удаление панели, её подключений и данных. При необходимости сначала сохраните резервную копию базы через панель.',removing:'Удаляем Connect Hub…',removed:'Connect Hub удалён с сервера. Вы можете установить его заново.',UNINSTALL_FAILED:'Удаление не завершилось. Подключитесь снова для проверки сервера. Удалить можно только стандартную управляемую установку Connect Hub; активная установка и посторонние службы блокируют удаление.',JOB_RUNNING:'Дождитесь завершения установки или обновления на сервере.'});
+Object.assign(strings.en,{swap:'Additional swap (GB, 0 = keep as is)',applySwap:'Apply recommendation',swapSuggested:'Recommended: add {size} GB of swap as a memory reserve.',swapLimited:'Disk space permits adding {size} GB of swap. More space should stay available for the OS.',swapEnough:'Existing swap is sufficient. We recommend keeping it.',swapNotNeeded:'Enough RAM for a typical panel workload. Additional swap is not required.',swapUnknown:'No reliable recommendation: filesystem support or hardware data is unavailable. Keep the current setup.',swapOwned:'A Connect Hub swap file already exists. It will be retained without resizing.',swapNoSpace:'Not enough free disk space for additional swap while retaining an OS reserve.',swapMetrics:'RAM: {ram} GB · Existing swap: {swap} GB · Free disk: {free} GB',recommended:'Recommended',xhttpProfiles:'XHTTP configuration profile',basicProfile:'Basic',basicProfileInfo:'Original setup: Reality, Chrome fingerprint, auto mode, no VLESS encryption or sniffing.',recommendedProfile:'Recommended',recommendedProfileInfo:'Your profile: ML-KEM-768 native, stream-one, padding 100–1000, Reality / Safari / booking.com, HTTP + TLS + QUIC sniffing.',manualProfile:'Manual',manualProfileInfo:'Configure transport, security, encryption and sniffing in the advanced editor below.',keyName:'Key name / e-mail (optional)',keyNameInfo:'For example iPhone-Alex. This is a label in the panel, not a mailbox. Leave blank for an automatic device name. Use no spaces; multiple protocols get a suffix.',KEY_NAME_IN_USE:'This key name already exists. Choose another name or leave the field empty.',MLKEM_UNAVAILABLE:'The server did not provide ML-KEM-768 native keys. Update Xray or choose Basic / Manual.'});
+Object.assign(strings.ru,{swap:'Дополнительная подкачка (ГБ, 0 — оставить как есть)',applySwap:'Применить рекомендацию',swapSuggested:'Рекомендуем добавить {size} ГБ подкачки как резерв оперативной памяти.',swapLimited:'С учётом свободного диска рекомендуем добавить {size} ГБ подкачки. Остальное место оставляем системе.',swapEnough:'Существующей подкачки достаточно. Рекомендуем оставить её как есть.',swapNotNeeded:'Для обычной нагрузки панели RAM достаточно. Дополнительная подкачка не требуется.',swapUnknown:'Нельзя дать надёжную рекомендацию: нет данных об оборудовании или поддержке файловой системы. Оставьте как есть.',swapOwned:'Файл подкачки Connect Hub уже существует. Он сохранится без изменения размера.',swapNoSpace:'Недостаточно свободного диска для подкачки с сохранением резерва для системы.',swapMetrics:'RAM: {ram} ГБ · Подкачка: {swap} ГБ · Свободный диск: {free} ГБ',recommended:'Рекомендуемый',xhttpProfiles:'Профиль настройки XHTTP',basicProfile:'Базовый',basicProfileInfo:'Первоначальный вариант: Reality, fingerprint Chrome, режим auto, без шифрования VLESS и сниффинга.',recommendedProfile:'Рекомендуемый',recommendedProfileInfo:'Ваш профиль: ML-KEM-768 native, stream-one, padding 100–1000, Reality / Safari / booking.com, сниффинг HTTP + TLS + QUIC.',manualProfile:'Ручной',manualProfileInfo:'Настройте транспорт, безопасность, шифрование и сниффинг в расширенном редакторе ниже.',keyName:'Название ключа / e-mail (необязательно)',keyNameInfo:'Например iPhone-Alex. Это метка в панели, не почтовый ящик. Пустое поле — автоматическое имя устройства. Без пробелов; для нескольких протоколов добавится суффикс.',KEY_NAME_IN_USE:'Такое название ключа уже существует. Укажите другое или оставьте поле пустым.',MLKEM_UNAVAILABLE:'Сервер не выдал ключи ML-KEM-768 native. Обновите Xray или выберите базовый / ручной профиль.'});
+function swapAdvice(){
+ if(!info)return;
+ const rec=info.swapRecommendation||{size:0,reason:'swapUnknown'};
+ const metric=value=>Number.isFinite(value)?value.toFixed(1):'—';
+ $('swap-recommendation').textContent=t(rec.reason).replace('{size}',rec.size)+' '+t('swapMetrics').replace('{ram}',metric(info.ram)).replace('{swap}',metric(info.swapGB)).replace('{free}',metric(info.freeDisk));
+ $('apply-swap').hidden=!rec.size;
+}
+$('apply-swap').addEventListener('click',()=>{$('swap').value=String(info?.swapRecommendation?.size||0);});
+function xhttpProfile(){return document.querySelector('input[name="xhttp-profile"]:checked')?.value||'basic';}
+function profileVisibility(){
+ if(currentEdit)return;
+ const enabled=document.querySelector('input[name="protocol"][value="xhttp"]').checked;
+ $('xhttp-profiles').hidden=!enabled;
+ const manual=enabled&&xhttpProfile()==='manual',recommended=enabled&&xhttpProfile()==='recommended';
+ if(manual&&!$('advanced-mode').checked){editor.reset(null);editor.assign('streamSettings.network','xhttp');editor.assign('streamSettings.security','reality');}
+ $('advanced-mode').checked=manual;$('advanced-mode').closest('label').hidden=enabled&&!manual;$('advanced-editor').hidden=!manual;
+ if(recommended){$('target-sni').value='booking.com';}else if($('target-sni').value==='booking.com')$('target-sni').value='www.cloudflare.com';
+ $('target-sni').readOnly=recommended;
+}
+Object.assign(strings.en,{shadowrocketInfo:'Shadowrocket 2.2.92+: Clash profile import. Requires a reachable panel HTTPS address and a trusted certificate. iPhone import needs device validation.',profileUnavailable:'Update the panel to generate the additional import link.'});
+Object.assign(strings.ru,{shadowrocketInfo:'Shadowrocket 2.2.92+: импорт Clash-профиля. Нужны доступ к HTTPS-адресу панели и доверенный сертификат. Импорт на iPhone требует проверки.',profileUnavailable:'Обновите панель для получения дополнительной ссылки импорта.'});
 let editor=null,currentEdit=null;
 let language='en',info=null,activeStep=1,pollTimer=null,clockTimer=null,started=0,stage='preparing',installing=false;
 const t=key=>strings[language][key]||strings[language].OPERATION_FAILED;
 async function api(method,...args){const response=await window.installer[method](...args);if(!response.ok){const error=new Error(response.error);error.code=response.error;throw error;}return response.value;}
-function localize(){if(editor)editor.localize();document.documentElement.lang=language;document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});$('ru').classList.toggle('selected',language==='ru');$('en').classList.toggle('selected',language==='en');if(info)$('install').textContent=t(info.installed?'update':'install');$('stage-text').textContent=t(stage);if(typeof rows!=='undefined')renderConnections();api('language',language).catch(()=>{});}
+function localize(){swapAdvice();if(editor)editor.localize();document.documentElement.lang=language;document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});$('ru').classList.toggle('selected',language==='ru');$('en').classList.toggle('selected',language==='en');if(info)$('install').textContent=t(info.installed?'update':'install');$('stage-text').textContent=t(stage);if(typeof rows!=='undefined')renderConnections();api('language',language).catch(()=>{});}
 function show(section,step){for(const id of ['connection','configuration','progress','result','connections','create-connection'])$(id).hidden=id!==section;document.querySelector('main').scrollTop=0;activeStep=step;document.querySelectorAll('#steps li').forEach(el=>{const n=Number(el.dataset.step);el.classList.toggle('active',n===step);el.classList.toggle('complete',n<step);});$('error').hidden=true;}
 function errorMessage(error){$('error').textContent=t(error.code||'OPERATION_FAILED');$('error').hidden=false;}
 function stopPolling(){clearTimeout(pollTimer);clearInterval(clockTimer);pollTimer=null;clockTimer=null;}
@@ -27,7 +50,7 @@ $('theme').addEventListener('click',()=>{document.body.dataset.theme=document.bo
 $('minimize').addEventListener('click',()=>api('minimize'));
 $('close').addEventListener('click',()=>api('close'));
 $('address').addEventListener('change',()=>{$('domain-field').hidden=$('address').value!=='domain';$('domain').required=$('address').value==='domain';});
-$('connection-form').addEventListener('submit',async event=>{event.preventDefault();$('error').hidden=true;$('connect').disabled=true;$('connect').textContent=t('connecting');try{info=await api('connect',{host:$('host').value,port:$('port').value,username:$('username').value,password:$('ssh-password').value,sudoPassword:$('sudo-password').value});$('ssh-password').value='';$('sudo-password').value='';$('hardware').textContent=info.os+' · '+info.cpus+' CPU · '+info.ram+' GB RAM · '+info.disk+' GB disk';$('remove-panel').hidden=!info.installed;$('existing').hidden=!info.installed;$('fresh-options').hidden=info.installed;$('show-access').hidden=!info.installed;$('install').textContent=t(info.installed?'update':'install');if(info.job)progress();else if(info.installed)await loadConnections();else show('configuration',2);}catch(error){errorMessage(error);}finally{$('connect').disabled=false;$('connect').textContent=t('connect');}});
+$('connection-form').addEventListener('submit',async event=>{event.preventDefault();$('error').hidden=true;$('connect').disabled=true;$('connect').textContent=t('connecting');try{info=await api('connect',{host:$('host').value,port:$('port').value,username:$('username').value,password:$('ssh-password').value,sudoPassword:$('sudo-password').value});$('ssh-password').value='';$('sudo-password').value='';$('swap').value='0';swapAdvice();$('hardware').textContent=info.os+' · '+info.cpus+' CPU · '+info.ram+' GB RAM · '+info.disk+' GB disk';$('remove-panel').hidden=!info.installed;$('existing').hidden=!info.installed;$('fresh-options').hidden=info.installed;$('show-access').hidden=!info.installed;$('install').textContent=t(info.installed?'update':'install');if(info.job)progress();else if(info.installed)await loadConnections();else show('configuration',2);}catch(error){errorMessage(error);}finally{$('connect').disabled=false;$('connect').textContent=t('connect');}});
 $('back').addEventListener('click',()=>show('connection',1));
 $('options-form').addEventListener('submit',async event=>{event.preventDefault();$('install').disabled=true;try{await api('install',{language,addressMode:$('address').value,domain:$('domain').value,bbr:$('bbr').checked,swap:Number($('swap').value)});started=Date.now();progress();}catch(error){errorMessage(error);}finally{$('install').disabled=false;}});
 $('show-access').addEventListener('click',async()=>{try{await result(await api('access'));}catch(error){errorMessage(error);}});
@@ -46,12 +69,23 @@ function renderConnections(){
   const title=document.createElement('strong');title.textContent=row.name;card.append(title);
   const meta=document.createElement('small');meta.textContent=row.protocol.toUpperCase()+' · '+row.port+' · '+t(row.enabled?'enabled':'disabled');card.append(meta);
   if(row.url){
-   const field=document.createElement('input');field.readOnly=true;field.value=row.url;field.setAttribute('aria-label',row.name);card.append(field);
+   const field=document.createElement('input');field.className='standard-key';field.readOnly=true;field.value=row.url;field.setAttribute('aria-label',row.name);card.append(field);
    const actions=document.createElement('div');actions.className='buttons';
    for(const [label,method]of [['copy','copyConnection'],['showQR','connectionQR'],['saveQR','saveConnectionQR']]){
     const button=document.createElement('button');button.textContent=t(label);button.addEventListener('click',async()=>{try{const value=await api(method,row.id);if(method==='connectionQR'){let img=card.querySelector('img');if(!img){img=document.createElement('img');img.className='key-qr';img.alt=row.name;card.append(img);}img.src=value;}if(method==='copyConnection'){button.textContent=t('copied');setTimeout(()=>button.textContent=t(label),1400);}}catch(error){errorMessage(error);}});actions.append(button);
    }card.append(actions);
   }else{const note=document.createElement('p');note.textContent=t(row.reason);card.append(note);}
+  if(row.protocol==='sudoku'&&row.enabled){
+   const title=document.createElement('strong');title.textContent='Shadowrocket · Clash';card.append(title);
+   const note=document.createElement('small');note.textContent=t('shadowrocketInfo');card.append(note);
+   if(row.shadowrocketUrl){
+    const field=document.createElement('input');field.className='shadowrocket-key';field.readOnly=true;field.value=row.shadowrocketUrl;card.append(field);
+    const actions=document.createElement('div');actions.className='buttons';
+    for(const [label,method]of [['copy','copyConnection'],['showQR','connectionQR'],['saveQR','saveConnectionQR']]){
+     const button=document.createElement('button');button.textContent=t(label);button.addEventListener('click',async()=>{try{const value=await api(method,row.id,'shadowrocket');if(method==='connectionQR'){let image=card.querySelector('.shadowrocket-qr');if(!image){image=document.createElement('img');image.className='key-qr shadowrocket-qr';image.alt='Shadowrocket';card.append(image);}image.src=value;}}catch(error){errorMessage(error);}});actions.append(button);
+    }card.append(actions);
+   }else{const hint=document.createElement('p');hint.textContent=t('profileUnavailable');card.append(hint);}
+  }
   const edit=document.createElement('button');edit.type='button';edit.className='edit-connection';edit.textContent=t('edit');edit.addEventListener('click',()=>editConnection(row.id));card.append(edit);
   list.append(card);
  }
@@ -62,7 +96,7 @@ async function loadConnections(){
 }
 $('manage-connections').addEventListener('click',loadConnections);
 $('refresh-connections').addEventListener('click',loadConnections);
-$('new-connection').addEventListener('click',async()=>{if(connectionWorking)return;await editor.ready;currentEdit=null;editor.reset(null);$('quick-settings').hidden=false;$('advanced-mode').checked=false;$('advanced-editor').hidden=true;document.querySelector('.protocols').hidden=false;$('create-submit').textContent=t('createKeys');$('public-host').value=info?.host||$('host').value;show('create-connection',5);});
+$('new-connection').addEventListener('click',async()=>{if(connectionWorking)return;await editor.ready;currentEdit=null;editor.reset(null);$('key-name').value='';$('advanced-mode').closest('label').hidden=false;$('quick-settings').hidden=false;$('advanced-mode').checked=false;$('advanced-editor').hidden=true;document.querySelector('.protocols').hidden=false;$('create-submit').textContent=t('createKeys');$('public-host').value=info?.host||$('host').value;show('create-connection',5);profileVisibility();});
 $('cancel-create').addEventListener('click',()=>{if(!connectionWorking)show('connections',5);});
 $('hub-settings').addEventListener('click',()=>show('configuration',2));
 $('hub-access').addEventListener('click',async()=>{try{await result(await api('access'));}catch(error){errorMessage(error);}});
@@ -83,7 +117,7 @@ $('create-form').addEventListener('submit',async event=>{
    if($('public-host').value!==(currentEdit.shareAddr||info?.host||$('host').value)){advanced.changes.shareAddr=$('public-host').value;advanced.changes.shareAddrStrategy='custom';}
    rows=await api('updateConnection',{id:currentEdit.id,advanced});currentEdit=null;show('connections',5);renderConnections();$('connection-status').textContent=t('runtimeInfo');return;
   }
-  const result=await api('createConnections',{advanced,name:$('device-name').value,host:$('public-host').value,port:Number($('first-port').value),sni:$('target-sni').value,protocols});
+  const result=await api('createConnections',{advanced,email:$('key-name').value,xhttpProfile:xhttpProfile(),name:$('device-name').value,host:$('public-host').value,port:Number($('first-port').value),sni:$('target-sni').value,protocols});
   rows=result.rows;show('connections',5);renderConnections();
   $('connection-status').textContent=result.outcomes.map(o=>o.protocol.toUpperCase()+' · '+o.port+' — '+t(o.ok?'created':o.error)).join('\n')+'\n\n'+(result.outcomes.some(o=>!o.ok)?t('partialInfo')+'\n':'')+t('runtimeInfo');
  }catch(error){errorMessage(error);}finally{connectionsBusy(false);$('create-submit').textContent=t('createKeys');}
@@ -98,7 +132,7 @@ async function editConnection(id){
  if(connectionWorking)return;connectionsBusy(true);
  try{
   const value=await api('connectionDetails',id);await editor.ready;currentEdit=value;editor.reset(value);
-  $('quick-settings').hidden=true;$('device-name').value=value.remark;$('public-host').value=value.shareAddr||info?.host||$('host').value;$('first-port').value=value.port;
+  $('advanced-mode').closest('label').hidden=false;$('quick-settings').hidden=true;$('device-name').value=value.remark;$('public-host').value=value.shareAddr||info?.host||$('host').value;$('first-port').value=value.port;
   $('advanced-mode').checked=true;$('advanced-editor').hidden=false;document.querySelector('.protocols').hidden=true;$('create-submit').textContent=t('saveChanges');show('create-connection',5);
  }catch(error){errorMessage(error);}finally{connectionsBusy(false);}
 }
@@ -116,3 +150,5 @@ $('uninstall').addEventListener('click',async()=>{
   }
  }catch(error){errorMessage(error);}finally{connectionsBusy(false);$('uninstall').disabled=false;$('install').disabled=false;$('back').disabled=false;$('show-access').disabled=false;}
 });
+
+for(const el of document.querySelectorAll('input[name="protocol"],input[name="xhttp-profile"]'))el.addEventListener('change',profileVisibility);

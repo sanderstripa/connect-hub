@@ -1549,6 +1549,8 @@ export function genLink(input: GenLinkInput): string {
       });
     case 'sudoku': {
       const compact = {
+        i: inbound.id,
+        c: client.id,
         h: address.replace(/^\[|\]$/g, ''),
         p: port ?? inbound.port,
         k: client.sudokuKey ?? '',

@@ -135,7 +135,8 @@
     "openMenu": "メニューを開く",
     "pinSidebar": "サイドバーを固定",
     "unpinSidebar": "サイドバーの固定を解除",
-    "subFormats": "Sub Formats"
+    "subFormats": "Sub Formats",
+    "connections": "Connections"
   },
   "pages": {
     "login": {
@@ -2866,5 +2867,12 @@
     "restartXray": "Xrayサービスを再起動",
     "restartXraySuccess": "Xrayサービスが正常に再起動されました",
     "settings": "設定"
+  },
+  "connections": {
+    "keys": "Keys and clients",
+    "shadowrocketHint": "Shadowrocket 2.2.92+: import a Clash profile by link or QR. The panel HTTPS address must be reachable with a trusted certificate. iPhone import needs device validation; download YAML for manual import.",
+    "copyProfileURL": "Copy profile URL",
+    "profileUnavailable": "Update the panel or check that the key is enabled and has not expired.",
+    "intro": "Create an inbound above, then add and manage device keys below."
   }
 }

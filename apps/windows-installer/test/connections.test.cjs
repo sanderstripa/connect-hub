@@ -39,3 +39,17 @@ test('bridge sends credentials and bodies over stdin, never shell arguments',asy
  client.exec=async(command,input)=>{for(const secret of ['sudo-private','panel-private','body-private'])assert.ok(!command.includes(secret));assert.ok(input.startsWith('sudo-private\n'));assert.equal(JSON.parse(input.slice(input.indexOf('\n')+1)).auth.password,'panel-private');return JSON.stringify({ok:true,value:[]});};
  await client.panelRequest({action:'create',inbound:{settings:'body-private'}});client.disconnect();assert.equal(client.panelAuth,null);
 });
+test('recommended XHTTP uses generated ML-KEM native, Safari, booking, padding and three sniffing overrides',async()=>{
+ const client=new InstallerConnection({bootstrap:'test',jobSource:'test'});client.secret={host:'203.0.113.1'};
+ let saved;
+ client.panelRequest=async req=>{
+  if(req.action==='keys')return keys;
+  if(req.action==='generate')return {auths:[{decryption:'mlkem768x25519plus.native.server',encryption:'mlkem768x25519plus.native.client'}]};
+  if(req.action==='create'){saved=req.inbound;return {};}
+  if(req.action==='list')return saved?[{...saved,id:1}]:[];
+ };
+ const result=await client.createConnections({...input,protocols:['xhttp'],email:'Alex-iPhone',xhttpProfile:'recommended'});
+ assert.equal(result.outcomes[0].ok,true);const s=JSON.parse(saved.settings),stream=JSON.parse(saved.streamSettings),sniff=JSON.parse(saved.sniffing);
+ assert.equal(s.clients[0].email,'Alex-iPhone');assert.ok(s.decryption.includes('.native.'));assert.equal(stream.xhttpSettings.mode,'stream-one');assert.equal(stream.xhttpSettings.xPaddingObfsMode,true);assert.equal(stream.realitySettings.settings.fingerprint,'safari');assert.equal(stream.realitySettings.target,'booking.com:443');assert.deepEqual(sniff.destOverride,['http','tls','quic']);assert.equal(sniff.enabled,true);assert.ok(!('fallbacks' in s));
+ const url=new URL(result.rows[0].url);assert.equal(url.searchParams.get('sni'),'booking.com');assert.equal(url.searchParams.get('encryption'),s.encryption);
+});

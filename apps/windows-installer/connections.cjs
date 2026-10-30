@@ -14,12 +14,14 @@ function hostName(value){
 function selection(input){
  if(!input||!Array.isArray(input.protocols)||!input.protocols.length||input.protocols.length>5||new Set(input.protocols).size!==input.protocols.length||input.protocols.some(p=>!PRESETS.includes(p)))fail('INVALID_OPTIONS');
  const name=String(input.name||'').trim();if(!name||name.length>80||/[\x00-\x1f\x7f]/.test(name))fail('INVALID_OPTIONS');
+ const email=String(input.email||'').trim();if(email.length>80||/[\s\x00-\x1f\x7f]/.test(email))fail('INVALID_OPTIONS');
+ const xhttpProfile=input.xhttpProfile||'basic';if(!['basic','recommended','manual'].includes(xhttpProfile))fail('INVALID_OPTIONS');
  const host=hostName(input.host),port=Number(input.port||443),sni=hostName(input.sni||'www.cloudflare.com');
  if(!Number.isInteger(port)||port<1||port+input.protocols.length-1>65535||isIP(sni))fail('INVALID_OPTIONS');
- return {protocols:input.protocols,name,host,port,sni};
+ return {protocols:input.protocols,name,email,xhttpProfile,host,port,sni};
 }
 function preset(kind,selected,port,keys){
- const client={id:randomUUID(),email:'desktop-'+randomBytes(10).toString('hex'),comment:selected.name,enable:true,limitIp:0,totalGB:0,expiryTime:0,subId:randomBytes(8).toString('hex')};
+ const client={id:randomUUID(),email:selected.email?(selected.protocols.length>1?selected.email+'-'+kind:selected.email):'device-'+randomBytes(5).toString('hex'),comment:selected.name,enable:true,limitIp:0,totalGB:0,expiryTime:0,subId:randomBytes(8).toString('hex')};
  const ib={enable:true,remark:selected.name+' · '+kind.toUpperCase(),protocol:kind==='xhttp'?'vless':kind,port,listen:'',settings:'{}',streamSettings:'{}',sniffing:'{"enabled":false}',shareAddrStrategy:'custom',shareAddr:selected.host,trafficReset:'never',trafficResetDay:1};
  let settings={clients:[client]};
  if(kind==='vless'||kind==='xhttp'){
@@ -51,7 +53,7 @@ function exportRows(inbounds,defaultHost){
    let url='',reason='UNSUPPORTED_EXPORT';
    // Remote-node and fallback links need the panel's endpoint resolution.
    if(!ib.nodeId&&!ib.fallbackParent&&address){
-    if(ib.protocol==='sudoku'&&client.sudokuKey){url='sudoku://'+Buffer.from(JSON.stringify({h:address,p:ib.port,k:client.sudokuKey,a:(settings.table||'prefer_ascii').replace(/^prefer_/,''),e:settings.aead||'chacha20-poly1305',m:1080,x:true,hd:true,hm:'auto',hx:'off',hy:'',n:name})).toString('base64url');}
+    if(ib.protocol==='sudoku'&&client.sudokuKey){url='sudoku://'+Buffer.from(JSON.stringify({h:address,p:ib.port,k:client.sudokuKey,a:(settings.table||'prefer_ascii').replace(/^prefer_/,''),e:settings.aead||'chacha20-poly1305',i:ib.id,c:client.id,m:1080,x:true,hd:true,hm:'auto',hx:'off',hy:'',n:name})).toString('base64url');}
     if(ib.protocol==='mtproto'&&client.secret)url='tg://proxy?'+new URLSearchParams({server:address,port:String(ib.port),secret:client.secret});
     if(ib.protocol==='shadowsocks'&&settings.method==='chacha20-ietf-poly1305'&&client.password&&(!stream.network||['tcp','raw'].includes(stream.network))&&(!stream.security||stream.security==='none'))url='ss://'+Buffer.from(settings.method+':'+client.password).toString('base64url')+'@'+host+':'+ib.port+'#'+encodeURIComponent(name);
     if(ib.protocol==='vless'&&['tcp','raw','xhttp','ws','grpc','httpupgrade'].includes(stream.network)&&['reality','tls','none',undefined].includes(stream.security)){
@@ -92,7 +94,7 @@ function exportRows(inbounds,defaultHost){
    }
    const stats=(ib.clientStats||[]).find(s=>s.email===client.email);
    const enabled=!!ib.enable&&client.enable!==false&&(!ib.expiryTime||ib.expiryTime>Date.now())&&(!client.expiryTime||client.expiryTime>Date.now())&&(!stats||stats.enable!==false)&&(!ib.total||Number(ib.up||0)+Number(ib.down||0)<ib.total)&&(!client.totalGB||!stats||Number(stats.up||0)+Number(stats.down||0)<client.totalGB);
-   rows.push({id:ib.id+':'+(client.id||client.email),name:ib.remark+' / '+name,protocol:ib.protocol==='vless'&&stream.network==='xhttp'?'xhttp':ib.protocol,port:ib.port,enabled,url:enabled?url:'',reason:enabled?(url?'':reason):'DISABLED'});
+   rows.push({id:ib.id+':'+(client.id||client.email),name:ib.remark+' / '+name,protocol:ib.protocol==='vless'&&stream.network==='xhttp'?'xhttp':ib.protocol,port:ib.port,enabled,profileRequest:ib.protocol==='sudoku'&&client.id&&enabled&&url?{inboundId:ib.id,clientId:client.id,host:address,port:ib.port,name}:undefined,url:enabled?url:'',reason:enabled?(url?'':reason):'DISABLED'});
   }
  }
  return rows;

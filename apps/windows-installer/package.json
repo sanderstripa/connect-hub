@@ -1,6 +1,6 @@
 {
   "name": "connect-hub-installer",
-  "version": "0.3.1-alpha.1",
+  "version": "0.4.0-alpha.1",
   "private": true,
   "description": "Connect. Hub server installation wizard",
   "author": "Sander Stripa and Connect Hub contributors",
@@ -41,7 +41,8 @@
       "panel-api.py",
       "advanced.cjs",
       "advanced-fields.cjs",
-      "uninstall.sh"
+      "uninstall.sh",
+      "system-recommendations.cjs"
     ],
     "win": {
       "target": [

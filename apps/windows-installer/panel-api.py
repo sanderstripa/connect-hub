@@ -50,6 +50,8 @@ class Panel:
         action = request.get('action')
         if action == 'list':
             return self.request('panel/api/inbounds/list')
+        if action == 'profiles':
+            return self.request('panel/hub/api/sudoku-profiles', request['profiles'])
         if action == 'keys':
             return self.request('panel/api/server/getNewX25519Cert')
         key_routes = {'vless': 'getNewVlessEnc', 'mldsa': 'getNewmldsa65', 'reality': 'getNewX25519Cert'}
