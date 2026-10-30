@@ -1,5 +1,5 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, useLocation, useNavigate } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import { expect, test, vi } from 'vitest';
 import AppSidebar from '@/layouts/AppSidebar';
 import OverviewActionBar from '@/pages/index/OverviewActionBar';
@@ -15,30 +15,31 @@ test('Connections replaces separate Inbounds and Clients navigation', async () =
   function Location() { return <output data-testid="current-route">{useLocation().pathname}</output>; }
   const view = renderWithProviders(<MemoryRouter initialEntries={['/']}><AppSidebar /><Location /></MemoryRouter>);
   await act(async () => {});
-  const item = view.container.querySelector('[data-menu-id$="-/connections"]')!;
-  expect(view.container.querySelector('[data-menu-id$="-/clients"]')).toBeNull();
-  expect(view.container.querySelector('[data-menu-id$="-/inbounds"]')).toBeNull();
-  expect(item.closest('.ant-menu-submenu')).toBeNull();
+  const item = screen.getByRole('button', { name: 'Connections' });
+  expect(screen.queryByRole('button', { name: 'Inbounds' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Clients' })).toBeNull();
+  expect(item.getAttribute('aria-haspopup')).toBeNull();
+  expect(view.container.querySelector('.compact-rail')).not.toBeNull();
   fireEvent.click(item);
   await waitFor(() => expect(screen.getByTestId('current-route').textContent).toBe('/connections'));
   expect(screen.queryByRole('menuitem', { name: /Groups|Client List/ })).toBeNull();
   localStorage.clear();
 });
 
-test('groups existing routes, supports manual collapse and reopens on navigation', async () => {
+test('keeps route groups compact and closed until clicked, then closes after choosing a child', async () => {
   localStorage.setItem('sidebar-pinned', 'true');
-  function Navigate() { const go = useNavigate(); return <button onClick={() => go('/nodes')}>Go nodes</button>; }
-  const view = renderWithProviders(<MemoryRouter initialEntries={['/hosts']}><AppSidebar /><Navigate /></MemoryRouter>);
+  function Location() { return <output data-testid="group-route">{useLocation().pathname}</output>; }
+  const view = renderWithProviders(<MemoryRouter initialEntries={['/hosts']}><AppSidebar /><Location /></MemoryRouter>);
   await act(async () => {});
-  const clientGroup = view.container.querySelector('[data-menu-id$="-__infrastructure"]')?.closest('.ant-menu-submenu');
-  expect(clientGroup?.classList.contains('ant-menu-submenu-open')).toBe(true);
-  expect(screen.getByRole('menuitem', { name: /Nodes/ })).not.toBeNull();
-  fireEvent.click(clientGroup!.querySelector('.ant-menu-submenu-title')!);
-  expect(clientGroup?.classList.contains('ant-menu-submenu-open')).toBe(false);
-  fireEvent.click(screen.getByRole('button', { name: 'Go nodes' }));
-  await waitFor(() => expect(clientGroup?.classList.contains('ant-menu-submenu-open')).toBe(true));
-  expect(screen.getByRole('menuitem', { name: /Infrastructure/ })).not.toBeNull();
-  expect(screen.getByRole('menuitem', { name: /Network/ })).not.toBeNull();
+  const group = screen.getByRole('button', { name: 'Infrastructure' });
+  expect(group.getAttribute('aria-current')).toBe('page');
+  expect(group.getAttribute('aria-expanded')).toBe('false');
+  expect(screen.queryByRole('menuitem', { name: /Nodes/ })).toBeNull();
+  fireEvent.click(group);
+  fireEvent.click(await screen.findByRole('menuitem', { name: /Nodes/ }));
+  await waitFor(() => expect(screen.getByTestId('group-route').textContent).toBe('/nodes'));
+  expect(group.getAttribute('aria-expanded')).toBe('false');
+  expect(screen.getByRole('button', { name: 'Network' })).not.toBeNull();
   expect(view.container.querySelector('.sidebar-command-kbd')).toBeNull();
   localStorage.clear();
 });

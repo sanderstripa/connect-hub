@@ -112,6 +112,7 @@ try{
    for(let i=0;i<routes.length;i++){
     const trigger=rail.getByRole('button',{name,exact:true});await trigger.hover();assert.equal(await trigger.getAttribute('aria-expanded'),'false');
     await trigger.click();const menu=page.locator('.rail-submenu:visible');await menu.waitFor();
+    await menu.evaluate(async el=>{await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));await Promise.all(el.getAnimations({subtree:true}).map(animation=>animation.finished.catch(()=>{})));});
     assert.notEqual(await menu.locator('.ant-dropdown-menu').evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(0, 0, 0, 0)');
     const bounds=await menu.boundingBox(),vp=page.viewportSize();assert.ok(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=vp.width+1&&bounds.y+bounds.height<=vp.height+1);
     await menu.getByRole('menuitem',{name:menuLabels[routes[i]],exact:true}).click();try{await page.waitForURL(cfg.url+'panel'+routes[i]);}catch(error){throw new Error('Expected '+routes[i]+' but got '+page.url(),{cause:error});}await page.locator('.rail-submenu:visible').waitFor({state:'hidden'});

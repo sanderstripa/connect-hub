@@ -15,7 +15,7 @@
 .rail-submenu{max-width:calc(100vw - 68px)}
 .rail-submenu .ant-dropdown-menu{max-height:calc(100dvh - 24px);overflow-y:auto;min-width:min(220px,calc(100vw - 68px));background:var(--surface-raised);border:1px solid var(--border)}
 .rail-submenu .ant-dropdown-menu-item{white-space:normal;overflow-wrap:anywhere;font-size:13px}
-@media(max-width:575px){.global-search-trigger{right:12px}.rail-brand{height:52px}.rail-nav{gap:4px}.rail-submenu .ant-dropdown-menu{min-width:200px}}
+@media(max-width:575px){.global-search-trigger{right:12px}.rail-brand{height:52px}.rail-nav{gap:4px}.rail-submenu .ant-dropdown-menu{min-width:min(200px,calc(100vw - 68px))}}
 @media(max-height:500px){.rail-nav{gap:0;padding:2px 0}.rail-brand{height:40px;min-height:40px}.rail-button{height:34px}.rail-utilities{gap:0;padding:2px 0}}
 /* Ant Layout previously inferred this from Layout.Sider; the semantic rail
    keeps the same horizontal shell explicitly, including mobile widths. */
