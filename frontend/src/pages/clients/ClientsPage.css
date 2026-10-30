@@ -339,3 +339,19 @@
   text-align: center;
   color: var(--ant-color-text-secondary);
 }
+
+/* Keep compact-table actions on one line within the 84px column. */
+.client-compact-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 4px;
+  vertical-align: middle;
+}
+
+.client-compact-actions > .ant-btn {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+}
