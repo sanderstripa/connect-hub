@@ -111,7 +111,9 @@ try{
   assert.equal(await page.locator('.ant-sidebar a').filter({hasText:'C.'}).count(),0);
   const header=await page.locator('.app-header').boundingBox();
   assert.ok(header.x>=55&&header.x+header.width<=page.viewportSize().width+1);
-  const content=await page.locator('.content-area').first().boundingBox();
+  const pageContent=page.locator('.content-area:visible').first();
+  await pageContent.waitFor({state:'visible'});
+  const content=await pageContent.boundingBox();
   assert.ok(content.y>=header.y+header.height-1,'Header must not cover page content');
  }
  async function navigation(dark){
