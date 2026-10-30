@@ -1,13 +1,4 @@
 {
-  "appearance": {
-    "title": "Apariencia",
-    "subtitle": "Elige una paleta y un modo de visualización.",
-    "palette": "Paleta",
-    "mode": "Modo de visualización",
-    "local": "Se guarda en este navegador. No cambia la configuración del servidor.",
-    "light": "Claro",
-    "dark": "Oscuro"
-  },
   "username": "Nombre de Usuario",
   "password": "Contraseña",
   "login": "Acceder",
@@ -2872,7 +2863,6 @@
     "profileRequestFailed": "Could not load the profile. Try again.",
     "profileLinkUnavailable": "This saved link has no profile export identity. Reopen the QR code from the key list.",
     "addInbound": "Create inbound",
-    "findInbound": "Find inbound",
     "allKeys": "All keys",
     "allKeysHint": "Search and bulk-manage keys across all inbounds.",
     "keyCount": "Keys: {count}",

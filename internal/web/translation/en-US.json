@@ -1,13 +1,4 @@
 {
-  "appearance": {
-    "title": "Appearance",
-    "subtitle": "Choose light or dark appearance.",
-    "palette": "Palette",
-    "mode": "Display mode",
-    "local": "Saved in this browser. No server settings are changed.",
-    "light": "Light",
-    "dark": "Dark"
-  },
   "username": "Username",
   "password": "Password",
   "login": "Log In",
@@ -2872,7 +2863,6 @@
     "profileRequestFailed": "Could not load the profile. Try again.",
     "profileLinkUnavailable": "This saved link has no profile export identity. Reopen the QR code from the key list.",
     "addInbound": "Create inbound",
-    "findInbound": "Find inbound",
     "allKeys": "All keys",
     "allKeysHint": "Search and bulk-manage keys across all inbounds.",
     "keyCount": "Keys: {count}",

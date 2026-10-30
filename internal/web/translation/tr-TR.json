@@ -1,13 +1,4 @@
 {
-  "appearance": {
-    "title": "Görünüm",
-    "subtitle": "Bir palet ve görüntüleme modu seçin.",
-    "palette": "Palet",
-    "mode": "Görüntüleme modu",
-    "local": "Bu tarayıcıda saklanır. Sunucu ayarları değiştirilmez.",
-    "light": "Açık",
-    "dark": "Koyu"
-  },
   "username": "Kullanıcı Adı",
   "password": "Şifre",
   "login": "Giriş Yap",
@@ -2872,7 +2863,6 @@
     "profileRequestFailed": "Could not load the profile. Try again.",
     "profileLinkUnavailable": "This saved link has no profile export identity. Reopen the QR code from the key list.",
     "addInbound": "Create inbound",
-    "findInbound": "Find inbound",
     "allKeys": "All keys",
     "allKeysHint": "Search and bulk-manage keys across all inbounds.",
     "keyCount": "Keys: {count}",

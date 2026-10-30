@@ -46,13 +46,13 @@ try{
    await page.goto(cfg.url+'panel/'+route);await page.locator('.ant-sidebar').waitFor();await check(route.split('#')[0]||'dashboard',dark);
    if(route==='connections'){
     await navigation(dark);
-    await page.locator('#connection-keys').waitFor();assert.equal(await page.locator('.ant-sidebar').count(),1);assert.ok(await page.locator('#connection-inbounds').boundingBox());
+    await page.locator('#connection-keys').waitFor();
+    assert.equal(await page.getByRole('button',{name:'All keys',exact:true}).count(),0);assert.equal(await page.getByPlaceholder('Find inbound').count(),0);
+    assert.equal(await page.locator('.rail-utilities .global-search-trigger').count(),1);assert.equal(await page.locator('.ant-sidebar').count(),1);assert.ok(await page.locator('#connection-inbounds').boundingBox());
 
     await page.locator('.inbound-card').filter({hasText:'Other inbound'}).click();
     await page.locator('#connection-keys .ant-table-row').filter({hasText:'other-phone'}).waitFor();
     assert.equal(await page.locator('#connection-keys .ant-table-row').filter({hasText:'iPhoneSudoku'}).isVisible(),false);
-    await page.getByRole('button',{name:'All keys',exact:true}).click();
-    await page.locator('#connection-keys .ant-table-row').filter({hasText:'iPhoneSudoku'}).waitFor();await page.locator('#connection-keys .ant-table-row').filter({hasText:'other-phone'}).waitFor();
     await page.locator('.inbound-card').filter({hasText:'Sweden Sudoku'}).click();
     const row=page.locator('#connection-keys .ant-table-row').filter({hasText:'iPhoneSudoku'});await row.waitFor();
     assert.equal(await page.locator('#connection-keys .ant-table-row').filter({hasText:'other-phone'}).isVisible(),false);
@@ -101,11 +101,11 @@ try{
   assert.equal(Math.round((await rail.boundingBox()).width),56);
   await rail.hover();await page.waitForTimeout(250);assert.equal(Math.round((await rail.boundingBox()).width),56);
   assert.equal(await page.locator('.rail-brand').textContent(),'C.');
-  const menuLabels={'/nodes':'Nodes','/hosts':'Hosts','/outbound':'Outbounds','/routing':'Routing','/settings#appearance':'Appearance','/settings#general':'General','/settings#security':'Authentication','/settings#telegram':'Telegram Bot','/settings#email':'Email','/settings#discord':'Discord Bot','/settings#subscription':'Subscription','/api-docs':'API Docs','/xray#basic':'Basics','/xray#balancer':'Balancers','/xray#dns':'DNS','/xray#advanced':'Advanced'};
+  const menuLabels={'/nodes':'Nodes','/hosts':'Hosts','/outbound':'Outbounds','/routing':'Routing','/settings#general':'General','/settings#security':'Authentication','/settings#telegram':'Telegram Bot','/settings#email':'Email','/settings#discord':'Discord Bot','/settings#subscription':'Subscription','/api-docs':'API Docs','/xray#basic':'Basics','/xray#balancer':'Balancers','/xray#dns':'DNS','/xray#advanced':'Advanced'};
   const groups=[
    ['Infrastructure',['/nodes','/hosts']],
    ['Network',['/outbound','/routing']],
-   ['Settings',['/settings#appearance','/settings#general','/settings#security','/settings#telegram','/settings#email','/settings#discord','/settings#subscription','/api-docs']],
+   ['Settings',['/settings#general','/settings#security','/settings#telegram','/settings#email','/settings#discord','/settings#subscription','/api-docs']],
    ['Xray Configs',['/xray#basic','/xray#balancer','/xray#dns','/xray#advanced']],
   ];
   for(const [name,routes] of groups){
@@ -125,7 +125,7 @@ try{
   await trigger.click();await page.locator('.connections-intro').click();assert.equal(await trigger.getAttribute('aria-expanded'),'false');
   await page.getByRole('button',{name:'Theme',exact:true}).click();await page.waitForFunction(d=>document.body.classList.contains('dark')===!d,dark);
   assert.equal(await page.evaluate(()=>localStorage.getItem('dark-mode')),String(!dark));await page.getByRole('button',{name:'Theme',exact:true}).click();
-  await page.keyboard.press('Control+k');const search=page.locator('.command-palette-input');await search.waitFor();await search.fill('appearance');await search.press('Enter');await page.waitForURL('**/settings#appearance');
+  await page.keyboard.press('Control+k');const search=page.locator('.command-palette-input');await search.waitFor();assert.equal(await page.getByText('Appearance',{exact:true}).count(),0);await search.fill('Authentication');await search.press('Enter');await page.waitForURL('**/settings#security');
   await page.getByRole('button',{name:/Command Palette/}).click();await page.locator('.command-palette-input').waitFor();await page.keyboard.press('Escape');await page.locator('.command-palette-input').waitFor({state:'detached'});
   await page.goto(cfg.url+'panel/connections');
   for(const width of [1024,768,390]){
@@ -147,7 +147,7 @@ try{
   await page.screenshot({path:path.join(cfg.output,'soulu-'+name+'-'+(dark?'dark':'light')+'.png'),fullPage:true});
  }
  console.log('PASS: fixed 56px rail, every submenu route, click/Escape/outside close, live theme, Ctrl+K search and 390/768/1024px without navigation overflow');
- console.log('PASS: inbound cards, scoped clients, All keys, inline details/back, scoped key creation and unchanged original keys');
+ console.log('PASS: inbound cards, scoped clients, inline details/back, scoped key creation and unchanged original keys');
  console.log('PASS: saved Sudoku client → real web QR modal → JSON/CSRF request → Shadowrocket QR and anonymous profile fetch; original key unchanged');
  assert.deepEqual(errors,[]);console.log('PASS: real panel login, dashboard, inbounds, clients, settings and dialogs in both Soulu themes; old palettes migrated; local Onest loaded');
 }finally{if(desktop)await desktop.close();if(browser)await browser.close();}

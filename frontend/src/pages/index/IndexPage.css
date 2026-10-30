@@ -485,3 +485,6 @@
 .index-page .ip-hidden {
   filter: blur(6px);
 }
+
+/* Throughput occupies the row after removal of the connections-count block. */
+.ov-mid{grid-template-columns:minmax(0,1fr)}

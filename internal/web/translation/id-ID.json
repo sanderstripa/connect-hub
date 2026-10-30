@@ -1,13 +1,4 @@
 {
-  "appearance": {
-    "title": "Tampilan",
-    "subtitle": "Pilih palet dan mode tampilan.",
-    "palette": "Palet",
-    "mode": "Mode tampilan",
-    "local": "Disimpan di peramban ini. Pengaturan server tidak berubah.",
-    "light": "Terang",
-    "dark": "Gelap"
-  },
   "username": "Nama Pengguna",
   "password": "Kata Sandi",
   "login": "Masuk",
@@ -2872,7 +2863,6 @@
     "profileRequestFailed": "Could not load the profile. Try again.",
     "profileLinkUnavailable": "This saved link has no profile export identity. Reopen the QR code from the key list.",
     "addInbound": "Create inbound",
-    "findInbound": "Find inbound",
     "allKeys": "All keys",
     "allKeysHint": "Search and bulk-manage keys across all inbounds.",
     "keyCount": "Keys: {count}",

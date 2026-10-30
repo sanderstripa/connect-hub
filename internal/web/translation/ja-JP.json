@@ -1,13 +1,4 @@
 {
-  "appearance": {
-    "title": "外観",
-    "subtitle": "配色と表示モードを選択します。",
-    "palette": "配色",
-    "mode": "表示モード",
-    "local": "このブラウザーに保存されます。サーバー設定は変更されません。",
-    "light": "ライト",
-    "dark": "ダーク"
-  },
   "username": "ユーザー名",
   "password": "パスワード",
   "login": "ログイン",
@@ -2872,7 +2863,6 @@
     "profileRequestFailed": "Could not load the profile. Try again.",
     "profileLinkUnavailable": "This saved link has no profile export identity. Reopen the QR code from the key list.",
     "addInbound": "Create inbound",
-    "findInbound": "Find inbound",
     "allKeys": "All keys",
     "allKeysHint": "Search and bulk-manage keys across all inbounds.",
     "keyCount": "Keys: {count}",

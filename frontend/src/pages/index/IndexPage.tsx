@@ -26,7 +26,6 @@ import { setMessageInstance } from '@/utils/messageBus';
 import OverviewActionBar from './OverviewActionBar';
 import VitalTile from './VitalTile';
 import ThroughputCard from './ThroughputCard';
-import ConnectionsCard from './ConnectionsCard';
 import SystemStrip from './SystemStrip';
 import { mean, peak, useOverviewHistory } from './useOverviewHistory';
 import type { PanelUpdateInfo } from './PanelUpdateModal';
@@ -283,13 +282,7 @@ export default function IndexPage() {
                       labels={history.labels}
                       isMobile={isMobile}
                     />
-                    <ConnectionsCard
-                      status={status}
-                      tcp={history.series.tcpCount}
-                      udp={history.series.udpCount}
-                      labels={history.labels}
-                      isMobile={isMobile}
-                    />
+
                   </div>
 
                   <SystemStrip

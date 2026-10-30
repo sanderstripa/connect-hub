@@ -1,13 +1,4 @@
 {
-  "appearance": {
-    "title": "Vzhľad",
-    "subtitle": "Vyberte paletu a režim zobrazenia.",
-    "palette": "Paleta",
-    "mode": "Režim zobrazenia",
-    "local": "Uložené v tomto prehliadači. Nastavenia servera sa nemenia.",
-    "light": "Svetlý",
-    "dark": "Tmavý"
-  },
   "username": "Používateľské meno",
   "password": "Heslo",
   "login": "Prihlásiť sa",
@@ -2872,7 +2863,6 @@
     "profileRequestFailed": "Could not load the profile. Try again.",
     "profileLinkUnavailable": "This saved link has no profile export identity. Reopen the QR code from the key list.",
     "addInbound": "Create inbound",
-    "findInbound": "Find inbound",
     "allKeys": "All keys",
     "allKeysHint": "Search and bulk-manage keys across all inbounds.",
     "keyCount": "Keys: {count}",
