@@ -61,6 +61,7 @@ interface PaletteItem {
 // The search terms of every panel page, so the palette finds it by what it
 // does rather than by its title.
 export const PALETTE_KEYWORDS: Record<string, string[]> = {
+  '/connections': ['connections', 'inbounds', 'clients', 'keys', 'vpn', 'подключения', 'ключи'],
   '/': ['overview', 'dashboard', 'cpu', 'ram', 'memory', 'traffic', 'speed'],
   '/inbounds': [
     'inbounds',
