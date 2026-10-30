@@ -2870,9 +2870,19 @@
   },
   "connections": {
     "keys": "Keys and clients",
-    "shadowrocketHint": "Shadowrocket 2.2.92+: import a Clash profile by link or QR. The panel HTTPS address must be reachable with a trusted certificate. iPhone import needs device validation; download YAML for manual import.",
+    "shadowrocketHint": "For Shadowrocket 2.2.92+. The QR code adds a single-connection profile. This panel address must be reachable from the iPhone.",
     "copyProfileURL": "Copy profile URL",
-    "profileUnavailable": "Update the panel or check that the key is enabled and has not expired.",
-    "intro": "Create an inbound above, then add and manage device keys below."
+    "profileUnavailable": "This key profile is unavailable. Check that the inbound and key are enabled, not revoked and not expired.",
+    "intro": "Choose an inbound on the left. Manage its keys, clients and settings on the right.",
+    "profileRequestFailed": "Could not load the profile. Try again.",
+    "profileLinkUnavailable": "This saved link has no profile export identity. Reopen the QR code from the key list.",
+    "addInbound": "Create inbound",
+    "findInbound": "Find inbound",
+    "allKeys": "All keys",
+    "allKeysHint": "Search and bulk-manage keys across all inbounds.",
+    "keyCount": "Keys: {count}",
+    "chooseInbound": "Create or choose an inbound",
+    "createKey": "Create key",
+    "backToKeys": "Back to keys"
   }
 }

@@ -77,3 +77,30 @@ func (s *InboundService) GetAllClientLinks(host string, email string) ([]string,
 	}
 	return links, nil
 }
+
+// GetInboundClientLinks scopes the workspace's QR/details to the selected
+// inbound while preserving host resolution and that inbound's device secret.
+func (s *InboundService) GetInboundClientLinks(host string, inboundID int, email string) ([]string, error) {
+	provider := subLinkProvider()
+	if provider == nil {
+		return nil, common.NewError("sub link provider not registered")
+	}
+	rec, err := s.clientService.GetRecordByEmail(nil, email)
+	if err != nil {
+		return nil, err
+	}
+	ids, err := s.clientService.GetInboundIdsForRecord(rec.Id)
+	if err != nil {
+		return nil, err
+	}
+	for _, id := range ids {
+		if id == inboundID {
+			ib, err := s.GetInbound(id)
+			if err != nil {
+				return nil, err
+			}
+			return provider.LinksForClient(host, ib, email), nil
+		}
+	}
+	return nil, common.NewError("client is not attached to this inbound")
+}

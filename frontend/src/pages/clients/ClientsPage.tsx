@@ -45,6 +45,7 @@ import {
   RestOutlined,
   RetweetOutlined,
   SearchOutlined,
+  ArrowLeftOutlined,
   SortAscendingOutlined,
   StopOutlined,
   TagsOutlined,
@@ -318,7 +319,7 @@ function sortValueFor(column: string | null, order: 'ascend' | 'descend' | null)
   return `${column}:${order}`;
 }
 
-export default function ClientsPage({ embedded = false }: { embedded?: boolean } = {}) {
+export default function ClientsPage({ embedded = false, explorer = false, inboundId }: { embedded?: boolean; explorer?: boolean; inboundId?: number } = {}) {
   const Heading = embedded ? 'h2' : 'h1';
   const Shell = embedded ? 'section' : Layout;
   const Inner = embedded ? 'div' : Layout;
@@ -335,6 +336,7 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
 
   const {
     clients,
+    query,
     total,
     filtered,
     summary,
@@ -395,6 +397,7 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
     fetchError: hostsFetchError,
     refetch: refetchHosts,
   } = useHostsQuery();
+  const scopeReady = inboundId === undefined || query?.inbound === String(inboundId) && !transitioning;
   const hostsError = hosts.length > 0 ? '' : hostsFetchError;
 
   const [togglingEmail, setTogglingEmail] = useState<string | null>(null);
@@ -434,7 +437,8 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
     ((value: string) => Promise<boolean | void> | boolean | void) | null
   >(null);
 
-  const initial = readFilterState();
+  const remembered = readFilterState();
+  const initial = inboundId === undefined ? remembered : { ...remembered, searchKey: '', filters: emptyFilters() };
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const searchParam = searchParams.get('search');
@@ -474,6 +478,7 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
   }
 
   useEffect(() => {
+    if (inboundId !== undefined) return;
     localStorage.setItem(
       FILTER_STATE_KEY,
       JSON.stringify({
@@ -484,7 +489,7 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
         pageSize: resolvedPageSize,
       }),
     );
-  }, [searchKey, filters, sortColumn, sortOrder, resolvedPageSize]);
+  }, [searchKey, filters, sortColumn, sortOrder, resolvedPageSize, inboundId]);
 
   useEffect(() => {
     const handle = window.setTimeout(() => setDebouncedSearch(searchKey), 300);
@@ -501,6 +506,7 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
   // already accepts an inbound CSV, so nodes never have to reach the backend.
   // Sentinel 0 = "local panel" (inbounds without a nodeId).
   const effectiveInboundCsv = useMemo(() => {
+    if (inboundId !== undefined) return String(inboundId);
     if (!filters.nodeIds.length) return filters.inboundIds.join(',');
     const nodeSet = new Set(filters.nodeIds);
     const nodeInboundIds = inbounds.filter((ib) => nodeSet.has(ib.nodeId ?? 0)).map((ib) => ib.id);
@@ -510,7 +516,7 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
     // Nothing matches the selected nodes: send an impossible id so the filter
     // yields an honest empty result instead of being silently ignored.
     return pool.length ? pool.join(',') : '-1';
-  }, [filters.nodeIds, filters.inboundIds, inbounds]);
+  }, [filters.nodeIds, filters.inboundIds, inbounds, inboundId]);
 
   useEffect(() => {
     // With no remembered size and no settings yet, any query we build would be a
@@ -689,9 +695,10 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
   }
 
   function onAdd() {
+    if (explorer) { setInfoOpen(false); setQrOpen(false); }
     setFormMode('add');
     setEditingClient(null);
-    setEditingAttachedIds([]);
+    setEditingAttachedIds(inboundId === undefined ? [] : [inboundId]);
     setEditingExternalLinks([]);
     setEditingTunnelAllowedIPs({});
     setFormOpen(true);
@@ -701,6 +708,7 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
     async (email: string) => {
       const row = rowsByEmail.current.get(email);
       if (!row) return;
+      if (explorer) { setInfoOpen(false); setQrOpen(false); }
       setFormMode('edit');
       // Paged list omits per-client secrets to keep the row payload tiny;
       // edit needs them, so fetch the full record first.
@@ -713,7 +721,7 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
       setEditingTunnelAllowedIPs(full?.tunnelAllowedIPs ?? {});
       setFormOpen(true);
     },
-    [hydrate],
+    [hydrate, explorer],
   );
 
   const onDelete = useCallback(
@@ -728,11 +736,11 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
         cancelText: t('cancel'),
         onOk: async () => {
           const msg = await remove(row.email);
-          if (msg?.success) messageApi.success(t('pages.clients.toasts.deleted'));
+          if (msg?.success) { messageApi.success(t('pages.clients.toasts.deleted')); if (explorer) { setInfoOpen(false); setQrOpen(false); setFormOpen(false); } }
         },
       });
     },
-    [modal, t, remove, messageApi],
+    [modal, t, remove, messageApi, explorer],
   );
 
   const onResetTraffic = useCallback(
@@ -761,11 +769,12 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
       const row = rowsByEmail.current.get(email);
       if (!row) return;
       const full = await hydrate(row.email);
+      if (explorer) { setFormOpen(false); setQrOpen(false); }
       setInfoClient(full ? { ...row, ...full.client, inboundIds: full.inboundIds } : row);
       setViewingTunnelAllowedIPs(full?.tunnelAllowedIPs ?? {});
       setInfoOpen(true);
     },
-    [hydrate],
+    [hydrate, explorer],
   );
 
   const onShowQr = useCallback(
@@ -773,11 +782,12 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
       const row = rowsByEmail.current.get(email);
       if (!row) return;
       const full = await hydrate(row.email);
+      if (explorer) { setFormOpen(false); setInfoOpen(false); }
       setQrClient(full ? { ...row, ...full.client, inboundIds: full.inboundIds } : row);
       setViewingTunnelAllowedIPs(full?.tunnelAllowedIPs ?? {});
       setQrOpen(true);
     },
-    [hydrate],
+    [hydrate, explorer],
   );
 
   const [refreshing, setRefreshing] = useState(false);
@@ -1019,7 +1029,7 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
           },
     ) => {
       if (!meta.isEdit) {
-        const createMsg = await create(payload);
+        const createMsg = await create(inboundId === undefined ? payload : { ...payload, inboundIds: [inboundId] });
         if (!createMsg?.success) return createMsg;
         if (meta.email && meta.externalLinks.length > 0) {
           const r = await setExternalLinks(meta.email, meta.externalLinks);
@@ -1045,7 +1055,7 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
       if (!r?.success) return r;
       return updateMsg;
     },
-    [create, update, attach, detach, setExternalLinks],
+    [create, update, attach, detach, setExternalLinks, inboundId],
   );
 
   const pageClass = useMemo(() => {
@@ -1128,7 +1138,7 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
         width: 220,
         render: (_v, record) => (
           <div className="email-cell">
-            <span className="email" title={record.email}>{record.email}</span>
+            <span className="email" title={record.email}>{explorer ? <button type="button" className="client-open" onClick={() => void onShowInfo(record.email)}>{record.email}</button> : record.email}</span>
             {(record.subId || record.comment) && <span className="client-secondary">
             {record.subId && (
               <span className="sub" title={record.subId}>
@@ -1240,6 +1250,7 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
       clientBucket,
       isOnline,
       inboundsById,
+      explorer,
       filters,
       allGroups,
       datepicker,
@@ -1258,6 +1269,12 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
     showTotal: (n: number) => `${n}`,
   };
 
+  const compactColumns = columns.filter(column => ['email', 'enable', 'online', 'traffic', 'expiryTime', 'actions'].includes(String(column.key))).map(column => {
+    if (column.key === 'inboundIds') return { ...column, hidden: true };
+    if (column.key === 'traffic') return { ...column, width: 200 };
+    if (column.key === 'actions') return { ...column, width: 84, render: (_value: unknown, row: ClientRecord) => <><Button type="text" icon={<QrcodeOutlined aria-hidden />} aria-label={t('pages.clients.qrCode')} onClick={() => void onShowQr(row.email)} /><Button type="text" icon={<InfoCircleOutlined aria-hidden />} aria-label={t('pages.clients.clientInfo')} onClick={() => void onShowInfo(row.email)} /></> };
+    return { ...column, width: column.key === 'email' ? 180 : column.key === 'expiryTime' ? 110 : 70 };
+  });
   const rowSelection = {
     selectedRowKeys,
     onChange: (keys: React.Key[]) => setSelectedRowKeys(keys as string[]),
@@ -1302,6 +1319,10 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
     setFilters({ ...filters, [key]: emptyFilters()[key] });
   }
 
+  const detailClient = infoOpen ? infoClient : qrOpen ? qrClient : editingClient;
+  const detailRow = detailClient ? rowsByEmail.current.get(detailClient.email) ?? detailClient : null;
+  const showingDetail = explorer && (infoOpen || qrOpen || formOpen);
+  function backToKeys() { setInfoOpen(false); setQrOpen(false); setFormOpen(false); }
   return (
     <ConfigProvider theme={antdThemeConfig}>
       {messageContextHolder}
@@ -1309,15 +1330,26 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
       <Shell className={`${embedded ? 'connections-section ' : ''}${pageClass}`}>
         {!embedded && <AppSidebar />}
 
-        <Inner className="content-shell">
+        {showingDetail && <div className="client-detail-toolbar">
+          <Button icon={<ArrowLeftOutlined aria-hidden />} onClick={backToKeys}>{t('connections.backToKeys')}</Button>
+          <strong>{detailClient?.email || t('connections.createKey')}</strong>
+          {detailClient && <div className="client-detail-actions">
+            <Button onClick={() => void onShowInfo(detailClient.email)}>{t('pages.clients.clientInfo')}</Button>
+            <Button onClick={() => void onShowQr(detailClient.email)}>{t('qrCode')}</Button>
+            <Button onClick={() => void onEdit(detailClient.email)}>{t('edit')}</Button>
+            {detailRow && <Switch checked={detailRow.enable} loading={togglingEmail === detailRow.email} onChange={value => void onToggleEnable(detailRow, value)} aria-label={t('enable')} />}
+            <Button danger onClick={() => onDelete(detailClient.email)}>{t('delete')}</Button>
+          </div>}
+        </div>}
+        <Inner className="content-shell" style={showingDetail ? { display: 'none' } : undefined}>
           <Content id={embedded ? undefined : 'content-layout'} className="content-area">
             <Spin
-              spinning={!fetched || !hostsFetched}
+              spinning={!fetched || !hostsFetched || !scopeReady}
               delay={200}
               description={t('loading')}
               size="large"
             >
-              {!fetched || !hostsFetched ? (
+              {!fetched || !hostsFetched || !scopeReady ? (
                 <div className="loading-spacer" />
               ) : fetchError || hostsError ? (
                 <Result
@@ -1332,8 +1364,8 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
                 />
               ) : (
                 <Row gutter={[isMobile ? 8 : 16, isMobile ? 8 : 12]}>
-                  <Col span={24}><Heading className="section-page-title">{t(embedded ? 'connections.keys' : 'menu.clients')}</Heading></Col>
-                  <Col span={24}>
+                  {!explorer && <Col span={24}><Heading className="section-page-title">{t(embedded ? 'connections.keys' : 'menu.clients')}</Heading></Col>}
+                  {inboundId === undefined && <Col span={24}>
                     <Card size="small" hoverable className="summary-card">
                       <Row gutter={[16, 12]}>
                         <Col xs={12} sm={8} md={4}>
@@ -1395,7 +1427,7 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
                         </Col>
                       </Row>
                     </Card>
-                  </Col>
+                  </Col>}
 
                   <Col span={24}>
                     <Card
@@ -1408,9 +1440,9 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
                               type="primary"
                               icon={<PlusOutlined aria-hidden />}
                               onClick={onAdd}
-                              aria-label={t('pages.clients.addClients')}
+                              aria-label={t(explorer ? 'connections.createKey' : 'pages.clients.addClients')}
                             >
-                              {!isMobile && t('pages.clients.addClients')}
+                              {!isMobile && t(explorer ? 'connections.createKey' : 'pages.clients.addClients')}
                             </Button>
                           ) : (
                             <Tag
@@ -1423,6 +1455,7 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
                             </Tag>
                           )}
                           <Dropdown
+                            disabled={inboundId !== undefined && selectedRowKeys.length === 0}
                             trigger={['click']}
                             placement="bottomRight"
                             menu={{
@@ -1710,14 +1743,14 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
 
                       {!isMobile ? (
                         <Table<ClientRecord>
-                          columns={columns}
+                          columns={explorer && inboundId !== undefined ? compactColumns : columns}
                           dataSource={sortedClients}
                           loading={transitioning}
                           rowKey="email"
                           rowSelection={rowSelection}
                           pagination={tablePagination}
                           size="small"
-                          scroll={{ x: 1200 }}
+                          scroll={{ x: explorer && inboundId !== undefined ? 740 : 1200 }}
                           onChange={onTableChange}
                           locale={{
                             emptyText: (
@@ -1909,13 +1942,14 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
 
         <LazyMount when={formOpen}>
           <ClientFormModal
+            embedded={explorer}
             open={formOpen}
             mode={formMode}
             client={editingClient}
             attachedIds={editingAttachedIds}
             attachedExternalLinks={editingExternalLinks}
             tunnelAllowedIPs={editingTunnelAllowedIPs}
-            inbounds={inbounds}
+            inbounds={inboundId !== undefined && formMode === 'add' ? inbounds.filter(row => row.id === inboundId) : inbounds}
             tgBotEnable={tgBotEnable}
             groups={allGroups}
             save={onSave}
@@ -1925,6 +1959,8 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
         </LazyMount>
         <LazyMount when={infoOpen}>
           <ClientInfoModal
+            embedded={explorer}
+            inboundScope={inboundId}
             open={infoOpen}
             client={infoClient}
             inboundsById={inboundsById}
@@ -1937,6 +1973,8 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
         </LazyMount>
         <LazyMount when={qrOpen}>
           <ClientQrModal
+            embedded={explorer}
+            inboundScope={inboundId}
             open={qrOpen}
             client={qrClient}
             inboundsById={inboundsById}
@@ -2040,7 +2078,7 @@ export default function ClientsPage({ embedded = false }: { embedded?: boolean }
             onOpenChange={setFilterDrawerOpen}
             filters={filters}
             onChange={setFilters}
-            inbounds={inbounds}
+            inbounds={inboundId === undefined ? inbounds : inbounds.filter(row => row.id === inboundId)}
             protocols={protocolOptions}
             groups={groupOptions}
             nodes={nodes}

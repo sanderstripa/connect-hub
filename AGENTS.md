@@ -52,3 +52,7 @@ Current specification, 29 October 2026: replace previous palettes and Montserrat
 Latest user request: add server panel removal to the Windows app, with explicit confirmation and preservation of unrelated services and opt-in host tuning.
 
 Current user request, 30 October 2026: combine Inbounds and Clients into Connections with inbounds above keys; offer opt-in hardware-based swap advice and arbitrary 1–32 GB sizes; recommend XHTTP with Basic / Recommended / Manual choices. Recommended profile matches provided Reality/Safari/booking.com, ML-KEM-768 native, stream-one, padding and HTTP/TLS/QUIC sniffing. Offer optional client e-mail name. Preserve native Sudoku export and add a separately labelled Shadowrocket Clash-profile import; do not claim proprietary URI or real iPhone validation without evidence.
+
+Latest bug report: the Sudoku Shadowrocket QR window in 0.4.0 shows a misleading update instruction instead of a QR. Exercise the actual browser HTTP serializer and saved-client modal against the real server, with no mocked export API, before publishing this fix. Preserve existing keys.
+
+Latest workspace request: compact inbound cards on the left, selected inbound clients/details/QR/settings on the right; inline key creation and Back navigation; separate All keys global search/bulk view. Preserve all original inbound actions and scope links/creation to the selected inbound. Validate two-inbound isolation in the real browser.

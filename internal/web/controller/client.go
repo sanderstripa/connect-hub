@@ -59,6 +59,7 @@ func (a *ClientController) initRouter(g *gin.RouterGroup) {
 	g.GET("/traffic/:email", a.getTrafficByEmail)
 	g.GET("/subLinks/:subId", a.getSubLinks)
 	g.GET("/links/:email", a.getClientLinks)
+	g.GET("/inboundLinks/:inboundId/:email", a.getInboundClientLinks)
 	g.POST("/happLink/:id", a.generateHappLink)
 
 	g.POST("/add", a.create)
@@ -688,6 +689,17 @@ func (a *ClientController) getClientLinks(c *gin.Context) {
 		return
 	}
 	jsonObj(c, links, nil)
+}
+
+func (a *ClientController) getInboundClientLinks(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("inboundId"))
+	if err != nil || id < 1 {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+	links, err := a.inboundService.GetInboundClientLinks(resolveHost(c), id, c.Param("email"))
+	c.Header("Cache-Control", "no-store")
+	jsonObj(c, links, err)
 }
 
 func (a *ClientController) generateHappLink(c *gin.Context) {

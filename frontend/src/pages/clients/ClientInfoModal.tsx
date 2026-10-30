@@ -1,3 +1,4 @@
+import DetailSurface from '@/components/layout/DetailSurface';
 import { CLIENT_GROUPS_UI_ENABLED } from '@/lib/client-groups-ui';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -63,6 +64,8 @@ interface SubSettings {
 }
 
 interface ClientInfoModalProps {
+  embedded?: boolean;
+  inboundScope?: number;
   open: boolean;
   client: ClientRecord | null;
   inboundsById: Record<number, InboundOption>;
@@ -96,7 +99,7 @@ const SUBSCRIPTION_DOWNLOAD_NAMES = {
   clash: 'subscription-clash.yaml',
 } as const;
 
-export default function ClientInfoModal({
+export default function ClientInfoModal({ embedded = false, inboundScope,
   open,
   client,
   inboundsById,
@@ -157,7 +160,7 @@ export default function ClientInfoModal({
     let cancelled = false;
     (async () => {
       const msg = (await HttpUtil.get(
-        `/panel/api/clients/subLinks/${encodeURIComponent(client.subId!)}`,
+        inboundScope ? `/panel/api/clients/inboundLinks/${inboundScope}/${encodeURIComponent(client.email)}` : `/panel/api/clients/subLinks/${encodeURIComponent(client.subId!)}`,
       )) as ApiMsg<string[]>;
       if (cancelled) return;
       setLinks(msg?.success && Array.isArray(msg.obj) ? msg.obj : []);
@@ -165,7 +168,7 @@ export default function ClientInfoModal({
     return () => {
       cancelled = true;
     };
-  }, [open, client?.subId]);
+  }, [open, client?.subId, client?.email, inboundScope]);
 
   const traffic = client?.traffic || null;
   const totalBytes = client?.totalGB || 0;
@@ -295,7 +298,7 @@ export default function ClientInfoModal({
   return (
     <>
       {messageContextHolder}
-      <Modal
+      <DetailSurface embedded={embedded}
         open={open}
         title={
           client
@@ -846,7 +849,7 @@ export default function ClientInfoModal({
             )}
           </>
         )}
-      </Modal>
+      </DetailSurface>
 
       <Modal
         open={ipsModalOpen}

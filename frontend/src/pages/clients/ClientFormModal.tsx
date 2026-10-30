@@ -1,3 +1,4 @@
+import DetailSurface from '@/components/layout/DetailSurface';
 import { CLIENT_GROUPS_UI_ENABLED } from '@/lib/client-groups-ui';
 import { useEffect, useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -118,6 +119,7 @@ interface SaveCreatePayload {
 }
 
 interface ClientFormModalProps {
+  embedded?: boolean;
   open: boolean;
   mode: Mode;
   client: ClientRecord | null;
@@ -252,6 +254,7 @@ export function resolveTotalBytes(
 }
 
 export default function ClientFormModal({
+  embedded = false,
   open,
   mode,
   client,
@@ -424,6 +427,7 @@ export default function ClientFormModal({
       const wgKeypair = Wireguard.generateKeypair();
       methods.reset({
         ...EMPTY,
+        inboundIds: [...attachedIds],
         email: RandomUtil.randomLowerAndNum(10),
         uuid: RandomUtil.randomUUID(),
         subId: RandomUtil.randomLowerAndNum(16),
@@ -896,7 +900,7 @@ export default function ClientFormModal({
   return (
     <>
       {messageContextHolder}
-      <Modal
+      <DetailSurface embedded={embedded}
         open={open}
         title={isEdit ? t('pages.clients.editClient') : t('pages.clients.addClient')}
         destroyOnHidden
@@ -1714,7 +1718,7 @@ export default function ClientFormModal({
             />
           </Form>
         </FormProvider>
-      </Modal>
+      </DetailSurface>
 
       <Modal
         open={ipsModalOpen}

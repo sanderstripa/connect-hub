@@ -79,7 +79,7 @@ jobs:
       - run: npm run typecheck && npm run lint && npm test -- --project unit --project components && npm run build
         working-directory: frontend
       - run: go test ./internal/web -run TestEmbeddedFontsAndRangeRequests -count=1
-      - run: go test ./internal/web/controller ./internal/sub -run TestSudoku -count=1
+      - run: go test ./internal/web/controller ./internal/web/service ./internal/sub -run 'TestSudoku|TestInboundClientLinks' -count=1
       - run: python3 apps/windows-installer/test/uninstall-smoke.py
       - run: python3 hub/package.py
       - name: Real native advanced connection creation and editing
@@ -123,22 +123,24 @@ jobs:
           cp panel-assets/connect-hub-linux-amd64.tar.gz release-assets/
           cat panel-assets/SHA256SUMS >> release-assets/SHA256SUMS
           cat > release-notes.md <<'NOTES'
-          Connect Hub 0.4: unified Connections, guided XHTTP and hardware advice.
+          Connections workspace and Sudoku QR fix.
 
-          - One Connections page: inbounds above, device keys and clients below, retaining all former actions. Old inbounds/client URLs redirect with their query filters.
-          - Read-only RAM, existing swap, filesystem and free disk analysis. Explicit Apply recommendation, keep-current default and a manual 0–32 GB choice.
-          - XHTTP first and marked Recommended. Basic, recommended and manual profiles. Recommended: fresh native ML-KEM-768 keys, stream-one, padding 100–1000, Reality with Safari fingerprint and booking.com:443, HTTP/TLS/QUIC sniffing without Fake DNS.
-          - Optional device key name in the panel e-mail field. Duplicate custom names are refused; existing keys are never silently overwritten.
-          - Original Sudoku URI/QR plus a separate Shadowrocket Clash-profile import link/QR. Signed per-device URLs expose only that device profile and stop working for disabled/revoked/expired keys. No new device keys are created for another export format.
-          - Shadowrocket 2.2.92+ supports Sudoku. This export uses Clash YAML and the documented import callback because its proprietary Sudoku URI is not specified publicly. Actual iPhone import/handshake is not verified; use the YAML download for manual import if needed. Profile fetching needs a reachable panel URL and trusted HTTPS certificate.
+          - Browse compact inbound cards on the left and work with selected clients on the right. Create keys in place and open client details, limits, editing and QR without leaving the workspace.
+          - Use All keys for global search and bulk management. Selected inbound views keep their own scope and only export links for that inbound.
 
-          Validation: frontend suite and type/lint/build checks, Windows source GUI and packaged portable EXE, native XHTTP/ML-KEM/Sudoku APIs and signed-profile authorization/revocation tests. Existing server update preserves keys and data. BBR/swap stay opt-in.
+          - Send explicit application/json with the real browser HTTP adapter, preserving CSRF protection and the private panel base path. Version 0.4.0 incorrectly sent a form body to a JSON-only endpoint.
+          - Replace the misleading update-panel warning with separate request/key errors and Retry. Keep standard Sudoku QR available and preserve saved client keys.
+          - Shorten the Shadowrocket import instructions; HTTP panels are no longer incorrectly described as requiring HTTPS.
+
+          Regression coverage: open the saved iPhoneSudoku client in the real bundled web panel, switch the QR modal to Shadowrocket, verify the actual JSON request, rendered QR, anonymous signed-profile fetch and unchanged device key in both themes. Unit coverage uses the real HTTP serializer, tests request failure/retry and legacy links. Windows GUI/portable EXE and public server installation/update/removal are also checked.
+
+          Shadowrocket export still uses Clash profile import; a real iPhone import/handshake has not been verified.
           NOTES
           if gh release view "$tag" >/dev/null 2>&1; then
             echo 'A release already exists for this installer version; refusing to replace published binaries.'
             exit 1
           fi
-          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — guided connections" --notes-file release-notes.md --prerelease --latest=false
+          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — Connections workspace" --notes-file release-notes.md --prerelease --latest=false
   public-install:
     needs: publish
     runs-on: ubuntu-24.04

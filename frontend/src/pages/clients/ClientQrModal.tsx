@@ -1,7 +1,8 @@
+import DetailSurface from '@/components/layout/DetailSurface';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { Alert, Button, Collapse, Empty, Modal, Segmented, Spin, Tag, Typography } from 'antd';
+import { Alert, Button, Collapse, Empty, Segmented, Spin, Tag, Typography } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
 import { HttpUtil } from '@/utils';
 import type { HappLinkResult } from '@/generated/types';
@@ -35,6 +36,8 @@ interface SubSettings {
 }
 
 interface ClientQrModalProps {
+  embedded?: boolean;
+  inboundScope?: number;
   open: boolean;
   client: ClientRecord | null;
   inboundsById: Record<number, InboundOption>;
@@ -227,6 +230,8 @@ export default function ClientQrModal(props: ClientQrModalProps) {
 }
 
 function ClientQrModalContent({
+  embedded = false,
+  inboundScope,
   open,
   client,
   inboundsById,
@@ -404,7 +409,7 @@ function ClientQrModalContent({
     (async () => {
       try {
         const msg = (await HttpUtil.get(
-          `/panel/api/clients/subLinks/${encodeURIComponent(client.subId!)}`,
+          inboundScope ? `/panel/api/clients/inboundLinks/${inboundScope}/${encodeURIComponent(client.email)}` : `/panel/api/clients/subLinks/${encodeURIComponent(client.subId!)}`,
         )) as ApiMsg<string[]>;
         if (!cancelled) {
           setLinks(msg?.success && Array.isArray(msg.obj) ? msg.obj : []);
@@ -416,7 +421,7 @@ function ClientQrModalContent({
     return () => {
       cancelled = true;
     };
-  }, [open, client?.subId]);
+  }, [open, client?.subId, client?.email, inboundScope]);
 
   const [activeKey, setActiveKey] = useState<string[]>([]);
 
@@ -555,7 +560,7 @@ function ClientQrModalContent({
   }
 
   return (
-    <Modal
+    <DetailSurface embedded={embedded}
       open={open}
       title={client ? `${t('qrCode')} — ${client.email}` : t('qrCode')}
       footer={null}
@@ -584,6 +589,6 @@ function ClientQrModalContent({
           />
         )}
       </Spin>
-    </Modal>
+    </DetailSurface>
   );
 }

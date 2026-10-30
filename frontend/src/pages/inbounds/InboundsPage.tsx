@@ -1,3 +1,4 @@
+import ConnectionsWorkspace from '@/pages/connections/ConnectionsWorkspace';
 import { CLIENT_GROUPS_UI_ENABLED } from '@/lib/client-groups-ui';
 import { lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -80,7 +81,7 @@ interface ClientMatchTarget {
   password?: string;
 }
 
-export default function InboundsPage({ embedded = false }: { embedded?: boolean } = {}) {
+export default function InboundsPage({ embedded = false, workspace = false }: { embedded?: boolean; workspace?: boolean } = {}) {
   const Heading = embedded ? 'h2' : 'h1';
   const Shell = embedded ? 'section' : Layout;
   const Inner = embedded ? 'div' : Layout;
@@ -748,6 +749,8 @@ export default function InboundsPage({ embedded = false }: { embedded?: boolean 
                     </Button>
                   }
                 />
+              ) : workspace ? (
+                <ConnectionsWorkspace inbounds={dbInbounds} counts={clientCount} subEnable={subSettings.enable} onAdd={onAddInbound} onGeneral={onGeneralAction} onAction={(key, dbInbound) => void onRowAction({ key: key as RowAction, dbInbound: dbInbound as unknown as DBInbound })} />
               ) : (
                 <Row gutter={[isMobile ? 8 : 16, 12]}>
                   <Col span={24}><Heading className="section-page-title">{t('menu.inbounds')}</Heading></Col>
