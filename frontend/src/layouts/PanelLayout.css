@@ -28,7 +28,7 @@
   outline-offset: 4px;
   border-radius: 2px;
 }
-.panel-app .ant-layout:has(> .ant-sidebar) > .content-shell {
+.panel-app > .ant-layout > .content-shell {
   padding-block-start: var(--app-header-height);
 }
 @media (max-width: 768px) {
@@ -41,7 +41,7 @@
   .app-brand {
     font-size: 15px;
   }
-  .panel-app .ant-layout:has(> .ant-sidebar) > .content-shell > .content-area {
+  .panel-app > .ant-layout > .content-shell > .content-area {
     padding-block-start: 12px;
   }
 }

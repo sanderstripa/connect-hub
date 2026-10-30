@@ -109,15 +109,20 @@ try{
   const brand=page.getByRole('link',{name:'Connect. Hub',exact:true});
   assert.equal(await brand.count(),1);await brand.waitFor();
   assert.equal(await page.locator('.ant-sidebar a').filter({hasText:'C.'}).count(),0);
-  const header=await page.locator('.app-header').boundingBox();
-  assert.ok(header.x>=55&&header.x+header.width<=page.viewportSize().width+1);
-  const pageContent=page.locator('.content-area:visible').first();
-  await pageContent.waitFor({state:'visible'});
-  const content=await pageContent.boundingBox();
-  const scrollY=await page.evaluate(()=>window.scrollY);
-  const topInset=await page.locator('.ant-layout:has(> .ant-sidebar) > .content-shell').evaluate(el=>parseFloat(getComputedStyle(el).paddingBlockStart));
-  assert.ok(topInset>=header.height,'Every section must reserve header space');
-  assert.ok(content.y+scrollY>=header.height-1,'Header must not cover initial page content: '+JSON.stringify({content,header,scrollY,topInset}));
+  await page.locator('.panel-app > .ant-layout:visible > .content-shell > .content-area:visible').first().waitFor();
+  await page.waitForFunction(()=>{
+   const header=document.querySelector('.app-header');
+   const shell=[...document.querySelectorAll('.panel-app > .ant-layout > .content-shell')].find(el=>el.getBoundingClientRect().height>0);
+   return header&&shell&&parseFloat(getComputedStyle(shell).paddingBlockStart)>=header.getBoundingClientRect().height;
+  });
+  const metrics=await page.evaluate(()=>{
+   const header=document.querySelector('.app-header').getBoundingClientRect();
+   const shell=[...document.querySelectorAll('.panel-app > .ant-layout > .content-shell')].find(el=>el.getBoundingClientRect().height>0);
+   const content=shell.querySelector('.content-area').getBoundingClientRect();
+   return {header:{x:header.x,y:header.y,width:header.width,height:header.height},content:{y:content.y},scrollY:window.scrollY,width:window.innerWidth};
+  });
+  assert.ok(metrics.header.x>=55&&metrics.header.x+metrics.header.width<=metrics.width+1);
+  assert.ok(metrics.content.y+metrics.scrollY>=metrics.header.height-1,'Header must not cover initial page content: '+JSON.stringify(metrics));
  }
  async function navigation(dark){
   const rail=page.locator('.ant-sidebar');
