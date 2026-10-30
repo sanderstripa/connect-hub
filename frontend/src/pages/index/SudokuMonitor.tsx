@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Button, Empty, Modal, Spin, Tag } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { HttpUtil } from '@/utils';
+import './VersionModal.css';
 
 type State = { state: string; configured: boolean; version: string };
 type Release = {
