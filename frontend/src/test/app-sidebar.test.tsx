@@ -30,7 +30,8 @@ test('keeps the icon rail compact on hover and ignores the old pin preference', 
   localStorage.setItem('sidebar-pinned', 'true');
   const view = await renderSidebar();
   const rail = view.container.querySelector('.ant-sidebar')!;
-  expect(screen.getByRole('link', { name: 'Connect Hub' }).textContent).toBe('C.');
+  expect(screen.queryByRole('link', { name: 'Connect Hub' })).toBeNull();
+  expect(view.container.querySelector('.rail-brand')).toBeNull();
   fireEvent.mouseEnter(rail);
   expect(screen.queryByRole('button', { name: 'Pin sidebar' })).toBeNull();
   expect(view.container.querySelector('.sidebar-command-trigger')).toBeNull();

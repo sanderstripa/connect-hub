@@ -125,20 +125,20 @@ jobs:
           cp panel-assets/connect-hub-linux-amd64.tar.gz release-assets/
           cat panel-assets/SHA256SUMS >> release-assets/SHA256SUMS
           cat > release-notes.md <<'NOTES'
-          Network navigation and Sudoku monitoring.
+          Shared application header.
 
-          - Merge Nodes and Hosts into Network and remove the Infrastructure group.
-          - Move Settings to the bottom-left rail directly above Search, preserving its sections.
-          - Rename Overview/Dashboard to Monitoring (RU/EN).
-          - Add a Sudoku status and installed-build control beside Xray, with current core release listings and links.
+          - Remove C. from the icon-only navigation rail.
+          - Show a compact Connect. Hub home link above every panel page through the shared layout.
+          - Keep the header mounted during section changes and return to Monitoring on click.
+          - Use compact mobile spacing and preserve both themes and all existing routes.
 
-          Validation: frontend typecheck/lint/build and tests, real panel browser navigation in both themes and responsive viewports, packaged Windows installer, public installation and preserved-key update smoke checks.
+          Validation includes frontend tests/typecheck/lint/build, real browser navigation and header bounds in both themes at 390/768/1024px, packaged Windows EXE, and public installation/update checks.
           NOTES
           if gh release view "$tag" >/dev/null 2>&1; then
             echo 'A release already exists for this installer version; refusing to replace published binaries.'
             exit 1
           fi
-          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — Network navigation and Sudoku monitoring" --notes-file release-notes.md --prerelease --latest=false
+          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — Shared application header" --notes-file release-notes.md --latest=true
   public-install:
     needs: publish
     runs-on: ubuntu-24.04

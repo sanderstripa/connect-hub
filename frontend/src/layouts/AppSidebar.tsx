@@ -229,17 +229,6 @@ export default function AppSidebar() {
     <>
       <aside className="ant-sidebar" aria-label="Connect Hub">
         <div className="compact-rail">
-          <a
-            className="rail-brand"
-            href={(window.X_UI_BASE_PATH || '/') + 'panel/'}
-            onClick={(event) => {
-              event.preventDefault();
-              openLink('/');
-            }}
-            aria-label="Connect Hub"
-          >
-            C.
-          </a>
           <nav className="rail-nav">{items.map((item) => renderItem(item))}</nav>
           <div className="rail-utilities">
             {renderItem(settingsItem)}

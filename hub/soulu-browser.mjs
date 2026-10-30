@@ -43,7 +43,7 @@ try{
  for(const dark of [false,true]){
   await page.evaluate(d=>localStorage.setItem('dark-mode',String(d)),dark);
   for(const route of ['','connections','inbounds','clients','settings#appearance']){
-   await page.goto(cfg.url+'panel/'+route);await page.locator('.ant-sidebar').waitFor();await check(route.split('#')[0]||'dashboard',dark);
+   await page.goto(cfg.url+'panel/'+route);await page.locator('.ant-sidebar').waitFor();await brandCheck();await check(route.split('#')[0]||'dashboard',dark);
    if(route===''){
     assert.equal(await page.getByRole('button',{name:'Monitoring',exact:true}).count(),1);
     const monitor=await page.evaluate(async url=>(await(await fetch(url+'panel/hub/api/sudoku/monitor')).json()),cfg.url);
@@ -105,11 +105,21 @@ try{
    }
   }
  }
+ async function brandCheck(){
+  const brand=page.getByRole('link',{name:'Connect. Hub',exact:true});
+  assert.equal(await brand.count(),1);await brand.waitFor();
+  assert.equal(await page.locator('.ant-sidebar a').filter({hasText:'C.'}).count(),0);
+  const header=await page.locator('.app-header').boundingBox();
+  assert.ok(header.x>=55&&header.x+header.width<=page.viewportSize().width+1);
+  const content=await page.locator('.content-area').first().boundingBox();
+  assert.ok(content.y>=header.y+header.height-1,'Header must not cover page content');
+ }
  async function navigation(dark){
   const rail=page.locator('.ant-sidebar');
   assert.equal(Math.round((await rail.boundingBox()).width),56);
   await rail.hover();await page.waitForTimeout(250);assert.equal(Math.round((await rail.boundingBox()).width),56);
-  assert.equal(await page.locator('.rail-brand').textContent(),'C.');
+  assert.equal(await page.locator('.rail-brand').count(),0);
+  assert.equal(await page.locator('.app-brand').textContent(),'Connect. Hub');
   const menuLabels={'/nodes':'Nodes','/hosts':'Hosts','/outbound':'Outbounds','/routing':'Routing','/settings#general':'General','/settings#security':'Authentication','/settings#telegram':'Telegram Bot','/settings#email':'Email','/settings#discord':'Discord Bot','/settings#subscription':'Subscription','/api-docs':'API Docs','/xray#basic':'Basics','/xray#balancer':'Balancers','/xray#dns':'DNS','/xray#advanced':'Advanced'};
   assert.equal(await rail.getByRole('button',{name:'Infrastructure',exact:true}).count(),0);
   const footer=rail.locator('.rail-utilities');
@@ -129,7 +139,7 @@ try{
     await menu.evaluate(async el=>{await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));await Promise.all(el.getAnimations({subtree:true}).map(animation=>animation.finished.catch(()=>{})));});
     assert.notEqual(await menu.locator('.ant-dropdown-menu').evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(0, 0, 0, 0)');
     const bounds=await menu.boundingBox(),vp=page.viewportSize();assert.ok(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=vp.width+1&&bounds.y+bounds.height<=vp.height+1);
-    await menu.getByRole('menuitem',{name:menuLabels[routes[i]],exact:true}).click();try{await page.waitForURL(cfg.url+'panel'+routes[i]);}catch(error){throw new Error('Expected '+routes[i]+' but got '+page.url(),{cause:error});}await page.locator('.rail-submenu:visible').waitFor({state:'hidden'});
+    await menu.getByRole('menuitem',{name:menuLabels[routes[i]],exact:true}).click();try{await page.waitForURL(cfg.url+'panel'+routes[i]);await brandCheck();}catch(error){throw new Error('Expected '+routes[i]+' but got '+page.url(),{cause:error});}await page.locator('.rail-submenu:visible').waitFor({state:'hidden'});
    }
   }
   await page.goto(cfg.url+'panel/connections');
@@ -146,12 +156,18 @@ try{
    await page.setViewportSize({width,height:800});await page.locator('.inbound-card').first().waitFor();
    await page.screenshot({path:path.join(cfg.output,'navigation-current.png'),fullPage:true});
    const rb=await rail.boundingBox(),ib=await page.locator('#connection-inbounds').boundingBox();assert.equal(Math.round(rb.width),56);assert.ok(ib.x>=rb.x+rb.width,JSON.stringify({width,rb,ib}));
+   await brandCheck();
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Navigation must not cause page-wide overflow at '+width);
    const pane=await page.locator('#connection-keys').boundingBox();assert.ok(pane.x+pane.width<=width+1,'Work pane clipped at '+width);
    await trigger.click();const menu=page.locator('.rail-submenu:visible');await menu.waitFor();const b=await menu.boundingBox();assert.ok(b.x>=0&&b.x+b.width<=width+1&&b.y>=0&&b.y+b.height<=801);await page.keyboard.press('Escape');await page.locator('.rail-submenu:visible').waitFor({state:'hidden'});
    await page.screenshot({path:path.join(cfg.output,'navigation-'+width+'-'+(dark?'dark':'light')+'.png'),fullPage:true});
   }
   await page.setViewportSize({width:1440,height:1000});
+  const header=await page.locator('.app-header').elementHandle();
+  await page.getByRole('link',{name:'Connect. Hub',exact:true}).click();
+  await page.waitForURL(cfg.url+'panel/');
+  assert.ok(await header.evaluate(el=>el.isConnected),'Shared header must persist across navigation');
+  await page.goto(cfg.url+'panel/connections');
  }
  async function check(name,dark){
   await page.evaluate(async()=>{await document.fonts.load('400 14px Onest','Настройки Connect Hub');await document.fonts.ready;});await page.waitForTimeout(300);
