@@ -1272,7 +1272,16 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
   const compactColumns = columns.filter(column => ['email', 'enable', 'online', 'traffic', 'expiryTime', 'actions'].includes(String(column.key))).map(column => {
     if (column.key === 'inboundIds') return { ...column, hidden: true };
     if (column.key === 'traffic') return { ...column, width: 200 };
-    if (column.key === 'actions') return { ...column, width: 84, render: (_value: unknown, row: ClientRecord) => <><Button type="text" icon={<QrcodeOutlined aria-hidden />} aria-label={t('pages.clients.qrCode')} onClick={() => void onShowQr(row.email)} /><Button type="text" icon={<InfoCircleOutlined aria-hidden />} aria-label={t('pages.clients.clientInfo')} onClick={() => void onShowInfo(row.email)} /></> };
+    if (column.key === 'actions') return {
+      ...column,
+      width: 84,
+      render: (_value: unknown, row: ClientRecord) => (
+        <div className="client-compact-actions">
+          <Button size="small" type="text" icon={<QrcodeOutlined aria-hidden />} aria-label={t('pages.clients.qrCode')} onClick={() => void onShowQr(row.email)} />
+          <Button size="small" type="text" icon={<InfoCircleOutlined aria-hidden />} aria-label={t('pages.clients.clientInfo')} onClick={() => void onShowInfo(row.email)} />
+        </div>
+      ),
+    };
     return { ...column, width: column.key === 'email' ? 180 : column.key === 'expiryTime' ? 110 : 70 };
   });
   const rowSelection = {
