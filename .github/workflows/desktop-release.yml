@@ -5,6 +5,8 @@ on:
     paths:
       - 'apps/windows-installer/**'
       - 'frontend/**'
+      - 'internal/web/**'
+      - 'hub/**'
       - 'internal/config/version'
       - '.github/workflows/desktop-release.yml'
   workflow_dispatch:
