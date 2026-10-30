@@ -114,7 +114,10 @@ try{
   const pageContent=page.locator('.content-area:visible').first();
   await pageContent.waitFor({state:'visible'});
   const content=await pageContent.boundingBox();
-  assert.ok(content.y>=header.y+header.height-1,'Header must not cover page content');
+  const scrollY=await page.evaluate(()=>window.scrollY);
+  const topInset=await page.locator('.ant-layout:has(> .ant-sidebar) > .content-shell').evaluate(el=>parseFloat(getComputedStyle(el).paddingBlockStart));
+  assert.ok(topInset>=header.height,'Every section must reserve header space');
+  assert.ok(content.y+scrollY>=header.height-1,'Header must not cover initial page content: '+JSON.stringify({content,header,scrollY,topInset}));
  }
  async function navigation(dark){
   const rail=page.locator('.ant-sidebar');
