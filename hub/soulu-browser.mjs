@@ -175,7 +175,8 @@ try{
   await page.setViewportSize({width:1440,height:1000});
   const header=await page.locator('.app-header').elementHandle();
   await page.getByRole('link',{name:'Connect. Hub',exact:true}).click();
-  await page.waitForURL(cfg.url+'panel/');
+  await page.waitForURL(url=>url.pathname.replace(/\/$/,'')===new URL(cfg.url+'panel/').pathname.replace(/\/$/,''));
+  await page.locator('.ov-bar').waitFor();
   assert.ok(await header.evaluate(el=>el.isConnected),'Shared header must persist across navigation');
   await page.goto(cfg.url+'panel/connections');
  }
