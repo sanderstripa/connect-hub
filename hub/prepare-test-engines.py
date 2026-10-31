@@ -3,8 +3,8 @@
 import hashlib,io,os,pathlib,subprocess,tarfile,urllib.request
 root=pathlib.Path(__file__).resolve().parent.parent
 tools=root/'dist/test-tools';tools.mkdir(parents=True,exist_ok=True)
-url='https://github.com/sanderstripa/sudoku-ui/releases/download/core-v0.7.0/sudoku-core-linux-amd64.tar.gz'
-expected='deb5519d88fec1e7cdc9c9d68217b05e1603577dbdd6dc4dfa945ab6d91a6446'
+url='https://github.com/sanderstripa/sudoku-ui/releases/download/core-v0.7.1/sudoku-core-linux-amd64.tar.gz'
+expected='7f2fcd6f35219c564c0cd7b154b015d6e7db2029aef8d65edb6331f1702d3d07'
 b=urllib.request.urlopen(url,timeout=120).read()
 assert hashlib.sha256(b).hexdigest()==expected,'Sudoku archive checksum mismatch'
 with tarfile.open(fileobj=io.BytesIO(b)) as t:

@@ -1,8 +1,8 @@
 # Compatible Sudoku Core source and notices
 
 The core is built from checksum-pinned original Sudoku source plus the disclosed
-patches below. The compatible core-v0.7.0 client from sanderstripa/sudoku-ui,
-commit a47140ffe8099392c4b14e23e7956f96fbf19dba, remains an interoperability
+patches below. The compatible core-v0.7.1 client from sanderstripa/sudoku-ui,
+release built from upstream v0.5.2-1, remains an interoperability
 test reference. Original Sudoku by saba and
 contributors: https://github.com/SUDOKU-ASCII/sudoku, GPL-3.0-or-later with the
 original naming/association notice retained in SUDOKU-LICENSE. Compatibility
@@ -13,12 +13,12 @@ protocol. Registered device hashes form an exact whitelist in the server config.
 Connect Hub is independent; no endorsement by the original Sudoku authors is implied.
 
 Each native package includes SUDOKU-original-source.tar.gz at original revision
-56ce6f1aeea18aa69b9bc1d57557ed312b59e5f5, its LICENSE, and both patches. To rebuild
+b1d1f0e767653d2c70e2ff814a01264c7dedf1f4, its LICENSE, and both patches. To rebuild
 the compatible core on Linux, use Go 1.27.3 and its source go.mod/go.sum:
 
 ```bash
 tar -xzf SUDOKU-original-source.tar.gz
-cd sudoku-56ce6f1aeea18aa69b9bc1d57557ed312b59e5f5
+cd sudoku-b1d1f0e767653d2c70e2ff814a01264c7dedf1f4
 git apply ../hub/third-party/sudoku-access-control.patch
 git apply ../hub/third-party/sudoku-native-listen.patch
 go test ./internal/access ./internal/app ./internal/tunnel

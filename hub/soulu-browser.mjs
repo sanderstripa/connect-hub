@@ -47,10 +47,10 @@ try{
    if(route===''){
     assert.equal(await page.getByRole('button',{name:'Monitoring',exact:true}).count(),1);
     const monitor=await page.evaluate(async url=>(await(await fetch(url+'panel/hub/api/sudoku/monitor')).json()),cfg.url);
-    assert.equal(monitor.success,true);assert.equal(monitor.obj.state,'running');assert.equal(monitor.obj.version,'core-v0.7.0');
+    assert.equal(monitor.success,true);assert.equal(monitor.obj.state,'running');assert.equal(monitor.obj.version,'core-v0.7.1');
     await page.getByRole('button',{name:'Sudoku updates',exact:true}).click();
     const dialog=page.getByRole('dialog');await dialog.waitFor();
-    await dialog.getByRole('link',{name:/Sudoku Core core-v0.7.0/}).waitFor({timeout:30000});
+    await dialog.getByRole('link',{name:/Sudoku Core core-v0.7.1/}).waitFor({timeout:30000});
     await check('sudoku-releases',dark);await dialog.locator('.ant-modal-close').click();
    }
    if(route==='connections'){

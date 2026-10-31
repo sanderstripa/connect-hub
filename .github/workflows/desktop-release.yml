@@ -125,20 +125,18 @@ jobs:
           cp panel-assets/connect-hub-linux-amd64.tar.gz release-assets/
           cat panel-assets/SHA256SUMS >> release-assets/SHA256SUMS
           cat > release-notes.md <<'NOTES'
-          Shared application header.
+          Update native Sudoku to upstream v0.5.2-1.
 
-          - Remove C. from the icon-only navigation rail.
-          - Show a compact Connect. Hub home link above every panel page through the shared layout.
-          - Keep the header mounted during section changes and return to Monitoring on click.
-          - Use compact mobile spacing and preserve both themes and all existing routes.
-
-          Validation includes frontend tests/typecheck/lint/build, real browser navigation and header bounds in both themes at 390/768/1024px, packaged Windows EXE, and public installation/update checks.
+          - Include upstream SOCKS5 UDP loopback/IPv6 fixes and the MPTCP mitigation.
+          - Retain native inbound listening, per-device policy, counters, revocation, saved credentials and subscription exports.
+          - Pin compatible Core core-v0.7.1 for shared clients and monitoring release metadata.
+          - Exercise upstream app regressions, web panel, Windows installer and public installation/update paths.
           NOTES
           if gh release view "$tag" >/dev/null 2>&1; then
             echo 'A release already exists for this installer version; refusing to replace published binaries.'
             exit 1
           fi
-          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — Shared application header" --notes-file release-notes.md --latest=true
+          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — Sudoku v0.5.2-1" --notes-file release-notes.md --latest=true
   public-install:
     needs: publish
     runs-on: ubuntu-24.04

@@ -21,17 +21,17 @@
   },
   "sudoku": {
     "amd64": {
-      "url": "https://github.com/sanderstripa/sudoku-ui/releases/download/core-v0.7.0/sudoku-core-linux-amd64.tar.gz",
-      "sha256": "deb5519d88fec1e7cdc9c9d68217b05e1603577dbdd6dc4dfa945ab6d91a6446"
+      "url": "https://github.com/sanderstripa/sudoku-ui/releases/download/core-v0.7.1/sudoku-core-linux-amd64.tar.gz",
+      "sha256": "7f2fcd6f35219c564c0cd7b154b015d6e7db2029aef8d65edb6331f1702d3d07"
     },
     "arm64": {
-      "url": "https://github.com/sanderstripa/sudoku-ui/releases/download/core-v0.7.0/sudoku-core-linux-arm64.tar.gz",
-      "sha256": "b50c9d02663b3c4873ada7d19aab0fcd5623b1923b0e745a477334dc50a41cb7"
+      "url": "https://github.com/sanderstripa/sudoku-ui/releases/download/core-v0.7.1/sudoku-core-linux-arm64.tar.gz",
+      "sha256": "d7f02a0f2dc4726923333f8088d69f4c64f57750b584ee1f965daab862ff7af2"
     }
   },
   "sudokuSource": {
-    "url": "https://codeload.github.com/SUDOKU-ASCII/sudoku/tar.gz/56ce6f1aeea18aa69b9bc1d57557ed312b59e5f5",
-    "sha256": "feba7fd0770b3af2fbc747b9d55d58764ef0470b5fedbabd21fc917e9d56625a",
+    "url": "https://codeload.github.com/SUDOKU-ASCII/sudoku/tar.gz/b1d1f0e767653d2c70e2ff814a01264c7dedf1f4",
+    "sha256": "46c406cdce6576aee140f53dfec1a3313f323bd35a9789145915b7de0706c8ec",
     "patchRevision": "a47140ffe8099392c4b14e23e7956f96fbf19dba"
   }
 }

@@ -23,7 +23,8 @@ def build(destination):
             for patch in ['sudoku-access-control.patch','sudoku-native-listen.patch']:
                 subprocess.run(['git','apply','--check',str(root/'hub/third-party'/patch)],cwd=folder,check=True)
                 subprocess.run(['git','apply',str(root/'hub/third-party'/patch)],cwd=folder,check=True)
-        subprocess.run(['go','test','./internal/access','./internal/users','./internal/config'],cwd=folder,env={**os.environ,'CGO_ENABLED':'0'},check=True)
+        if '//go:debug multipathtcp=0' not in (folder/'cmd/sudoku-tunnel/main.go').read_text():raise RuntimeError('Sudoku MPTCP mitigation missing')
+        subprocess.run(['go','test','./internal/access','./internal/users','./internal/config','./internal/app'],cwd=folder,env={**os.environ,'CGO_ENABLED':'0'},check=True)
         subprocess.run(['go','build','-trimpath','-ldflags=-s -w','-o',str(destination),'./cmd/sudoku-tunnel'],cwd=folder,env={**os.environ,'CGO_ENABLED':'0'},check=True)
     return data
 
