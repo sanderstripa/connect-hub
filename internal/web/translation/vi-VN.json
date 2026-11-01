@@ -107,6 +107,7 @@
     "saveQr": "Lưu QR"
   },
   "menu": {
+    "navigation": "Điều hướng",
     "hub": "Connect. Hub",
     "network": "Mạng",
     "theme": "Chủ đề",

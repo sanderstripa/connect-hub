@@ -107,6 +107,7 @@
     "saveQr": "儲存 QR 碼"
   },
   "menu": {
+    "navigation": "導覽",
     "hub": "Connect. Hub",
     "network": "網路",
     "theme": "主題",

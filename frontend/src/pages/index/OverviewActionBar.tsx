@@ -207,6 +207,7 @@ export default function OverviewActionBar({
       ) : (
         <Tooltip title={t('pages.index.updatePanel')}>
           <button type="button" className="ov-panel-version ov-mono" onClick={onOpenPanelUpdate}>
+            {isMobile && <span>{t('pages.index.updatePanel')}</span>}
             {formatPanelVersion(panelVersion)}
           </button>
         </Tooltip>
@@ -224,7 +225,7 @@ export default function OverviewActionBar({
             aria-label={action.text}
             onClick={action.onClick}
           >
-            {isMobile ? undefined : action.text}
+            {!isMobile || action.primary ? action.text : undefined}
           </Button>
         ))}
         <Dropdown

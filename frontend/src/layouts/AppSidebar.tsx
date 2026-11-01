@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Dropdown, Tooltip } from 'antd';
+import { Drawer, Dropdown, Menu, Tooltip } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   ApiOutlined,
@@ -33,15 +33,23 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAllSettings } from '@/api/queries/useAllSettings';
 import { useCommandPalette } from '@/components/command-palette/useCommandPalette';
 import './AppSidebar.css';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useMobileNavigation } from './MobileNavigation';
 
 const REPO_URL = 'https://github.com/sanderstripa/connect-hub';
 
 export default function AppSidebar() {
   const { t } = useTranslation();
+  const { isMobile } = useMediaQuery();
+  const { open: mobileOpen, setOpen: setMobileOpen } = useMobileNavigation();
+
   const { isDark, toggleTheme } = useTheme();
   const { open: openSearch } = useCommandPalette();
   const navigate = useNavigate();
   const { pathname, hash } = useLocation();
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname, hash, isMobile, setMobileOpen]);
   const { allSetting } = useAllSettings();
   const showSubFormats = !!(allSetting.subJsonEnable || allSetting.subClashEnable);
   const showSubBalancers = !!allSetting.subJsonEnable;
@@ -59,9 +67,10 @@ export default function AppSidebar() {
   const openLink = useCallback(
     (key: string) => {
       setOpenMenu(null);
+      setMobileOpen(false);
       navigate(key);
     },
-    [navigate],
+    [navigate, setMobileOpen],
   );
   const settingsChildren = useMemo<NonNullable<MenuProps['items']>>(() => {
     const children: NonNullable<MenuProps['items']> = [
@@ -225,6 +234,61 @@ export default function AppSidebar() {
       </Tooltip>
     );
   }
+  if (isMobile)
+    return (
+      <Drawer
+        placement="left"
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        title="Connect. Hub"
+        size="min(320px, 86vw)"
+        rootClassName="mobile-navigation-drawer"
+      >
+        <nav id="mobile-navigation" aria-label={t('menu.navigation')}>
+          <Menu
+            mode="inline"
+            selectedKeys={[selected, pathname]}
+            items={[...items, settingsItem].map((item) => ({
+              key: item.key,
+              label: item.title,
+              icon: item.icon,
+              children: item.children,
+            }))}
+            onClick={({ key }) => openLink(key)}
+          />
+          <div className="mobile-nav-utilities">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileOpen(false);
+                openSearch();
+              }}
+            >
+              <SearchOutlined aria-hidden />
+              {t('commandPalette.title')}
+            </button>
+            <button type="button" onClick={toggleTheme}>
+              {isDark ? <MoonOutlined aria-hidden /> : <SunOutlined aria-hidden />}
+              {t('menu.theme')}
+            </button>
+            <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
+              <GithubOutlined aria-hidden />
+              GitHub
+            </a>
+            <button
+              type="button"
+              onClick={async () => {
+                await HttpUtil.post('/logout');
+                window.location.href = window.X_UI_BASE_PATH || '/';
+              }}
+            >
+              <LogoutOutlined aria-hidden />
+              {t('logout')}
+            </button>
+          </div>
+        </nav>
+      </Drawer>
+    );
   return (
     <>
       <aside className="ant-sidebar" aria-label="Connect Hub">

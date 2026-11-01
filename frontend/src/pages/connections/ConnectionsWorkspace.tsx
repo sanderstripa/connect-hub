@@ -48,6 +48,12 @@ export default function ConnectionsWorkspace({
   const selected = inbounds.find((row) => row.id === choice) ?? inbounds[0] ?? null;
   const all = choice === 'all';
   const visible = inbounds;
+  const selectInbound = (id: number) => {
+    setChoice(id);
+    document
+      .getElementById(`inbound-card-${id}`)
+      ?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+  };
   const general: MenuProps['items'] = [
     { key: 'import', label: t('import') },
     { key: 'export', label: t('pages.inbounds.export') },
@@ -77,9 +83,10 @@ export default function ConnectionsWorkspace({
               <button
                 type="button"
                 key={row.id}
+                id={`inbound-card-${row.id}`}
                 className={'inbound-card' + (!all && selected?.id === row.id ? ' is-selected' : '')}
                 aria-pressed={!all && selected?.id === row.id}
-                onClick={() => setChoice(row.id)}
+                onClick={() => selectInbound(row.id)}
               >
                 <span className="inbound-card-title">
                   {row.remark || `Inbound ${row.id}`}
@@ -104,6 +111,19 @@ export default function ConnectionsWorkspace({
             <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('noData')} />
           )}
         </div>
+        {visible.length > 1 && (
+          <div className="inbound-position" aria-label={t('menu.inbounds')}>
+            {visible.map((row) => (
+              <button
+                type="button"
+                key={row.id}
+                aria-label={row.remark || `Inbound ${row.id}`}
+                aria-pressed={!all && selected?.id === row.id}
+                onClick={() => selectInbound(row.id)}
+              />
+            ))}
+          </div>
+        )}
         <Dropdown menu={{ items: general, onClick: ({ key }) => onGeneral(key as GeneralAction) }}>
           <Button block>{t('pages.inbounds.generalActions')}</Button>
         </Dropdown>

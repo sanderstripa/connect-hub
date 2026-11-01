@@ -1,5 +1,6 @@
-Connect. Hub alpha 14 — Midnight & Steel by default
+Connect Hub 0.8.5 — Mobile panel redesign
 
-- Midnight & Steel is the default for a fresh browser, login, first setup and Windows SSH installer. Explicit saved web palette/mode choices remain available.
-- Colored primary buttons in light palettes use white semibold labels, with a slightly deeper button fill for readable contrast. Core palette colors, graphs and layout remain unchanged.
-- The Windows installer generates its light/dark colors from the same palette tokens as the panel.
+- Mobile header with a hamburger menu and a labelled slide-out navigation drawer.
+- Compact stacked CPU, memory, swap and disk cards with live graphs and average/peak values.
+- Horizontally scrolling inbound cards, selection indicators and selected-inbound client controls.
+- Desktop rail, every existing route/action, Soulu light/dark themes, keys and protocol settings preserved.

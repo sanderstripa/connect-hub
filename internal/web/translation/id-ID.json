@@ -107,6 +107,7 @@
     "saveQr": "Simpan QR"
   },
   "menu": {
+    "navigation": "Navigasi",
     "hub": "Connect. Hub",
     "network": "Jaringan",
     "theme": "Tema",
