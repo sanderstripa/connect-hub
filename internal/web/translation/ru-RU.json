@@ -107,6 +107,7 @@
     "saveQr": "Сохранить QR"
   },
   "menu": {
+    "navigation": "Навигация",
     "hub": "Connect. Hub",
     "network": "Сеть",
     "theme": "Тема",
