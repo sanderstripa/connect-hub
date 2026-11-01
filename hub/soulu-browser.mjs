@@ -174,6 +174,7 @@ try{
     const hamburger=page.getByRole('button',{name:'Navigation',exact:true});
     await hamburger.click();const drawer=page.getByRole('dialog');await drawer.waitFor();
     await drawer.evaluate(async el=>{await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));await Promise.all(el.getAnimations({subtree:true}).map(a=>a.finished.catch(()=>{})));});
+    await page.waitForFunction(()=>{const r=document.querySelector('[role="dialog"]')?.getBoundingClientRect();return r && r.x>=-0.5;});
     const b=await drawer.boundingBox();assert.ok(b.x>=0&&b.x+b.width<=width+1);
     await page.screenshot({path:path.join(cfg.output,'mobile-menu-'+width+'-'+(dark?'dark':'light')+'.png')});
     await drawer.getByText('Settings',{exact:true}).click();
