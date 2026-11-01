@@ -1444,6 +1444,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                       hoverable
                       title={
                         <div className="card-toolbar">
+                          {explorer && isMobile && <h3 className="mobile-keys-title">{t('connections.keys')} ({filteredClients.length})</h3>}
                           {selectedRowKeys.length === 0 ? (
                             <Button
                               type="primary"
