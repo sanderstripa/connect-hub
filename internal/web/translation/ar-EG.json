@@ -107,6 +107,7 @@
     "saveQr": "حفظ QR"
   },
   "menu": {
+    "navigation": "التنقل",
     "hub": "Connect. Hub",
     "network": "الشبكة",
     "theme": "الثيم",
