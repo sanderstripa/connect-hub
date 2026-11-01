@@ -107,6 +107,7 @@
     "saveQr": "Save QR"
   },
   "menu": {
+    "navigation": "Navigation",
     "hub": "Connect. Hub",
     "network": "Network",
     "theme": "Theme",
