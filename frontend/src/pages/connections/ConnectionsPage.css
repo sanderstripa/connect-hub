@@ -59,3 +59,5 @@
   .connections-pane .card-head { gap: 6px; }
   .connections-pane .card-actions { gap: 8px; }
 }
+
+.mobile-keys-title { margin: 0; margin-inline-end: auto; font-size: 14px; font-weight: 600; }
