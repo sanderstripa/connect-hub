@@ -107,6 +107,7 @@
     "saveQr": "QR を保存"
   },
   "menu": {
+    "navigation": "ナビゲーション",
     "hub": "Connect. Hub",
     "network": "ネットワーク",
     "theme": "テーマ",
