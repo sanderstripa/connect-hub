@@ -268,8 +268,8 @@ export default function IndexPage() {
                       percent={status.disk.percent}
                       statusColor={status.disk.color}
                       detail={`${SizeFormatter.sizeFormat(status.disk.current)} / ${SizeFormatter.sizeFormat(totalDisk)}`}
-                      footLeft={`${t('pages.index.free')} ${SizeFormatter.sizeFormat(freeDisk)}`}
-                      footRight={`${t('pages.index.avg')} ${mean(history.series.diskUsage).toFixed(1)}%`}
+                      footLeft={isMobile ? `${t('pages.index.avg')} ${mean(history.series.diskUsage).toFixed(1)}%` : `${t('pages.index.free')} ${SizeFormatter.sizeFormat(freeDisk)}`}
+                      footRight={isMobile ? `${t('pages.index.peak')} ${peak(history.series.diskUsage).toFixed(1)}%` : `${t('pages.index.avg')} ${mean(history.series.diskUsage).toFixed(1)}%`}
                       data={history.series.diskUsage}
                       isMobile={isMobile}
                     />
