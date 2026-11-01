@@ -185,10 +185,10 @@ try{
     await page.goto(cfg.url+'panel/connections');await page.locator('.inbound-card').first().waitFor();
     const list=page.locator('.inbound-card-list');
     assert.ok(await list.evaluate(el=>getComputedStyle(el).gridAutoFlow==='column'));
-    await page.locator('.inbound-position').getByRole('button',{name:'Other inbound',exact:true}).click();
+    await page.locator('.inbound-position').getByRole('button',{name:/^Other inbound/}).click();
     await page.locator('.client-card').filter({hasText:'other-phone'}).waitFor();
     assert.equal(await page.locator('.client-card').filter({hasText:'iPhoneSudoku'}).count(),0);
-    await page.locator('.inbound-position').getByRole('button',{name:'Sweden Sudoku',exact:true}).click();
+    await page.locator('.inbound-position').getByRole('button',{name:/^Sweden Sudoku/}).click();
     await page.locator('.client-card').filter({hasText:'iPhoneSudoku'}).waitFor();
     await page.goto(cfg.url+'panel/');await page.locator('.ov-tile').first().waitFor();
     const tiles=await page.locator('.ov-tile').evaluateAll(els=>els.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};}));
