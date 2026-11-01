@@ -21,7 +21,7 @@
   .ant-layout:has(>.ant-sidebar)>.content-shell .section-page-title{padding-inline-start:0;padding-inline-end:0}
 }
 
-.mobile-navigation-drawer .ant-drawer-container { border-radius: 0 24px 24px 0; overflow: hidden; }
+.mobile-navigation-drawer .ant-drawer-content-wrapper { border-radius: 0 24px 24px 0; overflow: hidden; }
 .mobile-navigation-drawer .ant-drawer-header { padding: 24px 18px; }
 .mobile-navigation-drawer .ant-drawer-body { padding: 8px 12px 24px; }
 .mobile-navigation-drawer .ant-menu { background: transparent; border-inline-end: 0 !important; }
