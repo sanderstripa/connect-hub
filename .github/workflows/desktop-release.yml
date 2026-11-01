@@ -100,7 +100,10 @@ jobs:
         if: always()
         with:
           name: soulu-panel-evidence
-          path: dist/soulu-*.png
+          path: |
+            dist/soulu-*.png
+            dist/mobile-*.png
+            dist/navigation-*.png
   publish:
     needs: [windows, panel-api]
     runs-on: ubuntu-24.04
