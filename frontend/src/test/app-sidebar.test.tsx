@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import AppHeader from '@/layouts/AppHeader';
+import { MobileNavigationContext } from '@/layouts/MobileNavigation';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, expect, test, vi } from 'vitest';
@@ -71,4 +74,49 @@ test('keeps all navigation groups and footer actions and opens the existing sear
   ).toBe(5);
   fireEvent.click(screen.getByRole('button', { name: /Command Palette/ }));
   expect(commandPaletteStore.getSnapshot()).toBe(true);
+});
+
+test('mobile menu opens from the header, retains nested routes, and closes after navigation', async () => {
+  const original = window.matchMedia;
+  window.matchMedia = ((query: string) => ({
+    matches: query.includes('768'),
+    media: query,
+    addEventListener() {},
+    removeEventListener() {},
+    addListener() {},
+    removeListener() {},
+  })) as unknown as typeof window.matchMedia;
+  function MobileShell() {
+    const [open, setOpen] = useState(false);
+    return (
+      <MobileNavigationContext.Provider value={{ open, setOpen }}>
+        <AppHeader />
+        <AppSidebar />
+        <Location />
+      </MobileNavigationContext.Provider>
+    );
+  }
+  try {
+    const view = renderWithProviders(
+      <MemoryRouter>
+        <MobileShell />
+      </MemoryRouter>,
+    );
+    await act(async () => {});
+    expect(view.container.querySelector('.ant-sidebar')).toBeNull();
+    const trigger = screen.getByRole('button', { name: 'Navigation' });
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(trigger);
+    await screen.findByRole('dialog');
+    fireEvent.click(screen.getByText('Settings', { selector: '.ant-menu-title-content' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: /API Docs/ }));
+    await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/api-docs'));
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(trigger);
+    await waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('true'));
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+  } finally {
+    window.matchMedia = original;
+  }
 });
