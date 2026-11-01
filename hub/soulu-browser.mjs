@@ -121,7 +121,7 @@ try{
    const content=shell.querySelector('.content-area').getBoundingClientRect();
    return {header:{x:header.x,y:header.y,width:header.width,height:header.height},content:{y:content.y},scrollY:window.scrollY,width:window.innerWidth};
   });
-  assert.ok(metrics.header.x>=55&&metrics.header.x+metrics.header.width<=metrics.width+1);
+  assert.ok(metrics.header.x >= (metrics.width <= 768 ? 0 : 55) && metrics.header.x+metrics.header.width<=metrics.width+1);
   assert.ok(metrics.content.y+metrics.scrollY>=metrics.header.height-1,'Header must not cover initial page content: '+JSON.stringify(metrics));
  }
  async function navigation(dark){
@@ -165,11 +165,38 @@ try{
   for(const width of [1024,768,390]){
    await page.setViewportSize({width,height:800});await page.locator('.inbound-card').first().waitFor();
    await page.screenshot({path:path.join(cfg.output,'navigation-current.png'),fullPage:true});
-   const rb=await rail.boundingBox(),ib=await page.locator('#connection-inbounds').boundingBox();assert.equal(Math.round(rb.width),56);assert.ok(ib.x>=rb.x+rb.width,JSON.stringify({width,rb,ib}));
+   const ib=await page.locator('#connection-inbounds').boundingBox();
+   if(width > 768) {
+    const rb=await rail.boundingBox();assert.equal(Math.round(rb.width),56);assert.ok(ib.x>=rb.x+rb.width);
+    await trigger.click();await page.locator('.rail-submenu:visible').waitFor();await page.keyboard.press('Escape');
+   } else {
+    assert.equal(await rail.count(),0);
+    const hamburger=page.getByRole('button',{name:'Navigation',exact:true});
+    await hamburger.click();const drawer=page.getByRole('dialog');await drawer.waitFor();
+    const b=await drawer.boundingBox();assert.ok(b.x>=0&&b.x+b.width<=width+1);
+    await page.screenshot({path:path.join(cfg.output,'mobile-menu-'+width+'-'+(dark?'dark':'light')+'.png')});
+    await drawer.getByText('Settings',{exact:true}).click();
+    await drawer.getByRole('menuitem',{name:'API Docs',exact:true}).click();await page.waitForURL('**/api-docs');
+    await page.getByRole('dialog').waitFor({state:'hidden'});
+    await hamburger.click();await page.getByRole('dialog').waitFor();await page.keyboard.press('Escape');
+    await page.getByRole('dialog').waitFor({state:'hidden'});
+    await page.goto(cfg.url+'panel/connections');await page.locator('.inbound-card').first().waitFor();
+    const list=page.locator('.inbound-card-list');
+    assert.ok(await list.evaluate(el=>getComputedStyle(el).gridAutoFlow==='column'));
+    await page.locator('.inbound-position button').nth(1).click();
+    await page.locator('.client-card').filter({hasText:'other-phone'}).waitFor();
+    assert.equal(await page.locator('.client-card').filter({hasText:'iPhoneSudoku'}).count(),0);
+    await page.locator('.inbound-position button').first().click();
+    await page.locator('.client-card').filter({hasText:'iPhoneSudoku'}).waitFor();
+    await page.goto(cfg.url+'panel/');await page.locator('.ov-tile').first().waitFor();
+    const tiles=await page.locator('.ov-tile').evaluateAll(els=>els.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};}));
+    assert.equal(tiles.length,4);assert.ok(tiles.every((r,i)=>r.x>=0&&r.x+r.width<=width+1&&(!i||r.y>=tiles[i-1].y+tiles[i-1].height)));
+    await page.screenshot({path:path.join(cfg.output,'mobile-monitoring-'+width+'-'+(dark?'dark':'light')+'.png'),fullPage:true});
+    await page.goto(cfg.url+'panel/connections');await page.locator('#connection-keys').waitFor();
+   }
    await brandCheck();
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Navigation must not cause page-wide overflow at '+width);
    const pane=await page.locator('#connection-keys').boundingBox();assert.ok(pane.x+pane.width<=width+1,'Work pane clipped at '+width);
-   await trigger.click();const menu=page.locator('.rail-submenu:visible');await menu.waitFor();const b=await menu.boundingBox();assert.ok(b.x>=0&&b.x+b.width<=width+1&&b.y>=0&&b.y+b.height<=801);await page.keyboard.press('Escape');await page.locator('.rail-submenu:visible').waitFor({state:'hidden'});
    await page.screenshot({path:path.join(cfg.output,'navigation-'+width+'-'+(dark?'dark':'light')+'.png'),fullPage:true});
   }
   await page.setViewportSize({width:1440,height:1000});
@@ -187,7 +214,7 @@ try{
   const wrong=await page.locator('input,button,h1,h2,.ant-modal-title').evaluateAll(els=>els.filter(el=>el.getBoundingClientRect().width>0&&!getComputedStyle(el).fontFamily.includes('Onest')).length);assert.equal(wrong,0);
   await page.screenshot({path:path.join(cfg.output,'soulu-'+name+'-'+(dark?'dark':'light')+'.png'),fullPage:true});
  }
- console.log('PASS: fixed 56px rail, every submenu route, click/Escape/outside close, live theme, Ctrl+K search and 390/768/1024px without navigation overflow');
+ console.log('PASS: desktop 56px rail, mobile drawer navigation/Escape, stacked monitoring tiles, horizontal inbound selection with scoped clients; both themes at 390/768/1024px');
  console.log('PASS: inbound cards, scoped clients, inline details/back, scoped key creation and unchanged original keys');
  console.log('PASS: saved Sudoku client → real web QR modal → JSON/CSRF request → Shadowrocket QR and anonymous profile fetch; original key unchanged');
  assert.deepEqual(errors,[]);console.log('PASS: real panel login, dashboard, inbounds, clients, settings and dialogs in both Soulu themes; old palettes migrated; local Onest loaded');
