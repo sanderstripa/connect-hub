@@ -107,6 +107,7 @@
     "saveQr": "保存二维码"
   },
   "menu": {
+    "navigation": "导航",
     "hub": "Connect. Hub",
     "network": "网络",
     "theme": "主题",
