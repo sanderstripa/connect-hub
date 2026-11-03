@@ -10,7 +10,7 @@ try {
  await page.locator('button[type="submit"]').click();
  await page.waitForURL('**/panel/');
  const tag=page.locator('.ov-update-tag');
- await tag.filter({hasText:cfg.version}).waitFor({timeout:30000});
+ await tag.waitFor({state:'visible',timeout:30000});
  await tag.click();
  const modal=page.getByRole('dialog');
  await modal.locator('.actions-row button').click();
