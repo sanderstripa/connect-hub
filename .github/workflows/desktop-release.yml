@@ -127,20 +127,12 @@ jobs:
           tag="v${version}"
           cp panel-assets/connect-hub-linux-amd64.tar.gz release-assets/
           cat panel-assets/SHA256SUMS >> release-assets/SHA256SUMS
-          cat > release-notes.md <<'NOTES'
-          Mobile panel redesign based on the supplied concept.
-
-          - Replace the mobile icon rail with a labelled slide-out navigation drawer; retain desktop navigation and every existing route.
-          - Stack compact CPU, memory, swap and disk cards with live sparklines, average and peak values.
-          - Refine horizontally scrolling inbound cards with selection indicators and scoped client controls.
-          - Preserve light/dark Soulu themes, Onest, keys, protocol settings and server data.
-          - Validate mobile navigation, monitoring and two-inbound isolation in both themes at 390/768px, plus desktop layout at 1024px.
-          NOTES
+          cp hub/RELEASE.md release-notes.md
           if gh release view "$tag" >/dev/null 2>&1; then
             echo 'A release already exists for this installer version; refusing to replace published binaries.'
             exit 1
           fi
-          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — Mobile panel redesign" --notes-file release-notes.md --latest=true
+          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — Dashboard and Connections polish" --notes-file release-notes.md --latest=true
   public-install:
     needs: publish
     runs-on: ubuntu-24.04

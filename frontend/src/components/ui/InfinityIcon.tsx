@@ -3,7 +3,7 @@ interface InfinityIconProps {
   height?: number | string;
 }
 
-export default function InfinityIcon({ width = 14, height = 10 }: InfinityIconProps) {
+export default function InfinityIcon({ width = 20, height = 16 }: InfinityIconProps) {
   return (
     <svg
       width={width}

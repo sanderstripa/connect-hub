@@ -1,3 +1,4 @@
+import InfinityIcon from '@/components/ui/InfinityIcon';
 import DetailSurface from '@/components/layout/DetailSurface';
 import { CLIENT_GROUPS_UI_ENABLED } from '@/lib/client-groups-ui';
 import { useEffect, useMemo, useState } from 'react';
@@ -421,7 +422,7 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
                     </Tag>
                     <span className="hint">
                       {SizeFormatter.sizeFormat(used)} /{' '}
-                      {totalBytes > 0 ? SizeFormatter.sizeFormat(totalBytes) : '∞'}
+                      {totalBytes > 0 ? SizeFormatter.sizeFormat(totalBytes) : <InfinityIcon />}
                     </span>
                   </td>
                 </tr>
@@ -429,7 +430,7 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
                   <td>{t('remained')}</td>
                   <td>
                     {remaining < 0 ? (
-                      <Tag color="purple">∞</Tag>
+                      <Tag color="purple" className="unlimited-tag"><InfinityIcon /></Tag>
                     ) : (
                       <Tag color={remaining > 0 ? '' : 'red'}>
                         {SizeFormatter.sizeFormat(remaining)}
@@ -441,7 +442,7 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
                   <td>{t('pages.inbounds.expireDate')}</td>
                   <td>
                     {!client.expiryTime ? (
-                      <Tag color="purple">∞</Tag>
+                      <Tag color="purple" className="unlimited-tag"><InfinityIcon /></Tag>
                     ) : (
                       <Tag color={client.expiryTime < 0 ? 'blue' : undefined}>
                         {expiryLabel(client.expiryTime)}
@@ -454,7 +455,7 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
                 </tr>
                 <tr>
                   <td>{t('pages.clients.ipLimit')}</td>
-                  <td>{!client.limitIp ? <Tag>∞</Tag> : <Tag>{client.limitIp}</Tag>}</td>
+                  <td>{!client.limitIp ? <Tag className="unlimited-tag"><InfinityIcon /></Tag> : <Tag>{client.limitIp}</Tag>}</td>
                 </tr>
                 <tr>
                   <td>{t('pages.inbounds.IPLimitlog')}</td>
@@ -486,7 +487,7 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
                 )}
                 <tr>
                   <td>{t('pages.clients.limitHwid')}</td>
-                  <td>{!client.limitHwid ? <Tag>∞</Tag> : <Tag>{client.limitHwid}</Tag>}</td>
+                  <td>{!client.limitHwid ? <Tag className="unlimited-tag"><InfinityIcon /></Tag> : <Tag>{client.limitHwid}</Tag>}</td>
                 </tr>
                 <tr>
                   <td>{t('pages.clients.hwidLog')}</td>

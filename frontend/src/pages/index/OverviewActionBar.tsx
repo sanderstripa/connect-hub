@@ -7,7 +7,6 @@ import {
   ArrowUpOutlined,
   AreaChartOutlined,
   BarsOutlined,
-  CloudDownloadOutlined,
   CloudServerOutlined,
   ControlOutlined,
   FileTextOutlined,
@@ -18,7 +17,6 @@ import {
 
 import SudokuMonitor from './SudokuMonitor';
 import { formatPanelVersion } from '@/lib/panel-version';
-import { activateOnKey } from '@/utils/a11y';
 import type { Status } from '@/models/status';
 
 interface OverviewActionBarProps {
@@ -161,9 +159,9 @@ export default function OverviewActionBar({
   ];
 
   const statePill = (
-    <span className="ov-state" data-state={status.xray.state}>
+    <span className="ov-state" data-state={status.xray.state} title={stateText}>
       <span className="ov-state-dot" style={{ color: status.xray.color }} />
-      <span>{`${t('pages.index.xrayStatus')} · ${stateText}`}</span>
+      <span>{'Xray'}</span>
       {hasVersion && (
         <Tooltip title={t('pages.index.xraySwitch')}>
           <button type="button" className="ov-state-version" onClick={onOpenVersionSwitch}>
@@ -192,41 +190,33 @@ export default function OverviewActionBar({
 
       <SudokuMonitor />
 
-      {updateAvailable ? (
-        <Tag
-          className="ov-update-tag"
-          color="warning"
-          icon={<CloudDownloadOutlined aria-hidden />}
-          role="button"
-          tabIndex={0}
-          onClick={onOpenPanelUpdate}
-          onKeyDown={activateOnKey(onOpenPanelUpdate)}
+      <span className="ov-state ov-panel-state">
+        <span>{t('pages.index.panel')}</span>
+        <Tooltip
+          title={
+            updateAvailable
+              ? `${t('update')} ${formatPanelVersion(latestVersion)}`
+              : t('pages.index.updatePanel')
+          }
         >
-          {`${t('update')} ${formatPanelVersion(latestVersion)}`}
-        </Tag>
-      ) : (
-        <Tooltip title={t('pages.index.updatePanel')}>
-          <button type="button" className="ov-panel-version ov-mono" onClick={onOpenPanelUpdate}>
-            {isMobile && <span>{t('pages.index.updatePanel')}</span>}
+          <button type="button" className={`ov-state-version ov-panel-version${updateAvailable ? ' ov-update-tag' : ''}`} onClick={onOpenPanelUpdate}>
             {formatPanelVersion(panelVersion)}
           </button>
         </Tooltip>
-      )}
+      </span>
 
       <div className="ov-bar-actions">
         {[...actionGroups[0], actionGroups[1][0]].map((action) => (
           <Button
             key={action.key}
-            type={action.primary ? undefined : 'text'}
-            color={action.primary ? 'primary' : undefined}
-            variant={action.primary ? 'outlined' : undefined}
+            type="text"
+            className={`ov-icon-action ov-action-${action.key}`}
+            title={action.text}
             size={size}
             icon={action.icon}
             aria-label={action.text}
             onClick={action.onClick}
-          >
-            {!isMobile || action.primary ? action.text : undefined}
-          </Button>
+          ></Button>
         ))}
         <Dropdown
           trigger={['click']}
@@ -256,16 +246,17 @@ export default function OverviewActionBar({
           }}
         >
           <Button
+            type="text"
+            className="ov-icon-action ov-action-more"
+            title={t('pages.index.more')}
             size={size}
-            icon={<MoreOutlined aria-hidden />}
+            icon={<MoreOutlined rotate={90} aria-hidden />}
             aria-label={t('pages.index.more')}
             aria-expanded={moreOpen}
             onKeyDown={(event) => {
               if (event.key === 'Escape') setMoreOpen(false);
             }}
-          >
-            {t('pages.index.more')}
-          </Button>
+          ></Button>
         </Dropdown>
       </div>
     </div>

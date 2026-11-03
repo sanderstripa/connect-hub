@@ -8,10 +8,9 @@ import { renderWithProviders } from './test-utils';
 
 const noop = () => {};
 
-// The "update available" Tag only had onClick: keyboard and screen-reader users
-// could neither reach nor press it (s-ui#1293).
+// The version remains a native keyboard-accessible button when an update is available.
 describe('OverviewActionBar update tag', () => {
-  it.each(['Enter', ' '])('opens the panel update from the keyboard (%j)', (key) => {
+  it('opens the panel update using the installed version button', () => {
     const onOpenPanelUpdate = vi.fn();
     renderWithProviders(
       <OverviewActionBar
@@ -35,9 +34,10 @@ describe('OverviewActionBar update tag', () => {
       />,
     );
 
-    const tag = screen.getByRole('button', { name: /3\.10\.2/ });
+    const tag = screen.getByRole('button', { name: /3\.10\.1/ });
     expect(tag.tabIndex).toBe(0);
-    fireEvent.keyDown(tag, { key });
+    expect(tag.tagName).toBe('BUTTON');
+    fireEvent.click(tag);
 
     expect(onOpenPanelUpdate).toHaveBeenCalledOnce();
   });
