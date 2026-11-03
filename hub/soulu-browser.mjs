@@ -45,7 +45,7 @@ try{
   for(const route of ['','connections','inbounds','clients','settings#appearance']){
    await page.goto(cfg.url+'panel/'+route);await page.locator('.ant-sidebar').waitFor();await brandCheck();await check(route.split('#')[0]||'dashboard',dark);
    if(route===''){
-    assert.equal(await page.getByRole('button',{name:'Monitoring',exact:true}).count(),1);
+    assert.equal(await page.getByRole('button',{name:'Dashboard',exact:true}).count(),1);
     const monitor=await page.evaluate(async url=>(await(await fetch(url+'panel/hub/api/sudoku/monitor')).json()),cfg.url);
     assert.equal(monitor.success,true);assert.equal(monitor.obj.state,'running');assert.equal(monitor.obj.version,'core-v0.7.1');
     await page.getByRole('button',{name:'Sudoku updates',exact:true}).click();

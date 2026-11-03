@@ -199,7 +199,7 @@ export default function OverviewActionBar({
               : t('pages.index.updatePanel')
           }
         >
-          <button type="button" className="ov-state-version" onClick={onOpenPanelUpdate}>
+          <button type="button" className={`ov-state-version ov-panel-version${updateAvailable ? ' ov-update-tag' : ''}`} onClick={onOpenPanelUpdate}>
             {formatPanelVersion(panelVersion)}
           </button>
         </Tooltip>

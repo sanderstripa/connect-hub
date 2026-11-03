@@ -75,7 +75,7 @@
 .connections-pane-header .connection-icon-action.ant-btn:hover,
 .connections-pane-header .connection-icon-action.ant-btn:focus-visible {
   color: var(--ant-color-text);
-  background: var(--ant-color-fill-secondary);
+  background: color-mix(in srgb, var(--text-primary) 9%, var(--bg-card));
 }
 .connections-pane-header > div:first-child { min-width: 0; }
 .connections-pane-header > .ant-space { flex-shrink: 0; }

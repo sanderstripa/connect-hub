@@ -532,7 +532,7 @@
 }
 .ov-bar-actions .ov-icon-action.ant-btn:hover,
 .ov-bar-actions .ov-icon-action.ant-btn:focus-visible {
-  background: var(--ant-color-fill-secondary);
+  background: color-mix(in srgb, var(--text-primary) 9%, var(--bg-card));
   color: var(--ant-color-text);
 }
 .ov-bar-actions .ov-action-stop.ant-btn:hover,
@@ -541,3 +541,7 @@
 .ov-bar-actions .ov-action-restart.ant-btn:focus-visible { color: var(--ant-color-success); }
 .ov-panel-state { font-size: 13px; }
 .ov-state-version { min-height: 28px; }
+
+.ov-panel-state .ov-state-version { font-size: inherit; color: var(--ov-label); }
+.ov-panel-state .ov-state-version:hover,
+.ov-panel-state .ov-state-version:focus-visible { color: var(--ant-color-primary); }
