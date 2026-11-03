@@ -29,7 +29,8 @@ test('shows live Sudoku state and loads core releases only when opened', async (
     };
   });
   renderWithProviders(<SudokuMonitor />);
-  await screen.findByText('Sudoku · Running');
+  await screen.findByText('v0.7.0');
+  expect(screen.getByTitle('Running').getAttribute('data-state')).toBe('running');
   expect(get).toHaveBeenCalledTimes(1);
   fireEvent.click(screen.getByRole('button', { name: 'Sudoku updates' }));
   const link = await screen.findByRole('link', { name: 'Sudoku Core 0.8' });

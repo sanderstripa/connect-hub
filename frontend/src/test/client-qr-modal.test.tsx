@@ -480,7 +480,7 @@ describe('ClientQrModal Happ presentation', () => {
     expect(actionButton('Retry').disabled).toBe(false);
     expect(
       screen.getByText(
-        'The Happ link could not be generated. Retry, or check Monitoring -> Logs for details.',
+        'The Happ link could not be generated. Retry, or check Dashboard -> Logs for details.',
       ),
     ).toBeTruthy();
     expect(screen.queryByText(/provider token leaked/i)).toBeNull();
