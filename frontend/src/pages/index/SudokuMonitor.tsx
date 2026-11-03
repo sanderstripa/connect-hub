@@ -66,16 +66,10 @@ export default function SudokuMonitor() {
           : 'xrayStatusUnknown';
   return (
     <>
-      <button
-        type="button"
+      <span
         className="ov-state ov-sudoku-state"
         data-state={state?.state}
-        onClick={() => {
-          setLoading(true);
-          setError(false);
-          setOpen(true);
-        }}
-        aria-label={t('pages.index.sudokuUpdates')}
+        title={t(`pages.index.${stateKey}`)}
       >
         <span
           className="ov-state-dot"
@@ -86,11 +80,20 @@ export default function SudokuMonitor() {
                 : 'var(--text-secondary)',
           }}
         />
-        <span>Sudoku · {t(`pages.index.${stateKey}`)}</span>
-        {state?.version && (
-          <span className="ov-state-version">{state.version.replace('core-', '')}</span>
-        )}
-      </button>
+        <span>Sudoku</span>
+        <button
+          type="button"
+          className="ov-state-version"
+          onClick={() => {
+            setLoading(true);
+            setError(false);
+            setOpen(true);
+          }}
+          aria-label={t('pages.index.sudokuUpdates')}
+        >
+          {state?.version?.replace('core-', '') || t('pages.index.xrayStatusUnknown')}
+        </button>
+      </span>
       <Modal
         open={open}
         title={t('pages.index.sudokuUpdates')}

@@ -61,3 +61,48 @@
 }
 
 .mobile-keys-title { margin: 0; margin-inline-end: auto; font-size: 14px; font-weight: 600; }
+
+.connections-pane-header .connection-icon-action.ant-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  color: var(--ant-color-text);
+  font-size: 18px;
+}
+.connections-pane-header .connection-icon-action.ant-btn:hover,
+.connections-pane-header .connection-icon-action.ant-btn:focus-visible {
+  color: var(--ant-color-text);
+  background: var(--ant-color-fill-secondary);
+}
+.connections-pane-header > div:first-child { min-width: 0; }
+.connections-pane-header > .ant-space { flex-shrink: 0; }
+.connections-pane .clients-page { padding: 0; }
+.connections-pane .client-detail-toolbar { padding: 16px 16px 0; margin-bottom: 16px; }
+.connections-pane .connection-detail-surface { padding: 0 16px 16px; }
+.connections-pane .connection-detail-surface .info-table { max-width: 860px; table-layout: fixed; }
+.connections-pane .connection-detail-surface .info-table td { overflow-wrap: anywhere; }
+.connections-pane .connection-detail-surface .info-table td:first-child { width: 150px; }
+@media (min-width: 769px) and (max-width: 1200px) {
+  .connections-workspace { grid-template-columns: minmax(0, 1fr); }
+  .inbound-browser { position: static; max-height: none; }
+  .inbound-card-list { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 30%); overflow-x: auto; overflow-y: hidden; }
+  .inbound-browser-tools { max-width: 270px; }
+  .connections-pane-header { flex-direction: row; }
+}
+@media (max-width: 768px) {
+  .connections-pane-header { flex-direction: row; }
+  .connections-pane .client-detail-toolbar { padding: 14px 12px 0; }
+  .connections-pane .connection-detail-surface { padding: 0 12px 14px; }
+  .connections-pane .connection-detail-surface .info-table td:first-child { width: 112px; white-space: normal; }
+}
+
+.connection-detail-surface { container-type: inline-size; }
+@container (min-width: 850px) {
+  .connection-detail-surface .info-table.block { max-width: none; }
+  .connection-detail-surface .info-table.block tbody { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 20px; }
+  .connection-detail-surface .info-table.block tr { display: grid; grid-template-columns: 140px minmax(0, 1fr); }
+  .connections-pane .connection-detail-surface .info-table.block td:first-child { width: auto; white-space: normal; }
+}

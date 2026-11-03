@@ -1,3 +1,4 @@
+import InfinityIcon from '@/components/ui/InfinityIcon';
 import { CLIENT_GROUPS_UI_ENABLED } from '@/lib/client-groups-ui';
 import { lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -328,6 +329,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
   const { isDark, isUltra, antdThemeConfig } = useTheme();
   const { datepicker } = useDatepicker();
   const { isMobile } = useMediaQuery();
+  const { isMobile: isNarrowWorkspace } = useMediaQuery(1100);
   const [modal, modalContextHolder] = Modal.useModal();
   const [messageApi, messageContextHolder] = message.useMessage();
   useEffect(() => {
@@ -639,7 +641,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
 
   function remainingLabel(row: ClientRecord) {
     const total = row.totalGB || 0;
-    if (total <= 0) return '∞';
+    if (total <= 0) return <InfinityIcon />;
     const used = (row.traffic?.up || 0) + (row.traffic?.down || 0);
     const r = total - used;
     return r > 0 ? SizeFormatter.sizeFormat(r) : '0';
@@ -1228,7 +1230,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
         title: t('pages.clients.remaining'),
         key: 'remaining',
         width: 130,
-        render: (_v, record) => <Tag color={remainingColor(record)}>{remainingLabel(record)}</Tag>,
+        render: (_v, record) => <Tag color={remainingColor(record)} className={!record.totalGB ? 'unlimited-tag' : undefined}>{remainingLabel(record)}</Tag>,
       },
       {
         title: t('pages.clients.duration'),
@@ -1236,8 +1238,8 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
         width: 130,
         render: (_v, record) => (
           <Tooltip title={expiryLabel(record)}>
-            <Tag color={expiryColor(record)}>
-              {record.expiryTime ? expiryRelative(record) : '∞'}
+            <Tag color={expiryColor(record)} className={!record.expiryTime ? 'unlimited-tag' : undefined}>
+              {record.expiryTime ? expiryRelative(record) : <InfinityIcon />}
             </Tag>
           </Tooltip>
         ),
@@ -1751,7 +1753,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                         </div>
                       )}
 
-                      {!isMobile ? (
+                      {!isMobile && !(explorer && isNarrowWorkspace) ? (
                         <Table<ClientRecord>
                           columns={explorer && inboundId !== undefined ? compactColumns : columns}
                           dataSource={sortedClients}

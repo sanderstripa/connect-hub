@@ -88,3 +88,6 @@
 .client-traffic-popover td:first-child {
   color: var(--ant-color-text-secondary);
 }
+
+.client-traffic-cell-limit { flex: 0 1 auto; min-width: 20px; }
+.client-traffic-cell:not(.is-unlimited) .client-traffic-cell-limit { min-width: 58px; }

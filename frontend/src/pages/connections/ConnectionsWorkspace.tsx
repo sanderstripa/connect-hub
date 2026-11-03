@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Button, Empty, Space, Tag } from 'antd';
-import { PlusOutlined, SettingOutlined } from '@ant-design/icons';
+import { PlusOutlined, SettingOutlined, MoreOutlined } from '@ant-design/icons';
 import { SizeFormatter } from '@/utils';
 import { readStreamHints, networkLabel } from '@/pages/inbounds/list/helpers';
 import { buildRowActionsMenu } from '@/pages/inbounds/list/RowActions';
@@ -162,11 +162,13 @@ export default function ConnectionsWorkspace({
           {!all && selected && (
             <Space>
               <Button
+                type="text"
+                className="connection-icon-action"
+                title={t('menu.settings')}
+                aria-label={t('menu.settings')}
                 icon={<SettingOutlined aria-hidden />}
                 onClick={() => onAction('edit', selected)}
-              >
-                {t('menu.settings')}
-              </Button>
+              ></Button>
               <Dropdown
                 menu={{
                   items: buildRowActionsMenu({
@@ -178,7 +180,13 @@ export default function ConnectionsWorkspace({
                   onClick: ({ key }) => onAction(key, selected),
                 }}
               >
-                <Button>{t('more')}</Button>
+                <Button
+                  type="text"
+                  className="connection-icon-action"
+                  title={t('more')}
+                  aria-label={t('more')}
+                  icon={<MoreOutlined rotate={90} aria-hidden />}
+                />
               </Dropdown>
             </Space>
           )}
