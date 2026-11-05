@@ -24,3 +24,5 @@ new MutationObserver(() => {
  } catch {}
  if(!restoring)window.installer.appearance({palette:document.body.dataset.palette,dark:document.body.dataset.theme==='dark'}).catch(()=>{});
 }).observe(document.body, {attributes:true, attributeFilter:['data-palette','data-theme']});
+
+window.installer.version().then(response=>{if(response.ok)document.getElementById('app-version').textContent=response.value.version;}).catch(()=>{});

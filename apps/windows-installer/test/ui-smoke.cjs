@@ -23,6 +23,8 @@ const {fixture}=require('./ssh-fixture.cjs');
     assert.equal(await page.locator('#palette').inputValue(),id);
     assert.equal(await page.locator('body').getAttribute('data-theme'),mode);
     assert.equal(await page.locator('body').evaluate(e=>getComputedStyle(e).backgroundColor),before);
+    const label=await page.locator('#connect').evaluate(e=>({actual:getComputedStyle(e).color,expected:getComputedStyle(document.body).getPropertyValue('--inverse').trim()}));
+    assert.equal(label.actual,label.expected==='#FFFFFF'?'rgb(255, 255, 255)':'rgb(0, 0, 0)');
     await page.screenshot({path:path.join(output,`windows-${id}-${mode}.png`)});
    }
   }
