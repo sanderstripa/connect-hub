@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import {PALETTE_IDS,PALETTE_NAMES,themeTokens} from '../frontend/src/lib/theme-palettes.ts';
 import {createRequire} from 'node:module';
 import {chromium,_electron} from '../frontend/node_modules/playwright/index.mjs';
 let input='';for await(const chunk of process.stdin)input+=chunk;const cfg=JSON.parse(input);
@@ -157,8 +158,22 @@ try{
   await trigger.click();await page.keyboard.press('Escape');assert.equal(await trigger.getAttribute('aria-expanded'),'false');
   await trigger.click();await trigger.click();assert.equal(await trigger.getAttribute('aria-expanded'),'false');
   await trigger.click();await page.locator('.connections-intro').click();assert.equal(await trigger.getAttribute('aria-expanded'),'false');
-  await page.getByRole('button',{name:'Theme',exact:true}).click();await page.waitForFunction(d=>document.body.classList.contains('dark')===!d,dark);
-  assert.equal(await page.evaluate(()=>localStorage.getItem('dark-mode')),String(!dark));await page.getByRole('button',{name:'Theme',exact:true}).click();
+  await page.getByRole('button',{name:'Theme',exact:true}).click();await page.getByRole('menuitem',{name:'Theme',exact:true}).click();await page.waitForFunction(d=>document.body.classList.contains('dark')===!d,dark);
+  assert.equal(await page.evaluate(()=>localStorage.getItem('dark-mode')),String(!dark));await page.getByRole('button',{name:'Theme',exact:true}).click();await page.getByRole('menuitem',{name:'Theme',exact:true}).click();
+  await page.waitForFunction(d=>document.body.classList.contains('dark')===d,dark);
+  for(const id of PALETTE_IDS){
+   await page.getByRole('button',{name:'Theme',exact:true}).click();
+   await page.getByRole('menuitem',{name:PALETTE_NAMES[id],exact:true}).click();
+   await page.waitForFunction(id=>document.documentElement.dataset.palette===id,id);
+   assert.equal(await page.evaluate(()=>localStorage.getItem('connect-hub-palette')),id);
+   assert.equal(await page.evaluate(()=>document.documentElement.style.getPropertyValue('--app-bg').trim().toUpperCase()),themeTokens(id,dark).bg.toUpperCase());
+   await page.reload();await page.locator('#connection-keys').waitFor();
+   assert.equal(await page.locator('html').getAttribute('data-palette'),id);
+   assert.equal(await page.locator('html').getAttribute('data-mode'),dark?'dark':'light');
+   await page.screenshot({path:path.join(cfg.output,`soulu-palette-${id}-${dark?'dark':'light'}.png`)});
+  }
+  await page.getByRole('button',{name:'Theme',exact:true}).click();
+  await page.getByRole('menuitem',{name:'Soulu',exact:true}).click();
   await page.keyboard.press('Control+k');const search=page.locator('.command-palette-input');await search.waitFor();assert.equal(await page.getByText('Appearance',{exact:true}).count(),0);await search.fill('Authentication');await search.press('Enter');await page.waitForURL('**/settings#security');
   await page.getByRole('button',{name:/Command Palette/}).click();await page.locator('.command-palette-input').waitFor();await page.keyboard.press('Escape');await page.locator('.command-palette-input').waitFor({state:'detached'});
   await page.goto(cfg.url+'panel/connections');
