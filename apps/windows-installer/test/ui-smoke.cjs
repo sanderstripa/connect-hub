@@ -13,6 +13,20 @@ const {fixture}=require('./ssh-fixture.cjs');
   await page.screenshot({path:path.join(output,'windows-welcome-dark.png')});await page.locator('#theme').click();await page.screenshot({path:path.join(output,'windows-welcome-light.png')});
   assert.equal(await page.locator('body').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(246, 246, 248)');
   const primary=await page.locator('#connect').evaluate(e=>({color:getComputedStyle(e).color,weight:getComputedStyle(e).fontWeight}));assert.equal(primary.color,'rgb(255, 255, 255)');assert.equal(primary.weight,'500');
+  for(const id of ['warm-sand','forest','rose','lavender','warm-taupe']){
+   await page.locator('#palette').selectOption(id);
+   for(const mode of ['light','dark']){
+    if(await page.locator('body').getAttribute('data-theme')!==mode)await page.locator('#theme').click();
+    await page.waitForFunction(({id,mode})=>localStorage.getItem('connect-hub-palette')===id&&localStorage.getItem('dark-mode')===String(mode==='dark'),{id,mode});
+    const before=await page.locator('body').evaluate(e=>getComputedStyle(e).backgroundColor);
+    await page.reload();await page.locator('#host').waitFor();
+    assert.equal(await page.locator('#palette').inputValue(),id);
+    assert.equal(await page.locator('body').getAttribute('data-theme'),mode);
+    assert.equal(await page.locator('body').evaluate(e=>getComputedStyle(e).backgroundColor),before);
+    await page.screenshot({path:path.join(output,`windows-${id}-${mode}.png`)});
+   }
+  }
+  await page.locator('#palette').selectOption('soulu');await page.locator('#theme').click();await page.locator('#ru').click();
   await page.locator('#host').fill(server.host);await page.locator('#port').fill(String(server.port));await page.locator('#username').fill(server.username);await page.locator('#ssh-password').fill(server.password);await page.locator('#connect').click();
   await page.locator('#configuration').waitFor({state:'visible'});assert.match(await page.locator('#hardware').innerText(),/Debian GNU\/Linux 13/);assert.match(await page.locator('#swap-recommendation').innerText(),/2 ГБ/);assert.equal(await page.locator('#swap').inputValue(),'0');await page.locator('#apply-swap').click();assert.equal(await page.locator('#swap').inputValue(),'2');await page.locator('#swap').fill('0');assert.equal(await page.locator('#ssh-password').inputValue(),'');
   await page.screenshot({path:path.join(output,'windows-options-light.png')});await page.locator('#install').click();await page.locator('#result').waitFor({state:'visible'});await page.locator('#qr').waitFor();

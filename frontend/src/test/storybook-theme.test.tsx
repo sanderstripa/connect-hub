@@ -21,7 +21,11 @@ function ThemeToggle() {
 
 test('only light and dark are selectable and both use Onest for every token', () => {
   localStorage.setItem('isUltraDarkThemeEnabled', 'true');
-  const { getByRole } = render(<ThemeProvider><ThemeToggle /></ThemeProvider>);
+  const { getByRole } = render(
+    <ThemeProvider>
+      <ThemeToggle />
+    </ThemeProvider>,
+  );
   expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
   fireEvent.click(getByRole('button'));
   expect(document.body.classList.contains('light')).toBe(true);
@@ -99,4 +103,32 @@ test('preserves unrelated body classes when applying the panel theme', () => {
   expect(document.body.classList.contains('light')).toBe(false);
   expect(message.classList.contains('message-fixture')).toBe(true);
   expect(message.classList.contains('dark')).toBe(true);
+});
+
+test('keeps the selected palette and mode after remount', () => {
+  function PalettePicker() {
+    const { palette, setPalette } = useTheme();
+    return <button onClick={() => setPalette('forest')}>{palette}</button>;
+  }
+  localStorage.setItem('dark-mode', 'false');
+  localStorage.setItem('connect-hub-palette', 'soulu');
+  const first = render(
+    <ThemeProvider>
+      <PalettePicker />
+    </ThemeProvider>,
+  );
+  fireEvent.click(first.getByRole('button', { name: 'soulu' }));
+  expect(document.documentElement.dataset.palette).toBe('forest');
+  expect(localStorage.getItem('connect-hub-palette')).toBe('forest');
+  expect(localStorage.getItem('dark-mode')).toBe('false');
+  first.unmount();
+  const second = render(
+    <ThemeProvider>
+      <PalettePicker />
+    </ThemeProvider>,
+  );
+  expect(second.getByRole('button', { name: 'forest' })).toBeTruthy();
+  expect(document.documentElement.dataset.mode).toBe('light');
+  second.unmount();
+  localStorage.clear();
 });

@@ -80,6 +80,9 @@ register('saveConnections',async()=>{
  const file=await dialog.showSaveDialog(window,{defaultPath:'Connect-Hub-keys.txt',filters:[{name:'Text',extensions:['txt']}]});
  if(!file.canceled&&file.filePath)await fs.promises.writeFile(file.filePath,rows.map(row=>row.name+'\n'+row.url+(row.shadowrocketUrl?'\nYAML · Shadowrocket\n'+row.shadowrocketUrl:'')).join('\n\n')+'\n',{mode:0o600});
 });
+const appearance=require('./appearance.cjs');
+const appearanceFile=path.join(process.env.CONNECT_HUB_UI_TEST==='1'?cache:path.join(app.getPath('appData'),'Connect Hub'),'appearance.json');
+register('appearance',value=>value===undefined?appearance.load(appearanceFile):appearance.save(appearanceFile,value));
 register('minimize',()=>window.minimize());
 register('close',()=>window.close());
 app.whenReady().then(async()=>{

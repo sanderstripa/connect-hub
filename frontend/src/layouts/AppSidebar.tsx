@@ -29,6 +29,7 @@ import {
 } from '@ant-design/icons';
 import { HttpUtil } from '@/utils';
 import { formatPanelVersion } from '@/lib/panel-version';
+import { PALETTE_IDS, PALETTE_NAMES } from '@/lib/theme-palettes';
 import { useTheme } from '@/hooks/useTheme';
 import { useAllSettings } from '@/api/queries/useAllSettings';
 import { useCommandPalette } from '@/components/command-palette/useCommandPalette';
@@ -43,7 +44,19 @@ export default function AppSidebar() {
   const { isMobile } = useMediaQuery();
   const { open: mobileOpen, setOpen: setMobileOpen } = useMobileNavigation();
 
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme, palette, setPalette } = useTheme();
+  const themeMenu: MenuProps = {
+    selectedKeys: [palette],
+    items: [
+      { key: 'mode', label: t('menu.theme'), onClick: toggleTheme },
+      { type: 'divider' },
+      ...PALETTE_IDS.map((id) => ({
+        key: id,
+        label: PALETTE_NAMES[id],
+        onClick: () => setPalette(id),
+      })),
+    ],
+  };
   const { open: openSearch } = useCommandPalette();
   const navigate = useNavigate();
   const { pathname, hash } = useLocation();
@@ -267,10 +280,12 @@ export default function AppSidebar() {
               <SearchOutlined aria-hidden />
               {t('commandPalette.title')}
             </button>
-            <button type="button" onClick={toggleTheme}>
-              {isDark ? <MoonOutlined aria-hidden /> : <SunOutlined aria-hidden />}
-              {t('menu.theme')}
-            </button>
+            <Dropdown menu={themeMenu} trigger={['click']}>
+              <button type="button">
+                {isDark ? <MoonOutlined aria-hidden /> : <SunOutlined aria-hidden />}
+                {t('menu.theme')}
+              </button>
+            </Dropdown>
             <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
               <GithubOutlined aria-hidden />
               GitHub
@@ -310,17 +325,18 @@ export default function AppSidebar() {
                 <SearchOutlined aria-hidden />
               </button>
             </Tooltip>
-            <Tooltip title={t('menu.theme')} placement="right">
-              <button
-                id="theme-cycle"
-                type="button"
-                className="rail-button"
-                aria-label={t('menu.theme')}
-                onClick={toggleTheme}
-              >
-                {isDark ? <MoonOutlined aria-hidden /> : <SunOutlined aria-hidden />}
-              </button>
-            </Tooltip>
+            <Dropdown menu={themeMenu} trigger={['click']} placement="topRight">
+              <Tooltip title={t('menu.theme')} placement="right">
+                <button
+                  id="theme-cycle"
+                  type="button"
+                  className="rail-button"
+                  aria-label={t('menu.theme')}
+                >
+                  {isDark ? <MoonOutlined aria-hidden /> : <SunOutlined aria-hidden />}
+                </button>
+              </Tooltip>
+            </Dropdown>
             <Tooltip
               title={'GitHub ' + formatPanelVersion(window.X_UI_CUR_VER || '')}
               placement="right"

@@ -4,7 +4,7 @@ Portable Windows x64 alternative to the existing Linux command. The panel still
 runs on a Linux server; Windows only provides the SSH installation interface.
 Use root or a sudo-capable account with password authentication.
 
-The local interface uses bundled Onest and two themes, with RU/EN text.
+The local interface uses bundled Onest and six palettes, each with light/dark modes, with RU/EN text.
 SSH server fingerprints require confirmation. Passwords are held in memory,
 never added to remote commands, logs or Windows configuration files. A detached,
 root-owned server job preserves progress across a lost SSH connection. Its access

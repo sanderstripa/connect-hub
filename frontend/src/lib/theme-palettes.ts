@@ -1,20 +1,112 @@
 // Soulu design system. Legacy palette IDs migrate without changing data or mode.
 export const DEFAULT_PALETTE = 'soulu' as const;
 export const PALETTE_KEY = 'connect-hub-palette';
-export const PALETTE_IDS = ['soulu'] as const;
-export type PaletteId = 'soulu' | 'classic' | 'graphite-sage' | 'obsidian-champagne' | 'midnight-steel';
-export const PALETTE_NAMES: Record<PaletteId,string> = {soulu:'Soulu',classic:'Soulu','graphite-sage':'Soulu','obsidian-champagne':'Soulu','midnight-steel':'Soulu'};
-const soulu = {
- light:{bg:'#F6F6F8',surface:'#F8F8FA',raised:'#FCFCFD',input:'#FFFFFF',border:'#0000001F',text:'#292A2E',secondary:'#797B81',accent:'#0671FF',hover:'#005DDA'},
- dark:{bg:'#08090B',surface:'#111215',raised:'#16171B',input:'#16171B',border:'#FFFFFF17',text:'#EEEEEF',secondary:'#96979D',accent:'#0671FF',hover:'#2584FF'},
+export const PALETTE_IDS = [
+  'soulu',
+  'warm-sand',
+  'forest',
+  'rose',
+  'lavender',
+  'warm-taupe',
+] as const;
+export type PaletteId =
+  | (typeof PALETTE_IDS)[number]
+  | 'classic'
+  | 'graphite-sage'
+  | 'obsidian-champagne'
+  | 'midnight-steel';
+export const PALETTE_NAMES: Record<PaletteId, string> = {
+  soulu: 'Soulu',
+  'warm-sand': 'Warm Sand & Navy',
+  forest: 'Alabaster & Forest',
+  rose: 'Rose & Champagne',
+  lavender: 'Lavender & Steel',
+  'warm-taupe': 'Warm Taupe & Charcoal',
+  classic: 'Soulu',
+  'graphite-sage': 'Soulu',
+  'obsidian-champagne': 'Soulu',
+  'midnight-steel': 'Soulu',
 };
-export const PALETTES = {soulu,classic:soulu,'graphite-sage':soulu,'obsidian-champagne':soulu,'midnight-steel':soulu};
-export function parsePalette(_value: unknown): PaletteId { return DEFAULT_PALETTE; }
-const rgb = (hex: string) =>
-  hex
+const soulu = {
+  light: {
+    bg: '#F6F6F8',
+    surface: '#F8F8FA',
+    raised: '#FCFCFD',
+    input: '#FFFFFF',
+    border: '#0000001F',
+    text: '#292A2E',
+    secondary: '#797B81',
+    accent: '#0671FF',
+    hover: '#005DDA',
+  },
+  dark: {
+    bg: '#08090B',
+    surface: '#111215',
+    raised: '#16171B',
+    input: '#16171B',
+    border: '#FFFFFF17',
+    text: '#EEEEEF',
+    secondary: '#96979D',
+    accent: '#0671FF',
+    hover: '#2584FF',
+  },
+};
+function palette(
+  lightBg: string,
+  lightSurface: string,
+  darkBg: string,
+  darkSurface: string,
+  accent: string,
+  lightAccent: string,
+) {
+  return {
+    light: {
+      bg: lightBg,
+      surface: lightSurface,
+      raised: mix(lightSurface, '#FFFFFF', 0.5),
+      input: '#FFFFFF',
+      border: mix(lightAccent, lightBg, 0.72),
+      text: darkBg,
+      secondary: mix(darkBg, lightBg, 0.32),
+      accent: lightAccent,
+      hover: mix(lightAccent, '#000000', 0.15),
+    },
+    dark: {
+      bg: darkBg,
+      surface: darkSurface,
+      raised: mix(darkSurface, '#FFFFFF', 0.07),
+      input: darkSurface,
+      border: mix(accent, darkSurface, 0.72),
+      text: lightBg,
+      secondary: mix(lightBg, darkBg, 0.24),
+      accent,
+      hover: mix(accent, '#FFFFFF', 0.15),
+    },
+  };
+}
+export const PALETTES = {
+  soulu,
+  'warm-sand': palette('#EFC07B', '#F7E6CC', '#1A1A2E', '#16213E', '#EFC07B', '#0F3460'),
+  forest: palette('#F4F1EB', '#E4EAD9', '#0D4C3C', '#2D5A4A', '#7BA05B', '#2D5A4A'),
+  rose: palette('#FFFFFF', '#F7E7CE', '#432C33', '#5C3943', '#E8B4B8', '#B76E79'),
+  lavender: palette('#F8F8FF', '#E6E6FA', '#203535', '#2F4F4F', '#B0C4DE', '#525A87'),
+  'warm-taupe': palette('#BEA98E', '#DDD0BE', '#0C0C0C', '#2C2C2C', '#BEA98E', '#4A4A4A'),
+  classic: soulu,
+  'graphite-sage': soulu,
+  'obsidian-champagne': soulu,
+  'midnight-steel': soulu,
+};
+export function parsePalette(value: unknown): PaletteId {
+  return PALETTE_IDS.includes(value as (typeof PALETTE_IDS)[number])
+    ? (value as PaletteId)
+    : DEFAULT_PALETTE;
+}
+function rgb(hex: string) {
+  return hex
     .slice(1)
     .match(/../g)!
     .map((v) => parseInt(v, 16));
+}
 export function mix(a: string, b: string, weight: number): string {
   const x = rgb(a),
     y = rgb(b);
@@ -40,22 +132,84 @@ export function contrast(a: string, b: string): number {
   return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 }
 
-export function themeTokens(_id: PaletteId, dark: boolean) {
- const b=soulu[dark?'dark':'light'];
- return {...b,foreground:'#FFFFFF',button:b.accent,buttonHover:b.hover,
- subtle:dark?'#102039':'#EAF2FF',controlBorder:b.border,
- chartPrimary:b.accent,chartSecondary:b.secondary,chartThird:dark?'#57D6A3':'#087F5B',
- success:dark?'#57D6A3':'#087F5B',warning:dark?'#E6B66B':'#9A640D',error:dark?'#F47983':'#C13C4B',info:b.accent};
+export function themeTokens(id: PaletteId, dark: boolean) {
+  const b = PALETTES[id][dark ? 'dark' : 'light'];
+  const foreground =
+    PALETTES[id] === soulu || contrast(b.accent, '#FFFFFF') >= 4.5 ? '#FFFFFF' : '#000000';
+  const subtle =
+    PALETTES[id] === soulu
+      ? dark
+        ? '#102039'
+        : '#EAF2FF'
+      : mix(b.surface, b.accent, dark ? 0.16 : 0.1);
+  return {
+    ...b,
+    foreground,
+    button: b.accent,
+    buttonHover: b.hover,
+    subtle,
+    controlBorder: b.border,
+    chartPrimary: b.accent,
+    chartSecondary: b.secondary,
+    chartThird: dark ? '#57D6A3' : '#087F5B',
+    success: dark ? '#57D6A3' : '#087F5B',
+    warning: dark ? '#E6B66B' : '#9A640D',
+    error: dark ? '#F47983' : '#C13C4B',
+    info: b.accent,
+  };
 }
-export function themeVariables(id: PaletteId, dark: boolean): Record<string,string> {
- const t=themeTokens(id,dark);
- return {'app-bg':t.bg,surface:t.surface,'surface-raised':t.raised,'surface-hover':t.subtle,border:t.border,'border-strong':t.controlBorder,
- 'text-primary':t.text,'text-secondary':t.secondary,'text-muted':t.secondary,accent:t.accent,'accent-hover':t.hover,'accent-subtle':t.subtle,'accent-foreground':'#FFFFFF',
- 'button-bg':t.button,'button-hover':t.buttonHover,'accent-hover-foreground':'#FFFFFF','control-bg':t.input,'control-border':t.controlBorder,'control-disabled':t.raised,'focus-ring':t.accent,
- 'chart-primary':t.chartPrimary,'chart-secondary':t.chartSecondary,'chart-third':t.chartThird,'chart-grid':t.border,'chart-fill':dark?'#102039':'#EAF2FF',
- 'status-success':t.success,'status-warning':t.warning,'status-error':t.error,'status-info':t.info,'status-disabled':t.secondary,'status-error-foreground':'#FFFFFF',
- 'connect-bg':t.bg,'connect-card':t.surface,'connect-text':t.text,'connect-muted':t.secondary,'connect-border':t.border};
+export function themeVariables(id: PaletteId, dark: boolean): Record<string, string> {
+  const t = themeTokens(id, dark);
+  return {
+    'app-bg': t.bg,
+    surface: t.surface,
+    'surface-raised': t.raised,
+    'surface-hover': t.subtle,
+    border: t.border,
+    'border-strong': t.controlBorder,
+    'text-primary': t.text,
+    'text-secondary': t.secondary,
+    'text-muted': t.secondary,
+    accent: t.accent,
+    'accent-hover': t.hover,
+    'accent-subtle': t.subtle,
+    'accent-foreground': t.foreground,
+    'button-bg': t.button,
+    'button-hover': t.buttonHover,
+    'accent-hover-foreground': contrast(t.hover, '#FFFFFF') >= 4.5 ? '#FFFFFF' : '#000000',
+    'control-bg': t.input,
+    'control-border': t.controlBorder,
+    'control-disabled': t.raised,
+    'focus-ring': t.accent,
+    'chart-primary': t.chartPrimary,
+    'chart-secondary': t.chartSecondary,
+    'chart-third': t.chartThird,
+    'chart-grid': t.border,
+    'chart-fill': t.subtle,
+    'status-success': t.success,
+    'status-warning': t.warning,
+    'status-error': t.error,
+    'status-info': t.info,
+    'status-disabled': t.secondary,
+    'status-error-foreground': '#FFFFFF',
+    'connect-bg': t.bg,
+    'connect-card': t.surface,
+    'connect-text': t.text,
+    'connect-muted': t.secondary,
+    'connect-border': t.border,
+  };
 }
 export function themeCSS(): string {
- return [false,true].map(dark=>`html[data-palette="soulu"][data-mode="${dark?'dark':'light'}"]{${Object.entries(themeVariables('soulu',dark)).map(([k,v])=>`--${k}:${v}`).join(';')};background:${themeTokens('soulu',dark).bg};color-scheme:${dark?'dark':'light'}}`).join('\n');
+  return PALETTE_IDS.flatMap((id) =>
+    [false, true].map(
+      (dark) =>
+        `html[data-palette="${id}"][data-mode="${dark ? 'dark' : 'light'}"]{${Object.entries(
+          themeVariables(id, dark),
+        )
+          .map(([k, v]) => `--${k}:${v}`)
+          .join(
+            ';',
+          )};background:${themeTokens(id, dark).bg};color-scheme:${dark ? 'dark' : 'light'}}`,
+    ),
+  ).join('\n');
 }
