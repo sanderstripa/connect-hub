@@ -1,0 +1,6 @@
+/* Optional glass styling: default disabled; existing palettes and layout are unaffected. */
+html[data-glass="on"] body::before { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; background:radial-gradient(circle at 20% 10%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 55%),radial-gradient(circle at 90% 80%,color-mix(in srgb,var(--accent) 9%,transparent),transparent 50%); }
+html[data-glass="on"] body :is(.ant-card,.ant-modal-content,.ant-drawer-content,.ant-dropdown-menu,.ant-table-wrapper,.compact-rail,.settings-page .ant-card) { backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); }
+html[data-glass="on"] body :is(.ant-card,.ant-modal-content,.ant-drawer-content,.ant-dropdown-menu,.compact-rail) { background:color-mix(in srgb,var(--surface) 83%,transparent)!important; }
+html[data-glass="on"] body .ant-btn-primary:not(:disabled) { background-image:linear-gradient(125deg,transparent,color-mix(in srgb,white 13%,transparent)); }
+@media (prefers-reduced-transparency:reduce) { html[data-glass="on"] body :is(.ant-card,.ant-modal-content,.ant-drawer-content,.ant-dropdown-menu,.compact-rail) {background:var(--surface)!important;backdrop-filter:none;-webkit-backdrop-filter:none;} }
