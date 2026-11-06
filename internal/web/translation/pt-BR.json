@@ -792,6 +792,7 @@
       "advancedTitle": "Configurações avançadas"
     },
     "clients": {
+      "columns": "Colunas",
       "tabBasics": "Básico",
       "tabCredentials": "Credenciais",
       "tabLinks": "Links",

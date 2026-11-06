@@ -792,6 +792,7 @@
       "sniffingDestOverride": "Destination override"
     },
     "clients": {
+      "columns": "Columns",
       "tabBasics": "Basics",
       "tabCredentials": "Credentials",
       "tabLinks": "Links",

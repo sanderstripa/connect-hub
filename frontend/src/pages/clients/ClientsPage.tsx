@@ -96,6 +96,8 @@ const BulkDetachInboundsModal = lazy(() => import('./BulkDetachInboundsModal'));
 const TextModal = lazy(() => import('@/components/feedback/TextModal'));
 const PromptModal = lazy(() => import('@/components/feedback/PromptModal'));
 import { ClientInboundChips, ClientRowActions } from './RowCells';
+import ClientColumnPicker from './ClientColumnPicker';
+import { clientColumnOptions, hideClientColumns, useHiddenClientColumns } from './columnVisibility';
 import { emptyFilters, activeFilterCount } from './filters';
 import type { ClientFilters } from './filters';
 import './ClientsPage.css';
@@ -1072,7 +1074,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
     if (pag?.pageSize) setPageSizeChoice(pag.pageSize);
   };
 
-  const columns = useMemo<ColumnsType<ClientRecord>>(
+  const baseColumns = useMemo<ColumnsType<ClientRecord>>(
     () => [
       {
         title: t('pages.clients.actions'),
@@ -1260,6 +1262,10 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
       clientSpeed,
     ],
   );
+
+  const [hiddenColumns, setHiddenColumns] = useHiddenClientColumns();
+  const columnOptions = useMemo(() => clientColumnOptions(baseColumns), [baseColumns]);
+  const columns = useMemo(() => hideClientColumns(baseColumns, hiddenColumns), [baseColumns, hiddenColumns]);
 
   const tablePagination = {
     current: currentPage,
@@ -1610,6 +1616,13 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                             {!isMobile && t('filter')}
                           </Button>
                         </Badge>
+                        {!isMobile && (
+                          <ClientColumnPicker
+                            options={columnOptions}
+                            hidden={hiddenColumns}
+                            onChange={setHiddenColumns}
+                          />
+                        )}
                         <Select
                           value={sortValueFor(sortColumn, sortOrder)}
                           aria-label={t('sort')}
@@ -1760,9 +1773,13 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                           loading={transitioning}
                           rowKey="email"
                           rowSelection={rowSelection}
+                          rowClassName={(record) => {
+                            const bucket = clientBucket(record);
+                            return bucket === 'depleted' ? 'client-row-depleted' : bucket === 'expiring' ? 'client-row-expiring' : '';
+                          }}
                           pagination={tablePagination}
                           size="small"
-                          scroll={{ x: explorer && inboundId !== undefined ? 740 : 1200 }}
+                          scroll={{ x: explorer && inboundId !== undefined ? 740 : 'max-content' }}
                           onChange={onTableChange}
                           locale={{
                             emptyText: (
@@ -1822,7 +1839,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                               return (
                                 <div
                                   key={row.email}
-                                  className={`client-card${selectedRowKeys.includes(row.email) ? ' is-selected' : ''}`}
+                                  className={`client-card${selectedRowKeys.includes(row.email) ? ' is-selected' : ''}${bucket === 'depleted' || bucket === 'expiring' ? ` is-${bucket}` : ''}`}
                                 >
                                   <div className="card-head">
                                     <Checkbox

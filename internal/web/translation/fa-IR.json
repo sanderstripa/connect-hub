@@ -792,6 +792,7 @@
       "advancedTitle": "تنظیمات پیشرفته"
     },
     "clients": {
+      "columns": "ستون‌ها",
       "tabBasics": "پایه",
       "tabCredentials": "اطلاعات اتصال",
       "tabLinks": "لینک‌ها",

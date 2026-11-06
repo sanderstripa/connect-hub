@@ -792,6 +792,7 @@
       "sniffingDestOverride": "Переопределение назначения"
     },
     "clients": {
+      "columns": "Столбцы",
       "tabBasics": "Основные",
       "tabCredentials": "Учетные данные",
       "tabLinks": "Ссылки",

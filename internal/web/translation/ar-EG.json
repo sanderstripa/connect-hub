@@ -792,6 +792,7 @@
       "advancedTitle": "الإعدادات المتقدمة"
     },
     "clients": {
+      "columns": "الأعمدة",
       "tabBasics": "أساسي",
       "tabCredentials": "بيانات الاعتماد",
       "tabLinks": "الروابط",

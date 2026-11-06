@@ -792,6 +792,7 @@
       "advancedTitle": "Додаткові налаштування"
     },
     "clients": {
+      "columns": "Стовпці",
       "tabBasics": "Основні",
       "tabCredentials": "Облікові дані",
       "tabLinks": "Посилання",
