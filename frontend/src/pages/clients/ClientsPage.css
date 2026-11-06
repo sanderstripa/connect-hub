@@ -378,3 +378,6 @@
 .clients-page .ant-table-tbody > tr.client-row-depleted:not(.ant-table-row-selected):hover > td { background: var(--ant-color-error-bg-hover); }
 .client-card.is-expiring:not(.is-selected) { border-color: var(--ant-color-warning-border); background: var(--ant-color-warning-bg); }
 .client-card.is-depleted:not(.is-selected) { border-color: var(--ant-color-error-border); background: var(--ant-color-error-bg); }
+
+/* Clicks are handled by the dropdown menu, not the checkbox itself. */
+.column-picker-check { pointer-events: none; }
