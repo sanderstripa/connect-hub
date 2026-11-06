@@ -507,7 +507,7 @@ export default function DnsTab({ templateSettings, setTemplateSettings }: DnsTab
                   rowKey={(r) => r.key}
                   rowClassName={(_row, index) => {
                     if (index === drag?.from) return 'row-dragging';
-                    if (index !== drag?.to || drag.from === drag.to) return '';
+                    if (!drag || index !== drag.to || drag.from === drag.to) return '';
                     return index > drag.from ? 'drop-after' : 'drop-before';
                   }}
                   pagination={false}
