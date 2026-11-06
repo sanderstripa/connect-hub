@@ -4,6 +4,7 @@ import type { ComponentType } from 'react';
 import {
   ApiOutlined,
   ClusterOutlined,
+  CloudServerOutlined,
   DashboardOutlined,
   ExportOutlined,
   GlobalOutlined,
@@ -11,6 +12,7 @@ import {
   SettingOutlined,
   SwapOutlined,
   TeamOutlined,
+  ThunderboltOutlined,
   ToolOutlined,
 } from '@ant-design/icons';
 
@@ -25,6 +27,8 @@ const LegacyClients = () => <LegacyConnections keys />;
 const GroupsPage = LegacyClients;
 const NodesPage = lazy(() => import('@/pages/nodes/NodesPage'));
 const HostsPage = lazy(() => import('@/pages/hosts/HostsPage'));
+const CleanIpPage = lazy(() => import('@/pages/clean-ip/CleanIpPage'));
+const DnsTunnelPage = lazy(() => import('@/pages/dns-tunnel/DnsTunnelPage'));
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
 const XrayPage = lazy(() => import('@/pages/xray/XrayPage'));
 const ApiDocsPage = lazy(() => import('@/pages/api-docs/ApiDocsPage'));
@@ -48,6 +52,18 @@ export const PANEL_ROUTES: PanelRoute[] = [
   { path: '/groups', titleKey: 'menu.groups', icon: TeamOutlined, component: GroupsPage, hidden: true },
   { path: '/nodes', titleKey: 'menu.nodes', icon: ClusterOutlined, component: NodesPage },
   { path: '/hosts', titleKey: 'menu.hosts', icon: GlobalOutlined, component: HostsPage },
+  {
+    path: '/clean-ip',
+    titleKey: 'menu.cleanIp',
+    icon: ThunderboltOutlined,
+    component: CleanIpPage,
+  },
+  {
+    path: '/dns-tunnel',
+    titleKey: 'menu.dnsTunnel',
+    icon: CloudServerOutlined,
+    component: DnsTunnelPage,
+  },
   { path: '/outbound', titleKey: 'menu.outbounds', icon: ExportOutlined, component: XrayPage },
   { path: '/routing', titleKey: 'menu.routing', icon: SwapOutlined, component: XrayPage },
   { path: '/settings', titleKey: 'menu.settings', icon: SettingOutlined, component: SettingsPage },
