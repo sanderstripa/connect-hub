@@ -792,6 +792,7 @@
       "advancedTitle": "高级设置"
     },
     "clients": {
+      "columns": "列",
       "tabBasics": "基本",
       "tabCredentials": "凭据",
       "tabLinks": "链接",
