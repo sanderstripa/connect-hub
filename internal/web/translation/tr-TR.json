@@ -792,6 +792,7 @@
       "advancedTitle": "Gelişmiş Ayarlar"
     },
     "clients": {
+      "columns": "Sütunlar",
       "tabBasics": "Temel",
       "tabCredentials": "Kimlik Bilgileri",
       "tabLinks": "Bağlantılar",
