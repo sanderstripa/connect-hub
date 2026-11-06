@@ -792,6 +792,7 @@
       "sniffingDestOverride": "Prepísať cieľ"
     },
     "clients": {
+      "columns": "Stĺpce",
       "tabBasics": "Základné údaje",
       "tabCredentials": "Prihlasovacie údaje",
       "tabLinks": "Odkazy",
