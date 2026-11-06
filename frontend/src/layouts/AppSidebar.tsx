@@ -188,10 +188,12 @@ export default function AppSidebar() {
       key: 'network',
       title: t('menu.network'),
       icon: <SwapOutlined aria-hidden />,
-      active: ['/nodes', '/hosts', '/outbound', '/routing'].includes(pathname),
+      active: ['/nodes', '/hosts', '/outbound', '/routing', '/clean-ip', '/dns-tunnel'].includes(pathname),
       children: [
         { key: '/nodes', icon: <ClusterOutlined aria-hidden />, label: t('menu.nodes') },
         { key: '/hosts', icon: <GlobalOutlined aria-hidden />, label: t('menu.hosts') },
+        { key: '/clean-ip', icon: <SearchOutlined aria-hidden />, label: 'Clean IP' },
+        { key: '/dns-tunnel', icon: <DatabaseOutlined aria-hidden />, label: 'DNS Tunnel' },
         { key: '/outbound', icon: <ExportOutlined aria-hidden />, label: t('menu.outbounds') },
         { key: '/routing', icon: <SwapOutlined aria-hidden />, label: t('menu.routing') },
       ],
