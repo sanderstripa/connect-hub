@@ -792,6 +792,7 @@
       "advancedTitle": "Cài đặt nâng cao"
     },
     "clients": {
+      "columns": "Cột",
       "tabBasics": "Cơ bản",
       "tabCredentials": "Thông tin xác thực",
       "tabLinks": "Liên kết",
