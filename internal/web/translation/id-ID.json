@@ -792,6 +792,7 @@
       "advancedTitle": "Pengaturan Lanjutan"
     },
     "clients": {
+      "columns": "Kolom",
       "tabBasics": "Dasar",
       "tabCredentials": "Kredensial",
       "tabLinks": "Tautan",
