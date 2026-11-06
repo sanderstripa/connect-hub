@@ -792,6 +792,7 @@
       "advancedTitle": "進階設定"
     },
     "clients": {
+      "columns": "欄位",
       "tabBasics": "基本",
       "tabCredentials": "認證資訊",
       "tabLinks": "連結",
