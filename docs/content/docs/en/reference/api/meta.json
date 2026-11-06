@@ -15,6 +15,8 @@
     "hosts",
     "nodes",
     "backup",
+    "clean-ip-scanner",
+    "dns-tunnel",
     "mcp",
     "websocket"
   ]
