@@ -30,7 +30,7 @@ import {
 import { HttpUtil } from '@/utils';
 import { formatPanelVersion } from '@/lib/panel-version';
 import { PALETTE_IDS, PALETTE_NAMES } from '@/lib/theme-palettes';
-import { useTheme } from '@/hooks/useTheme';
+import { ACCENT_CHOICES, useTheme } from '@/hooks/useTheme';
 import { useAllSettings } from '@/api/queries/useAllSettings';
 import { useCommandPalette } from '@/components/command-palette/useCommandPalette';
 import './AppSidebar.css';
@@ -44,17 +44,26 @@ export default function AppSidebar() {
   const { isMobile } = useMediaQuery();
   const { open: mobileOpen, setOpen: setMobileOpen } = useMobileNavigation();
 
-  const { isDark, toggleTheme, palette, setPalette } = useTheme();
+  const { isDark, toggleTheme, palette, setPalette, accent, setAccent, glass, setGlass, followSystem, setFollowSystem } = useTheme();
   const themeMenu: MenuProps = {
     selectedKeys: [palette],
     items: [
       { key: 'mode', label: t('menu.theme'), onClick: toggleTheme },
+      { key: 'system-mode', label: `${followSystem ? '✓ ' : ''}${t('menu.theme')} · Auto`, onClick: () => setFollowSystem(!followSystem) },
       { type: 'divider' },
       ...PALETTE_IDS.map((id) => ({
         key: id,
         label: PALETTE_NAMES[id],
         onClick: () => setPalette(id),
       })),
+      { type: 'divider' },
+      { key: 'accent-group', type: 'group', label: 'Accent colors', children: Object.entries(ACCENT_CHOICES).map(([id,color]) => ({
+        key: `accent-${id}`,
+        label: <span style={{display:'inline-flex',alignItems:'center',gap:8}}><span style={{width:12,height:12,borderRadius:12,background:color,display:'inline-block',border:'1px solid var(--border)'}}/>{id[0].toUpperCase()+id.slice(1)}{accent === id ? ' ✓' : ''}</span>,
+        onClick: () => setAccent(id as keyof typeof ACCENT_CHOICES),
+      })) },
+      { type: 'divider' },
+      { key: 'glassy-mode', label: `Glassy style ${glass ? '✓' : ''}`, onClick: () => setGlass(!glass) },
     ],
   };
   const { open: openSearch } = useCommandPalette();
