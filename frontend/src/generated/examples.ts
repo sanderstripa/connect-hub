@@ -521,6 +521,21 @@ export const EXAMPLES: Record<string, unknown> = {
       "104.16.1.1"
     ]
   },
+  "Capabilities": {
+    "arch": "amd64",
+    "carriers": [
+      ""
+    ],
+    "error": "",
+    "os": "linux",
+    "rawSocket": false,
+    "supported": false,
+    "version": "3.3.0"
+  },
+  "CarrierEndpoint": {
+    "carrier": "tcp",
+    "port": 4443
+  },
   "Client": {
     "adTag": "0123456789abcdef0123456789abcdef",
     "allowedIPs": [
@@ -776,6 +791,40 @@ export const EXAMPLES: Record<string, unknown> = {
     "key": "93d3404c6701dc9dea2d1ff3282ab88b",
     "method": 1,
     "name": "Iran"
+  },
+  "Config": {
+    "bind": "0.0.0.0",
+    "candidates": [
+      {
+        "carrier": "tcp",
+        "port": 4443
+      }
+    ],
+    "carrier": "tcp",
+    "conns": 0,
+    "endpoint": "203.0.113.10",
+    "fec": false,
+    "icmpType": "",
+    "listen": "0.0.0.0",
+    "memoryMB": 0,
+    "mtu": 0,
+    "path": "/wat",
+    "port": 4443,
+    "ports": [
+      {
+        "listen": 8443,
+        "protocol": "tcp",
+        "target": 443
+      }
+    ],
+    "reverse": false,
+    "reversePeer": "",
+    "role": "client",
+    "sessions": 0,
+    "sni": "",
+    "tlsCert": "",
+    "tlsKey": "",
+    "tlsPin": ""
   },
   "FallbackParentInfo": {
     "masterId": 0,
@@ -1059,6 +1108,15 @@ export const EXAMPLES: Record<string, unknown> = {
     "client": "mlkem768-client",
     "seed": "mlkem768-seed"
   },
+  "Metrics": {
+    "alive": false,
+    "bytes_in_total": 0,
+    "bytes_out_total": 0,
+    "last_rx_age_ms": 0,
+    "loss_pct": null,
+    "send_errors": 0,
+    "srtt_ms": null
+  },
   "Msg": {
     "msg": "",
     "obj": null,
@@ -1207,6 +1265,11 @@ export const EXAMPLES: Record<string, unknown> = {
     "tag": "inbound-51820",
     "up": 1048576
   },
+  "Port": {
+    "listen": 8443,
+    "protocol": "tcp",
+    "target": 443
+  },
   "ProbeResultUI": {
     "cpuPct": 12.5,
     "error": "",
@@ -1338,6 +1401,50 @@ export const EXAMPLES: Record<string, unknown> = {
     "key": "",
     "value": ""
   },
+  "Spec": {
+    "config": {
+      "bind": "0.0.0.0",
+      "candidates": [
+        {
+          "carrier": "tcp",
+          "port": 4443
+        }
+      ],
+      "carrier": "tcp",
+      "conns": 0,
+      "endpoint": "203.0.113.10",
+      "fec": false,
+      "icmpType": "",
+      "listen": "0.0.0.0",
+      "memoryMB": 0,
+      "mtu": 0,
+      "path": "/wat",
+      "port": 4443,
+      "ports": [
+        {
+          "listen": 8443,
+          "protocol": "tcp",
+          "target": 443
+        }
+      ],
+      "reverse": false,
+      "reversePeer": "",
+      "role": "client",
+      "sessions": 0,
+      "sni": "",
+      "tlsCert": "",
+      "tlsKey": "",
+      "tlsPin": ""
+    },
+    "deleted": false,
+    "enabled": false,
+    "guid": "",
+    "name": "",
+    "owner": "",
+    "restart": 0,
+    "revision": 0,
+    "secret": ""
+  },
   "Sponsor": {
     "enable": true,
     "from": "2026-10-01T00:00:00Z",
@@ -1370,6 +1477,13 @@ export const EXAMPLES: Record<string, unknown> = {
         "until": "2026-11-01T00:00:00Z"
       }
     ]
+  },
+  "Status": {
+    "carrier": "tcp",
+    "metrics": null,
+    "reason": "",
+    "revision": 0,
+    "state": "connected"
   },
   "SubBalancer": {
     "createdAt": 1710000000000,
@@ -1417,6 +1531,102 @@ export const EXAMPLES: Record<string, unknown> = {
     "sni": "",
     "udp_relay_mode": "",
     "zero_rtt_handshake": false
+  },
+  "TunnelMutation": {
+    "config": {
+      "bind": "0.0.0.0",
+      "candidates": [
+        {
+          "carrier": "tcp",
+          "port": 4443
+        }
+      ],
+      "carrier": "tcp",
+      "conns": 0,
+      "endpoint": "203.0.113.10",
+      "fec": false,
+      "icmpType": "",
+      "listen": "0.0.0.0",
+      "memoryMB": 0,
+      "mtu": 0,
+      "path": "/wat",
+      "port": 4443,
+      "ports": [
+        {
+          "listen": 8443,
+          "protocol": "tcp",
+          "target": 443
+        }
+      ],
+      "reverse": false,
+      "reversePeer": "",
+      "role": "client",
+      "sessions": 0,
+      "sni": "",
+      "tlsCert": "",
+      "tlsKey": "",
+      "tlsPin": ""
+    },
+    "enabled": false,
+    "generateKey": false,
+    "name": "Edge to exit",
+    "nodeId": null,
+    "revision": 0,
+    "secret": "",
+    "token": ""
+  },
+  "TunnelToken": {
+    "token": ""
+  },
+  "TunnelView": {
+    "config": {
+      "bind": "0.0.0.0",
+      "candidates": [
+        {
+          "carrier": "tcp",
+          "port": 4443
+        }
+      ],
+      "carrier": "tcp",
+      "conns": 0,
+      "endpoint": "203.0.113.10",
+      "fec": false,
+      "icmpType": "",
+      "listen": "0.0.0.0",
+      "memoryMB": 0,
+      "mtu": 0,
+      "path": "/wat",
+      "port": 4443,
+      "ports": [
+        {
+          "listen": 8443,
+          "protocol": "tcp",
+          "target": 443
+        }
+      ],
+      "reverse": false,
+      "reversePeer": "",
+      "role": "client",
+      "sessions": 0,
+      "sni": "",
+      "tlsCert": "",
+      "tlsKey": "",
+      "tlsPin": ""
+    },
+    "enabled": false,
+    "guid": "",
+    "id": 1,
+    "managed": false,
+    "name": "",
+    "nodeId": null,
+    "revision": 0,
+    "status": {
+      "carrier": "tcp",
+      "metrics": null,
+      "reason": "",
+      "revision": 0,
+      "state": "connected"
+    }
   },
   "User": {
     "id": 0,

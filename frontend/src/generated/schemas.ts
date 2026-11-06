@@ -2046,6 +2046,64 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "Capabilities": {
+    "properties": {
+      "arch": {
+        "example": "amd64",
+        "type": "string"
+      },
+      "carriers": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "error": {
+        "type": "string"
+      },
+      "os": {
+        "example": "linux",
+        "type": "string"
+      },
+      "rawSocket": {
+        "type": "boolean"
+      },
+      "supported": {
+        "type": "boolean"
+      },
+      "version": {
+        "example": "3.3.0",
+        "type": "string"
+      }
+    },
+    "required": [
+      "arch",
+      "carriers",
+      "error",
+      "os",
+      "rawSocket",
+      "supported",
+      "version"
+    ],
+    "type": "object"
+  },
+  "CarrierEndpoint": {
+    "properties": {
+      "carrier": {
+        "example": "tcp",
+        "type": "string"
+      },
+      "port": {
+        "example": 4443,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "carrier",
+      "port"
+    ],
+    "type": "object"
+  },
   "Client": {
     "description": "Client represents a client configuration for Xray inbounds with traffic limits and settings.",
     "properties": {
@@ -2973,6 +3031,110 @@ export const SCHEMAS: Record<string, unknown> = {
       "key",
       "method",
       "name"
+    ],
+    "type": "object"
+  },
+  "Config": {
+    "properties": {
+      "bind": {
+        "example": "0.0.0.0",
+        "type": "string"
+      },
+      "candidates": {
+        "items": {
+          "$ref": "#/components/schemas/CarrierEndpoint"
+        },
+        "type": "array"
+      },
+      "carrier": {
+        "example": "tcp",
+        "type": "string"
+      },
+      "conns": {
+        "type": "integer"
+      },
+      "endpoint": {
+        "example": "203.0.113.10",
+        "type": "string"
+      },
+      "fec": {
+        "type": "boolean"
+      },
+      "icmpType": {
+        "type": "string"
+      },
+      "listen": {
+        "example": "0.0.0.0",
+        "type": "string"
+      },
+      "memoryMB": {
+        "type": "integer"
+      },
+      "mtu": {
+        "type": "integer"
+      },
+      "path": {
+        "example": "/wat",
+        "type": "string"
+      },
+      "port": {
+        "example": 4443,
+        "type": "integer"
+      },
+      "ports": {
+        "items": {
+          "$ref": "#/components/schemas/Port"
+        },
+        "type": "array"
+      },
+      "reverse": {
+        "type": "boolean"
+      },
+      "reversePeer": {
+        "type": "string"
+      },
+      "role": {
+        "example": "client",
+        "type": "string"
+      },
+      "sessions": {
+        "type": "integer"
+      },
+      "sni": {
+        "type": "string"
+      },
+      "tlsCert": {
+        "type": "string"
+      },
+      "tlsKey": {
+        "type": "string"
+      },
+      "tlsPin": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "bind",
+      "candidates",
+      "carrier",
+      "conns",
+      "endpoint",
+      "fec",
+      "icmpType",
+      "listen",
+      "memoryMB",
+      "mtu",
+      "path",
+      "port",
+      "ports",
+      "reverse",
+      "reversePeer",
+      "role",
+      "sessions",
+      "sni",
+      "tlsCert",
+      "tlsKey",
+      "tlsPin"
     ],
     "type": "object"
   },
@@ -4041,6 +4203,45 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "Metrics": {
+    "properties": {
+      "alive": {
+        "type": "boolean"
+      },
+      "bytes_in_total": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "bytes_out_total": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "last_rx_age_ms": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "loss_pct": {
+        "nullable": true,
+        "type": "number"
+      },
+      "send_errors": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "srtt_ms": {
+        "nullable": true,
+        "type": "number"
+      }
+    },
+    "required": [
+      "alive",
+      "bytes_in_total",
+      "bytes_out_total",
+      "last_rx_age_ms",
+      "send_errors"
+    ],
+    "type": "object"
+  },
   "Msg": {
     "properties": {
       "msg": {
@@ -4736,6 +4937,28 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "Port": {
+    "properties": {
+      "listen": {
+        "example": 8443,
+        "type": "integer"
+      },
+      "protocol": {
+        "example": "tcp",
+        "type": "string"
+      },
+      "target": {
+        "example": 443,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "listen",
+      "protocol",
+      "target"
+    ],
+    "type": "object"
+  },
   "ProbeResultUI": {
     "properties": {
       "cpuPct": {
@@ -5239,6 +5462,51 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "Spec": {
+    "properties": {
+      "config": {
+        "$ref": "#/components/schemas/Config"
+      },
+      "deleted": {
+        "type": "boolean"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "guid": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "owner": {
+        "type": "string"
+      },
+      "restart": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "revision": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "secret": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "config",
+      "deleted",
+      "enabled",
+      "guid",
+      "name",
+      "owner",
+      "restart",
+      "revision",
+      "secret"
+    ],
+    "type": "object"
+  },
   "Sponsor": {
     "description": "Sponsor is one paid placement published in the repo's sponsors.json.",
     "properties": {
@@ -5320,6 +5588,40 @@ export const SCHEMAS: Record<string, unknown> = {
     },
     "required": [
       "sponsors"
+    ],
+    "type": "object"
+  },
+  "Status": {
+    "properties": {
+      "carrier": {
+        "example": "tcp",
+        "type": "string"
+      },
+      "metrics": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Metrics"
+          }
+        ],
+        "nullable": true
+      },
+      "reason": {
+        "type": "string"
+      },
+      "revision": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "state": {
+        "example": "connected",
+        "type": "string"
+      }
+    },
+    "required": [
+      "carrier",
+      "reason",
+      "revision",
+      "state"
     ],
     "type": "object"
   },
@@ -5528,6 +5830,103 @@ export const SCHEMAS: Record<string, unknown> = {
       "private_key",
       "udp_relay_mode",
       "zero_rtt_handshake"
+    ],
+    "type": "object"
+  },
+  "TunnelMutation": {
+    "properties": {
+      "config": {
+        "$ref": "#/components/schemas/Config"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "generateKey": {
+        "type": "boolean"
+      },
+      "name": {
+        "example": "Edge to exit",
+        "type": "string"
+      },
+      "nodeId": {
+        "nullable": true,
+        "type": "integer"
+      },
+      "revision": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "secret": {
+        "type": "string"
+      },
+      "token": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "config",
+      "enabled",
+      "generateKey",
+      "name",
+      "revision",
+      "secret",
+      "token"
+    ],
+    "type": "object"
+  },
+  "TunnelToken": {
+    "properties": {
+      "token": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "token"
+    ],
+    "type": "object"
+  },
+  "TunnelView": {
+    "properties": {
+      "config": {
+        "$ref": "#/components/schemas/Config"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "guid": {
+        "type": "string"
+      },
+      "id": {
+        "example": 1,
+        "type": "integer"
+      },
+      "managed": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "string"
+      },
+      "nodeId": {
+        "nullable": true,
+        "type": "integer"
+      },
+      "revision": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "status": {
+        "$ref": "#/components/schemas/Status"
+      }
+    },
+    "required": [
+      "config",
+      "enabled",
+      "guid",
+      "id",
+      "managed",
+      "name",
+      "revision",
+      "status"
     ],
     "type": "object"
   },

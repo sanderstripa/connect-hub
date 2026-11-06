@@ -25,6 +25,7 @@ function LegacyConnections({ keys = false }: { keys?: boolean }) {
 const LegacyInbounds = () => <LegacyConnections />;
 const LegacyClients = () => <LegacyConnections keys />;
 const GroupsPage = LegacyClients;
+const TunnelsPage = lazy(() => import('@/pages/tunnels/TunnelsPage'));
 const NodesPage = lazy(() => import('@/pages/nodes/NodesPage'));
 const HostsPage = lazy(() => import('@/pages/hosts/HostsPage'));
 const CleanIpPage = lazy(() => import('@/pages/clean-ip/CleanIpPage'));
@@ -50,6 +51,7 @@ export const PANEL_ROUTES: PanelRoute[] = [
   { path: '/inbounds', titleKey: 'menu.connections', icon: ImportOutlined, component: LegacyInbounds, hidden: true },
   { path: '/clients', titleKey: 'menu.connections', icon: TeamOutlined, component: LegacyClients, hidden: true },
   { path: '/groups', titleKey: 'menu.groups', icon: TeamOutlined, component: GroupsPage, hidden: true },
+  { path: '/tunnels', titleKey: 'menu.tunnels', icon: SwapOutlined, component: TunnelsPage },
   { path: '/nodes', titleKey: 'menu.nodes', icon: ClusterOutlined, component: NodesPage },
   { path: '/hosts', titleKey: 'menu.hosts', icon: GlobalOutlined, component: HostsPage },
   {
