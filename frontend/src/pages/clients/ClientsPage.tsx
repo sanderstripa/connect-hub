@@ -1760,6 +1760,10 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                           loading={transitioning}
                           rowKey="email"
                           rowSelection={rowSelection}
+                          rowClassName={(record) => {
+                            const bucket = clientBucket(record);
+                            return bucket === 'depleted' ? 'client-row-depleted' : bucket === 'expiring' ? 'client-row-expiring' : '';
+                          }}
                           pagination={tablePagination}
                           size="small"
                           scroll={{ x: explorer && inboundId !== undefined ? 740 : 1200 }}
@@ -1822,7 +1826,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                               return (
                                 <div
                                   key={row.email}
-                                  className={`client-card${selectedRowKeys.includes(row.email) ? ' is-selected' : ''}`}
+                                  className={`client-card${selectedRowKeys.includes(row.email) ? ' is-selected' : ''}${bucket === 'depleted' || bucket === 'expiring' ? ` is-${bucket}` : ''}`}
                                 >
                                   <div className="card-head">
                                     <Checkbox
