@@ -260,6 +260,19 @@ const LOG_QUERY_PARAMS: EndpointParam[] = [
 
 export const sections: readonly Section[] = [
   {
+    id: 'client-usage-history-0-8-9',
+    title: 'Client usage and change history',
+    description: 'Review the client’s lifetime traffic and historically closed usage windows, with detailed changes and per-node traffic data.',
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/clients/usageHistory/:email',
+        summary: 'Fetch client lifetime traffic, change history and node usage.',
+        params: [{ name: 'email', in: 'path', type: 'string', desc: 'Client email.' }],
+      },
+    ],
+  },
+  {
     id: 'new-network-admin-0-8-9',
     title: 'Network administration and REALITY target finder',
     description: 'Administrator-authenticated server tools. The REALITY Finder runs an opt-in ISP-side target scan and collects results using a short-lived token.',
