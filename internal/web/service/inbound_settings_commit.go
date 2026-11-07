@@ -2,7 +2,10 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"reflect"
+	"strings"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/sudoku"
