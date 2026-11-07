@@ -983,6 +983,15 @@ func (s *Server) sendUDPPacketFragments(
 			}
 			if _, err := stream.Write(frame.Bytes()); err != nil {
 				stream.CancelWrite(0)
+				// QUIC peers can cancel their one-shot response stream just
+				// after consuming a packet. Preserve the long-lived UDP
+				// association; otherwise the following datagram is lost.
+				if ctx.Err() != nil {
+					return ctx.Err()
+				}
+				if strings.Contains(err.Error(), "canceled stream") {
+					continue
+				}
 				return err
 			}
 			if err := stream.Close(); err != nil {
