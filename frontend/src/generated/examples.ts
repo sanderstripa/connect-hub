@@ -1829,34 +1829,11 @@ export const EXAMPLES: Record<string, unknown> = {
     ]
   },
   "Status": {
-    "amneziawg": null,
-    "appStats": null,
-    "cpu": 0,
-    "cpuCores": 0,
-    "cpuSpeedMhz": 0,
-    "disk": null,
-    "diskIO": null,
-    "diskTraffic": null,
-    "loads": [
-      0
-    ],
-    "logicalPro": 0,
-    "mem": null,
-    "netIO": null,
-    "netTraffic": null,
-    "networkInterface": null,
-    "panelGuid": "",
-    "panelVersion": "",
-    "publicIP": null,
-    "resourceScope": "",
-    "swap": null,
-    "tcpCount": 0,
-    "udpCount": 0,
-    "unavailableMetrics": [
-      ""
-    ],
-    "uptime": 0,
-    "xray": null
+    "carrier": "tcp",
+    "metrics": null,
+    "reason": "",
+    "revision": 0,
+    "state": "connected"
   },
   "SubBalancer": {
     "createdAt": 1710000000000,
@@ -1996,34 +1973,11 @@ export const EXAMPLES: Record<string, unknown> = {
     "nodeId": null,
     "revision": 0,
     "status": {
-      "amneziawg": null,
-      "appStats": null,
-      "cpu": 0,
-      "cpuCores": 0,
-      "cpuSpeedMhz": 0,
-      "disk": null,
-      "diskIO": null,
-      "diskTraffic": null,
-      "loads": [
-        0
-      ],
-      "logicalPro": 0,
-      "mem": null,
-      "netIO": null,
-      "netTraffic": null,
-      "networkInterface": null,
-      "panelGuid": "",
-      "panelVersion": "",
-      "publicIP": null,
-      "resourceScope": "",
-      "swap": null,
-      "tcpCount": 0,
-      "udpCount": 0,
-      "unavailableMetrics": [
-        ""
-      ],
-      "uptime": 0,
-      "xray": null
+      "carrier": "tcp",
+      "metrics": null,
+      "reason": "",
+      "revision": 0,
+      "state": "connected"
     }
   },
   "User": {

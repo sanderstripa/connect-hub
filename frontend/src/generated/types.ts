@@ -1510,33 +1510,6 @@ export interface SponsorList {
 }
 
 export interface Status {
-  amneziawg: unknown;
-  appStats: unknown;
-  cpu: number;
-  cpuCores: number;
-  cpuSpeedMhz: number;
-  disk: unknown;
-  diskIO: unknown;
-  diskTraffic: unknown;
-  loads: number[];
-  logicalPro: number;
-  mem: unknown;
-  netIO: unknown;
-  netTraffic: unknown;
-  networkInterface?: NetworkTrafficSelection | null;
-  panelGuid: string;
-  panelVersion: string;
-  publicIP: unknown;
-  resourceScope?: string;
-  swap: unknown;
-  tcpCount: number;
-  udpCount: number;
-  unavailableMetrics?: string[];
-  uptime: number;
-  xray: unknown;
-}
-
-export interface Status {
   carrier: string;
   metrics?: Metrics | null;
   reason: string;

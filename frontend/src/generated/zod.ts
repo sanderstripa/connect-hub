@@ -1618,34 +1618,6 @@ export const SponsorListSchema = z.object({
 export type SponsorList = z.infer<typeof SponsorListSchema>;
 
 export const StatusSchema = z.object({
-  amneziawg: z.unknown(),
-  appStats: z.unknown(),
-  cpu: z.number(),
-  cpuCores: z.number().int(),
-  cpuSpeedMhz: z.number(),
-  disk: z.unknown(),
-  diskIO: z.unknown(),
-  diskTraffic: z.unknown(),
-  loads: z.array(z.number()),
-  logicalPro: z.number().int(),
-  mem: z.unknown(),
-  netIO: z.unknown(),
-  netTraffic: z.unknown(),
-  networkInterface: z.lazy(() => NetworkTrafficSelectionSchema).nullable().optional(),
-  panelGuid: z.string(),
-  panelVersion: z.string(),
-  publicIP: z.unknown(),
-  resourceScope: z.string().optional(),
-  swap: z.unknown(),
-  tcpCount: z.number().int(),
-  udpCount: z.number().int(),
-  unavailableMetrics: z.array(z.string()).optional(),
-  uptime: z.number().int(),
-  xray: z.unknown(),
-});
-export type Status = z.infer<typeof StatusSchema>;
-
-export const StatusSchema = z.object({
   carrier: z.string(),
   metrics: z.lazy(() => MetricsSchema).nullable().optional(),
   reason: z.string(),

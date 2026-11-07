@@ -6670,95 +6670,36 @@ export const SCHEMAS: Record<string, unknown> = {
     "type": "object"
   },
   "Status": {
-    "description": "Status represents comprehensive system and application status information.\nIt includes CPU, memory, disk, network statistics, and Xray process status.",
     "properties": {
-      "amneziawg": {
-        "description": "AmneziaWG gates the overview's AmneziaWG log view: Configured stays true\nwhile an inbound exists but its embedded interface isn't up yet, which\nis exactly when that view's event lines are worth reading."
+      "carrier": {
+        "example": "tcp",
+        "type": "string"
       },
-      "appStats": {},
-      "cpu": {
-        "type": "number"
-      },
-      "cpuCores": {
-        "type": "integer"
-      },
-      "cpuSpeedMhz": {
-        "type": "number"
-      },
-      "disk": {},
-      "diskIO": {},
-      "diskTraffic": {},
-      "loads": {
-        "items": {
-          "type": "number"
-        },
-        "type": "array"
-      },
-      "logicalPro": {
-        "type": "integer"
-      },
-      "mem": {},
-      "netIO": {},
-      "netTraffic": {},
-      "networkInterface": {
+      "metrics": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/NetworkTrafficSelection"
+            "$ref": "#/components/schemas/Metrics"
           }
         ],
         "nullable": true
       },
-      "panelGuid": {
+      "reason": {
         "type": "string"
       },
-      "panelVersion": {
-        "type": "string"
-      },
-      "publicIP": {},
-      "resourceScope": {
-        "type": "string"
-      },
-      "swap": {},
-      "tcpCount": {
-        "type": "integer"
-      },
-      "udpCount": {
-        "type": "integer"
-      },
-      "unavailableMetrics": {
-        "items": {
-          "type": "string"
-        },
-        "type": "array"
-      },
-      "uptime": {
+      "revision": {
         "format": "int64",
         "type": "integer"
       },
-      "xray": {}
+      "state": {
+        "example": "connected",
+        "type": "string"
+      }
     },
     "required": [
-      "amneziawg",
-      "appStats",
-      "cpu",
-      "cpuCores",
-      "cpuSpeedMhz",
-      "disk",
-      "diskIO",
-      "diskTraffic",
-      "loads",
-      "logicalPro",
-      "mem",
-      "netIO",
-      "netTraffic",
-      "panelGuid",
-      "panelVersion",
-      "publicIP",
-      "swap",
-      "tcpCount",
-      "udpCount",
-      "uptime",
-      "xray"
+      "carrier",
+      "reason",
+      "revision",
+      "state"
     ],
     "type": "object"
   },
