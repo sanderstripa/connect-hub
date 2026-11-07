@@ -11,9 +11,9 @@ import {
   Row,
   Col,
   Divider,
+  Select,
 } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { NativeSelect } from '@/components/form/NativeSelect';
 import './TunnelsPage.css';
 import { FormProvider, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -136,7 +136,7 @@ export default function TunnelForm({
                 label={t('menu.nodes')}
                 transform={{ input: (v) => v ?? '', output: (v) => (v === '' ? null : Number(v)) }}
               >
-                <NativeSelect<string | number>
+                <Select<string | number>
                   disabled={!!record}
                   options={[
                     { value: '', label: t('pages.tunnels.local') },
@@ -155,7 +155,7 @@ export default function TunnelForm({
                 label={t('pages.tunnels.role')}
                 onAfterChange={() => setValue('config.sessions', 0)}
               >
-                <NativeSelect
+                <Select
                   options={[
                     { value: 'server', label: 'Server' },
                     { value: 'client', label: 'Client' },
@@ -179,7 +179,7 @@ export default function TunnelForm({
                     ]);
                 }}
               >
-                <NativeSelect options={carrierOptions} />
+                <Select options={carrierOptions} />
               </FormField>
             </Col>
           </Row>
@@ -229,7 +229,7 @@ export default function TunnelForm({
                     name={`config.candidates.${i}.carrier`}
                     label={t('pages.tunnels.carrier')}
                   >
-                    <NativeSelect
+                    <Select
                       options={carrierOptions.filter((option) => option.value !== 'auto')}
                     />
                   </FormField>
@@ -271,7 +271,7 @@ export default function TunnelForm({
                   <InputNumber min={1} max={65535} />
                 </FormField>
                 <FormField name={`config.ports.${i}.protocol`} label={t('protocol')}>
-                  <NativeSelect
+                  <Select
                     options={[
                       { value: 'tcp', label: 'TCP' },
                       { value: 'udp', label: 'UDP' },
