@@ -108,7 +108,7 @@ export default function AssistantPage() {
                   {busy && <Spin size="small" aria-label={ru ? 'Формируется ответ' : 'Generating answer'} />}
                 </div>
                 <div className="assistant-compose">
-                  <Input.TextArea autoSize={{ minRows: 2, maxRows: 5 }} maxLength={4000}
+                  <Input.TextArea aria-label={ru ? 'Сообщение для ИИ-помощника' : 'Message to AI assistant'} autoSize={{ minRows: 2, maxRows: 5 }} maxLength={4000}
                     disabled={!provider?.configured || busy}
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
@@ -116,10 +116,10 @@ export default function AssistantPage() {
                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }}
                   />
                   <Space>
-                    <Button icon={<DeleteOutlined />} disabled={busy || messages.length === 0} onClick={() => setMessages([])}>
+                    <Button icon={<DeleteOutlined aria-hidden />} disabled={busy || messages.length === 0} onClick={() => setMessages([])}>
                       {ru ? 'Очистить' : 'Clear'}
                     </Button>
-                    <Button type="primary" icon={<SendOutlined />} loading={busy}
+                    <Button type="primary" icon={<SendOutlined aria-hidden />} loading={busy}
                       disabled={!provider?.configured || !draft.trim()} onClick={() => void send()}>
                       {ru ? 'Отправить' : 'Send'}
                     </Button>
