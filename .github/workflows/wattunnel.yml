@@ -54,7 +54,7 @@ jobs:
           RUN useradd --system --no-create-home --shell /usr/sbin/nologin connect-hub-wattunnel
           DOCKERFILE
           docker run --rm --network none --security-opt no-new-privileges --cap-drop ALL "${caps[@]}" \
-            --cap-add SETUID --cap-add SETGID \
+            # Capabilities are derived directly from the production systemd unit. \
             -v "$PWD:/workspace:ro" -w /workspace \
             -e WATTUN_E2E_BINARY="/workspace/.cache/wattunnel/wattun-${{ matrix.target }}" -e WATTUN_E2E_ICMP=1 \
             connect-hub-wattunnel-ci:${{ matrix.target }} bash -ec '
