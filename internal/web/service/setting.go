@@ -85,7 +85,7 @@ var defaultValueMap = map[string]string{
 	"dnsTunnelProfiles":           "[]",
 	"subShowIdentityOnAllLinks":   "false",
 	"subInfoNodeEnable":           "false",
-	"subHostSortMode":             "inbound-first",
+	"subHostSortMode":             "hosts-first",
 	"subCalendarExpireInclusive":  "false",
 	"subExpiredTemplate":          DefaultSubExpiredTemplate,
 	"subTrafficDepletedTemplate":  DefaultSubTrafficDepletedTemplate,
@@ -1699,7 +1699,7 @@ type SecretClears struct {
 func (s *SettingService) UpdateAllSetting(allSetting *entity.AllSetting, clears SecretClears) error {
 	switch allSetting.SubHostSortMode {
 	case "":
-		allSetting.SubHostSortMode = "inbound-first"
+		allSetting.SubHostSortMode = defaultValueMap["subHostSortMode"]
 	case "inbound-first", "hosts-first":
 	default:
 		return errors.New("subscription host sort mode must be inbound-first or hosts-first")
