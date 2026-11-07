@@ -51,7 +51,7 @@ jobs:
           # CAP_NET_RAW/CAP_NET_BIND_SERVICE-only runtime container.
           docker build -t connect-hub-wattunnel-ci:${{ matrix.target }} - <<'DOCKERFILE'
           FROM ubuntu:24.04
-          RUN useradd --system --no-create-home --shell /usr/sbin/nologin x-ui-wattunnel
+          RUN useradd --system --no-create-home --shell /usr/sbin/nologin connect-hub-wattunnel
           DOCKERFILE
           docker run --rm --network none --security-opt no-new-privileges --cap-drop ALL "${caps[@]}" \
             --cap-add SETUID --cap-add SETGID \

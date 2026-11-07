@@ -98,7 +98,11 @@ it('submits a nested edited configuration without revealing or replacing its key
   expect(data[0].revision).toBe(4);
   expect(data[0].secret).toBe('');
   expect(data[0].generateKey).toBe(false);
-  expect((screen.getByRole('option', { name: 'ICMP' }) as HTMLOptionElement).disabled).toBe(true);
+  // Ant Design renders Select options only after the menu is opened.
+  const carrier = screen.getByRole('combobox', { name: 'Carrier' });
+  fireEvent.mouseDown(carrier.closest('.ant-select')?.querySelector('.ant-select-selector') as HTMLElement);
+  const icmp = await screen.findByText('ICMP');
+  expect(icmp.closest('.ant-select-item-option')).toHaveClass('ant-select-item-option-disabled');
 });
 
 it('keeps keyboard focus in the dialog, focuses invalid fields, and restores the trigger', async () => {

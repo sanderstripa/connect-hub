@@ -7,6 +7,7 @@ import {
   CloudServerOutlined,
   DashboardOutlined,
   ExportOutlined,
+  FileTextOutlined,
   GlobalOutlined,
   ImportOutlined,
   SettingOutlined,
@@ -30,6 +31,7 @@ const NodesPage = lazy(() => import('@/pages/nodes/NodesPage'));
 const HostsPage = lazy(() => import('@/pages/hosts/HostsPage'));
 const CleanIpPage = lazy(() => import('@/pages/clean-ip/CleanIpPage'));
 const DnsTunnelPage = lazy(() => import('@/pages/dns-tunnel/DnsTunnelPage'));
+const LogsPage = lazy(() => import('@/pages/logs/LogsPage'));
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
 const XrayPage = lazy(() => import('@/pages/xray/XrayPage'));
 const ApiDocsPage = lazy(() => import('@/pages/api-docs/ApiDocsPage'));
@@ -68,6 +70,7 @@ export const PANEL_ROUTES: PanelRoute[] = [
   },
   { path: '/outbound', titleKey: 'menu.outbounds', icon: ExportOutlined, component: XrayPage },
   { path: '/routing', titleKey: 'menu.routing', icon: SwapOutlined, component: XrayPage },
+  { path: '/logs', titleKey: 'menu.logs', icon: FileTextOutlined, component: LogsPage },
   { path: '/settings', titleKey: 'menu.settings', icon: SettingOutlined, component: SettingsPage },
   { path: '/xray', titleKey: 'menu.xray', icon: ToolOutlined, component: XrayPage },
   { path: '/api-docs', titleKey: 'menu.apiDocs', icon: ApiOutlined, component: ApiDocsPage },

@@ -13,6 +13,7 @@ import {
   DatabaseOutlined,
   DiscordOutlined,
   ExportOutlined,
+  FileTextOutlined,
   GithubOutlined,
   GlobalOutlined,
   ImportOutlined,
@@ -183,6 +184,12 @@ export default function AppSidebar() {
       title: t('menu.connections'),
       icon: <ImportOutlined aria-hidden />,
       active: ['/connections', '/inbounds', '/clients'].includes(pathname),
+    },
+    {
+      key: '/logs',
+      title: t('menu.logs'),
+      icon: <FileTextOutlined aria-hidden />,
+      active: pathname === '/logs',
     },
     {
       key: 'network',
