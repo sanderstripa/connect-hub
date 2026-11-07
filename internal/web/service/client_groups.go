@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"sort"
 	"strings"
 
@@ -449,103 +450,133 @@ func (s *ClientService) AddToGroup(emails []string, group string) (int, error) {
 	return int(affected), nil
 }
 
-func (s *ClientService) replaceGroupValue(oldName, newName string) (int, error) {
-	db := database.GetDB()
-	if newName == "" {
-		if err := db.Where("name = ?", oldName).Delete(&model.ClientGroup{}).Error; err != nil {
-			return 0, err
-		}
-	} else {
-		if err := db.Model(&model.ClientGroup{}).Where("name = ?", oldName).Update("name", newName).Error; err != nil {
-			return 0, err
-		}
-	}
-	var records []model.ClientRecord
-	if err := db.Where("group_name = ?", oldName).Find(&records).Error; err != nil {
-		return 0, err
-	}
-	if len(records) == 0 {
-		return 0, nil
-	}
-	affectedEmails := make([]string, 0, len(records))
-	for _, r := range records {
-		affectedEmails = append(affectedEmails, r.Email)
-	}
+// replaceGroupValue moves group metadata, host bindings and client membership
+// atomically. A failed host-rule validation never half-renames the group.
+func (s *ClientService) replaceGroupValue(oldName, newName string, hostGroupIDs *[]string) (int, error) {
+    db := database.GetDB()
+    affected := 0
+    err := db.Transaction(func(tx *gorm.DB) error {
+        var selected []string
+        if hostGroupIDs != nil {
+            selected = normalizeHostGroupIDs(*hostGroupIDs)
+            if err := validateHostGroupIDs(tx, selected); err != nil {
+                return err
+            }
+        }
+        var group model.ClientGroup
+        getErr := tx.Where("name = ?", oldName).First(&group).Error
+        if getErr != nil && !errors.Is(getErr, gorm.ErrRecordNotFound) {
+            return getErr
+        }
+        groupID := 0
+        if getErr == nil {
+            groupID = group.Id
+            if newName == "" {
+                if err := tx.Where("client_group_id = ?", group.Id).
+                    Delete(&model.HostGroupClientGroup{}).Error; err != nil {
+                    return err
+                }
+                if err := tx.Delete(&group).Error; err != nil {
+                    return err
+                }
+                groupID = 0
+            } else if err := tx.Model(&group).Update("name", newName).Error; err != nil {
+                return err
+            }
+        } else if newName != "" {
+            record, err := database.EnsureClientGroup(tx, newName)
+            if err != nil {
+                return err
+            }
+            groupID = record.Id
+        }
+        if hostGroupIDs != nil && newName != "" {
+            if err := replaceGroupHostGroups(tx, groupID, selected); err != nil {
+                return err
+            }
+        }
 
-	tx := db.Begin()
-	if err := tx.Model(&model.ClientRecord{}).
-		Where("group_name = ?", oldName).
-		UpdateColumn("group_name", newName).Error; err != nil {
-		tx.Rollback()
-		return 0, err
-	}
+        var clients []model.ClientRecord
+        if err := tx.Where("group_name = ?", oldName).Find(&clients).Error; err != nil {
+            return err
+        }
+        affected = len(clients)
+        if len(clients) == 0 {
+            return nil
+        }
+        emails := make([]string, 0, len(clients))
+        for _, c := range clients {
+            emails = append(emails, c.Email)
+        }
+        if err := tx.Model(&model.ClientRecord{}).
+            Where("group_name = ?", oldName).
+            UpdateColumn("group_name", newName).Error; err != nil {
+            return err
+        }
 
-	var inboundIDs []int
-	inboundIDSeen := make(map[int]struct{})
-	for _, batch := range chunkStrings(affectedEmails, sqlInChunk) {
-		var ids []int
-		if err := tx.Table("client_inbounds").
-			Joins("JOIN clients ON clients.id = client_inbounds.client_id").
-			Where("clients.email IN ?", batch).
-			Distinct("client_inbounds.inbound_id").
-			Pluck("inbound_id", &ids).Error; err != nil {
-			tx.Rollback()
-			return 0, err
-		}
-		for _, id := range ids {
-			if _, ok := inboundIDSeen[id]; !ok {
-				inboundIDSeen[id] = struct{}{}
-				inboundIDs = append(inboundIDs, id)
-			}
-		}
-	}
-
-	for _, ibID := range inboundIDs {
-		var ib model.Inbound
-		if err := tx.First(&ib, ibID).Error; err != nil {
-			tx.Rollback()
-			return 0, err
-		}
-		var settings map[string]any
-		if err := json.Unmarshal([]byte(ib.Settings), &settings); err != nil {
-			continue
-		}
-		clients, ok := settings["clients"].([]any)
-		if !ok {
-			continue
-		}
-		modified := false
-		for i := range clients {
-			cm, ok := clients[i].(map[string]any)
-			if !ok {
-				continue
-			}
-			if g, ok := cm["group"].(string); ok && g == oldName {
-				if newName == "" {
-					delete(cm, "group")
-				} else {
-					cm["group"] = newName
-				}
-				clients[i] = cm
-				modified = true
-			}
-		}
-		if modified {
-			settings["clients"] = clients
-			newSettings, err := json.Marshal(settings)
-			if err != nil {
-				continue
-			}
-			ib.Settings = string(newSettings)
-			if err := tx.Save(&ib).Error; err != nil {
-				tx.Rollback()
-				return 0, err
-			}
-		}
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		return 0, err
-	}
-	return len(records), nil
+        var inboundIDs []int
+        seen := make(map[int]bool)
+        for _, batch := range chunkStrings(emails, sqlInChunk) {
+            var ids []int
+            if err := tx.Table("client_inbounds").
+                Joins("JOIN clients ON clients.id = client_inbounds.client_id").
+                Where("clients.email IN ?", batch).
+                Distinct("client_inbounds.inbound_id").
+                Pluck("inbound_id", &ids).Error; err != nil {
+                return err
+            }
+            for _, id := range ids {
+                if !seen[id] {
+                    seen[id] = true
+                    inboundIDs = append(inboundIDs, id)
+                }
+            }
+        }
+        for _, ibID := range inboundIDs {
+            var inbound model.Inbound
+            if err := tx.First(&inbound, ibID).Error; err != nil {
+                return err
+            }
+            var settings map[string]any
+            if err := json.Unmarshal([]byte(inbound.Settings), &settings); err != nil {
+                continue
+            }
+            list, ok := settings["clients"].([]any)
+            if !ok {
+                continue
+            }
+            modified := false
+            for ix := range list {
+                item, ok := list[ix].(map[string]any)
+                if !ok {
+                    continue
+                }
+                if groupName, ok := item["group"].(string); ok && groupName == oldName {
+                    if newName == "" {
+                        delete(item, "group")
+                    } else {
+                        item["group"] = newName
+                    }
+                    list[ix] = item
+                    modified = true
+                }
+            }
+            if modified {
+                settings["clients"] = list
+                serialized, err := json.Marshal(settings)
+                if err != nil {
+                    return err
+                }
+                inbound.Settings = string(serialized)
+                if err := tx.Save(&inbound).Error; err != nil {
+                    return err
+                }
+            }
+        }
+        return nil
+    })
+    if err != nil {
+        return 0, err
+    }
+    return affected, nil
 }
