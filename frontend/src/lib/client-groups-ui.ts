@@ -1,3 +1,3 @@
-// Retire group management from the UI only. Existing model/form values and
-// backend records remain intact, including values submitted when editing.
-export const CLIENT_GROUPS_UI_ENABLED = false;
+// Connect Hub 0.8.9 restores the existing group management interface and
+// extends group-to-host bindings without removing any stored client groups.
+export const CLIENT_GROUPS_UI_ENABLED = true;

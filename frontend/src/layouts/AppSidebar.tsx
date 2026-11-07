@@ -193,6 +193,12 @@ export default function AppSidebar() {
       active: ['/connections', '/inbounds', '/clients'].includes(pathname),
     },
     {
+      key: '/groups',
+      title: t('menu.groups'),
+      icon: <ApartmentOutlined aria-hidden />,
+      active: pathname === '/groups',
+    },
+    {
       key: '/logs',
       title: t('menu.logs'),
       icon: <FileTextOutlined aria-hidden />,
