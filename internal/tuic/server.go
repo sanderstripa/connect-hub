@@ -986,7 +986,17 @@ func (s *Server) sendUDPPacketFragments(
 				return err
 			}
 			if err := stream.Close(); err != nil {
-				return err
+				// A peer can cancel an individual receive stream immediately
+				// after reading its UDP packet. quic-go may then report that
+				// the stream was canceled when Close races with CancelRead.
+				// This must not terminate the long-lived UDP association:
+				// the next UDP response must still be read and forwarded.
+				if ctx.Err() != nil {
+					return ctx.Err()
+				}
+				if !strings.Contains(err.Error(), "canceled stream") {
+					return err
+				}
 			}
 			continue
 		}
