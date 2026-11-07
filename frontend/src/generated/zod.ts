@@ -574,6 +574,7 @@ export const ClientSchema = z.object({
   allowedIPs: z.array(z.string()).optional(),
   allowedIPsByInbound: z.record(z.number().int(), z.array(z.string())).optional(),
   auth: z.string().optional(),
+  awgPing: z.lazy(() => AWGPingPolicySchema).nullable().optional(),
   clientHostRuleIds: z.array(z.number().int()).optional(),
   comment: z.string(),
   created_at: z.number().int().optional(),

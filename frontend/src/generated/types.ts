@@ -543,6 +543,7 @@ export interface Client {
   allowedIPs?: string[];
   allowedIPsByInbound?: Record<number, string[]>;
   auth?: string;
+  awgPing?: AWGPingPolicy | null;
   clientHostRuleIds?: number[];
   comment: string;
   created_at?: number;

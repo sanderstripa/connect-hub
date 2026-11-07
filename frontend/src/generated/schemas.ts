@@ -2289,6 +2289,14 @@ export const SCHEMAS: Record<string, unknown> = {
         "description": "Auth password (Hysteria)",
         "type": "string"
       },
+      "awgPing": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AWGPingPolicy"
+          }
+        ],
+        "nullable": true
+      },
       "clientHostRuleIds": {
         "description": "ClientHostRuleIds binds the client to these host rules, one link each; nil preserves, empty\nclears, and bindings with no usable host leave that inbound out of the subscription.",
         "example": [

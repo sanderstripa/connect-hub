@@ -578,6 +578,7 @@ export const EXAMPLES: Record<string, unknown> = {
     ],
     "allowedIPsByInbound": {},
     "auth": "",
+    "awgPing": null,
     "clientHostRuleIds": [
       1,
       2
