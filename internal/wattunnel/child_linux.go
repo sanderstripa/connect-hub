@@ -28,16 +28,16 @@ func prepareChild(cmd *exec.Cmd, c Config, selected, dir string) error {
 	if os.Geteuid() != 0 {
 		return nil
 	}
-	account, err := user.Lookup("x-ui-wattunnel")
+	account, err := user.Lookup("connect-hub-wattunnel")
 	if err != nil {
-		return errors.New("create the x-ui-wattunnel service account before starting WatTunnel as root")
+		return errors.New("create the connect-hub-wattunnel service account before starting WatTunnel as root")
 	}
 	uid, err := strconv.ParseUint(account.Uid, 10, 32)
 	if err != nil {
 		return err
 	}
 	if uid == 0 {
-		return errors.New("x-ui-wattunnel must be an unprivileged service account")
+		return errors.New("connect-hub-wattunnel must be an unprivileged service account")
 	}
 	gid, err := strconv.ParseUint(account.Gid, 10, 32)
 	if err != nil {
