@@ -525,7 +525,7 @@ func (s *SubService) getSubs(subId string) ([]string, []string, int64, xray.Clie
 			}
 			var link string
 			if s.hostsFirst {
-				variants, closed := s.clientHostVariants(inbound, client, "raw")
+				variants, closed := s.selectHostVariants(inbound, client, "raw")
 				if closed {
 					seenEmails[client.Email] = struct{}{}
 					continue
@@ -539,7 +539,7 @@ func (s *SubService) getSubs(subId string) ([]string, []string, int64, xray.Clie
 					}
 					ordered = append(ordered, orderedSubEntry[func() string]{variant.order, render})
 				}
-			} else if effectiveEps, bound := s.clientHostEndpoints(inbound, client, "raw", hostEps); bound && len(effectiveEps) == 0 {
+			} else if effectiveEps, bound := s.selectHostEndpoints(inbound, client, "raw", hostEps); bound && len(effectiveEps) == 0 {
 				seenEmails[client.Email] = struct{}{}
 				continue
 			} else if len(effectiveEps) > 0 {
@@ -624,7 +624,7 @@ func (s *SubService) inboundLinks(inbound *model.Inbound) []string {
 			continue
 		}
 		seen[key] = struct{}{}
-		effectiveEps, bound := s.clientHostEndpoints(inbound, client, "raw", hostEps)
+		effectiveEps, bound := s.selectHostEndpoints(inbound, client, "raw", hostEps)
 		if bound && len(effectiveEps) == 0 {
 			continue
 		}
