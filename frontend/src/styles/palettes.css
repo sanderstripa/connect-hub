@@ -18,7 +18,8 @@ html:not([data-palette="classic"]) body .ant-switch:not(.ant-switch-checked) { b
 html:not([data-palette="classic"]) body .ant-switch:not(.ant-switch-checked) .ant-switch-handle::before { background:var(--surface); }
 html:not([data-palette="classic"]) body :is(.ant-input,.ant-input-affix-wrapper,.ant-input-number,.ant-select-selector,.ant-picker) { border-color:var(--control-border); }
 html:not([data-palette="classic"]) body .ant-input-affix-wrapper > .ant-input { background:transparent; }
-html:not([data-palette="classic"]) body .ant-select-dropdown :is(.ant-select-item-option-active,.ant-select-item-option-selected) { background:var(--accent-subtle)!important; color:var(--accent)!important; }
+/* Selected dropdown labels must meet WCAG AA against accent-subtle backgrounds. */
+html:not([data-palette="classic"]) body .ant-select-dropdown :is(.ant-select-item-option-active,.ant-select-item-option-selected) { background:var(--accent-subtle)!important; color:var(--text-primary)!important; }
 html:not([data-palette="classic"]) body .ant-select-dropdown { background:var(--surface-raised); }
 html:not([data-palette="classic"]) body .ant-btn.ant-btn-background-ghost:not(.ant-btn-dangerous) { background:transparent; color:var(--text-primary); border-color:var(--control-border); }
 html:not([data-palette="classic"]) body .ant-btn.ant-btn-background-ghost:not(.ant-btn-dangerous):hover { background:var(--accent-subtle); }
