@@ -260,6 +260,30 @@ const LOG_QUERY_PARAMS: EndpointParam[] = [
 
 export const sections: readonly Section[] = [
   {
+    id: 'new-network-admin-0-8-9',
+    title: 'Network administration and REALITY target finder',
+    description: 'Administrator-authenticated server tools. The REALITY Finder runs an opt-in ISP-side target scan and collects results using a short-lived token.',
+    endpoints: [
+      {
+        method: 'POST',
+        path: '/panel/api/server/realityFinder/command',
+        summary: 'Create a short-lived REALITY Finder scan command for a client device.',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/server/realityFinder/command/:token',
+        summary: 'Read an existing REALITY Finder scan report by its token.',
+        params: [{ name: 'token', in: 'path', type: 'string' }],
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/clients/groups/:name/hosts',
+        summary: 'Replace the host-rule groups assigned to a client group.',
+        params: [{ name: 'name', in: 'path', type: 'string' }],
+      },
+    ],
+  },
+  {
     id: 'assistant',
     title: 'AI Assistant',
     description: 'Optional in-panel assistant. The operator configures an OpenAI-compatible provider through server environment variables. The API key is never returned to the browser. Chat messages are sent to the configured external provider only after the administrator submits them.',
