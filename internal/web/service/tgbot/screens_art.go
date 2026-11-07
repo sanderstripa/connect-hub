@@ -32,6 +32,9 @@ var (
 	artProbedAt   time.Time
 	// artProbeRunning keeps a burst of renders from starting a burst of probes.
 	artProbeRunning atomic.Bool
+	// Incremented on bot/test resets: a completed probe from a previous bot
+	// must never overwrite the freshly configured bot's avatar cache.
+	artProbeEpoch atomic.Uint64
 
 	blackTileOnce  sync.Once
 	blackTileBytes []byte
@@ -47,6 +50,10 @@ const (
 // resolveScreenArt caches the bot avatar's file_id for every screen kind.
 // Telegram serves one photo per bot, so all kinds share it.
 func (t *Tgbot) resolveScreenArt() {
+	t.resolveScreenArtForEpoch(artProbeEpoch.Load())
+}
+
+func (t *Tgbot) resolveScreenArtForEpoch(epoch uint64) {
 	// One read: the panel can swap the bot under us (login/logout), and reading
 	// the global per call is a nil-pointer crash in this background goroutine.
 	b := liveBot()
@@ -74,6 +81,9 @@ func (t *Tgbot) resolveScreenArt() {
 
 	screenArtMu.Lock()
 	defer screenArtMu.Unlock()
+	if epoch != artProbeEpoch.Load() {
+		return // The bot or test server changed during this network probe.
+	}
 	artProbedAt = time.Now()
 	if len(photos.Photos) == 0 || len(photos.Photos[0]) == 0 {
 		// Remember the miss so the next render does not probe again, but keep
@@ -106,12 +116,22 @@ func (t *Tgbot) ensureScreenArt() {
 	if time.Since(at) <= ttl {
 		return
 	}
+	epoch := artProbeEpoch.Load()
 	if !artProbeRunning.CompareAndSwap(false, true) {
 		return
 	}
+	if epoch != artProbeEpoch.Load() {
+		// resetScreenArt replaced the bot between the cache check and
+		// claiming the single-flight slot; the new bot can probe again.
+		return
+	}
 	go func() {
-		defer artProbeRunning.Store(false)
-		t.resolveScreenArt()
+		defer func() {
+			if epoch == artProbeEpoch.Load() {
+				artProbeRunning.Store(false)
+			}
+		}()
+		t.resolveScreenArtForEpoch(epoch)
 	}()
 }
 
@@ -164,6 +184,10 @@ func cacheArtFileID(kind, fileID string) {
 // resetScreenArt drops the cached file_ids; tests use it between mock servers.
 func resetScreenArt() {
 	screenArtMu.Lock()
+	artProbeEpoch.Add(1)
+	// A stale 15s GetMe/profile request must not prevent the replacement
+	// bot from probing its own avatar or publishing the new cache entry.
+	artProbeRunning.Store(false)
 	screenArtIDs = map[string]string{}
 	artOverrides = map[string]string{}
 	artFromAvatar = false
