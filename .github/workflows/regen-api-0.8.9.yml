@@ -34,5 +34,7 @@ jobs:
           git add -- '*.go' frontend/src/generated
           if ! git diff --cached --quiet; then
             git commit -m 'chore(api): regenerate models for all imported 0.8.9 features'
+            git fetch origin 'feat/complete-11-upstream-features-0.8.9'
+            git rebase origin/feat/complete-11-upstream-features-0.8.9
             git push origin 'HEAD:refs/heads/feat/complete-11-upstream-features-0.8.9'
           fi
