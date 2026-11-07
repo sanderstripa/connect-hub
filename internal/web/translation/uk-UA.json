@@ -107,6 +107,7 @@
     "saveQr": "Зберегти QR"
   },
   "menu": {
+    "logs": "Журнали",
     "cleanIp": "Сканер чистих IP",
     "dnsTunnel": "DNS-тунель",
     "navigation": "Навігація",
@@ -129,6 +130,92 @@
     "tunnels": "Тунелі"
   },
   "pages": {
+    "logs": {
+      "noFiles": "No log files found",
+      "noFilesHint": "Check the log folder configured for the panel.",
+      "externalTitle": "Some Xray logs are outside the log folder",
+      "externalDesc": "Move these log files to the panel's log folder to analyse them here.",
+      "kinds": {
+        "access": "Access",
+        "error": "Error",
+        "traffic": "Traffic",
+        "xray": "Xray",
+        "panel": "Panel"
+      },
+      "tabs": {
+        "overview": "Overview",
+        "raw": "Raw logs"
+      },
+      "file": "Log file",
+      "timeRange": "Time range",
+      "level": "Level",
+      "levels": {
+        "all": "All",
+        "error": "Error",
+        "warning": "Warning",
+        "info": "Info",
+        "debug": "Debug"
+      },
+      "ranges": {
+        "all": "All time",
+        "15m": "Last 15 minutes",
+        "1h": "Last hour",
+        "6h": "Last 6 hours",
+        "24h": "Last 24 hours",
+        "7d": "Last 7 days",
+        "custom": "Custom range"
+      },
+      "autoRefresh": "Auto refresh",
+      "autoRefreshOff": "Off",
+      "autoRefreshEvery": "Every {seconds}s",
+      "fields": {
+        "query": "Search all text",
+        "ip": "IP",
+        "country": "Country",
+        "user": "User",
+        "host": "Host",
+        "inbound": "Inbound",
+        "protocol": "Protocol",
+        "status": "Status or message"
+      },
+      "columns": {
+        "time": "Time",
+        "message": "Message"
+      },
+      "outbound": "Outbound",
+      "truncated": "Line shortened",
+      "noMatches": "No matching log lines",
+      "uncategorized": "Uncategorized",
+      "noTimestamps": "No timestamps",
+      "scanStopped": "Stopped after analysing {scanned}: the rest of this file is not included.",
+      "readBudget": "Searched {scanned} without filling this page. You can continue loading older lines.",
+      "clickHint": "Click a chart point or a row to filter the logs.",
+      "cards": {
+        "lines": "Lines",
+        "errors": "Errors",
+        "warnings": "Warnings",
+        "uniqueIps": "Unique IPs",
+        "uniqueUsers": "Unique users",
+        "range": "Time range"
+      },
+      "charts": {
+        "volume": "Log volume",
+        "problems": "Errors and warnings",
+        "countries": "Requests by country",
+        "topIps": "Top IPs",
+        "topUsers": "Top users",
+        "topHosts": "Top hosts",
+        "topErrorCategories": "Top error categories",
+        "topProtocols": "Top protocols",
+        "topInbounds": "Top inbounds",
+        "topStatuses": "Top statuses"
+      },
+      "geoMissing": "geoip.dat was not found. Country analytics are unavailable.",
+      "geoNote": "Country counts are based on addresses in the selected log file.",
+      "geoUnlocated": "{count} lines have an address with no country.",
+      "lineCap": "Showing the newest {count} lines. Older lines are not loaded.",
+      "loadOlder": "Load older lines"
+    },
     "dnsTunnel": {
       "detect": "Прочитати з цього сервера",
       "detected": "Сервер StormDNS на цій машині прочитано; перевірте та збережіть",

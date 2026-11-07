@@ -99,7 +99,7 @@ it('submits a nested edited configuration without revealing or replacing its key
   expect(data[0].secret).toBe('');
   expect(data[0].generateKey).toBe(false);
   // Ant Design renders Select options only after the menu is opened.
-  const carrier = screen.getByRole('combobox', { name: 'Carrier' });
+  const carrier = screen.getByRole('combobox', { name: 'Transport' });
   fireEvent.mouseDown(carrier.closest('.ant-select')?.querySelector('.ant-select-selector') as HTMLElement);
   const icmp = await screen.findByText('ICMP');
   expect(icmp.closest('.ant-select-item-option')).toHaveClass('ant-select-item-option-disabled');
