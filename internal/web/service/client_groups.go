@@ -184,20 +184,36 @@ func (s *ClientService) ResetGroupTraffic(name string) error {
 		Updates(map[string]any{"reset_up": agg.Up, "reset_down": agg.Down}).Error
 }
 
-func (s *ClientService) CreateGroup(name string) error {
-	name = strings.TrimSpace(name)
-	if name == "" {
-		return common.NewError("group name is required")
-	}
-	db := database.GetDB()
-	var count int64
-	if err := db.Model(&model.ClientGroup{}).Where("LOWER(name) = LOWER(?)", name).Count(&count).Error; err != nil {
-		return err
-	}
-	if count > 0 {
-		return common.NewError("group already exists")
-	}
-	return db.Create(&model.ClientGroup{Name: name}).Error
+// CreateGroup accepts optional host-rule bindings. The variadic form retains
+// compatibility with existing callers that only create a group by name.
+func (s *ClientService) CreateGroup(name string, hostGroupIDsArg ...[]string) error {
+    name = strings.TrimSpace(name)
+    if name == "" {
+        return common.NewError("group name is required")
+    }
+    var hostGroupIDs []string
+    if len(hostGroupIDsArg) > 0 {
+        hostGroupIDs = normalizeHostGroupIDs(hostGroupIDsArg[0])
+    }
+    db := database.GetDB()
+    return db.Transaction(func(tx *gorm.DB) error {
+        if err := validateHostGroupIDs(tx, hostGroupIDs); err != nil {
+            return err
+        }
+        var count int64
+        if err := tx.Model(&model.ClientGroup{}).
+            Where("LOWER(name) = LOWER(?)", name).Count(&count).Error; err != nil {
+            return err
+        }
+        if count != 0 {
+            return common.NewError("group already exists")
+        }
+        group := &model.ClientGroup{Name: name}
+        if err := tx.Create(group).Error; err != nil {
+            return err
+        }
+        return replaceGroupHostGroups(tx, group.Id, hostGroupIDs)
+    })
 }
 
 func (s *ClientService) RenameGroup(oldName, newName string) (int, error) {
