@@ -289,6 +289,7 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 	s.api = controller.NewAPIController(g, engine)
 	controller.NewCleanIpRunController(g)
 	controller.NewDnsTunnelRunController(g)
+	controller.NewRealityFinderRunController(g)
 
 	// Initialize WebSocket hub
 	s.wsHub = websocket.NewHub()

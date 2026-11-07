@@ -224,6 +224,7 @@ func (a *APIController) initRouter(g *gin.RouterGroup, router http.Handler) {
 	// Server API
 	server := api.Group("/server")
 	a.serverController = NewServerController(server)
+	NewRealityFinderController(server.Group("/realityFinder"))
 
 	NewTunnelController(api.Group("/tunnels"))
 
