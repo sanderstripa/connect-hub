@@ -420,6 +420,19 @@ func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool
 			case "client_qr_links":
 				t.screenClientQR(chatId, email)
 				return
+			case "client_one_link":
+				t.answerSilent(callbackQuery.ID)
+				t.screenOneLinkPicker(chatId, email)
+				return
+			case "link_one":
+				_, target, index, ok := splitClientLinkCallback(decodedQuery)
+				if !ok {
+					t.sendCallbackAnswerTgBot(callbackQuery.ID, t.I18nBot("tgbot.answers.errorOperation"))
+					return
+				}
+				t.answerSilent(callbackQuery.ID)
+				t.screenOneLink(chatId, target, index)
+				return
 			case "client_get_usage":
 				t.sendCallbackAnswerTgBot(callbackQuery.ID, t.I18nBot("tgbot.messages.email", "Email=="+email))
 				t.searchClientScreen(chatId, email)
@@ -1201,7 +1214,12 @@ func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool
 		// only button being the one just pressed.
 		t.screenHome(chatId, callbackQuery.From.ID)
 	default:
-		action, email, ok := splitClientLinkCallback(callbackQuery.Data)
+		if messageKey, ok := parseGuideCallback(callbackQuery.Data); ok {
+			t.answerSilent(callbackQuery.ID)
+			t.screenGuide(chatId, messageKey)
+			return
+		}
+		action, email, index, ok := splitClientLinkCallback(callbackQuery.Data)
 		if !ok {
 			// Nothing matched: an unknown button still has to be answered, or it
 			// keeps spinning until Telegram times the callback out.
@@ -1221,6 +1239,12 @@ func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool
 			t.screenIndividualLinks(chatId, email)
 		case "client_qr_links":
 			t.screenClientQR(chatId, email)
+		case "client_one_link":
+			t.answerSilent(callbackQuery.ID)
+			t.screenOneLinkPicker(chatId, email)
+		case "link_one":
+			t.answerSilent(callbackQuery.ID)
+			t.screenOneLink(chatId, email, index)
 		}
 	}
 }

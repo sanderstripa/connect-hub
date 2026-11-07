@@ -191,7 +191,8 @@ func (t *Tgbot) screenIndividualLinks(chatID int64, email string) {
 		return
 	}
 	var body strings.Builder
-	body.WriteString(t.clientScreenBody(email, t.I18nBot("tgbot.buttons.individualLinks")))
+	body.WriteString(t.clientHeader(email))
+	body.WriteString(html.EscapeString(t.I18nBot("tgbot.buttons.individualLinks")) + "\n\n")
 	for _, link := range links {
 		body.WriteString("<code>" + html.EscapeString(link) + "</code>\n")
 	}
@@ -379,5 +380,7 @@ func (t *Tgbot) openClientAction(chatID int64, action, email string) {
 		t.screenIndividualLinks(chatID, email)
 	case "client_qr_links":
 		t.screenClientQR(chatID, email)
+	case "client_one_link":
+		t.screenOneLinkPicker(chatID, email)
 	}
 }
