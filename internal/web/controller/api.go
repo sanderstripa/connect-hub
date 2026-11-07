@@ -1,10 +1,13 @@
 package controller
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/web/mcp"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/middleware"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/service/panel"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/service/tgbot"
@@ -28,9 +31,10 @@ type APIController struct {
 }
 
 // NewAPIController creates a new APIController instance and initializes its routes.
-func NewAPIController(g *gin.RouterGroup) *APIController {
+// router is the full engine; MCP tool calls re-enter it as ordinary API requests.
+func NewAPIController(g *gin.RouterGroup, router http.Handler) *APIController {
 	a := &APIController{}
-	a.initRouter(g)
+	a.initRouter(g, router)
 	return a
 }
 
@@ -46,12 +50,16 @@ func (a *APIController) checkAPIAuth(c *gin.Context) {
 	if after, ok := strings.CutPrefix(c.GetHeader("Authorization"), "Bearer "); ok {
 		if row, matched := a.apiTokenService.MatchToken(after); matched {
 			matchedScope = row.Scope
+			c.Set("api_identity", fmt.Sprintf("token:%d", row.Id))
 		}
 	}
 	// Verified mTLS keeps its historical node-sync identity. Only an explicit
 	// node-admin bearer elevates it to software-update authority.
 	if c.Request.TLS != nil && len(c.Request.TLS.VerifiedChains) > 0 {
 		scope := model.ApiScopeNodeSync
+		peer := c.Request.TLS.VerifiedChains[0][0]
+		identity := sha256.Sum256(append(append([]byte{}, peer.RawIssuer...), peer.RawSubject...))
+		c.Set("api_identity", fmt.Sprintf("mtls:%x", identity))
 		if matchedScope == model.ApiScopeNodeAdmin {
 			scope = model.ApiScopeNodeAdmin
 		}
@@ -97,6 +105,8 @@ var monitorScopeAllow = map[string]struct{}{
 // nodeSyncScopeAllow is the node-sync route/method allowlist relative to
 // /panel/api; Gin patterns prevent concrete parameters broadening authority.
 var nodeSyncScopeAllow = map[string]map[string]struct{}{
+	"/tunnels/capabilities":        {http.MethodGet: {}},
+	"/tunnels/sync":                {http.MethodPost: {}},
 	"/server/status":               {http.MethodGet: {}},
 	"/inbounds/list":               {http.MethodGet: {}},
 	"/inbounds/add":                {http.MethodPost: {}},
@@ -190,7 +200,7 @@ func relAPIPath(fullPath string) string {
 }
 
 // initRouter sets up the API routes for inbounds, server, and other endpoints.
-func (a *APIController) initRouter(g *gin.RouterGroup) {
+func (a *APIController) initRouter(g *gin.RouterGroup, router http.Handler) {
 	// Main API group
 	api := g.Group("/panel/api")
 	api.Use(a.checkAPIAuth)
@@ -214,6 +224,8 @@ func (a *APIController) initRouter(g *gin.RouterGroup) {
 	server := api.Group("/server")
 	a.serverController = NewServerController(server)
 
+	NewTunnelController(api.Group("/tunnels"))
+
 	// Nodes API — multi-panel management
 	nodes := api.Group("/nodes")
 	a.nodeController = NewNodeController(nodes)
@@ -221,6 +233,15 @@ func (a *APIController) initRouter(g *gin.RouterGroup) {
 	// Hosts API — per-inbound override endpoints for subscription links
 	hosts := api.Group("/hosts")
 	a.hostController = NewHostController(hosts)
+
+	// Clean IP scanner — the visitor's ISP, for the scan that runs in their browser
+	NewCleanIpController(api.Group("/cleanip"))
+
+	// DNS tunnels (StormDNS / dnstt): user profiles and the resolver test
+	NewDnsTunnelController(api.Group("/dnstunnel"))
+
+	// Logs API — read-only viewer over XUI_LOG_FOLDER
+	NewLogController(api.Group("/logs"))
 
 	// Settings + Xray config management live under the API surface too, so the
 	// same API token drives them. Paths are /panel/api/setting/* and
@@ -231,8 +252,12 @@ func (a *APIController) initRouter(g *gin.RouterGroup) {
 	// Subscription balancers — client-side balancers for the JSON sub output
 	NewSubBalancerController(api)
 
+	// REALITY watch — spare targets and automatic replacement per REALITY inbound
+	NewRealityWatchController(api.Group("/realityWatch"))
+
 	// Extra routes
 	api.POST("/backuptotgbot", a.BackuptoTgbot)
+	api.POST(mcp.Path, gin.WrapH(mcp.NewHandler(router)))
 }
 
 // BackuptoTgbot sends a backup of the panel data to Telegram bot admins.

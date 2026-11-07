@@ -24,7 +24,9 @@ import {
   validateRealityMaxClientVer,
   validateRealityTarget,
 } from '@/lib/xray/stream-wire-normalize';
-import type { RealityScanResult } from '@/generated/types';
+import type { RealityScanResult, RealityWatchEntry } from '@/generated/types';
+import type { MessageInstance } from 'antd/es/message/interface';
+import RealityWatchSection from './RealityWatchSection';
 import RealityTargetScannerModal, {
   MLDSA65_MIN_CERT_CHAIN_BYTES,
 } from './RealityTargetScannerModal';
@@ -42,6 +44,11 @@ interface RealityFormProps {
   clearRealityKeypair: () => void;
   genMldsa65: () => void;
   clearMldsa65: () => void;
+  inboundId?: number | null;
+  onNode?: boolean;
+  messageApi?: MessageInstance;
+  onWatchDraftChange?: (entry: RealityWatchEntry) => void;
+  onWatchSwitched?: (target: string, serverNames: string[]) => void;
 }
 
 export default function RealityForm({
@@ -57,6 +64,11 @@ export default function RealityForm({
   clearRealityKeypair,
   genMldsa65,
   clearMldsa65,
+  inboundId = null,
+  onNode = false,
+  messageApi,
+  onWatchDraftChange,
+  onWatchSwitched,
 }: RealityFormProps) {
   const { t } = useTranslation();
   const uid = useId();
@@ -376,6 +388,14 @@ export default function RealityForm({
             ),
           },
         ]}
+      />
+      <RealityWatchSection
+        inboundId={inboundId}
+        onNode={onNode}
+        scanRealityCandidates={scanRealityCandidates}
+        message={messageApi}
+        onDraftChange={onWatchDraftChange}
+        onSwitched={onWatchSwitched}
       />
       <RealityTargetScannerModal
         open={scannerOpen}

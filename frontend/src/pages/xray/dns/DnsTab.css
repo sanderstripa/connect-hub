@@ -14,3 +14,10 @@
   align-items: center;
   flex-wrap: wrap;
 }
+
+/* Visual feedback when dragging DNS servers into a new order. */
+.dns-reorder-table .drag-handle { cursor: grab; touch-action: none; }
+.dns-reorder-table .drag-handle:active { cursor: grabbing; }
+.dns-reorder-table tr.row-dragging > td { opacity: .55; }
+.dns-reorder-table tr.drop-before > td { border-top: 2px solid var(--ant-color-primary) !important; }
+.dns-reorder-table tr.drop-after > td { border-bottom: 2px solid var(--ant-color-primary) !important; }

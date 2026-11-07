@@ -13,8 +13,13 @@
     "subscription-server",
     "subscription-balancers",
     "hosts",
+    "reality-watch",
     "nodes",
+    "logs",
     "backup",
+    "clean-ip-scanner",
+    "dns-tunnel",
+    "mcp",
     "websocket"
   ]
 }

@@ -5,6 +5,7 @@ export type OnlineAPISupport = number;
 export type ProcessState = string;
 export type Protocol = string;
 export type addrFamily = number;
+export type lineVisitor = unknown;
 export type staticEgressResolver = string;
 export type trafficLocalApplyAction = number;
 export type transportBits = number;
@@ -159,6 +160,8 @@ export interface AllSetting {
   subPort: number;
   subProfileMode: string;
   subProfileUrl: string;
+  subRateLimit: number;
+  subRateLimitEnable: boolean;
   subRoutingRules: string;
   subShowIdentityOnAllLinks: boolean;
   subSupportUrl: string;
@@ -350,6 +353,8 @@ export interface AllSettingView {
   subPort: number;
   subProfileMode: string;
   subProfileUrl: string;
+  subRateLimit: number;
+  subRateLimitEnable: boolean;
   subRoutingRules: string;
   subShowIdentityOnAllLinks: boolean;
   subSupportUrl: string;
@@ -412,6 +417,97 @@ export interface ApiTokenView {
 export interface Blocker {
   code: BlockerCode;
   detail?: string;
+}
+
+export interface CleanIpCdn {
+  groups: CleanIpRangeGroup[];
+  id: string;
+  name: string;
+}
+
+export interface CleanIpCommand {
+  expiresAt: number;
+  scriptUrl: string;
+  token: string;
+  unix: string;
+  unixVia: string;
+  via: string;
+  windows: string;
+  windowsVia: string;
+}
+
+export interface CleanIpCommandRequest {
+  cdn: string;
+  host: string;
+  ips: string[];
+  path: string;
+  perRange: number;
+  ranges: string[];
+  size: number;
+}
+
+export interface CleanIpFragment {
+  delay: string;
+  length: string;
+  ms: number;
+  n: number;
+  ok: number;
+  packets: string;
+}
+
+export interface CleanIpHit {
+  colo: string;
+  ip: string;
+  ms: number;
+}
+
+export interface CleanIpNetwork {
+  asn: number;
+  country: string;
+  ip: string;
+  isp: string;
+  org: string;
+}
+
+export interface CleanIpRangeGroup {
+  id: string;
+  on: boolean;
+  ranges: string[];
+}
+
+export interface CleanIpReport {
+  at: number;
+  fragments: CleanIpFragment[];
+  ips: CleanIpHit[];
+  network: CleanIpNetwork;
+  size: number;
+  tested: number;
+}
+
+export interface CleanIpVerdict {
+  ip: string;
+  status: string;
+}
+
+export interface CleanIpVerifyRequest {
+  cdn: string;
+  host: string;
+  ips: string[];
+}
+
+export interface Capabilities {
+  arch: string;
+  carriers: string[];
+  error: string;
+  os: string;
+  rawSocket: boolean;
+  supported: boolean;
+  version: string;
+}
+
+export interface CarrierEndpoint {
+  carrier: string;
+  port: number;
 }
 
 export interface Client {
@@ -582,6 +678,58 @@ export interface ClientsSummary {
   online: string[];
   onlineCount: number;
   total: number;
+}
+
+export interface DnsResolverReport {
+  at: number;
+  network: CleanIpNetwork;
+  results: DnsResolverResult[];
+  zone: string;
+}
+
+export interface DnsResolverResult {
+  ip: string;
+  maxName: number;
+  ms: number;
+  name: string;
+  status: string;
+}
+
+export interface DnsTunnelCommandRequest {
+  resolvers: string[];
+  zone: string;
+}
+
+export interface DnsTunnelProfile {
+  domain: string;
+  engine: string;
+  key: string;
+  method: number;
+  name: string;
+}
+
+export interface Config {
+  bind: string;
+  candidates: CarrierEndpoint[];
+  carrier: string;
+  conns: number;
+  endpoint: string;
+  fec: boolean;
+  icmpType: string;
+  listen: string;
+  memoryMB: number;
+  mtu: number;
+  path: string;
+  port: number;
+  ports: Port[];
+  reverse: boolean;
+  reversePeer: string;
+  role: string;
+  sessions: number;
+  sni: string;
+  tlsCert: string;
+  tlsKey: string;
+  tlsPin: string;
 }
 
 export interface FallbackParentInfo {
@@ -801,6 +949,18 @@ export interface InboundTrafficSummary {
   up: number;
 }
 
+export interface LogBucket {
+  errors: number;
+  start: number;
+  total: number;
+  warnings: number;
+}
+
+export interface LogCount {
+  count: number;
+  value: string;
+}
+
 export interface LogEntry {
   DateTime: string;
   Email: string;
@@ -811,6 +971,84 @@ export interface LogEntry {
   ToAddress: string;
 }
 
+export interface LogExternalPath {
+  kind: string;
+  path: string;
+  suggested: string;
+}
+
+export interface LogFile {
+  compressed: boolean;
+  modTime: number;
+  name: string;
+  size: number;
+}
+
+export interface LogFileList {
+  external: LogExternalPath[];
+  files: LogFile[];
+  folder: string;
+}
+
+export interface LogLine {
+  category: string;
+  country: string;
+  host: string;
+  inbound: string;
+  ip: string;
+  level: string;
+  message: string;
+  offset: number;
+  outbound: string;
+  protocol: string;
+  raw: string;
+  status: string;
+  time: number;
+  truncated: boolean;
+  user: string;
+}
+
+export interface LogPage {
+  budgetExhausted: boolean;
+  file: string;
+  fileSize: number;
+  lines: LogLine[];
+  nextCursor: number;
+  scannedBytes: number;
+}
+
+export interface LogStats {
+  bucketMillis: number;
+  budgetExhausted: boolean;
+  countries: LogCount[];
+  debugs: number;
+  errors: number;
+  file: string;
+  fileSize: number;
+  firstTime: number;
+  geoAvailable: boolean;
+  infos: number;
+  lastTime: number;
+  matchedLines: number;
+  scannedBytes: number;
+  scannedLines: number;
+  timeline: LogBucket[];
+  topErrorCategories: LogCount[];
+  topHosts: LogCount[];
+  topInbounds: LogCount[];
+  topIps: LogCount[];
+  topProtocols: LogCount[];
+  topStatuses: LogCount[];
+  topUsers: LogCount[];
+  uniqueCapped: boolean;
+  uniqueHosts: number;
+  uniqueIps: number;
+  uniqueUsers: number;
+  unknown: number;
+  unlocatedLines: number;
+  warnings: number;
+}
+
 export interface MLDSA65Response {
   seed: string;
   verify: string;
@@ -819,6 +1057,16 @@ export interface MLDSA65Response {
 export interface MLKEM768Response {
   client: string;
   seed: string;
+}
+
+export interface Metrics {
+  alive: boolean;
+  bytes_in_total: number;
+  bytes_out_total: number;
+  last_rx_age_ms: number;
+  loss_pct?: number | null;
+  send_errors: number;
+  srtt_ms?: number | null;
 }
 
 export interface Msg {
@@ -967,6 +1215,12 @@ export interface PeerActivity {
   up: number;
 }
 
+export interface Port {
+  listen: number;
+  protocol: string;
+  target: number;
+}
+
 export interface ProbeResultUI {
   cpuPct: number;
   error: string;
@@ -1009,6 +1263,32 @@ export interface RealityScanResult {
   tls13: boolean;
   tlsVersion: string;
   x25519: boolean;
+}
+
+export interface RealityWatchEntry {
+  auto: boolean;
+  spares: string[];
+}
+
+export interface RealityWatchEvent {
+  at: number;
+  from: string;
+  reason: string;
+  to: string;
+}
+
+export interface RealityWatchStatus {
+  auto: boolean;
+  checkedAt: number;
+  events: RealityWatchEvent[];
+  fails: number;
+  inboundId: number;
+  latencyMs: number;
+  ok: boolean;
+  reason: string;
+  serverNames: string[];
+  spares: string[];
+  target: string;
 }
 
 export interface ServerSettings {
@@ -1058,6 +1338,18 @@ export interface Setting {
   value: string;
 }
 
+export interface Spec {
+  config: Config;
+  deleted: boolean;
+  enabled: boolean;
+  guid: string;
+  name: string;
+  owner: string;
+  restart: number;
+  revision: number;
+  secret: string;
+}
+
 export interface Sponsor {
   enable?: boolean | null;
   from?: string | null;
@@ -1074,6 +1366,14 @@ export interface Sponsor {
 export interface SponsorList {
   contact?: string;
   sponsors: Sponsor[];
+}
+
+export interface Status {
+  carrier: string;
+  metrics?: Metrics | null;
+  reason: string;
+  revision: number;
+  state: string;
 }
 
 export interface SubBalancer {
@@ -1121,6 +1421,33 @@ export interface TuicServerSettings {
   sni?: string;
   udp_relay_mode: string;
   zero_rtt_handshake: boolean;
+}
+
+export interface TunnelMutation {
+  config: Config;
+  enabled: boolean;
+  generateKey: boolean;
+  name: string;
+  nodeId?: number | null;
+  revision: number;
+  secret: string;
+  token: string;
+}
+
+export interface TunnelToken {
+  token: string;
+}
+
+export interface TunnelView {
+  config: Config;
+  enabled: boolean;
+  guid: string;
+  id: number;
+  managed: boolean;
+  name: string;
+  nodeId?: number | null;
+  revision: number;
+  status: Status;
 }
 
 export interface User {

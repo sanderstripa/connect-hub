@@ -152,7 +152,24 @@ func newNodeTransport(tlsCfg *tls.Config) *http.Transport {
 
 // defaultNodeHTTPClient reaches nodes trusting the system CA store ("verify"
 // mode or plain http); shared so connections pool across nodes.
-var defaultNodeHTTPClient = &http.Client{Transport: newNodeTransport(nil)}
+// NoCrossHostRedirect prevents a compromised node from redirecting authenticated
+// requests (including their bearer tokens and client certificates) to another
+// origin, or downgrading HTTPS requests to plaintext.
+func NoCrossHostRedirect(req *http.Request, via []*http.Request) error {
+	if len(via) == 0 {
+		return nil
+	}
+	origin := via[0].URL
+	if !strings.EqualFold(req.URL.Scheme, origin.Scheme) || !strings.EqualFold(req.URL.Host, origin.Host) {
+		return fmt.Errorf("node API redirect changed origin")
+	}
+	return nil
+}
+
+var defaultNodeHTTPClient = &http.Client{
+	Transport: newNodeTransport(nil),
+	CheckRedirect: NoCrossHostRedirect,
+}
 
 // nodeClients caches one client per node: heartbeat and traffic sync reach it
 // every few seconds, and a rebuilt client would open its own empty pool.
@@ -214,6 +231,7 @@ func HTTPClientForNode(n *model.Node, proxyURL string) (*http.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	client.CheckRedirect = NoCrossHostRedirect
 
 	nodeClientsMu.Lock()
 	if entry, ok := nodeClientsCache[key]; ok {

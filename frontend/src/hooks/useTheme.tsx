@@ -8,11 +8,27 @@ import type { PaletteId } from '@/lib/theme-palettes';
 import '@/styles/connect-brand.css';
 import '@/styles/connect-density.css';
 import '@/styles/palettes.css';
+import '@/styles/glass.css';
+export const ACCENT_CHOICES = {blue:'#0671FF',red:'#DC4E58',pink:'#D45597',orange:'#D87832',yellow:'#A97805',green:'#268B65',purple:'#805AD5'} as const;
+export type AccentChoice = keyof typeof ACCENT_CHOICES;
+const ACCENT_KEY = 'connect-hub-accent';
+const GLASS_KEY = 'connect-hub-glass';
+const SYSTEM_KEY = 'connect-hub-system-mode';
+const readSetting = (key:string) => {try{return localStorage.getItem(key);}catch{return null;}};
+const savedAccent = ():AccentChoice => {const value=readSetting(ACCENT_KEY);return value && Object.prototype.hasOwnProperty.call(ACCENT_CHOICES,value) ? value as AccentChoice : 'blue';};
+const rgbMix = (a:string,b:string,w:number) => '#'+[0,1,2].map(i=>Math.round(parseInt(a.slice(1+i*2,3+i*2),16)*(1-w)+parseInt(b.slice(1+i*2,3+i*2),16)*w).toString(16).padStart(2,'0')).join('');
 const initialDark = (()=>{try{return localStorage.getItem('dark-mode') !== 'false';}catch{return true;}})();
-function applyDom(dark: boolean, palette: PaletteId = DEFAULT_PALETTE) {
+function applyDom(dark: boolean, palette: PaletteId = DEFAULT_PALETTE, accent:AccentChoice = 'blue', glass=false) {
   const root = document.documentElement;
   root.dataset.palette = palette; root.dataset.mode = dark ? 'dark' : 'light';
   for (const [key,value] of Object.entries(themeVariables(palette,dark))) root.style.setProperty('--'+key,value);
+  const color=accent==='blue' ? themeTokens(palette,dark).accent : ACCENT_CHOICES[accent];
+  const hovered=accent==='blue' ? themeTokens(palette,dark).hover : rgbMix(color,dark?'#FFFFFF':'#000000',0.16);
+  root.style.setProperty('--accent',color);root.style.setProperty('--accent-hover',hovered);
+  root.style.setProperty('--focus-ring',color);root.style.setProperty('--chart-primary',color);root.style.setProperty('--button-bg',color);root.style.setProperty('--button-hover',hovered);
+  root.style.setProperty('--accent-subtle',rgbMix(themeTokens(palette,dark).surface,color,dark?0.18:0.1));
+  root.style.setProperty('--accent-foreground',accent==='yellow'?'#161616':'#FFFFFF');
+  root.dataset.accent=accent;root.dataset.glass=glass?'on':'off';
   document.body.classList.remove('dark', 'light'); document.body.classList.add(dark ? 'dark' : 'light');
   document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
   document.documentElement.removeAttribute('data-theme'); try {localStorage.removeItem('isUltraDarkThemeEnabled');} catch { /* Storage can be blocked. */ }
@@ -20,9 +36,10 @@ function applyDom(dark: boolean, palette: PaletteId = DEFAULT_PALETTE) {
   if (msg) { msg.classList.remove('dark', 'light'); msg.classList.add(dark ? 'dark' : 'light'); }
 }
 function savedPalette(): PaletteId { try {return parsePalette(localStorage.getItem(PALETTE_KEY));} catch {return DEFAULT_PALETTE;} }
-applyDom(initialDark, savedPalette());
-export function buildAntdThemeConfig(dark: boolean, _legacyUltra = false, palette: PaletteId = DEFAULT_PALETTE): ThemeConfig {
+applyDom(initialDark, savedPalette(), savedAccent(), readSetting(GLASS_KEY)==='true');
+export function buildAntdThemeConfig(dark: boolean, _legacyUltra = false, palette: PaletteId = DEFAULT_PALETTE, accent: AccentChoice = 'blue'): ThemeConfig {
   const colors=themeTokens(palette,dark);
+  if(accent!=='blue') { const color=ACCENT_CHOICES[accent];Object.assign(colors,{accent:color,button:color,hover:rgbMix(color,dark?'#FFFFFF':'#000000',0.16),buttonHover:rgbMix(color,dark?'#FFFFFF':'#000000',0.16),foreground:accent==='yellow'?'#161616':'#FFFFFF',subtle:rgbMix(colors.surface,color,dark?0.18:0.10),chartPrimary:color,info:color});}
   const {bg,surface:card,text,secondary:muted,border,accent:primary}=colors;
   const config: ThemeConfig = {
     hashed: false, cssVar: { key: 'xui' }, algorithm: dark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
@@ -75,18 +92,25 @@ export function pauseAnimationsUntilLeave(elementId: string): void {
   const restore = () => { document.documentElement.removeAttribute('data-theme-animations'); el.removeEventListener('mouseleave', restore); el.removeEventListener('touchend', restore); };
   el.addEventListener('mouseleave', restore); el.addEventListener('touchend', restore);
 }
-interface ThemeContextValue { isDark: boolean; isUltra: boolean; palette: PaletteId; setPalette: (id: PaletteId) => void; toggleTheme: () => void; toggleUltra: () => void; antdThemeConfig: ThemeConfig; }
+interface ThemeContextValue { isDark: boolean; isUltra: boolean; palette: PaletteId; setPalette: (id: PaletteId) => void; accent: AccentChoice; setAccent: (id: AccentChoice) => void; glass: boolean; setGlass:(next:boolean)=>void; followSystem:boolean; setFollowSystem:(next:boolean)=>void; toggleTheme: () => void; toggleUltra: () => void; antdThemeConfig: ThemeConfig; }
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState(()=>{try{return localStorage.getItem('dark-mode')!=='false';}catch{return initialDark;}});
   const [palette,setPaletteState] = useState<PaletteId>(savedPalette);
+  const [accent,setAccentState] = useState<AccentChoice>(savedAccent);
+  const [glass,setGlassState] = useState(()=>readSetting(GLASS_KEY)==='true');
+  const [followSystem,setFollowSystemState] = useState(()=>readSetting(SYSTEM_KEY)==='true');
+  const setAccent=useCallback((next:AccentChoice)=>{if(Object.prototype.hasOwnProperty.call(ACCENT_CHOICES,next))setAccentState(next);},[]);
+  const setGlass=useCallback((next:boolean)=>setGlassState(next),[]);
+  const setFollowSystem=useCallback((next:boolean)=>setFollowSystemState(next),[]);
   const setPalette=useCallback((id: PaletteId)=>setPaletteState(parsePalette(id)),[]);
-  useLayoutEffect(() => { applyDom(isDark,palette); try {localStorage.setItem('dark-mode', String(isDark)); localStorage.setItem(PALETTE_KEY,palette);} catch { /* Private storage must not break rendering. */ } }, [isDark,palette]);
-  const toggleTheme = useCallback(() => setIsDark(v => !v), []);
+  useLayoutEffect(() => { applyDom(isDark,palette,accent,glass); try {localStorage.setItem('dark-mode', String(isDark)); localStorage.setItem(PALETTE_KEY,palette);localStorage.setItem(ACCENT_KEY,accent);localStorage.setItem(GLASS_KEY,String(glass));localStorage.setItem(SYSTEM_KEY,String(followSystem));} catch { /* Private storage must not break rendering. */ } }, [isDark,palette,accent,glass,followSystem]);
+  useLayoutEffect(()=>{if(!followSystem || typeof window.matchMedia!=='function')return;const query=window.matchMedia('(prefers-color-scheme: dark)');const sync=()=>setIsDark(query.matches);sync();query.addEventListener?.('change',sync);return()=>query.removeEventListener?.('change',sync)},[followSystem]);
+  const toggleTheme = useCallback(() => {setFollowSystemState(false);setIsDark(v => !v);}, []);
   // Compatibility for upstream consumers; no third theme remains selectable.
   const toggleUltra = useCallback(() => {}, []);
-  const antdThemeConfig = useMemo(() => buildAntdThemeConfig(isDark,false,palette), [isDark,palette]);
-  const value = useMemo(() => ({ isDark, isUltra: false, palette,setPalette,toggleTheme, toggleUltra, antdThemeConfig }), [isDark,palette,setPalette, toggleTheme, toggleUltra, antdThemeConfig]);
+  const antdThemeConfig = useMemo(() => buildAntdThemeConfig(isDark,false,palette,accent), [isDark,palette,accent]);
+  const value = useMemo(() => ({ isDark, isUltra: false, palette,setPalette,accent,setAccent,glass,setGlass,followSystem,setFollowSystem,toggleTheme,toggleUltra,antdThemeConfig }), [isDark,palette,setPalette,accent,setAccent,glass,setGlass,followSystem,setFollowSystem,toggleTheme,toggleUltra,antdThemeConfig]);
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 export function useTheme(): ThemeContextValue { const ctx = useContext(ThemeContext); if (!ctx) throw new Error('useTheme must be used inside <ThemeProvider>'); return ctx; }

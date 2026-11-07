@@ -29,6 +29,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/util/common"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/cronspec"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/sys"
+	"github.com/mhsanaei/3x-ui/v3/internal/wattunnel"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/controller"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/job"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/locale"
@@ -276,7 +277,9 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 
 	s.index = controller.NewIndexController(g)
 	s.panel = controller.NewXUIController(g)
-	s.api = controller.NewAPIController(g)
+	s.api = controller.NewAPIController(g, engine)
+	controller.NewCleanIpRunController(g)
+	controller.NewDnsTunnelRunController(g)
 
 	// Initialize WebSocket hub
 	s.wsHub = websocket.NewHub()
@@ -313,6 +316,7 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 // counters.
 const (
 	cadenceXrayRunning   = "@every 1s"
+	cadenceRealityWatch  = "@every 10m"
 	cadenceXrayRestart   = "@every 30s"
 	cadenceXrayTraffic   = "@every 5s"
 	cadenceMtproto       = "@every 10s"
@@ -355,6 +359,9 @@ func (s *Server) startTask(restartXray bool, loc *time.Location) {
 		_, _ = s.cron.AddJob(cadenceXrayTraffic, job.NewXrayTrafficJob())
 	}()
 
+	tunnelJob := job.NewTunnelJob(s.ctx)
+	_, _ = s.cron.AddJob("@every 5s", tunnelJob)
+
 	// Reconcile mtproto (mtg) sidecars and scrape their traffic
 	_, _ = s.cron.AddJob("@every 5s", job.NewSudokuJob())
 	mtJob := job.NewMtprotoJob()
@@ -392,6 +399,7 @@ func (s *Server) startTask(restartXray bool, loc *time.Location) {
 	_, _ = s.cron.AddJob("@daily", job.NewClearLogsJob())
 	_, _ = s.cron.AddJob(cadenceXrayLogPrune, job.NewPruneXrayLogsJob())
 	_, _ = s.cron.AddJob("@hourly", job.NewWarpIpJob())
+	_, _ = s.cron.AddJob(cadenceRealityWatch, job.NewRealityWatchJob())
 
 	// Inbound traffic reset jobs
 	// Run every hour
@@ -826,6 +834,7 @@ func (s *Server) stop(stopXray bool, stopTgBot bool) error {
 		}
 		sudoku.GetManager().StopAll()
 		mtproto.GetManager().StopAll()
+		wattunnel.GetManager().StopAll()
 		amneziawgnet.GetManager().StopAll()
 		job.NewAmneziaWGJob().FlushKernelTraffic()
 		amneziawgkern.GetManager().StopAll()

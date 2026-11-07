@@ -150,6 +150,8 @@ export const EXAMPLES: Record<string, unknown> = {
     "subPort": 1,
     "subProfileMode": "",
     "subProfileUrl": "",
+    "subRateLimit": 1,
+    "subRateLimitEnable": false,
     "subRoutingRules": "",
     "subShowIdentityOnAllLinks": false,
     "subSupportUrl": "",
@@ -340,6 +342,8 @@ export const EXAMPLES: Record<string, unknown> = {
     "subPort": 1,
     "subProfileMode": "",
     "subProfileUrl": "",
+    "subRateLimit": 1,
+    "subRateLimitEnable": false,
     "subRoutingRules": "",
     "subShowIdentityOnAllLinks": false,
     "subSupportUrl": "",
@@ -413,6 +417,124 @@ export const EXAMPLES: Record<string, unknown> = {
   "Blocker": {
     "code": "tools",
     "detail": "awg"
+  },
+  "CleanIpCdn": {
+    "groups": [
+      {
+        "id": "official",
+        "on": true,
+        "ranges": [
+          "104.16.0.0/13"
+        ]
+      }
+    ],
+    "id": "cloudflare",
+    "name": "Cloudflare"
+  },
+  "CleanIpCommand": {
+    "expiresAt": 1793000000,
+    "scriptUrl": "https://panel.example.com/path/cleanip/run/kP3x9Qw7Lm2Zr8Tv5Yb1Nc4D/script.py",
+    "token": "kP3x9Qw7Lm2Zr8Tv5Yb1Nc4D",
+    "unix": "python3 -c \"import urllib.request as u,hashlib as h;s=u.urlopen(u.Request('https://panel.example.com/path/cleanip/run/kP3x9Qw7Lm2Zr8Tv5Yb1Nc4D/script.py',headers={'User-Agent':'Mozilla/5.0 (3x-ui clean IP)'})).read();exec(s) if h.sha256(s).hexdigest()=='9f2c...' else print('The script did not match this command: make a new one on the Clean IP scanner page.')\"",
+    "unixVia": "python3 -c \"import urllib.request as u,hashlib as h,socket as o;g=o.getaddrinfo;o.getaddrinfo=lambda a,*r,**k:g('104.16.1.1' if a=='panel.example.com' else a,*r,**k);s=u.urlopen(u.Request('https://panel.example.com/path/cleanip/run/kP3x9Qw7Lm2Zr8Tv5Yb1Nc4D/script.py?via=104.16.1.1',headers={'User-Agent':'Mozilla/5.0 (3x-ui clean IP)'})).read();o.getaddrinfo=g;exec(s) if h.sha256(s).hexdigest()=='9f2c...' else print('The script did not match this command: make a new one on the Clean IP scanner page.')\"",
+    "via": "104.16.1.1",
+    "windows": "python -c \"import urllib.request as u,hashlib as h;s=u.urlopen(u.Request('https://panel.example.com/path/cleanip/run/kP3x9Qw7Lm2Zr8Tv5Yb1Nc4D/script.py',headers={'User-Agent':'Mozilla/5.0 (3x-ui clean IP)'})).read();exec(s) if h.sha256(s).hexdigest()=='9f2c...' else print('The script did not match this command: make a new one on the Clean IP scanner page.')\"",
+    "windowsVia": "python -c \"import urllib.request as u,hashlib as h,socket as o;g=o.getaddrinfo;o.getaddrinfo=lambda a,*r,**k:g('104.16.1.1' if a=='panel.example.com' else a,*r,**k);s=u.urlopen(u.Request('https://panel.example.com/path/cleanip/run/kP3x9Qw7Lm2Zr8Tv5Yb1Nc4D/script.py?via=104.16.1.1',headers={'User-Agent':'Mozilla/5.0 (3x-ui clean IP)'})).read();o.getaddrinfo=g;exec(s) if h.sha256(s).hexdigest()=='9f2c...' else print('The script did not match this command: make a new one on the Clean IP scanner page.')\""
+  },
+  "CleanIpCommandRequest": {
+    "cdn": "cloudflare",
+    "host": "cdn.example.com",
+    "ips": [
+      "104.16.1.1"
+    ],
+    "path": "/",
+    "perRange": 8,
+    "ranges": [
+      "104.16.0.0/13"
+    ],
+    "size": 5000
+  },
+  "CleanIpFragment": {
+    "delay": "1-2",
+    "length": "10-20",
+    "ms": 700,
+    "n": 10,
+    "ok": 9,
+    "packets": "tlshello"
+  },
+  "CleanIpHit": {
+    "colo": "FRA",
+    "ip": "104.16.1.1",
+    "ms": 410
+  },
+  "CleanIpNetwork": {
+    "asn": 197207,
+    "country": "IR",
+    "ip": "5.160.10.20",
+    "isp": "MCI",
+    "org": "Mobile Communication Company of Iran PLC"
+  },
+  "CleanIpRangeGroup": {
+    "id": "official",
+    "on": true,
+    "ranges": [
+      "104.16.0.0/13"
+    ]
+  },
+  "CleanIpReport": {
+    "at": 1793000000,
+    "fragments": [
+      {
+        "delay": "1-2",
+        "length": "10-20",
+        "ms": 700,
+        "n": 10,
+        "ok": 9,
+        "packets": "tlshello"
+      }
+    ],
+    "ips": [
+      {
+        "colo": "FRA",
+        "ip": "104.16.1.1",
+        "ms": 410
+      }
+    ],
+    "network": {
+      "asn": 197207,
+      "country": "IR",
+      "ip": "5.160.10.20",
+      "isp": "MCI",
+      "org": "Mobile Communication Company of Iran PLC"
+    },
+    "size": 5000,
+    "tested": 120
+  },
+  "CleanIpVerdict": {
+    "ip": "104.16.1.1",
+    "status": "ok"
+  },
+  "CleanIpVerifyRequest": {
+    "cdn": "cloudflare",
+    "host": "cdn.example.com",
+    "ips": [
+      "104.16.1.1"
+    ]
+  },
+  "Capabilities": {
+    "arch": "amd64",
+    "carriers": [
+      ""
+    ],
+    "error": "",
+    "os": "linux",
+    "rawSocket": false,
+    "supported": false,
+    "version": "3.3.0"
+  },
+  "CarrierEndpoint": {
+    "carrier": "tcp",
+    "port": 4443
   },
   "Client": {
     "adTag": "0123456789abcdef0123456789abcdef",
@@ -629,6 +751,80 @@ export const EXAMPLES: Record<string, unknown> = {
     ],
     "onlineCount": 1,
     "total": 2000
+  },
+  "DnsResolverReport": {
+    "at": 1793000000,
+    "network": {
+      "asn": 197207,
+      "country": "IR",
+      "ip": "5.160.10.20",
+      "isp": "MCI",
+      "org": "Mobile Communication Company of Iran PLC"
+    },
+    "results": [
+      {
+        "ip": "178.22.122.100",
+        "maxName": 253,
+        "ms": 120,
+        "name": "Shecan",
+        "status": "ok"
+      }
+    ],
+    "zone": "t.example.com"
+  },
+  "DnsResolverResult": {
+    "ip": "178.22.122.100",
+    "maxName": 253,
+    "ms": 120,
+    "name": "Shecan",
+    "status": "ok"
+  },
+  "DnsTunnelCommandRequest": {
+    "resolvers": [
+      "178.22.122.100"
+    ],
+    "zone": "t.example.com"
+  },
+  "DnsTunnelProfile": {
+    "domain": "st.t.example.com",
+    "engine": "stormdns",
+    "key": "93d3404c6701dc9dea2d1ff3282ab88b",
+    "method": 1,
+    "name": "Iran"
+  },
+  "Config": {
+    "bind": "0.0.0.0",
+    "candidates": [
+      {
+        "carrier": "tcp",
+        "port": 4443
+      }
+    ],
+    "carrier": "tcp",
+    "conns": 0,
+    "endpoint": "203.0.113.10",
+    "fec": false,
+    "icmpType": "",
+    "listen": "0.0.0.0",
+    "memoryMB": 0,
+    "mtu": 0,
+    "path": "/wat",
+    "port": 4443,
+    "ports": [
+      {
+        "listen": 8443,
+        "protocol": "tcp",
+        "target": 443
+      }
+    ],
+    "reverse": false,
+    "reversePeer": "",
+    "role": "client",
+    "sessions": 0,
+    "sni": "",
+    "tlsCert": "",
+    "tlsKey": "",
+    "tlsPin": ""
   },
   "FallbackParentInfo": {
     "masterId": 0,
@@ -895,6 +1091,16 @@ export const EXAMPLES: Record<string, unknown> = {
     "total": 10737418240,
     "up": 1048576
   },
+  "LogBucket": {
+    "errors": 3,
+    "start": 1767225600000,
+    "total": 120,
+    "warnings": 7
+  },
+  "LogCount": {
+    "count": 42,
+    "value": "203.0.113.9"
+  },
   "LogEntry": {
     "DateTime": "2025-01-01T12:00:00Z",
     "Email": "alice@example.com",
@@ -904,6 +1110,156 @@ export const EXAMPLES: Record<string, unknown> = {
     "Outbound": "direct",
     "ToAddress": "example.com:443"
   },
+  "LogExternalPath": {
+    "kind": "access",
+    "path": "./access.log",
+    "suggested": "/var/log/x-ui/access.log"
+  },
+  "LogFile": {
+    "compressed": false,
+    "modTime": 1767225600000,
+    "name": "3xui.log",
+    "size": 1048576
+  },
+  "LogFileList": {
+    "external": [
+      {
+        "kind": "access",
+        "path": "./access.log",
+        "suggested": "/var/log/x-ui/access.log"
+      }
+    ],
+    "files": [
+      {
+        "compressed": false,
+        "modTime": 1767225600000,
+        "name": "3xui.log",
+        "size": 1048576
+      }
+    ],
+    "folder": "/var/log/x-ui"
+  },
+  "LogLine": {
+    "category": "app/proxyman/inbound",
+    "country": "DE",
+    "host": "example.com",
+    "inbound": "inbound-443",
+    "ip": "203.0.113.9",
+    "level": "info",
+    "message": "from 203.0.113.9:5555 accepted tcp:example.com:443 [inbound-443 \u003e\u003e direct]",
+    "offset": 52428,
+    "outbound": "direct",
+    "protocol": "tcp",
+    "raw": "2026/01/01 00:00:00.000000 from 203.0.113.9:5555 accepted tcp:example.com:443 [inbound-443 \u003e\u003e direct]",
+    "status": "accepted",
+    "time": 1767225600000,
+    "truncated": false,
+    "user": "alice@example.com"
+  },
+  "LogPage": {
+    "budgetExhausted": false,
+    "file": "3xui.log",
+    "fileSize": 1048576,
+    "lines": [
+      {
+        "category": "app/proxyman/inbound",
+        "country": "DE",
+        "host": "example.com",
+        "inbound": "inbound-443",
+        "ip": "203.0.113.9",
+        "level": "info",
+        "message": "from 203.0.113.9:5555 accepted tcp:example.com:443 [inbound-443 \u003e\u003e direct]",
+        "offset": 52428,
+        "outbound": "direct",
+        "protocol": "tcp",
+        "raw": "2026/01/01 00:00:00.000000 from 203.0.113.9:5555 accepted tcp:example.com:443 [inbound-443 \u003e\u003e direct]",
+        "status": "accepted",
+        "time": 1767225600000,
+        "truncated": false,
+        "user": "alice@example.com"
+      }
+    ],
+    "nextCursor": 52428,
+    "scannedBytes": 65536
+  },
+  "LogStats": {
+    "bucketMillis": 60000,
+    "budgetExhausted": false,
+    "countries": [
+      {
+        "count": 42,
+        "value": "203.0.113.9"
+      }
+    ],
+    "debugs": 100,
+    "errors": 12,
+    "file": "3xui.log",
+    "fileSize": 1048576,
+    "firstTime": 1767225600000,
+    "geoAvailable": true,
+    "infos": 8000,
+    "lastTime": 1767312000000,
+    "matchedLines": 8200,
+    "scannedBytes": 1048576,
+    "scannedLines": 9000,
+    "timeline": [
+      {
+        "errors": 3,
+        "start": 1767225600000,
+        "total": 120,
+        "warnings": 7
+      }
+    ],
+    "topErrorCategories": [
+      {
+        "count": 42,
+        "value": "203.0.113.9"
+      }
+    ],
+    "topHosts": [
+      {
+        "count": 42,
+        "value": "203.0.113.9"
+      }
+    ],
+    "topInbounds": [
+      {
+        "count": 42,
+        "value": "203.0.113.9"
+      }
+    ],
+    "topIps": [
+      {
+        "count": 42,
+        "value": "203.0.113.9"
+      }
+    ],
+    "topProtocols": [
+      {
+        "count": 42,
+        "value": "203.0.113.9"
+      }
+    ],
+    "topStatuses": [
+      {
+        "count": 42,
+        "value": "203.0.113.9"
+      }
+    ],
+    "topUsers": [
+      {
+        "count": 42,
+        "value": "203.0.113.9"
+      }
+    ],
+    "uniqueCapped": false,
+    "uniqueHosts": 1800,
+    "uniqueIps": 312,
+    "uniqueUsers": 25,
+    "unknown": 48,
+    "unlocatedLines": 14,
+    "warnings": 40
+  },
   "MLDSA65Response": {
     "seed": "mldsa65-seed",
     "verify": "mldsa65-verify"
@@ -911,6 +1267,15 @@ export const EXAMPLES: Record<string, unknown> = {
   "MLKEM768Response": {
     "client": "mlkem768-client",
     "seed": "mlkem768-seed"
+  },
+  "Metrics": {
+    "alive": false,
+    "bytes_in_total": 0,
+    "bytes_out_total": 0,
+    "last_rx_age_ms": 0,
+    "loss_pct": null,
+    "send_errors": 0,
+    "srtt_ms": null
   },
   "Msg": {
     "msg": "",
@@ -1060,6 +1425,11 @@ export const EXAMPLES: Record<string, unknown> = {
     "tag": "inbound-51820",
     "up": 1048576
   },
+  "Port": {
+    "listen": 8443,
+    "protocol": "tcp",
+    "target": 443
+  },
   "ProbeResultUI": {
     "cpuPct": 12.5,
     "error": "",
@@ -1110,6 +1480,42 @@ export const EXAMPLES: Record<string, unknown> = {
     "tlsVersion": "1.3",
     "x25519": true
   },
+  "RealityWatchEntry": {
+    "auto": true,
+    "spares": [
+      "www.example.com:443"
+    ]
+  },
+  "RealityWatchEvent": {
+    "at": 1793000000,
+    "from": "old.example.com:443",
+    "reason": "TLS handshake failed: EOF",
+    "to": "www.example.com:443"
+  },
+  "RealityWatchStatus": {
+    "auto": true,
+    "checkedAt": 1793000000,
+    "events": [
+      {
+        "at": 1793000000,
+        "from": "old.example.com:443",
+        "reason": "TLS handshake failed: EOF",
+        "to": "www.example.com:443"
+      }
+    ],
+    "fails": 0,
+    "inboundId": 3,
+    "latencyMs": 180,
+    "ok": true,
+    "reason": "",
+    "serverNames": [
+      "old.example.com"
+    ],
+    "spares": [
+      "www.example.com:443"
+    ],
+    "target": "old.example.com:443"
+  },
   "ServerSettings": {
     "contentPaddingAddition": "",
     "disableCookies": false,
@@ -1155,6 +1561,50 @@ export const EXAMPLES: Record<string, unknown> = {
     "key": "",
     "value": ""
   },
+  "Spec": {
+    "config": {
+      "bind": "0.0.0.0",
+      "candidates": [
+        {
+          "carrier": "tcp",
+          "port": 4443
+        }
+      ],
+      "carrier": "tcp",
+      "conns": 0,
+      "endpoint": "203.0.113.10",
+      "fec": false,
+      "icmpType": "",
+      "listen": "0.0.0.0",
+      "memoryMB": 0,
+      "mtu": 0,
+      "path": "/wat",
+      "port": 4443,
+      "ports": [
+        {
+          "listen": 8443,
+          "protocol": "tcp",
+          "target": 443
+        }
+      ],
+      "reverse": false,
+      "reversePeer": "",
+      "role": "client",
+      "sessions": 0,
+      "sni": "",
+      "tlsCert": "",
+      "tlsKey": "",
+      "tlsPin": ""
+    },
+    "deleted": false,
+    "enabled": false,
+    "guid": "",
+    "name": "",
+    "owner": "",
+    "restart": 0,
+    "revision": 0,
+    "secret": ""
+  },
   "Sponsor": {
     "enable": true,
     "from": "2026-10-01T00:00:00Z",
@@ -1187,6 +1637,13 @@ export const EXAMPLES: Record<string, unknown> = {
         "until": "2026-11-01T00:00:00Z"
       }
     ]
+  },
+  "Status": {
+    "carrier": "tcp",
+    "metrics": null,
+    "reason": "",
+    "revision": 0,
+    "state": "connected"
   },
   "SubBalancer": {
     "createdAt": 1710000000000,
@@ -1234,6 +1691,102 @@ export const EXAMPLES: Record<string, unknown> = {
     "sni": "",
     "udp_relay_mode": "",
     "zero_rtt_handshake": false
+  },
+  "TunnelMutation": {
+    "config": {
+      "bind": "0.0.0.0",
+      "candidates": [
+        {
+          "carrier": "tcp",
+          "port": 4443
+        }
+      ],
+      "carrier": "tcp",
+      "conns": 0,
+      "endpoint": "203.0.113.10",
+      "fec": false,
+      "icmpType": "",
+      "listen": "0.0.0.0",
+      "memoryMB": 0,
+      "mtu": 0,
+      "path": "/wat",
+      "port": 4443,
+      "ports": [
+        {
+          "listen": 8443,
+          "protocol": "tcp",
+          "target": 443
+        }
+      ],
+      "reverse": false,
+      "reversePeer": "",
+      "role": "client",
+      "sessions": 0,
+      "sni": "",
+      "tlsCert": "",
+      "tlsKey": "",
+      "tlsPin": ""
+    },
+    "enabled": false,
+    "generateKey": false,
+    "name": "Edge to exit",
+    "nodeId": null,
+    "revision": 0,
+    "secret": "",
+    "token": ""
+  },
+  "TunnelToken": {
+    "token": ""
+  },
+  "TunnelView": {
+    "config": {
+      "bind": "0.0.0.0",
+      "candidates": [
+        {
+          "carrier": "tcp",
+          "port": 4443
+        }
+      ],
+      "carrier": "tcp",
+      "conns": 0,
+      "endpoint": "203.0.113.10",
+      "fec": false,
+      "icmpType": "",
+      "listen": "0.0.0.0",
+      "memoryMB": 0,
+      "mtu": 0,
+      "path": "/wat",
+      "port": 4443,
+      "ports": [
+        {
+          "listen": 8443,
+          "protocol": "tcp",
+          "target": 443
+        }
+      ],
+      "reverse": false,
+      "reversePeer": "",
+      "role": "client",
+      "sessions": 0,
+      "sni": "",
+      "tlsCert": "",
+      "tlsKey": "",
+      "tlsPin": ""
+    },
+    "enabled": false,
+    "guid": "",
+    "id": 1,
+    "managed": false,
+    "name": "",
+    "nodeId": null,
+    "revision": 0,
+    "status": {
+      "carrier": "tcp",
+      "metrics": null,
+      "reason": "",
+      "revision": 0,
+      "state": "connected"
+    }
   },
   "User": {
     "id": 0,

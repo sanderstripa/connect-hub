@@ -57,6 +57,8 @@ interface SparklineProps {
   tooltipLabelFormatter?: ((label: string) => string) | null;
   referenceLines?: SparklineReferenceLine[];
   extrema?: SparklineExtrema;
+  onPointClick?: (index: number) => void;
+  rightPadding?: number;
 }
 
 interface ChartPoint {
@@ -161,6 +163,8 @@ export default function Sparkline(props: SparklineProps) {
     tooltipLabelFormatter = null,
     referenceLines,
     extrema,
+    onPointClick,
+    rightPadding = 8,
   } = themedProps;
 
   const hasSeries2 = data2.length > 0;
@@ -269,6 +273,7 @@ export default function Sparkline(props: SparklineProps) {
     tooltipLabelFormatter,
     referenceLines,
     extrema,
+    onPointClick,
   };
   const cfgRef = useRef(cfg);
   const viewRef = useRef<SparklineView>({ points, yDomain, yTicks, xTickIndexes, extremaPoints });
@@ -498,7 +503,7 @@ export default function Sparkline(props: SparklineProps) {
     const opts: uPlot.Options = {
       width: container.clientWidth || 600,
       height,
-      padding: [8, 8, showAxes ? 0 : 2, showAxes ? 0 : 2],
+      padding: [8, rightPadding, showAxes ? 0 : 2, showAxes ? 0 : 2],
       legend: { show: false },
       cursor: {
         show: showTooltip,
@@ -530,6 +535,10 @@ export default function Sparkline(props: SparklineProps) {
       hooks: {
         init: [
           (u) => {
+            u.over.addEventListener('click', () => {
+              const idx = u.cursor.idx;
+              if (idx != null && idx >= 0) cfgRef.current.onPointClick?.(idx);
+            });
             if (!cfgRef.current.showTooltip) return;
             tooltipEl = document.createElement('div');
             tooltipEl.className = 'sparkline-tooltip';
@@ -558,7 +567,7 @@ export default function Sparkline(props: SparklineProps) {
       plotRef.current = null;
       tooltipEl = null;
     };
-  }, [hasSeries2, hasSeries3, showAxes, showTooltip, showMarker, height]);
+  }, [hasSeries2, hasSeries3, showAxes, showTooltip, showMarker, height, rightPadding]);
 
   useEffect(() => {
     plotRef.current?.setData(
@@ -586,7 +595,7 @@ export default function Sparkline(props: SparklineProps) {
 
   return (
     <div
-      className="sparkline-container"
+      className={onPointClick ? 'sparkline-container is-clickable' : 'sparkline-container'}
       data-chart-palette={palette}
       data-chart-stroke={stroke}
       role={ariaSummary ? 'img' : undefined}

@@ -23,6 +23,7 @@ COPY --from=builder /src/dist/connect-hub/ /app/
 COPY hub/entrypoint.sh /app/entrypoint.sh
 COPY --from=builder /src/dist/connect-hub/x-ui.sh /usr/local/bin/connect-hub
 RUN chmod +x /app/entrypoint.sh
+RUN groupadd --system connect-hub-wattunnel && useradd --system --no-create-home --gid connect-hub-wattunnel --shell /usr/sbin/nologin connect-hub-wattunnel
 RUN groupadd --system connect-hub && mkdir -p /etc/fail2ban/jail.d /opt/connect-hub && ln -s /app /opt/connect-hub/current && printf '[sshd]\nenabled = false\n' > /etc/fail2ban/jail.d/zz-connect-hub-container.conf
 ENV XUI_DB_FOLDER=/etc/connect-hub XUI_LOG_FOLDER=/var/log/connect-hub XUI_BIN_FOLDER=/app/bin XUI_MAIN_FOLDER=/app CONNECT_HUB_INTEGRATIONS_DIR=/etc/connect-hub/integrations XUI_NODE_TOKEN_KEY_FILE=/etc/connect-hub/node_token_key.json
 ENV XUI_DB_TYPE=sqlite XUI_DB_DSN="" XUI_NODE_TOKEN_KEY="" NODE_TOKEN_ENCRYPTION=off

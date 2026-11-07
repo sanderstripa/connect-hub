@@ -478,6 +478,14 @@ export const SCHEMAS: Record<string, unknown> = {
       "subProfileUrl": {
         "type": "string"
       },
+      "subRateLimit": {
+        "maximum": 1000,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "subRateLimitEnable": {
+        "type": "boolean"
+      },
       "subRoutingRules": {
         "type": "string"
       },
@@ -733,6 +741,8 @@ export const SCHEMAS: Record<string, unknown> = {
       "subPort",
       "subProfileMode",
       "subProfileUrl",
+      "subRateLimit",
+      "subRateLimitEnable",
       "subRoutingRules",
       "subShowIdentityOnAllLinks",
       "subSupportUrl",
@@ -1269,6 +1279,14 @@ export const SCHEMAS: Record<string, unknown> = {
       "subProfileUrl": {
         "type": "string"
       },
+      "subRateLimit": {
+        "maximum": 1000,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "subRateLimitEnable": {
+        "type": "boolean"
+      },
       "subRoutingRules": {
         "type": "string"
       },
@@ -1532,6 +1550,8 @@ export const SCHEMAS: Record<string, unknown> = {
       "subPort",
       "subProfileMode",
       "subProfileUrl",
+      "subRateLimit",
+      "subRateLimitEnable",
       "subRoutingRules",
       "subShowIdentityOnAllLinks",
       "subSupportUrl",
@@ -1691,6 +1711,396 @@ export const SCHEMAS: Record<string, unknown> = {
     },
     "required": [
       "code"
+    ],
+    "type": "object"
+  },
+  "CleanIpCdn": {
+    "properties": {
+      "groups": {
+        "items": {
+          "$ref": "#/components/schemas/CleanIpRangeGroup"
+        },
+        "type": "array"
+      },
+      "id": {
+        "example": "cloudflare",
+        "type": "string"
+      },
+      "name": {
+        "example": "Cloudflare",
+        "type": "string"
+      }
+    },
+    "required": [
+      "groups",
+      "id",
+      "name"
+    ],
+    "type": "object"
+  },
+  "CleanIpCommand": {
+    "properties": {
+      "expiresAt": {
+        "example": 1793000000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "scriptUrl": {
+        "example": "https://panel.example.com/path/cleanip/run/kP3x9Qw7Lm2Zr8Tv5Yb1Nc4D/script.py",
+        "type": "string"
+      },
+      "token": {
+        "example": "kP3x9Qw7Lm2Zr8Tv5Yb1Nc4D",
+        "type": "string"
+      },
+      "unix": {
+        "example": "python3 -c \"import urllib.request as u,hashlib as h;s=u.urlopen(u.Request('https://panel.example.com/path/cleanip/run/kP3x9Qw7Lm2Zr8Tv5Yb1Nc4D/script.py',headers={'User-Agent':'Mozilla/5.0 (3x-ui clean IP)'})).read();exec(s) if h.sha256(s).hexdigest()=='9f2c...' else print('The script did not match this command: make a new one on the Clean IP scanner page.')\"",
+        "type": "string"
+      },
+      "unixVia": {
+        "example": "python3 -c \"import urllib.request as u,hashlib as h,socket as o;g=o.getaddrinfo;o.getaddrinfo=lambda a,*r,**k:g('104.16.1.1' if a=='panel.example.com' else a,*r,**k);s=u.urlopen(u.Request('https://panel.example.com/path/cleanip/run/kP3x9Qw7Lm2Zr8Tv5Yb1Nc4D/script.py?via=104.16.1.1',headers={'User-Agent':'Mozilla/5.0 (3x-ui clean IP)'})).read();o.getaddrinfo=g;exec(s) if h.sha256(s).hexdigest()=='9f2c...' else print('The script did not match this command: make a new one on the Clean IP scanner page.')\"",
+        "type": "string"
+      },
+      "via": {
+        "description": "Via, UnixVia, WindowsVia reach the panel's domain through the fastest page IP, for an\nISP that blocks the domain itself; empty without a page IP or for a panel opened by IP.",
+        "example": "104.16.1.1",
+        "type": "string"
+      },
+      "windows": {
+        "example": "python -c \"import urllib.request as u,hashlib as h;s=u.urlopen(u.Request('https://panel.example.com/path/cleanip/run/kP3x9Qw7Lm2Zr8Tv5Yb1Nc4D/script.py',headers={'User-Agent':'Mozilla/5.0 (3x-ui clean IP)'})).read();exec(s) if h.sha256(s).hexdigest()=='9f2c...' else print('The script did not match this command: make a new one on the Clean IP scanner page.')\"",
+        "type": "string"
+      },
+      "windowsVia": {
+        "example": "python -c \"import urllib.request as u,hashlib as h,socket as o;g=o.getaddrinfo;o.getaddrinfo=lambda a,*r,**k:g('104.16.1.1' if a=='panel.example.com' else a,*r,**k);s=u.urlopen(u.Request('https://panel.example.com/path/cleanip/run/kP3x9Qw7Lm2Zr8Tv5Yb1Nc4D/script.py?via=104.16.1.1',headers={'User-Agent':'Mozilla/5.0 (3x-ui clean IP)'})).read();o.getaddrinfo=g;exec(s) if h.sha256(s).hexdigest()=='9f2c...' else print('The script did not match this command: make a new one on the Clean IP scanner page.')\"",
+        "type": "string"
+      }
+    },
+    "required": [
+      "expiresAt",
+      "scriptUrl",
+      "token",
+      "unix",
+      "unixVia",
+      "via",
+      "windows",
+      "windowsVia"
+    ],
+    "type": "object"
+  },
+  "CleanIpCommandRequest": {
+    "description": "CleanIpCommandRequest is what the full test runs with: the CDN domain as SNI, the path\nit uploads to, and the IPs the page already found (they seed the fragment test).",
+    "properties": {
+      "cdn": {
+        "example": "cloudflare",
+        "type": "string"
+      },
+      "host": {
+        "example": "cdn.example.com",
+        "type": "string"
+      },
+      "ips": {
+        "example": [
+          "104.16.1.1"
+        ],
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "path": {
+        "example": "/",
+        "type": "string"
+      },
+      "perRange": {
+        "example": 8,
+        "type": "integer"
+      },
+      "ranges": {
+        "example": [
+          "104.16.0.0/13"
+        ],
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "size": {
+        "example": 5000,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "cdn",
+      "host",
+      "ips",
+      "path",
+      "perRange",
+      "ranges",
+      "size"
+    ],
+    "type": "object"
+  },
+  "CleanIpFragment": {
+    "description": "CleanIpFragment is one fragment setting the test tried; an empty Packets is the run\nwithout a fragment, to compare against.",
+    "properties": {
+      "delay": {
+        "example": "1-2",
+        "type": "string"
+      },
+      "length": {
+        "example": "10-20",
+        "type": "string"
+      },
+      "ms": {
+        "example": 700,
+        "type": "integer"
+      },
+      "n": {
+        "example": 10,
+        "type": "integer"
+      },
+      "ok": {
+        "example": 9,
+        "type": "integer"
+      },
+      "packets": {
+        "example": "tlshello",
+        "type": "string"
+      }
+    },
+    "required": [
+      "delay",
+      "length",
+      "ms",
+      "n",
+      "ok",
+      "packets"
+    ],
+    "type": "object"
+  },
+  "CleanIpHit": {
+    "properties": {
+      "colo": {
+        "example": "FRA",
+        "type": "string"
+      },
+      "ip": {
+        "example": "104.16.1.1",
+        "type": "string"
+      },
+      "ms": {
+        "example": 410,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "colo",
+      "ip",
+      "ms"
+    ],
+    "type": "object"
+  },
+  "CleanIpNetwork": {
+    "description": "CleanIpNetwork is the network (ISP) a panel visitor is on. The clean IP\nscanner runs in that visitor's browser, so its result belongs to this ISP.",
+    "properties": {
+      "asn": {
+        "example": 197207,
+        "type": "integer"
+      },
+      "country": {
+        "example": "IR",
+        "type": "string"
+      },
+      "ip": {
+        "example": "5.160.10.20",
+        "type": "string"
+      },
+      "isp": {
+        "example": "MCI",
+        "type": "string"
+      },
+      "org": {
+        "example": "Mobile Communication Company of Iran PLC",
+        "type": "string"
+      }
+    },
+    "required": [
+      "asn",
+      "country",
+      "ip",
+      "isp",
+      "org"
+    ],
+    "type": "object"
+  },
+  "CleanIpRangeGroup": {
+    "properties": {
+      "id": {
+        "example": "official",
+        "type": "string"
+      },
+      "on": {
+        "example": true,
+        "type": "boolean"
+      },
+      "ranges": {
+        "example": [
+          "104.16.0.0/13"
+        ],
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "id",
+      "on",
+      "ranges"
+    ],
+    "type": "object"
+  },
+  "CleanIpReport": {
+    "properties": {
+      "at": {
+        "example": 1793000000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "fragments": {
+        "items": {
+          "$ref": "#/components/schemas/CleanIpFragment"
+        },
+        "type": "array"
+      },
+      "ips": {
+        "items": {
+          "$ref": "#/components/schemas/CleanIpHit"
+        },
+        "type": "array"
+      },
+      "network": {
+        "$ref": "#/components/schemas/CleanIpNetwork"
+      },
+      "size": {
+        "example": 5000,
+        "type": "integer"
+      },
+      "tested": {
+        "example": 120,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "at",
+      "fragments",
+      "ips",
+      "network",
+      "size",
+      "tested"
+    ],
+    "type": "object"
+  },
+  "CleanIpVerdict": {
+    "description": "CleanIpVerdict is what the server saw on one IP: ok, restricted (Cloudflare error 1xxx such as\n1034), unreachable, skipped (not one of the CDN's edges, never contacted) or limited (budget spent).",
+    "properties": {
+      "ip": {
+        "example": "104.16.1.1",
+        "type": "string"
+      },
+      "status": {
+        "example": "ok",
+        "type": "string"
+      }
+    },
+    "required": [
+      "ip",
+      "status"
+    ],
+    "type": "object"
+  },
+  "CleanIpVerifyRequest": {
+    "properties": {
+      "cdn": {
+        "example": "cloudflare",
+        "type": "string"
+      },
+      "host": {
+        "example": "cdn.example.com",
+        "type": "string"
+      },
+      "ips": {
+        "example": [
+          "104.16.1.1"
+        ],
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "cdn",
+      "host",
+      "ips"
+    ],
+    "type": "object"
+  },
+  "Capabilities": {
+    "properties": {
+      "arch": {
+        "example": "amd64",
+        "type": "string"
+      },
+      "carriers": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "error": {
+        "type": "string"
+      },
+      "os": {
+        "example": "linux",
+        "type": "string"
+      },
+      "rawSocket": {
+        "type": "boolean"
+      },
+      "supported": {
+        "type": "boolean"
+      },
+      "version": {
+        "example": "3.3.0",
+        "type": "string"
+      }
+    },
+    "required": [
+      "arch",
+      "carriers",
+      "error",
+      "os",
+      "rawSocket",
+      "supported",
+      "version"
+    ],
+    "type": "object"
+  },
+  "CarrierEndpoint": {
+    "properties": {
+      "carrier": {
+        "example": "tcp",
+        "type": "string"
+      },
+      "port": {
+        "example": 4443,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "carrier",
+      "port"
     ],
     "type": "object"
   },
@@ -2504,6 +2914,227 @@ export const SCHEMAS: Record<string, unknown> = {
       "online",
       "onlineCount",
       "total"
+    ],
+    "type": "object"
+  },
+  "DnsResolverReport": {
+    "properties": {
+      "at": {
+        "example": 1793000000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "network": {
+        "$ref": "#/components/schemas/CleanIpNetwork"
+      },
+      "results": {
+        "items": {
+          "$ref": "#/components/schemas/DnsResolverResult"
+        },
+        "type": "array"
+      },
+      "zone": {
+        "example": "t.example.com",
+        "type": "string"
+      }
+    },
+    "required": [
+      "at",
+      "network",
+      "results",
+      "zone"
+    ],
+    "type": "object"
+  },
+  "DnsResolverResult": {
+    "description": "DnsResolverResult is one resolver as the test saw it; MaxName is the longest query name it\ncarried to the server (StormDNS packs its upload there), 0 when not measured.",
+    "properties": {
+      "ip": {
+        "example": "178.22.122.100",
+        "type": "string"
+      },
+      "maxName": {
+        "example": 253,
+        "type": "integer"
+      },
+      "ms": {
+        "example": 120,
+        "type": "integer"
+      },
+      "name": {
+        "example": "Shecan",
+        "type": "string"
+      },
+      "status": {
+        "example": "ok",
+        "type": "string"
+      }
+    },
+    "required": [
+      "ip",
+      "maxName",
+      "ms",
+      "name",
+      "status"
+    ],
+    "type": "object"
+  },
+  "DnsTunnelCommandRequest": {
+    "properties": {
+      "resolvers": {
+        "example": [
+          "178.22.122.100"
+        ],
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "zone": {
+        "example": "t.example.com",
+        "type": "string"
+      }
+    },
+    "required": [
+      "resolvers",
+      "zone"
+    ],
+    "type": "object"
+  },
+  "DnsTunnelProfile": {
+    "description": "DnsTunnelProfile is one tunnel server users connect to: engine stormdns (WhiteDNS,\nMasterDNS-compatible apps) or dnstt, its delegated domain and its key.",
+    "properties": {
+      "domain": {
+        "example": "st.t.example.com",
+        "type": "string"
+      },
+      "engine": {
+        "example": "stormdns",
+        "type": "string"
+      },
+      "key": {
+        "example": "93d3404c6701dc9dea2d1ff3282ab88b",
+        "type": "string"
+      },
+      "method": {
+        "example": 1,
+        "type": "integer"
+      },
+      "name": {
+        "example": "Iran",
+        "type": "string"
+      }
+    },
+    "required": [
+      "domain",
+      "engine",
+      "key",
+      "method",
+      "name"
+    ],
+    "type": "object"
+  },
+  "Config": {
+    "properties": {
+      "bind": {
+        "example": "0.0.0.0",
+        "type": "string"
+      },
+      "candidates": {
+        "items": {
+          "$ref": "#/components/schemas/CarrierEndpoint"
+        },
+        "type": "array"
+      },
+      "carrier": {
+        "example": "tcp",
+        "type": "string"
+      },
+      "conns": {
+        "type": "integer"
+      },
+      "endpoint": {
+        "example": "203.0.113.10",
+        "type": "string"
+      },
+      "fec": {
+        "type": "boolean"
+      },
+      "icmpType": {
+        "type": "string"
+      },
+      "listen": {
+        "example": "0.0.0.0",
+        "type": "string"
+      },
+      "memoryMB": {
+        "type": "integer"
+      },
+      "mtu": {
+        "type": "integer"
+      },
+      "path": {
+        "example": "/wat",
+        "type": "string"
+      },
+      "port": {
+        "example": 4443,
+        "type": "integer"
+      },
+      "ports": {
+        "items": {
+          "$ref": "#/components/schemas/Port"
+        },
+        "type": "array"
+      },
+      "reverse": {
+        "type": "boolean"
+      },
+      "reversePeer": {
+        "type": "string"
+      },
+      "role": {
+        "example": "client",
+        "type": "string"
+      },
+      "sessions": {
+        "type": "integer"
+      },
+      "sni": {
+        "type": "string"
+      },
+      "tlsCert": {
+        "type": "string"
+      },
+      "tlsKey": {
+        "type": "string"
+      },
+      "tlsPin": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "bind",
+      "candidates",
+      "carrier",
+      "conns",
+      "endpoint",
+      "fec",
+      "icmpType",
+      "listen",
+      "memoryMB",
+      "mtu",
+      "path",
+      "port",
+      "ports",
+      "reverse",
+      "reversePeer",
+      "role",
+      "sessions",
+      "sni",
+      "tlsCert",
+      "tlsKey",
+      "tlsPin"
     ],
     "type": "object"
   },
@@ -3495,6 +4126,53 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "LogBucket": {
+    "description": "LogBucket is one point of the volume timeline.",
+    "properties": {
+      "errors": {
+        "example": 3,
+        "type": "integer"
+      },
+      "start": {
+        "example": 1767225600000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "total": {
+        "example": 120,
+        "type": "integer"
+      },
+      "warnings": {
+        "example": 7,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "errors",
+      "start",
+      "total",
+      "warnings"
+    ],
+    "type": "object"
+  },
+  "LogCount": {
+    "description": "LogCount is one row of a top list.",
+    "properties": {
+      "count": {
+        "example": 42,
+        "type": "integer"
+      },
+      "value": {
+        "example": "203.0.113.9",
+        "type": "string"
+      }
+    },
+    "required": [
+      "count",
+      "value"
+    ],
+    "type": "object"
+  },
   "LogEntry": {
     "properties": {
       "DateTime": {
@@ -3538,6 +4216,390 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "LogExternalPath": {
+    "description": "LogExternalPath is an Xray log configured to a path this feature refuses to read.",
+    "properties": {
+      "kind": {
+        "example": "access",
+        "type": "string"
+      },
+      "path": {
+        "example": "./access.log",
+        "type": "string"
+      },
+      "suggested": {
+        "example": "/var/log/x-ui/access.log",
+        "type": "string"
+      }
+    },
+    "required": [
+      "kind",
+      "path",
+      "suggested"
+    ],
+    "type": "object"
+  },
+  "LogFile": {
+    "description": "LogFile describes one readable file in the log folder.",
+    "properties": {
+      "compressed": {
+        "example": false,
+        "type": "boolean"
+      },
+      "modTime": {
+        "example": 1767225600000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "name": {
+        "example": "3xui.log",
+        "type": "string"
+      },
+      "size": {
+        "example": 1048576,
+        "format": "int64",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "compressed",
+      "modTime",
+      "name",
+      "size"
+    ],
+    "type": "object"
+  },
+  "LogFileList": {
+    "description": "LogFileList is the listing of the log folder.",
+    "properties": {
+      "external": {
+        "items": {
+          "$ref": "#/components/schemas/LogExternalPath"
+        },
+        "type": "array"
+      },
+      "files": {
+        "items": {
+          "$ref": "#/components/schemas/LogFile"
+        },
+        "type": "array"
+      },
+      "folder": {
+        "example": "/var/log/x-ui",
+        "type": "string"
+      }
+    },
+    "required": [
+      "external",
+      "files",
+      "folder"
+    ],
+    "type": "object"
+  },
+  "LogLine": {
+    "description": "LogLine is one parsed line; fields the line did not contain are empty.",
+    "properties": {
+      "category": {
+        "example": "app/proxyman/inbound",
+        "type": "string"
+      },
+      "country": {
+        "example": "DE",
+        "type": "string"
+      },
+      "host": {
+        "example": "example.com",
+        "type": "string"
+      },
+      "inbound": {
+        "example": "inbound-443",
+        "type": "string"
+      },
+      "ip": {
+        "example": "203.0.113.9",
+        "type": "string"
+      },
+      "level": {
+        "example": "info",
+        "type": "string"
+      },
+      "message": {
+        "example": "from 203.0.113.9:5555 accepted tcp:example.com:443 [inbound-443 \u003e\u003e direct]",
+        "type": "string"
+      },
+      "offset": {
+        "example": 52428,
+        "format": "int64",
+        "type": "integer"
+      },
+      "outbound": {
+        "example": "direct",
+        "type": "string"
+      },
+      "protocol": {
+        "example": "tcp",
+        "type": "string"
+      },
+      "raw": {
+        "example": "2026/01/01 00:00:00.000000 from 203.0.113.9:5555 accepted tcp:example.com:443 [inbound-443 \u003e\u003e direct]",
+        "type": "string"
+      },
+      "status": {
+        "example": "accepted",
+        "type": "string"
+      },
+      "time": {
+        "example": 1767225600000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "truncated": {
+        "example": false,
+        "type": "boolean"
+      },
+      "user": {
+        "example": "alice@example.com",
+        "type": "string"
+      }
+    },
+    "required": [
+      "category",
+      "country",
+      "host",
+      "inbound",
+      "ip",
+      "level",
+      "message",
+      "offset",
+      "outbound",
+      "protocol",
+      "raw",
+      "status",
+      "time",
+      "truncated",
+      "user"
+    ],
+    "type": "object"
+  },
+  "LogPage": {
+    "description": "LogPage is one newest-first page of matching lines.",
+    "properties": {
+      "budgetExhausted": {
+        "example": false,
+        "type": "boolean"
+      },
+      "file": {
+        "example": "3xui.log",
+        "type": "string"
+      },
+      "fileSize": {
+        "example": 1048576,
+        "format": "int64",
+        "type": "integer"
+      },
+      "lines": {
+        "items": {
+          "$ref": "#/components/schemas/LogLine"
+        },
+        "type": "array"
+      },
+      "nextCursor": {
+        "example": 52428,
+        "format": "int64",
+        "type": "integer"
+      },
+      "scannedBytes": {
+        "example": 65536,
+        "format": "int64",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "budgetExhausted",
+      "file",
+      "fileSize",
+      "lines",
+      "nextCursor",
+      "scannedBytes"
+    ],
+    "type": "object"
+  },
+  "LogStats": {
+    "description": "LogStats aggregates the lines matching a filter.",
+    "properties": {
+      "bucketMillis": {
+        "example": 60000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "budgetExhausted": {
+        "example": false,
+        "type": "boolean"
+      },
+      "countries": {
+        "items": {
+          "$ref": "#/components/schemas/LogCount"
+        },
+        "type": "array"
+      },
+      "debugs": {
+        "example": 100,
+        "type": "integer"
+      },
+      "errors": {
+        "example": 12,
+        "type": "integer"
+      },
+      "file": {
+        "example": "3xui.log",
+        "type": "string"
+      },
+      "fileSize": {
+        "example": 1048576,
+        "format": "int64",
+        "type": "integer"
+      },
+      "firstTime": {
+        "example": 1767225600000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "geoAvailable": {
+        "example": true,
+        "type": "boolean"
+      },
+      "infos": {
+        "example": 8000,
+        "type": "integer"
+      },
+      "lastTime": {
+        "example": 1767312000000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "matchedLines": {
+        "example": 8200,
+        "type": "integer"
+      },
+      "scannedBytes": {
+        "example": 1048576,
+        "format": "int64",
+        "type": "integer"
+      },
+      "scannedLines": {
+        "example": 9000,
+        "type": "integer"
+      },
+      "timeline": {
+        "items": {
+          "$ref": "#/components/schemas/LogBucket"
+        },
+        "type": "array"
+      },
+      "topErrorCategories": {
+        "items": {
+          "$ref": "#/components/schemas/LogCount"
+        },
+        "type": "array"
+      },
+      "topHosts": {
+        "items": {
+          "$ref": "#/components/schemas/LogCount"
+        },
+        "type": "array"
+      },
+      "topInbounds": {
+        "items": {
+          "$ref": "#/components/schemas/LogCount"
+        },
+        "type": "array"
+      },
+      "topIps": {
+        "items": {
+          "$ref": "#/components/schemas/LogCount"
+        },
+        "type": "array"
+      },
+      "topProtocols": {
+        "items": {
+          "$ref": "#/components/schemas/LogCount"
+        },
+        "type": "array"
+      },
+      "topStatuses": {
+        "items": {
+          "$ref": "#/components/schemas/LogCount"
+        },
+        "type": "array"
+      },
+      "topUsers": {
+        "items": {
+          "$ref": "#/components/schemas/LogCount"
+        },
+        "type": "array"
+      },
+      "uniqueCapped": {
+        "example": false,
+        "type": "boolean"
+      },
+      "uniqueHosts": {
+        "example": 1800,
+        "type": "integer"
+      },
+      "uniqueIps": {
+        "example": 312,
+        "type": "integer"
+      },
+      "uniqueUsers": {
+        "example": 25,
+        "type": "integer"
+      },
+      "unknown": {
+        "example": 48,
+        "type": "integer"
+      },
+      "unlocatedLines": {
+        "example": 14,
+        "type": "integer"
+      },
+      "warnings": {
+        "example": 40,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "bucketMillis",
+      "budgetExhausted",
+      "countries",
+      "debugs",
+      "errors",
+      "file",
+      "fileSize",
+      "firstTime",
+      "geoAvailable",
+      "infos",
+      "lastTime",
+      "matchedLines",
+      "scannedBytes",
+      "scannedLines",
+      "timeline",
+      "topErrorCategories",
+      "topHosts",
+      "topInbounds",
+      "topIps",
+      "topProtocols",
+      "topStatuses",
+      "topUsers",
+      "uniqueCapped",
+      "uniqueHosts",
+      "uniqueIps",
+      "uniqueUsers",
+      "unknown",
+      "unlocatedLines",
+      "warnings"
+    ],
+    "type": "object"
+  },
   "MLDSA65Response": {
     "properties": {
       "seed": {
@@ -3569,6 +4631,45 @@ export const SCHEMAS: Record<string, unknown> = {
     "required": [
       "client",
       "seed"
+    ],
+    "type": "object"
+  },
+  "Metrics": {
+    "properties": {
+      "alive": {
+        "type": "boolean"
+      },
+      "bytes_in_total": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "bytes_out_total": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "last_rx_age_ms": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "loss_pct": {
+        "nullable": true,
+        "type": "number"
+      },
+      "send_errors": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "srtt_ms": {
+        "nullable": true,
+        "type": "number"
+      }
+    },
+    "required": [
+      "alive",
+      "bytes_in_total",
+      "bytes_out_total",
+      "last_rx_age_ms",
+      "send_errors"
     ],
     "type": "object"
   },
@@ -4267,6 +5368,28 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "Port": {
+    "properties": {
+      "listen": {
+        "example": 8443,
+        "type": "integer"
+      },
+      "protocol": {
+        "example": "tcp",
+        "type": "string"
+      },
+      "target": {
+        "example": 443,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "listen",
+      "protocol",
+      "target"
+    ],
+    "type": "object"
+  },
   "ProbeResultUI": {
     "properties": {
       "cpuPct": {
@@ -4476,6 +5599,132 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "RealityWatchEntry": {
+    "description": "RealityWatchEntry is what the admin sets per inbound: spare targets (host:port) in order\nof preference, and whether a dead target is replaced without asking.",
+    "properties": {
+      "auto": {
+        "example": true,
+        "type": "boolean"
+      },
+      "spares": {
+        "example": [
+          "www.example.com:443"
+        ],
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "auto",
+      "spares"
+    ],
+    "type": "object"
+  },
+  "RealityWatchEvent": {
+    "description": "RealityWatchEvent is one switch (To set) or a failed attempt to find a working spare.",
+    "properties": {
+      "at": {
+        "example": 1793000000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "from": {
+        "example": "old.example.com:443",
+        "type": "string"
+      },
+      "reason": {
+        "example": "TLS handshake failed: EOF",
+        "type": "string"
+      },
+      "to": {
+        "example": "www.example.com:443",
+        "type": "string"
+      }
+    },
+    "required": [
+      "at",
+      "from",
+      "reason",
+      "to"
+    ],
+    "type": "object"
+  },
+  "RealityWatchStatus": {
+    "properties": {
+      "auto": {
+        "example": true,
+        "type": "boolean"
+      },
+      "checkedAt": {
+        "example": 1793000000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "events": {
+        "items": {
+          "$ref": "#/components/schemas/RealityWatchEvent"
+        },
+        "type": "array"
+      },
+      "fails": {
+        "example": 0,
+        "type": "integer"
+      },
+      "inboundId": {
+        "example": 3,
+        "type": "integer"
+      },
+      "latencyMs": {
+        "example": 180,
+        "type": "integer"
+      },
+      "ok": {
+        "example": true,
+        "type": "boolean"
+      },
+      "reason": {
+        "type": "string"
+      },
+      "serverNames": {
+        "example": [
+          "old.example.com"
+        ],
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "spares": {
+        "example": [
+          "www.example.com:443"
+        ],
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "target": {
+        "example": "old.example.com:443",
+        "type": "string"
+      }
+    },
+    "required": [
+      "auto",
+      "checkedAt",
+      "events",
+      "fails",
+      "inboundId",
+      "latencyMs",
+      "ok",
+      "reason",
+      "serverNames",
+      "spares",
+      "target"
+    ],
+    "type": "object"
+  },
   "ServerSettings": {
     "description": "ServerSettings is the \"server\" block of an AmneziaWG inbound's Settings\nJSON: the interface-level configuration shared by every client/peer. The\nlisten port is deliberately not duplicated here — it lives on the inbound\nrow itself (Inbound.Port), like every other protocol.",
     "properties": {
@@ -4644,6 +5893,51 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "Spec": {
+    "properties": {
+      "config": {
+        "$ref": "#/components/schemas/Config"
+      },
+      "deleted": {
+        "type": "boolean"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "guid": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "owner": {
+        "type": "string"
+      },
+      "restart": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "revision": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "secret": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "config",
+      "deleted",
+      "enabled",
+      "guid",
+      "name",
+      "owner",
+      "restart",
+      "revision",
+      "secret"
+    ],
+    "type": "object"
+  },
   "Sponsor": {
     "description": "Sponsor is one paid placement published in the repo's sponsors.json.",
     "properties": {
@@ -4725,6 +6019,40 @@ export const SCHEMAS: Record<string, unknown> = {
     },
     "required": [
       "sponsors"
+    ],
+    "type": "object"
+  },
+  "Status": {
+    "properties": {
+      "carrier": {
+        "example": "tcp",
+        "type": "string"
+      },
+      "metrics": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Metrics"
+          }
+        ],
+        "nullable": true
+      },
+      "reason": {
+        "type": "string"
+      },
+      "revision": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "state": {
+        "example": "connected",
+        "type": "string"
+      }
+    },
+    "required": [
+      "carrier",
+      "reason",
+      "revision",
+      "state"
     ],
     "type": "object"
   },
@@ -4933,6 +6261,103 @@ export const SCHEMAS: Record<string, unknown> = {
       "private_key",
       "udp_relay_mode",
       "zero_rtt_handshake"
+    ],
+    "type": "object"
+  },
+  "TunnelMutation": {
+    "properties": {
+      "config": {
+        "$ref": "#/components/schemas/Config"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "generateKey": {
+        "type": "boolean"
+      },
+      "name": {
+        "example": "Edge to exit",
+        "type": "string"
+      },
+      "nodeId": {
+        "nullable": true,
+        "type": "integer"
+      },
+      "revision": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "secret": {
+        "type": "string"
+      },
+      "token": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "config",
+      "enabled",
+      "generateKey",
+      "name",
+      "revision",
+      "secret",
+      "token"
+    ],
+    "type": "object"
+  },
+  "TunnelToken": {
+    "properties": {
+      "token": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "token"
+    ],
+    "type": "object"
+  },
+  "TunnelView": {
+    "properties": {
+      "config": {
+        "$ref": "#/components/schemas/Config"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "guid": {
+        "type": "string"
+      },
+      "id": {
+        "example": 1,
+        "type": "integer"
+      },
+      "managed": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "string"
+      },
+      "nodeId": {
+        "nullable": true,
+        "type": "integer"
+      },
+      "revision": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "status": {
+        "$ref": "#/components/schemas/Status"
+      }
+    },
+    "required": [
+      "config",
+      "enabled",
+      "guid",
+      "id",
+      "managed",
+      "name",
+      "revision",
+      "status"
     ],
     "type": "object"
   },

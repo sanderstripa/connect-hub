@@ -21,6 +21,7 @@ func main() {
 
 func run(root, outDir string) error {
 	requests := []packageRequest{
+		{Path: resolveRel(root, "internal/wattunnel"), StructAllow: setOf("Config", "Port", "CarrierEndpoint", "Status", "Metrics", "Capabilities", "Spec")},
 		{
 			Path: resolveRel(root, "internal/database/model"),
 			StructAllow: setOf(
@@ -95,6 +96,20 @@ func run(root, outDir string) error {
 			Path: resolveRel(root, "internal/web/service"),
 			StructAllow: setOf(
 				"InboundOption",
+				"CleanIpNetwork",
+				"CleanIpCdn",
+				"CleanIpRangeGroup",
+				"CleanIpCommandRequest",
+				"CleanIpCommand",
+				"CleanIpHit",
+				"CleanIpFragment",
+				"CleanIpReport",
+				"CleanIpVerifyRequest",
+				"CleanIpVerdict",
+				"DnsTunnelProfile",
+				"DnsTunnelCommandRequest",
+				"DnsResolverResult",
+				"DnsResolverReport",
 				"HappLinkResult",
 				"ClientSlim",
 				"ClientRenewalPreviewRequest",
@@ -107,13 +122,30 @@ func run(root, outDir string) error {
 				"MLDSA65Response",
 				"MLKEM768Response",
 				"NodeMutationRequest",
+				"TunnelMutation", "TunnelView", "TunnelToken",
 				"NodeView",
 				"ProbeResultUI",
 				"RealityScanResult",
+				"RealityWatchEntry",
+				"RealityWatchEvent",
+				"RealityWatchStatus",
 				"GeodataTokenIssue",
 				"AmneziaWGLogs",
 				"PeerActivity",
 				"HwidSlotStatus",
+			),
+		},
+		{
+			Path: resolveRel(root, "internal/web/service/logview"),
+			StructAllow: setOf(
+				"LogFile",
+				"LogExternalPath",
+				"LogFileList",
+				"LogLine",
+				"LogPage",
+				"LogCount",
+				"LogBucket",
+				"LogStats",
 			),
 		},
 		{

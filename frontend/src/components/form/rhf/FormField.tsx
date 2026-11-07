@@ -50,13 +50,10 @@ export function FormField<T extends FieldValues = FieldValues>({
   const dottedName = toDotted(name) as Path<T>;
   const generatedId = useId();
   const hintId = useId();
+  const errorId = useId();
   const childOwnProps = (children as ReactElement<{ id?: string; 'aria-describedby'?: string }>)
     .props;
   const fieldId = childOwnProps.id ?? generatedId;
-  const describedBy = tooltip
-    ? [childOwnProps['aria-describedby'], hintId].filter(Boolean).join(' ')
-    : undefined;
-
   return (
     <Controller
       control={control}
@@ -79,7 +76,13 @@ export function FormField<T extends FieldValues = FieldValues>({
           onBlur: field.onBlur,
           ref: field.ref,
         };
+        const describedBy = [
+          childOwnProps['aria-describedby'],
+          tooltip ? hintId : undefined,
+          fieldState.error ? errorId : undefined,
+        ].filter(Boolean).join(' ');
         if (describedBy) childProps['aria-describedby'] = describedBy;
+        if (fieldState.error) childProps['aria-invalid'] = true;
         return (
           <Form.Item
             label={label}
@@ -98,6 +101,11 @@ export function FormField<T extends FieldValues = FieldValues>({
             {tooltip && (
               <span id={hintId} hidden>
                 {tooltip}
+              </span>
+            )}
+            {fieldState.error && (
+              <span id={errorId} hidden>
+                {help}
               </span>
             )}
           </Form.Item>

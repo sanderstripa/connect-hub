@@ -18,6 +18,9 @@ export type Protocol = z.infer<typeof ProtocolSchema>;
 export const addrFamilySchema = z.number().int();
 export type addrFamily = z.infer<typeof addrFamilySchema>;
 
+export const lineVisitorSchema = z.unknown();
+export type lineVisitor = z.infer<typeof lineVisitorSchema>;
+
 export const staticEgressResolverSchema = z.string();
 export type staticEgressResolver = z.infer<typeof staticEgressResolverSchema>;
 
@@ -177,6 +180,8 @@ export const AllSettingSchema = z.object({
   subPort: z.number().int().min(1).max(65535),
   subProfileMode: z.string(),
   subProfileUrl: z.string(),
+  subRateLimit: z.number().int().min(1).max(1000),
+  subRateLimitEnable: z.boolean(),
   subRoutingRules: z.string(),
   subShowIdentityOnAllLinks: z.boolean(),
   subSupportUrl: z.string(),
@@ -369,6 +374,8 @@ export const AllSettingViewSchema = z.object({
   subPort: z.number().int().min(1).max(65535),
   subProfileMode: z.string(),
   subProfileUrl: z.string(),
+  subRateLimit: z.number().int().min(1).max(1000),
+  subRateLimitEnable: z.boolean(),
   subRoutingRules: z.string(),
   subShowIdentityOnAllLinks: z.boolean(),
   subSupportUrl: z.string(),
@@ -437,6 +444,109 @@ export const BlockerSchema = z.object({
   detail: z.string().optional(),
 });
 export type Blocker = z.infer<typeof BlockerSchema>;
+
+export const CleanIpCdnSchema = z.object({
+  groups: z.array(z.lazy(() => CleanIpRangeGroupSchema)),
+  id: z.string(),
+  name: z.string(),
+});
+export type CleanIpCdn = z.infer<typeof CleanIpCdnSchema>;
+
+export const CleanIpCommandSchema = z.object({
+  expiresAt: z.number().int(),
+  scriptUrl: z.string(),
+  token: z.string(),
+  unix: z.string(),
+  unixVia: z.string(),
+  via: z.string(),
+  windows: z.string(),
+  windowsVia: z.string(),
+});
+export type CleanIpCommand = z.infer<typeof CleanIpCommandSchema>;
+
+export const CleanIpCommandRequestSchema = z.object({
+  cdn: z.string(),
+  host: z.string(),
+  ips: z.array(z.string()),
+  path: z.string(),
+  perRange: z.number().int(),
+  ranges: z.array(z.string()),
+  size: z.number().int(),
+});
+export type CleanIpCommandRequest = z.infer<typeof CleanIpCommandRequestSchema>;
+
+export const CleanIpFragmentSchema = z.object({
+  delay: z.string(),
+  length: z.string(),
+  ms: z.number().int(),
+  n: z.number().int(),
+  ok: z.number().int(),
+  packets: z.string(),
+});
+export type CleanIpFragment = z.infer<typeof CleanIpFragmentSchema>;
+
+export const CleanIpHitSchema = z.object({
+  colo: z.string(),
+  ip: z.string(),
+  ms: z.number().int(),
+});
+export type CleanIpHit = z.infer<typeof CleanIpHitSchema>;
+
+export const CleanIpNetworkSchema = z.object({
+  asn: z.number().int(),
+  country: z.string(),
+  ip: z.string(),
+  isp: z.string(),
+  org: z.string(),
+});
+export type CleanIpNetwork = z.infer<typeof CleanIpNetworkSchema>;
+
+export const CleanIpRangeGroupSchema = z.object({
+  id: z.string(),
+  on: z.boolean(),
+  ranges: z.array(z.string()),
+});
+export type CleanIpRangeGroup = z.infer<typeof CleanIpRangeGroupSchema>;
+
+export const CleanIpReportSchema = z.object({
+  at: z.number().int(),
+  fragments: z.array(z.lazy(() => CleanIpFragmentSchema)),
+  ips: z.array(z.lazy(() => CleanIpHitSchema)),
+  network: z.lazy(() => CleanIpNetworkSchema),
+  size: z.number().int(),
+  tested: z.number().int(),
+});
+export type CleanIpReport = z.infer<typeof CleanIpReportSchema>;
+
+export const CleanIpVerdictSchema = z.object({
+  ip: z.string(),
+  status: z.string(),
+});
+export type CleanIpVerdict = z.infer<typeof CleanIpVerdictSchema>;
+
+export const CleanIpVerifyRequestSchema = z.object({
+  cdn: z.string(),
+  host: z.string(),
+  ips: z.array(z.string()),
+});
+export type CleanIpVerifyRequest = z.infer<typeof CleanIpVerifyRequestSchema>;
+
+export const CapabilitiesSchema = z.object({
+  arch: z.string(),
+  carriers: z.array(z.string()),
+  error: z.string(),
+  os: z.string(),
+  rawSocket: z.boolean(),
+  supported: z.boolean(),
+  version: z.string(),
+});
+export type Capabilities = z.infer<typeof CapabilitiesSchema>;
+
+export const CarrierEndpointSchema = z.object({
+  carrier: z.string(),
+  port: z.number().int(),
+});
+export type CarrierEndpoint = z.infer<typeof CarrierEndpointSchema>;
 
 export const ClientSchema = z.object({
   adTag: z.string().optional(),
@@ -617,6 +727,63 @@ export const ClientsSummarySchema = z.object({
   total: z.number().int(),
 });
 export type ClientsSummary = z.infer<typeof ClientsSummarySchema>;
+
+export const DnsResolverReportSchema = z.object({
+  at: z.number().int(),
+  network: z.lazy(() => CleanIpNetworkSchema),
+  results: z.array(z.lazy(() => DnsResolverResultSchema)),
+  zone: z.string(),
+});
+export type DnsResolverReport = z.infer<typeof DnsResolverReportSchema>;
+
+export const DnsResolverResultSchema = z.object({
+  ip: z.string(),
+  maxName: z.number().int(),
+  ms: z.number().int(),
+  name: z.string(),
+  status: z.string(),
+});
+export type DnsResolverResult = z.infer<typeof DnsResolverResultSchema>;
+
+export const DnsTunnelCommandRequestSchema = z.object({
+  resolvers: z.array(z.string()),
+  zone: z.string(),
+});
+export type DnsTunnelCommandRequest = z.infer<typeof DnsTunnelCommandRequestSchema>;
+
+export const DnsTunnelProfileSchema = z.object({
+  domain: z.string(),
+  engine: z.string(),
+  key: z.string(),
+  method: z.number().int(),
+  name: z.string(),
+});
+export type DnsTunnelProfile = z.infer<typeof DnsTunnelProfileSchema>;
+
+export const ConfigSchema = z.object({
+  bind: z.string(),
+  candidates: z.array(z.lazy(() => CarrierEndpointSchema)),
+  carrier: z.string(),
+  conns: z.number().int(),
+  endpoint: z.string(),
+  fec: z.boolean(),
+  icmpType: z.string(),
+  listen: z.string(),
+  memoryMB: z.number().int(),
+  mtu: z.number().int(),
+  path: z.string(),
+  port: z.number().int(),
+  ports: z.array(z.lazy(() => PortSchema)),
+  reverse: z.boolean(),
+  reversePeer: z.string(),
+  role: z.string(),
+  sessions: z.number().int(),
+  sni: z.string(),
+  tlsCert: z.string(),
+  tlsKey: z.string(),
+  tlsPin: z.string(),
+});
+export type Config = z.infer<typeof ConfigSchema>;
 
 export const FallbackParentInfoSchema = z.object({
   masterId: z.number().int(),
@@ -852,6 +1019,20 @@ export const InboundTrafficSummarySchema = z.object({
 });
 export type InboundTrafficSummary = z.infer<typeof InboundTrafficSummarySchema>;
 
+export const LogBucketSchema = z.object({
+  errors: z.number().int(),
+  start: z.number().int(),
+  total: z.number().int(),
+  warnings: z.number().int(),
+});
+export type LogBucket = z.infer<typeof LogBucketSchema>;
+
+export const LogCountSchema = z.object({
+  count: z.number().int(),
+  value: z.string(),
+});
+export type LogCount = z.infer<typeof LogCountSchema>;
+
 export const LogEntrySchema = z.object({
   DateTime: z.string(),
   Email: z.string(),
@@ -862,6 +1043,90 @@ export const LogEntrySchema = z.object({
   ToAddress: z.string(),
 });
 export type LogEntry = z.infer<typeof LogEntrySchema>;
+
+export const LogExternalPathSchema = z.object({
+  kind: z.string(),
+  path: z.string(),
+  suggested: z.string(),
+});
+export type LogExternalPath = z.infer<typeof LogExternalPathSchema>;
+
+export const LogFileSchema = z.object({
+  compressed: z.boolean(),
+  modTime: z.number().int(),
+  name: z.string(),
+  size: z.number().int(),
+});
+export type LogFile = z.infer<typeof LogFileSchema>;
+
+export const LogFileListSchema = z.object({
+  external: z.array(z.lazy(() => LogExternalPathSchema)),
+  files: z.array(z.lazy(() => LogFileSchema)),
+  folder: z.string(),
+});
+export type LogFileList = z.infer<typeof LogFileListSchema>;
+
+export const LogLineSchema = z.object({
+  category: z.string(),
+  country: z.string(),
+  host: z.string(),
+  inbound: z.string(),
+  ip: z.string(),
+  level: z.string(),
+  message: z.string(),
+  offset: z.number().int(),
+  outbound: z.string(),
+  protocol: z.string(),
+  raw: z.string(),
+  status: z.string(),
+  time: z.number().int(),
+  truncated: z.boolean(),
+  user: z.string(),
+});
+export type LogLine = z.infer<typeof LogLineSchema>;
+
+export const LogPageSchema = z.object({
+  budgetExhausted: z.boolean(),
+  file: z.string(),
+  fileSize: z.number().int(),
+  lines: z.array(z.lazy(() => LogLineSchema)),
+  nextCursor: z.number().int(),
+  scannedBytes: z.number().int(),
+});
+export type LogPage = z.infer<typeof LogPageSchema>;
+
+export const LogStatsSchema = z.object({
+  bucketMillis: z.number().int(),
+  budgetExhausted: z.boolean(),
+  countries: z.array(z.lazy(() => LogCountSchema)),
+  debugs: z.number().int(),
+  errors: z.number().int(),
+  file: z.string(),
+  fileSize: z.number().int(),
+  firstTime: z.number().int(),
+  geoAvailable: z.boolean(),
+  infos: z.number().int(),
+  lastTime: z.number().int(),
+  matchedLines: z.number().int(),
+  scannedBytes: z.number().int(),
+  scannedLines: z.number().int(),
+  timeline: z.array(z.lazy(() => LogBucketSchema)),
+  topErrorCategories: z.array(z.lazy(() => LogCountSchema)),
+  topHosts: z.array(z.lazy(() => LogCountSchema)),
+  topInbounds: z.array(z.lazy(() => LogCountSchema)),
+  topIps: z.array(z.lazy(() => LogCountSchema)),
+  topProtocols: z.array(z.lazy(() => LogCountSchema)),
+  topStatuses: z.array(z.lazy(() => LogCountSchema)),
+  topUsers: z.array(z.lazy(() => LogCountSchema)),
+  uniqueCapped: z.boolean(),
+  uniqueHosts: z.number().int(),
+  uniqueIps: z.number().int(),
+  uniqueUsers: z.number().int(),
+  unknown: z.number().int(),
+  unlocatedLines: z.number().int(),
+  warnings: z.number().int(),
+});
+export type LogStats = z.infer<typeof LogStatsSchema>;
 
 export const MLDSA65ResponseSchema = z.object({
   seed: z.string(),
@@ -874,6 +1139,17 @@ export const MLKEM768ResponseSchema = z.object({
   seed: z.string(),
 });
 export type MLKEM768Response = z.infer<typeof MLKEM768ResponseSchema>;
+
+export const MetricsSchema = z.object({
+  alive: z.boolean(),
+  bytes_in_total: z.number().int(),
+  bytes_out_total: z.number().int(),
+  last_rx_age_ms: z.number().int(),
+  loss_pct: z.number().nullable().optional(),
+  send_errors: z.number().int(),
+  srtt_ms: z.number().nullable().optional(),
+});
+export type Metrics = z.infer<typeof MetricsSchema>;
 
 export const MsgSchema = z.object({
   msg: z.string(),
@@ -1029,6 +1305,13 @@ export const PeerActivitySchema = z.object({
 });
 export type PeerActivity = z.infer<typeof PeerActivitySchema>;
 
+export const PortSchema = z.object({
+  listen: z.number().int(),
+  protocol: z.string(),
+  target: z.number().int(),
+});
+export type Port = z.infer<typeof PortSchema>;
+
 export const ProbeResultUISchema = z.object({
   cpuPct: z.number(),
   error: z.string(),
@@ -1075,6 +1358,35 @@ export const RealityScanResultSchema = z.object({
   x25519: z.boolean(),
 });
 export type RealityScanResult = z.infer<typeof RealityScanResultSchema>;
+
+export const RealityWatchEntrySchema = z.object({
+  auto: z.boolean(),
+  spares: z.array(z.string()),
+});
+export type RealityWatchEntry = z.infer<typeof RealityWatchEntrySchema>;
+
+export const RealityWatchEventSchema = z.object({
+  at: z.number().int(),
+  from: z.string(),
+  reason: z.string(),
+  to: z.string(),
+});
+export type RealityWatchEvent = z.infer<typeof RealityWatchEventSchema>;
+
+export const RealityWatchStatusSchema = z.object({
+  auto: z.boolean(),
+  checkedAt: z.number().int(),
+  events: z.array(z.lazy(() => RealityWatchEventSchema)),
+  fails: z.number().int(),
+  inboundId: z.number().int(),
+  latencyMs: z.number().int(),
+  ok: z.boolean(),
+  reason: z.string(),
+  serverNames: z.array(z.string()),
+  spares: z.array(z.string()),
+  target: z.string(),
+});
+export type RealityWatchStatus = z.infer<typeof RealityWatchStatusSchema>;
 
 export const ServerSettingsSchema = z.object({
   contentPaddingAddition: z.string().optional(),
@@ -1125,6 +1437,19 @@ export const SettingSchema = z.object({
 });
 export type Setting = z.infer<typeof SettingSchema>;
 
+export const SpecSchema = z.object({
+  config: z.lazy(() => ConfigSchema),
+  deleted: z.boolean(),
+  enabled: z.boolean(),
+  guid: z.string(),
+  name: z.string(),
+  owner: z.string(),
+  restart: z.number().int(),
+  revision: z.number().int(),
+  secret: z.string(),
+});
+export type Spec = z.infer<typeof SpecSchema>;
+
 export const SponsorSchema = z.object({
   enable: z.boolean().nullable().optional(),
   from: z.string().nullable().optional(),
@@ -1144,6 +1469,15 @@ export const SponsorListSchema = z.object({
   sponsors: z.array(z.lazy(() => SponsorSchema)),
 });
 export type SponsorList = z.infer<typeof SponsorListSchema>;
+
+export const StatusSchema = z.object({
+  carrier: z.string(),
+  metrics: z.lazy(() => MetricsSchema).nullable().optional(),
+  reason: z.string(),
+  revision: z.number().int(),
+  state: z.string(),
+});
+export type Status = z.infer<typeof StatusSchema>;
 
 export const SubBalancerSchema = z.object({
   createdAt: z.number().int(),
@@ -1196,6 +1530,36 @@ export const TuicServerSettingsSchema = z.object({
   zero_rtt_handshake: z.boolean(),
 });
 export type TuicServerSettings = z.infer<typeof TuicServerSettingsSchema>;
+
+export const TunnelMutationSchema = z.object({
+  config: z.lazy(() => ConfigSchema),
+  enabled: z.boolean(),
+  generateKey: z.boolean(),
+  name: z.string(),
+  nodeId: z.number().int().nullable().optional(),
+  revision: z.number().int(),
+  secret: z.string(),
+  token: z.string(),
+});
+export type TunnelMutation = z.infer<typeof TunnelMutationSchema>;
+
+export const TunnelTokenSchema = z.object({
+  token: z.string(),
+});
+export type TunnelToken = z.infer<typeof TunnelTokenSchema>;
+
+export const TunnelViewSchema = z.object({
+  config: z.lazy(() => ConfigSchema),
+  enabled: z.boolean(),
+  guid: z.string(),
+  id: z.number().int(),
+  managed: z.boolean(),
+  name: z.string(),
+  nodeId: z.number().int().nullable().optional(),
+  revision: z.number().int(),
+  status: z.lazy(() => StatusSchema),
+});
+export type TunnelView = z.infer<typeof TunnelViewSchema>;
 
 export const UserSchema = z.object({
   id: z.number().int(),

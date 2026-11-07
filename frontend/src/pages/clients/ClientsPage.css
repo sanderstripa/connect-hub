@@ -32,8 +32,13 @@
 }
 
 .filter-bar.mobile {
+  position: sticky;
+  top: 60px;
+  z-index: 10;
   gap: 6px;
-  margin-bottom: 8px;
+  margin: 0 -12px 8px;
+  padding: 6px 12px;
+  background: var(--bg-card);
 }
 
 .filter-bar.mobile > * {
@@ -365,3 +370,14 @@
   padding: 2px 6px;
   vertical-align: middle;
 }
+
+/* Upstream feature: surface quota/expiry problems at a glance. */
+.clients-page .ant-table-tbody > tr.client-row-expiring:not(.ant-table-row-selected) > td { background: var(--ant-color-warning-bg); }
+.clients-page .ant-table-tbody > tr.client-row-expiring:not(.ant-table-row-selected):hover > td { background: var(--ant-color-warning-bg-hover); }
+.clients-page .ant-table-tbody > tr.client-row-depleted:not(.ant-table-row-selected) > td { background: var(--ant-color-error-bg); }
+.clients-page .ant-table-tbody > tr.client-row-depleted:not(.ant-table-row-selected):hover > td { background: var(--ant-color-error-bg-hover); }
+.client-card.is-expiring:not(.is-selected) { border-color: var(--ant-color-warning-border); background: var(--ant-color-warning-bg); }
+.client-card.is-depleted:not(.is-selected) { border-color: var(--ant-color-error-border); background: var(--ant-color-error-bg); }
+
+/* Clicks are handled by the dropdown menu, not the checkbox itself. */
+.column-picker-check { pointer-events: none; }

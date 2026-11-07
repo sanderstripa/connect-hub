@@ -196,7 +196,148 @@ const hwidStatusErrorResponses = {
   '500': { description: 'Database lookup failed. Empty body.' },
 };
 
+const LOG_QUERY_PARAMS: EndpointParam[] = [
+  {
+    name: 'file',
+    in: 'query',
+    type: 'string',
+    desc: 'File name from /panel/api/logs/files, for example 3xui.log.',
+  },
+  {
+    name: 'query',
+    in: 'query',
+    type: 'string',
+    desc: 'Free text matched against the whole raw line.',
+    optional: true,
+  },
+  { name: 'ip', in: 'query', type: 'string', desc: 'Client IP contains.', optional: true },
+  {
+    name: 'country',
+    in: 'query',
+    type: 'string',
+    desc: 'Country code of the client IP, from the local geoip.dat, for example DE.',
+    optional: true,
+  },
+  { name: 'user', in: 'query', type: 'string', desc: 'User or email contains.', optional: true },
+  { name: 'host', in: 'query', type: 'string', desc: 'Host or domain contains.', optional: true },
+  { name: 'inbound', in: 'query', type: 'string', desc: 'Inbound tag contains.', optional: true },
+  {
+    name: 'protocol',
+    in: 'query',
+    type: 'string',
+    desc: 'Protocol or network contains.',
+    optional: true,
+  },
+  {
+    name: 'status',
+    in: 'query',
+    type: 'string',
+    desc: 'Status or message text contains.',
+    optional: true,
+  },
+  {
+    name: 'levels',
+    in: 'query',
+    type: 'string',
+    desc: 'Comma-separated levels: error, warning, info, debug, unknown.',
+    optional: true,
+  },
+  {
+    name: 'since',
+    in: 'query',
+    type: 'integer',
+    desc: 'Inclusive start, Unix milliseconds. Lines without a timestamp are excluded.',
+    optional: true,
+  },
+  {
+    name: 'until',
+    in: 'query',
+    type: 'integer',
+    desc: 'Inclusive end, Unix milliseconds. Lines without a timestamp are excluded.',
+    optional: true,
+  },
+];
+
 export const sections: readonly Section[] = [
+  {
+    id: 'tunnels',
+    title: 'Tunnels',
+    description:
+      'Managed WatTunnel processes. Client accepts user traffic; Server forwards to allowed loopback ports. Reverse changes the connection initiator.',
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/tunnels/list',
+        summary: 'List managed tunnels without secrets',
+        responseSchema: 'TunnelView',
+        responseSchemaArray: true,
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/tunnels/capabilities',
+        summary: 'Inspect local or target-node WatTunnel capabilities',
+        responseSchema: 'Capabilities',
+        params: [{ name: 'nodeId', in: 'query', type: 'integer', optional: true }],
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/tunnels/add',
+        summary: 'Create a tunnel; persist desired state before applying it',
+        responseSchema: 'TunnelView',
+        requestSchema: { $ref: '#/components/schemas/TunnelMutation' },
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/tunnels/update/:id',
+        summary: 'Update a tunnel using its current revision',
+        responseSchema: 'TunnelView',
+        params: [{ name: 'id', in: 'path', type: 'integer' }],
+        requestSchema: { $ref: '#/components/schemas/TunnelMutation' },
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/tunnels/start/:id',
+        summary: 'Persist started state',
+        responseSchema: 'TunnelView',
+        params: [{ name: 'id', in: 'path', type: 'integer' }],
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/tunnels/stop/:id',
+        summary: 'Persist stopped state',
+        responseSchema: 'TunnelView',
+        params: [{ name: 'id', in: 'path', type: 'integer' }],
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/tunnels/restart/:id',
+        summary: 'Restart a tunnel',
+        responseSchema: 'TunnelView',
+        params: [{ name: 'id', in: 'path', type: 'integer' }],
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/tunnels/del/:id',
+        summary: 'Persist a deletion tombstone and stop the tunnel',
+        responseSchema: 'TunnelView',
+        params: [{ name: 'id', in: 'path', type: 'integer' }],
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/tunnels/export/:id',
+        summary: 'Export a secret connection token (admin; no-store)',
+        responseSchema: 'TunnelToken',
+        params: [{ name: 'id', in: 'path', type: 'integer' }],
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/tunnels/sync',
+        summary: 'Idempotent owner-bound node synchronization',
+        responseSchema: 'Status',
+        requestSchema: { $ref: '#/components/schemas/Spec' },
+      },
+    ],
+  },
   {
     id: 'authentication',
     title: 'Authentication',
@@ -275,6 +416,21 @@ export const sections: readonly Section[] = [
         path: '/panel/hub/api/sudoku/inbounds/:id/devices/:device/:action',
         summary:
           'Actions: export (private key, sudoku:// URI and native JSON), enabled, disabled, revoked. Revocation is permanent. Secret exports have Cache-Control: no-store.',
+      },
+      {
+        method: 'GET',
+        path: '/panel/hub/api/sudoku/monitor',
+        summary: 'Read sanitized Sudoku tunnel health, runtime state, and per-inbound monitoring details.',
+      },
+      {
+        method: 'GET',
+        path: '/panel/hub/api/sudoku/releases',
+        summary: 'List available Sudoku update/release metadata without modifying the running installation.',
+      },
+      {
+        method: 'POST',
+        path: '/panel/hub/api/sudoku-profiles',
+        summary: 'Manage bundled Sudoku profiles through the authenticated Connect Hub integration.',
       },
       {
         method: 'GET',
@@ -1710,6 +1866,15 @@ export const sections: readonly Section[] = [
       },
       {
         method: 'GET',
+        path: '/panel/api/clients/inboundLinks/:inboundId/:email',
+        summary: 'Get connection links for one client on a selected inbound.',
+        params: [
+          { name: 'inboundId', in: 'path', type: 'integer', desc: 'Inbound ID.' },
+          { name: 'email', in: 'path', type: 'string', desc: 'Client identifier.' },
+        ],
+      },
+      {
+        method: 'GET',
         path: '/panel/api/clients/subLinks/:subId',
         summary:
           'Return every protocol URL (vless://, vmess://, trojan://, ss://, hysteria://, hy2://) for clients matching the subscription ID. Same result set as the configured subPath endpoint, but as a JSON array — no base64. When an inbound has streamSettings.externalProxy set, one URL is emitted per external proxy. Empty array when the subId has no enabled clients.',
@@ -1989,6 +2154,212 @@ export const sections: readonly Section[] = [
   },
 
   {
+    id: 'clean-ip',
+    title: 'Clean IP Scanner',
+    description:
+      'The clean IP scanner tests Cloudflare IPs from the browser of whoever opens it; these endpoints tell it which ISP that is.',
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/cleanip/network',
+        summary:
+          "The network (AS number, organization, country and short ISP name such as MCI or MTN) of the caller's IP address. Private addresses come back with only the IP.",
+        responseSchema: 'CleanIpNetwork',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/cleanip/cdns',
+        summary:
+          'The CDNs the scanner can search (Cloudflare, Fastly, Gcore, CloudFront) with the edge ranges it samples for each.',
+        responseSchema: 'CleanIpCdn',
+        responseSchemaArray: true,
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/cleanip/command',
+        summary:
+          'Make a one-day command for the full test (an upload, then 26 fragment settings), to run on a device on the ISP to test. Its script reports back to the panel with the token alone.',
+        body: '{\n  "host": "cdn.example.com",\n  "path": "/",\n  "size": 5000,\n  "perRange": 8,\n  "ips": ["104.16.1.1"],\n  "cdn": "cloudflare"\n}',
+        responseSchema: 'CleanIpCommand',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/cleanip/command/:token',
+        summary: 'The reports the runs of a command sent back so far, oldest first.',
+        params: [{ name: 'token', in: 'path', type: 'string', desc: 'The command token.' }],
+        responseSchema: 'CleanIpReport',
+        responseSchemaArray: true,
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/cleanip/verify',
+        summary:
+          "Check from the panel's server that each IP really serves the domain: ok, restricted (Cloudflare refuses it there, error 1xxx such as 1034) or unreachable from the server. Up to 200 IPs.",
+        body: '{\n  "host": "cdn.example.com",\n  "ips": ["104.16.1.1"]\n}',
+        responseSchema: 'CleanIpVerdict',
+        responseSchemaArray: true,
+      },
+    ],
+  },
+
+  {
+    id: 'dns-tunnel',
+    title: 'DNS Tunnel',
+    description:
+      'DNS tunnels (StormDNS for WhiteDNS-style apps, dnstt) for internet shutdowns: the profiles users import and a resolver test run on a device on the ISP.',
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/dnstunnel/profiles',
+        summary:
+          'The DNS tunnel servers users connect to (engine, domain, key, encryption method).',
+        responseSchema: 'DnsTunnelProfile',
+        responseSchemaArray: true,
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/dnstunnel/profiles',
+        summary: 'Replace the list of DNS tunnel servers (up to 20).',
+        body: '[{\n  "name": "Iran",\n  "engine": "stormdns",\n  "domain": "st.t.example.com",\n  "key": "93d3404c6701dc9dea2d1ff3282ab88b",\n  "method": 1\n}]',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/dnstunnel/detect',
+        summary:
+          'Read the StormDNS server installed on this server (its server_config.toml and key file) as one profile per served domain. An empty list means no StormDNS server is installed in that folder.',
+        params: [
+          {
+            name: 'dir',
+            in: 'query',
+            type: 'string',
+            desc: 'The StormDNS server folder (default /opt/stormdns).',
+            optional: true,
+          },
+        ],
+        responseSchema: 'DnsTunnelProfile',
+        responseSchemaArray: true,
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/dnstunnel/command',
+        summary:
+          'Make a one-day command that tests which DNS resolvers reach the tunnel zone from the device it runs on (its own resolvers, the given list and well-known public ones).',
+        body: '{\n  "zone": "t.example.com",\n  "resolvers": ["178.22.122.100"]\n}',
+        responseSchema: 'CleanIpCommand',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/dnstunnel/command/:token',
+        summary: 'The resolver reports the runs of a command sent back so far, oldest first.',
+        params: [{ name: 'token', in: 'path', type: 'string', desc: 'The command token.' }],
+        responseSchema: 'DnsResolverReport',
+        responseSchemaArray: true,
+      },
+    ],
+  },
+
+  {
+    id: 'reality-watch',
+    title: 'REALITY watch',
+    description:
+      'Spare targets per REALITY inbound. Every 10 minutes the panel checks each watched target from this server; after 3 failed checks in a row, an inbound with auto switch on moves to the first spare that passes the same check and a real REALITY connection through a throwaway Xray server and client. Inbounds on nodes, and targets on this machine or the LAN (a bare port, a unix socket, a private address), are not checked.',
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/realityWatch/list',
+        summary:
+          'Status of every watched inbound: current target, spares, last check and the switch history.',
+        responseSchema: 'RealityWatchStatus',
+        responseSchemaArray: true,
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/realityWatch/status/:id',
+        summary: 'Status of one REALITY inbound.',
+        params: [{ name: 'id', in: 'path', type: 'number', desc: 'Inbound ID.' }],
+        responseSchema: 'RealityWatchStatus',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/realityWatch/save/:id',
+        summary:
+          'Set the spare targets (host[:port], in order of preference, at most 10; the current target is dropped) and whether a dead target is replaced automatically.',
+        params: [{ name: 'id', in: 'path', type: 'number', desc: 'Inbound ID.' }],
+        body: '{\n  "auto": true,\n  "spares": ["www.example.com:443"]\n}',
+        responseSchema: 'RealityWatchStatus',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/realityWatch/switch/:id',
+        summary:
+          'Move the inbound to this target now and return its new status. Refused for a node inbound, or unless the target passes the server check and a real REALITY connection. Only target and serverNames change, plus any Hosts of this inbound that pin an old server name.',
+        params: [{ name: 'id', in: 'path', type: 'number', desc: 'Inbound ID.' }],
+        body: '{\n  "target": "www.example.com:443"\n}',
+        responseSchema: 'RealityWatchStatus',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/realityWatch/test',
+        summary:
+          'Check a target from this server and through a real REALITY connection; feasible is false with a reason when either fails.',
+        body: '{\n  "target": "www.example.com:443"\n}',
+        responseSchema: 'RealityScanResult',
+      },
+    ],
+  },
+
+  {
+    id: 'logs',
+    title: 'Logs',
+    description:
+      'Read-only access to the log files in XUI_LOG_FOLDER. Only regular files named like *.log, *.log.N or *.log.gz are served; symlinks and anything outside the folder are refused. Admin tokens only.',
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/logs/files',
+        summary:
+          'List the readable log files, most recently written first, and any Xray log configured to a path outside the folder.',
+        responseSchema: 'LogFileList',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/logs/read',
+        summary: 'Return one newest-first page of the lines matching a filter.',
+        description:
+          'Each request scans at most 64 MiB. A page can come back short with budgetExhausted set; pass nextCursor back to continue the search. nextCursor is 0 once nothing older remains.',
+        params: [
+          ...LOG_QUERY_PARAMS,
+          {
+            name: 'limit',
+            in: 'query',
+            type: 'integer',
+            desc: 'Lines per page, 1-1000.',
+            optional: true,
+            defaultValue: 200,
+          },
+          {
+            name: 'cursor',
+            in: 'query',
+            type: 'integer',
+            desc: 'nextCursor of the previous page; omit for the newest lines.',
+            optional: true,
+          },
+        ],
+        responseSchema: 'LogPage',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/logs/stats',
+        summary:
+          'Aggregate the lines matching a filter: level counts, a volume timeline and top lists.',
+        description:
+          'Scans at most 64 MiB, newest lines first (for .gz files, 64 MiB of decompressed data from the start), and sets budgetExhausted when part of the file was left out.',
+        params: LOG_QUERY_PARAMS,
+        responseSchema: 'LogStats',
+      },
+    ],
+  },
+  {
     id: 'backup',
     title: 'Backup',
     description: 'Operations that interact with the configured Telegram bot.',
@@ -1998,6 +2369,31 @@ export const sections: readonly Section[] = [
         path: '/panel/api/backuptotgbot',
         summary:
           'Send a fresh DB backup to every Telegram chat configured as an admin recipient. No body, no params.',
+      },
+    ],
+  },
+
+  {
+    id: 'mcp',
+    title: 'MCP',
+    description:
+      'Model Context Protocol endpoint for AI agents (Claude, Cursor, VS Code). Point an MCP client at this URL with an admin Bearer token; restricted token scopes are refused.',
+    endpoints: [
+      {
+        method: 'POST',
+        path: '/panel/api/mcp',
+        summary:
+          'Stateless streamable-HTTP MCP endpoint (JSON-RPC 2.0). Exposes panel tools for inbounds, clients, server, Xray, nodes, hosts and settings; each tool call runs the matching /panel/api route with the caller’s credentials.',
+        params: [
+          {
+            name: 'toolsets',
+            in: 'query',
+            type: 'string',
+            optional: true,
+            desc: 'Comma-separated tool groups to expose: inbounds, clients, server, panel. Omit for all. call_api and get_openapi_spec are always included.',
+          },
+        ],
+        body: '{\n  "jsonrpc": "2.0",\n  "id": 1,\n  "method": "tools/list"\n}',
       },
     ],
   },

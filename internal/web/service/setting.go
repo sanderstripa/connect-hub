@@ -76,11 +76,13 @@ var defaultValueMap = map[string]string{
 	"sessionMaxAge":               "360",
 	"trustedProxyCIDRs":           DefaultTrustedProxyCIDRs,
 	"realityScanCandidates":       DefaultRealityScanCandidatesCSV,
+	"realityWatch":                "{}",
 	"ipLimitAllowlist":            "",
 	"pageSize":                    "25",
 	"expireDiff":                  "0",
 	"trafficDiff":                 "0",
 	"remarkTemplate":              DefaultRemarkTemplate,
+	"dnsTunnelProfiles":           "[]",
 	"subShowIdentityOnAllLinks":   "false",
 	"subInfoNodeEnable":           "false",
 	"subHostSortMode":             "inbound-first",
@@ -178,6 +180,8 @@ var defaultValueMap = map[string]string{
 	"subKeyFile":                  "",
 	"externalSubUserAgent":        DefaultExternalSubUserAgent,
 	"subUpdates":                  "12",
+	"subRateLimitEnable":          "false",
+	"subRateLimit":                "60",
 	"subEncrypt":                  "true",
 	"subURI":                      "",
 	"subJsonPath":                 "/json/",
@@ -529,6 +533,15 @@ func (s *SettingService) GetListen() (string, error) {
 }
 
 func (s *SettingService) SetListen(ip string) error {
+	tunnelMu.Lock()
+	defer tunnelMu.Unlock()
+	port, err := s.GetPort()
+	if err != nil {
+		return err
+	}
+	if err = checkPanelTunnelPort(database.GetDB(), ip, port); err != nil {
+		return err
+	}
 	return s.setString("webListen", ip)
 }
 
@@ -714,6 +727,15 @@ func (s *SettingService) GetPort() (int, error) {
 }
 
 func (s *SettingService) SetPort(port int) error {
+	tunnelMu.Lock()
+	defer tunnelMu.Unlock()
+	listen, err := s.GetListen()
+	if err != nil {
+		return err
+	}
+	if err = checkPanelTunnelPort(database.GetDB(), listen, port); err != nil {
+		return err
+	}
 	return s.setInt("webPort", port)
 }
 
@@ -1200,6 +1222,14 @@ func (s *SettingService) GetSubKeyFile() (string, error) {
 
 func (s *SettingService) GetSubUpdates() (string, error) {
 	return s.getString("subUpdates")
+}
+
+func (s *SettingService) GetSubRateLimitEnable() (bool, error) {
+	return s.getBool("subRateLimitEnable")
+}
+
+func (s *SettingService) GetSubRateLimit() (int, error) {
+	return s.getInt("subRateLimit")
 }
 
 func (s *SettingService) GetExternalSubUserAgent() (string, error) {
@@ -1696,6 +1726,15 @@ func (s *SettingService) UpdateAllSetting(allSetting *entity.AllSetting, clears 
 		return err
 	}
 	if err := allSetting.CheckValid(); err != nil {
+		return err
+	}
+
+	tunnelMu.Lock()
+	defer tunnelMu.Unlock()
+	if err := checkPanelTunnelPort(database.GetDB(), allSetting.WebListen, allSetting.WebPort); err != nil {
+		return err
+	}
+	if err := checkPanelTunnelPort(database.GetDB(), allSetting.SubListen, allSetting.SubPort); err != nil {
 		return err
 	}
 
