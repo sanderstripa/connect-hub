@@ -260,6 +260,15 @@ const LOG_QUERY_PARAMS: EndpointParam[] = [
 
 export const sections: readonly Section[] = [
   {
+    id: 'assistant',
+    title: 'AI Assistant',
+    description: 'Optional in-panel assistant. The operator configures an OpenAI-compatible provider through server environment variables. The API key is never returned to the browser. Chat messages are sent to the configured external provider only after the administrator submits them.',
+    endpoints: [
+      { method: 'GET', path: '/panel/api/assistant/status', summary: 'Whether the AI assistant provider is configured; does not expose secrets.' },
+      { method: 'POST', path: '/panel/api/assistant/chat', summary: 'Chat with the configured AI provider. Admin only; bounded messages, no autonomous control actions, secrets are not recorded.', requestSchema: { type: 'object', properties: { messages: { type: 'array', items: { type: 'object', properties: { role: { type: 'string', enum: ['user', 'assistant'] }, content: { type: 'string' } } } } }, required: ['messages'] } },
+    ],
+  },
+  {
     id: 'tunnels',
     title: 'Tunnels',
     description:

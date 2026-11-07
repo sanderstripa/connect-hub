@@ -244,6 +244,9 @@ func (a *APIController) initRouter(g *gin.RouterGroup, router http.Handler) {
 	// Logs API — read-only viewer over XUI_LOG_FOLDER
 	NewLogController(api.Group("/logs"))
 
+	// Optional in-panel AI assistant; admin-authenticated, no API keys in the browser.
+	NewAssistantController(api.Group("/assistant"))
+
 	// Settings + Xray config management live under the API surface too, so the
 	// same API token drives them. Paths are /panel/api/setting/* and
 	// /panel/api/xray/*.

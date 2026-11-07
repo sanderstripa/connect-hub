@@ -22,6 +22,7 @@ import {
   MoonOutlined,
   SafetyOutlined,
   SearchOutlined,
+  RobotOutlined,
   SettingOutlined,
   SunOutlined,
   SwapOutlined,
@@ -195,6 +196,12 @@ export default function AppSidebar() {
       title: t('menu.logs'),
       icon: <FileTextOutlined aria-hidden />,
       active: pathname === '/logs',
+    },
+    {
+      key: '/assistant',
+      title: t('menu.assistant', { defaultValue: 'AI Assistant' }),
+      icon: <RobotOutlined aria-hidden />,
+      active: pathname === '/assistant',
     },
     {
       key: 'network',
