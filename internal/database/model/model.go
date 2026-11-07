@@ -996,6 +996,8 @@ type ClientRecord struct {
 	KeepAlive         KeepAliveValue `json:"keepAlive" gorm:"-"` // Numeric values or AmneziaWG ranges.
 	KeepAliveLegacy   int            `json:"-" gorm:"column:wg_keep_alive;default:0"`
 	KeepAliveRange    KeepAliveValue `json:"-" gorm:"column:wg_keep_alive_range;type:text;default:''"`
+	AWGPing           *AWGPingPolicy `json:"awgPing,omitempty" gorm:"serializer:json;column:awg_ping;type:text"`
+	AWGPingRevision   uint64         `json:"-" gorm:"column:awg_ping_revision;default:0"`
 	ForwardedPorts    string         `json:"forwardedPorts" gorm:"column:wg_forwarded_ports"`
 	Secret            string         `json:"secret" gorm:"column:secret"`
 	AdTag             string         `json:"adTag" gorm:"column:ad_tag;default:''"`
@@ -1024,6 +1026,9 @@ type ClientRecord struct {
 func (ClientRecord) TableName() string { return "clients" }
 
 func (r *ClientRecord) BeforeSave(*gorm.DB) error {
+	if err := r.AWGPing.Normalize(); err != nil {
+		return err
+	}
 	legacy, ranged, err := splitKeepAliveStorage(r.KeepAlive)
 	if err != nil {
 		return err
