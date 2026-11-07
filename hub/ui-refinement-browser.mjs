@@ -46,7 +46,7 @@ try {
    await page.goto(cfg.url+'panel/');await theme(dark);const m=strings.menu,i=strings.pages.index;
    await page.locator('.ov-bar-actions').waitFor();
    assert.equal(await page.locator('.sidebar-command-kbd').count(),0);
-   for(const name of [i.restartXray,i.stopXray,i.logs])assert.ok(await page.getByRole('button',{name,exact:true}).isVisible());
+   for(const name of [i.restartXray,i.stopXray,i.logs])assert.ok(await page.locator('.ov-bar-actions').getByRole('button',{name,exact:true}).isVisible());
    const more=page.getByRole('button',{name:i.more,exact:true});
    await more.click();await page.getByText(i.maintenance,{exact:true}).waitFor({state:'visible'});await page.getByText(i.diagnostics,{exact:true}).waitFor({state:'visible'});
    await page.waitForTimeout(350);const menuBox=await page.locator('.ant-dropdown:visible').boundingBox();assert.ok(menuBox.x>=0&&menuBox.x+menuBox.width<=1440&&menuBox.y>=0&&menuBox.y+menuBox.height<=1000);await shot(language+'-more-'+dark);await page.keyboard.press('Escape');assert.equal(await more.getAttribute('aria-expanded'),'false');
@@ -54,7 +54,7 @@ try {
    for(const label of [i.config,i.backupTitle,i.systemHistoryTitle,i.xrayMetricsTitle]){
     await more.click();await page.locator('.ant-dropdown:visible').getByRole('menuitem',{name:label,exact:false}).click();const modal=page.getByRole('dialog').last();await modal.waitFor();await modal.locator('.ant-modal-close').click();await modal.waitFor({state:'hidden'});
    }
-   await page.getByRole('button',{name:i.logs,exact:true}).click();const logs=page.getByRole('dialog');await logs.waitFor();
+   await page.locator('.ov-bar-actions').getByRole('button',{name:i.logs,exact:true}).click();const logs=page.getByRole('dialog');await logs.waitFor();
    await logs.locator('.ant-select').nth(1).click();const selected=page.locator('.ant-select-dropdown:visible .ant-select-item-option-selected');await selected.waitFor();
    await page.waitForTimeout(350);
    const colors=await selected.evaluate(el=>{const s=getComputedStyle(el);return {fg:s.color,bg:s.backgroundColor};});const ratio=contrast(colors.fg,colors.bg);assert.ok(ratio>=4.5,'Log select contrast '+ratio+' '+JSON.stringify(colors));
