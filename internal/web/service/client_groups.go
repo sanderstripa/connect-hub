@@ -17,7 +17,7 @@ type GroupSummary struct {
 	Id           int      `json:"id"`
 	Name         string   `json:"name"`
 	ClientCount  int      `json:"clientCount"`
-	HostGroupIds []string `json:"hostGroupIds"`
+	HostGroupIds []string `json:"hostGroupIds" gorm:"-"`
 	TrafficUsed  int64    `json:"trafficUsed"`
 	Up           int64    `json:"up"`
 	Down         int64    `json:"down"`
@@ -55,11 +55,13 @@ func (s *ClientService) ListGroups() ([]GroupSummary, error) {
 	}
 	baseUp := make(map[string]int64, len(stored))
 	baseDown := make(map[string]int64, len(stored))
+	groupIDs := make(map[string]int, len(stored))
 	merged := make(map[string]groupAgg, len(derived)+len(stored))
 	for _, g := range stored {
 		merged[g.Name] = groupAgg{}
 		baseUp[g.Name] = g.ResetUp
 		baseDown[g.Name] = g.ResetDown
+		groupIDs[g.Name] = g.Id
 	}
 	for _, g := range derived {
 		merged[g.Name] = groupAgg{count: g.ClientCount, up: g.Up, down: g.Down}
@@ -68,7 +70,11 @@ func (s *ClientService) ListGroups() ([]GroupSummary, error) {
 	for name, agg := range merged {
 		up := max(agg.up-baseUp[name], 0)
 		down := max(agg.down-baseDown[name], 0)
-		out = append(out, GroupSummary{Name: name, ClientCount: agg.count, TrafficUsed: up + down, Up: up, Down: down})
+		hostGroupIDs := hostGroups[groupIDs[name]]
+		if hostGroupIDs == nil {
+			hostGroupIDs = []string{}
+		}
+		out = append(out, GroupSummary{Id: groupIDs[name], Name: name, ClientCount: agg.count, HostGroupIds: hostGroupIDs, TrafficUsed: up + down, Up: up, Down: down})
 	}
 	sort.Slice(out, func(i, j int) bool {
 		return strings.ToLower(out[i].Name) < strings.ToLower(out[j].Name)
