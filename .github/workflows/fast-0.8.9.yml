@@ -6,6 +6,7 @@ on:
       - .github/workflows/fast-0.8.9.yml
       - internal/database/model/model.go
       - internal/web/service/**
+      - internal/tuic/**
       - internal/web/controller/**
       - frontend/src/**
       - tools/openapigen/**
@@ -26,6 +27,23 @@ jobs:
         run: mkdir -p internal/web/dist && echo '<html></html>' > internal/web/dist/index.html
       - name: Compile Go packages
         run: go test ./internal/... ./tools/... -run '___DO_NOT_RUN_TESTS___' -count=1
+      - name: Verify the critical 0.8.9 regression paths twice
+        run: |
+          go test -shuffle=on -count=2 ./internal/web/service ./internal/web/service/tgbot ./internal/tuic \
+            -run '^(TestClientGroup_CreateAndUpdateWithHostGroups|TestClientGroup_SetHostGroups|TestBulkSetEnableOfSidecarClientReachesTheDevice|TestAddInboundRefusesClientNamesTheClientAPIRefuses|TestClientHeaderEscapesTheEmailOnce|TestScreenArtReprobeWindow|TestLegacyLinksIndividualAndQRScreensAcceptCustomPrimaryURI|TestLinkPagesCarryTheHeader|TestAudit3UDPAssociationMustRecoverAfterBridgeReadFailure)
+  check-frontend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --ignore-scripts
+        working-directory: frontend
+      - run: npm run typecheck
+        working-directory: frontend
+
   check-frontend:
     runs-on: ubuntu-24.04
     timeout-minutes: 18
