@@ -73,7 +73,7 @@ export const PANEL_ROUTES: PanelRoute[] = [
   { path: '/outbound', titleKey: 'menu.outbounds', icon: ExportOutlined, component: XrayPage },
   { path: '/routing', titleKey: 'menu.routing', icon: SwapOutlined, component: XrayPage },
   { path: '/logs', titleKey: 'menu.logs', icon: FileTextOutlined, component: LogsPage },
-  { path: '/assistant', titleKey: 'assistant', icon: RobotOutlined, component: AssistantPage },
+  { path: '/assistant', titleKey: 'menu.assistant', icon: RobotOutlined, component: AssistantPage },
   { path: '/settings', titleKey: 'menu.settings', icon: SettingOutlined, component: SettingsPage },
   { path: '/xray', titleKey: 'menu.xray', icon: ToolOutlined, component: XrayPage },
   { path: '/api-docs', titleKey: 'menu.apiDocs', icon: ApiOutlined, component: ApiDocsPage },

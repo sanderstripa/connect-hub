@@ -55,7 +55,7 @@ describe('ClientFormModal — Vision flow preservation', () => {
     await waitFor(() => expect(save).toHaveBeenCalled());
     expect(savedFlow(save)).toBe('xtls-rprx-vision');
     expect((save.mock.calls[0][0] as Record<string, unknown>).group).toBe('existing-group-must-survive');
-    expect(screen.queryByLabelText(/^Group$/)).toBeNull();
+    expect(screen.getByLabelText(/^Group$/)).toHaveProperty('value', 'existing-group-must-survive');
   });
 
   it('does not drop a selected Vision flow while the inbound options momentarily reload', async () => {
