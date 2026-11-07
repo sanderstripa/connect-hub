@@ -64,15 +64,39 @@ try {
    if(language==='en-US'&&!dark){await logs.getByRole('checkbox',{name:i.autoUpdate,exact:true}).check();const before=logReads;await page.waitForTimeout(5300);assert.ok(logReads>before);await logs.getByRole('checkbox',{name:i.autoUpdate,exact:true}).uncheck();}
    await logs.locator('.ant-modal-close').click();
    await page.locator('.ov-panel-version,.ov-update-tag').click();const update=page.getByRole('dialog');await update.waitFor();assert.equal(await update.getByRole('switch').count(),0);await shot(language+'-update-'+dark);await update.locator('.ant-modal-close').click();
-   for(const [route,parent,label] of [['clients',null,m.clients],['nodes',m.infrastructure,m.nodes],['hosts',m.infrastructure,m.hosts],['outbound',m.network,m.outbounds],['routing',m.network,m.routing]]){
-    await page.goto(cfg.url+'panel/'+route);const item=page.locator('.sider-nav').getByRole('menuitem',{name:label,exact:false}).last();await item.waitFor({state:'visible'});assert.ok(await item.evaluate(el=>el.classList.contains('ant-menu-item-selected')));
-    if(!parent)continue;const title=page.locator('.sider-nav .ant-menu-submenu-title').filter({hasText:parent}).first();const disclosure=parent===m.clients?title.locator('.ant-menu-submenu-arrow'):title;await disclosure.click();await page.waitForTimeout(200);assert.equal(await title.getAttribute('aria-expanded'),'false');await disclosure.click();await page.reload();await item.waitFor({state:'visible'});
+   // Connect Hub uses a compact vertical rail: flat Connections, Groups and
+   // Assistant buttons plus an on-demand Network dropdown. Check the actual
+   // selected state rather than looking for the removed legacy .sider-nav.
+   for(const [route,label] of [['connections',m.connections],['groups',m.groups],['assistant',m.assistant]]){
+    await page.goto(cfg.url+'panel/'+route);
+    const item=page.locator('.rail-nav').getByRole('button',{name:label,exact:true});
+    await item.waitFor({state:'visible'});
+    assert.ok(await item.evaluate(el=>el.classList.contains('is-active')),route+' was not selected');
+   }
+   for(const [route,label] of [['nodes',m.nodes],['hosts',m.hosts],['outbound',m.outbounds],['routing',m.routing]]){
+    await page.goto(cfg.url+'panel/'+route);
+    const network=page.locator('.rail-nav').getByRole('button',{name:m.network,exact:true});
+    await network.waitFor({state:'visible'});
+    assert.ok(await network.evaluate(el=>el.classList.contains('is-active')),'Network not selected on '+route);
+    await network.click();
+    const item=page.locator('.rail-submenu:visible').getByRole('menuitem',{name:label,exact:false}).last();
+    await item.waitFor({state:'visible'});
+    assert.ok(await item.evaluate(el=>el.classList.contains('ant-menu-item-selected')),'Network item not selected: '+route);
+    await page.keyboard.press('Escape');
    }
    await shot(language+'-navigation-'+dark);
-   await page.goto(cfg.url+'panel/groups');await page.waitForURL('**/panel/clients');await page.goto(cfg.url+'panel/nodes');await page.goBack();await page.waitForURL('**/panel/clients');await page.locator('.sider-nav .ant-menu-item-selected').filter({hasText:m.clients}).waitFor();await page.goForward();await page.waitForURL('**/panel/nodes');await page.locator('.sider-nav .ant-menu-item-selected').filter({hasText:m.nodes}).waitFor();
+   await page.goto(cfg.url+'panel/groups');
+   await page.locator('.rail-nav').getByRole('button',{name:m.groups,exact:true}).waitFor();
+   await page.goto(cfg.url+'panel/nodes');
+   await page.goBack();
+   await page.waitForURL('**/panel/groups');
+   assert.ok(await page.locator('.rail-nav').getByRole('button',{name:m.groups,exact:true}).evaluate(el=>el.classList.contains('is-active')));
+   await page.goForward();
+   await page.waitForURL('**/panel/nodes');
+   assert.ok(await page.locator('.rail-nav').getByRole('button',{name:m.network,exact:true}).evaluate(el=>el.classList.contains('is-active')));
    await page.keyboard.press('Control+k');await page.locator('.command-palette-modal').waitFor({state:'visible'});await page.keyboard.press('Escape');
    await page.goto(cfg.url+'panel/');for(const width of widths){await page.setViewportSize({width,height:1000});await more.waitFor({state:'visible'});const r=await more.boundingBox();assert.ok(r.x>=0&&r.x+r.width<=width);await more.click();await page.getByText(i.maintenance,{exact:true}).waitFor({state:'visible'});await page.keyboard.press('Escape');}
-   await page.getByRole('button',{name:m.openMenu,exact:true}).click();const drawer=page.getByRole('dialog');await drawer.waitFor();await shot(language+'-mobile-open-'+dark);await drawer.locator('.ant-menu-submenu-title').filter({hasText:m.infrastructure}).click();await drawer.getByRole('menuitem',{name:m.nodes,exact:false}).waitFor({state:'visible'});await shot(language+'-mobile-menu-'+dark);await drawer.getByRole('button',{name:strings.close,exact:true}).click();
+   await page.getByRole('button',{name:m.openMenu,exact:true}).click();const drawer=page.getByRole('dialog');await drawer.waitFor();await shot(language+'-mobile-open-'+dark);await drawer.locator('.ant-menu-submenu-title').filter({hasText:m.network}).click();await drawer.getByRole('menuitem',{name:m.nodes,exact:false}).waitFor({state:'visible'});await shot(language+'-mobile-menu-'+dark);await drawer.getByRole('button',{name:strings.close,exact:true}).click();
    await page.setViewportSize({width:1440,height:1000});await shot(language+'-dashboard-'+dark);
    report.push({language,dark,loginWidths:widths,toolbarWidths:widths,logSelectContrast:ratio,navigation:true,dialogs:true});
   }
