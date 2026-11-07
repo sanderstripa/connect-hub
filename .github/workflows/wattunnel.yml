@@ -53,8 +53,8 @@ jobs:
           FROM ubuntu:24.04
           RUN useradd --system --no-create-home --shell /usr/sbin/nologin connect-hub-wattunnel
           DOCKERFILE
+          # Derive allowed root capabilities from the production systemd unit.
           docker run --rm --network none --security-opt no-new-privileges --cap-drop ALL "${caps[@]}" \
-            # Capabilities are derived directly from the production systemd unit. \
             -v "$PWD:/workspace:ro" -w /workspace \
             -e WATTUN_E2E_BINARY="/workspace/.cache/wattunnel/wattun-${{ matrix.target }}" -e WATTUN_E2E_ICMP=1 \
             connect-hub-wattunnel-ci:${{ matrix.target }} bash -ec '
