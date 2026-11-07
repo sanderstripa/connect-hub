@@ -181,6 +181,11 @@ PY
 fi
 if ((service));then
  if ! id connect-hub >/dev/null 2>&1;then useradd --system --user-group --no-create-home --home-dir "$data" --shell /usr/sbin/nologin connect-hub;fi
+ # WatTunnel runs as a dedicated unprivileged account, distinct from upstream 3x-ui.
+ if compgen -G "$target/bin/wattun-linux-*" > /dev/null; then
+  if ! id connect-hub-wattunnel >/dev/null 2>&1;then useradd --system --user-group --no-create-home --home-dir "$data" --shell /usr/sbin/nologin connect-hub-wattunnel;fi
+  chmod 0755 "$target"/bin/wattun-linux-* || die 'Cannot secure WatTunnel binaries'
+ fi
  chmod 0755 "$prefix" "$prefix/releases" "$target"
  chown -R connect-hub:connect-hub "$data" "$logs" "$target/bin"
  # Refuse to replace a pre-existing, unowned unit.
@@ -234,7 +239,7 @@ RestrictRealtime=yes
 RestrictSUIDSGID=yes
 RestrictNamespaces=yes
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
-CapabilityBoundingSet=CAP_DAC_OVERRIDE CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_RAW
+CapabilityBoundingSet=CAP_CHOWN CAP_DAC_OVERRIDE CAP_FOWNER CAP_KILL CAP_SETGID CAP_SETUID CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_RAW
 SystemCallArchitectures=native
 KillMode=control-group
 TimeoutStopSec=30
