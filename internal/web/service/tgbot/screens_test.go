@@ -59,7 +59,8 @@ func recordingServer(t *testing.T, failEdit bool) (*httptest.Server, func() []ap
 		if strings.HasPrefix(string(body), "{") {
 			// JSON payload: keep it as decoded.
 		} else {
-			payload = map[string]any{}
+			r.Body = io.NopCloser(bytes.NewReader(body))
+			payload = multipartPayload(r)
 		}
 		mu.Lock()
 		calls = append(calls, apiCall{Method: method, Payload: payload})
@@ -129,6 +130,22 @@ func recordingServer(t *testing.T, failEdit bool) (*httptest.Server, func() []ap
 		defer mu.Unlock()
 		return append([]apiCall(nil), calls...)
 	}
+}
+
+// multipartPayload exposes an upload's form fields as a payload; the uploaded
+// document's file name is under "filename".
+func multipartPayload(r *http.Request) map[string]any {
+	payload := map[string]any{}
+	if r.ParseMultipartForm(1<<22) != nil {
+		return payload
+	}
+	for name, values := range r.MultipartForm.Value {
+		payload[name] = values[0]
+	}
+	if files := r.MultipartForm.File["document"]; len(files) > 0 {
+		payload["filename"] = files[0].Filename
+	}
+	return payload
 }
 
 // newScreenTgbot points the package bot at a recording server and clears the
