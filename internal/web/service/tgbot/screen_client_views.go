@@ -157,7 +157,7 @@ func (t *Tgbot) screenClientLinks(chatID int64, email string) {
 		t.sendNotice(chatID, t.I18nBot("tgbot.answers.errorOperation"))
 		return
 	}
-	body := t.clientScreenBody(email, "")
+	body := t.clientHeader(email)
 	body += t.I18nBot("tgbot.messages.subURL", "URL=="+html.EscapeString(subURL))
 	if subJSON != "" {
 		body += t.I18nBot("tgbot.messages.jsonURL", "URL=="+html.EscapeString(subJSON))
