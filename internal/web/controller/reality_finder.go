@@ -29,17 +29,17 @@ func requestBaseURL(c *gin.Context) string {
 		scheme = "https"
 	}
 	if isTrustedForwardedRequest(c) {
-		if strings.EqualFold(firstForwarded(c.GetHeader("X-Forwarded-Proto")), "https") {
+		if strings.EqualFold(firstRealityForwarded(c.GetHeader("X-Forwarded-Proto")), "https") {
 			scheme = "https"
 		}
-		if h := firstForwarded(c.GetHeader("X-Forwarded-Host")); h != "" {
+		if h := firstRealityForwarded(c.GetHeader("X-Forwarded-Host")); h != "" {
 			host = h
 		}
 	}
 	return scheme + "://" + host + c.GetString("base_path")
 }
 
-func firstForwarded(v string) string {
+func firstRealityForwarded(v string) string {
 	if i := strings.Index(v, ","); i >= 0 {
 		v = v[:i]
 	}
