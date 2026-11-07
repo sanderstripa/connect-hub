@@ -240,6 +240,9 @@ func (a *APIController) initRouter(g *gin.RouterGroup, router http.Handler) {
 	// DNS tunnels (StormDNS / dnstt): user profiles and the resolver test
 	NewDnsTunnelController(api.Group("/dnstunnel"))
 
+	// Logs API — read-only viewer over XUI_LOG_FOLDER
+	NewLogController(api.Group("/logs"))
+
 	// Settings + Xray config management live under the API surface too, so the
 	// same API token drives them. Paths are /panel/api/setting/* and
 	// /panel/api/xray/*.

@@ -136,6 +136,19 @@ func run(root, outDir string) error {
 			),
 		},
 		{
+			Path: resolveRel(root, "internal/web/service/logview"),
+			StructAllow: setOf(
+				"LogFile",
+				"LogExternalPath",
+				"LogFileList",
+				"LogLine",
+				"LogPage",
+				"LogCount",
+				"LogBucket",
+				"LogStats",
+			),
+		},
+		{
 			Path:        resolveRel(root, "internal/web/service/panel"),
 			StructAllow: setOf("ApiTokenView", "PanelUpdateStatus", "Sponsor", "SponsorList"),
 		},

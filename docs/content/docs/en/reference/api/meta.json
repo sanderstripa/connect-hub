@@ -15,6 +15,7 @@
     "hosts",
     "reality-watch",
     "nodes",
+    "logs",
     "backup",
     "clean-ip-scanner",
     "dns-tunnel",
