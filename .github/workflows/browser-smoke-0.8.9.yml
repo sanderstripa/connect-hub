@@ -1,0 +1,52 @@
+name: Fast real-browser acceptance for 0.8.9
+on:
+  push:
+    branches: [feat/complete-11-upstream-features-0.8.9]
+    paths:
+      - .github/workflows/browser-smoke-0.8.9.yml
+      - hub/browser-smoke.mjs
+      - hub/ui-refinement-browser.mjs
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --ignore-scripts
+        working-directory: frontend
+      - name: Download already built and validated 0.8.9 Linux candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p dist
+          gh run download 42368983916 -n connect-hub-linux-amd64 -D dist
+          find dist -maxdepth 2 -type f | head -20
+      - name: Extract actual Linux distribution
+        run: |
+          set -euo pipefail
+          archive=$(find dist -maxdepth 2 -name '*.tar.gz' -print -quit)
+          test -n "$archive"
+          tar tzf "$archive" | head -15 || true
+          tar xzf "$archive" -C dist
+          test -x dist/connect-hub/connect-hub
+          test -f dist/connect-hub/bin/sudoku-linux-amd64
+      - name: Install Chromium browser
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - name: Real panel, native Sudoku, clients and responsive layout
+        run: python3 hub/browser-smoke.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-smoke-0-8-9-evidence
+          path: |
+            dist/*-*.png
+            dist/*-report.json
+          if-no-files-found: ignore
