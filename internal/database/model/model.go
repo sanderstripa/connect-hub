@@ -962,6 +962,7 @@ type Client struct {
 	// before -- fully backward compatible for callers that never set this.
 	AllowedIPsByInbound map[int][]string `json:"allowedIPsByInbound,omitempty"`
 	PreSharedKey        string           `json:"preSharedKey,omitempty"`
+	AWGPing             *AWGPingPolicy   `json:"awgPing,omitempty"`
 	KeepAlive           *KeepAliveValue  `json:"keepAlive,omitempty"`      // Numeric values or AmneziaWG ranges; 0 disables, omission preserves.
 	ForwardedPorts      string           `json:"forwardedPorts,omitempty"` // AmneziaWG per-client port-forwarding spec, e.g. "80,443,8000-8100"
 	SudokuKey           string           `json:"sudokuKey,omitempty"`
