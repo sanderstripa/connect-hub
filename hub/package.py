@@ -8,6 +8,8 @@ out=root/'dist';out.mkdir(exist_ok=True)
 stage=out/'connect-hub';stage.mkdir(exist_ok=False)
 subprocess.run(['go','build','-trimpath','-buildvcs=false','-tags=netgo,osusergo','-ldflags=-s -w -linkmode external -extldflags=-static','-o',str(stage/'connect-hub'),'.'],cwd=root,check=True,env={**os.environ,'CGO_ENABLED':'1'})
 (stage/'bin').mkdir()
+# WatTunnel ships as a signed, checked sidecar; no unverified binaries are accepted.
+subprocess.run(['go','run','./tools/wattunnel-release','-target',f'linux-{arch}','-out',str(stage/'bin')],cwd=root,check=True)
 lock=json.loads((root/'hub/dependencies.json').read_text())
 for kind,name in [('xray','xray'),('mtg','mtg-multi')]:
  entry=lock[kind][arch]
