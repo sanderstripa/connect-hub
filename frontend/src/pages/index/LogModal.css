@@ -170,3 +170,10 @@ html[data-theme='ultra-dark'] .log-container {
 .logmodal-mobile .ant-modal-body {
   padding: 12px;
 }
+
+/* Ant Design's selected-option accent is too light against its selected background
+   in the high-contrast palettes. Keep the selected background and use the
+   actual semantic text color in both light and dark modes (WCAG AA). */
+body .ant-select-dropdown .ant-select-item-option-selected {
+  color: var(--ant-color-text) !important;
+}
