@@ -40,6 +40,12 @@ func validateAmneziaWGClientWrite(inbound *model.Inbound, clients []model.Client
 		return fmt.Errorf("amneziawg: invalid settings: %w", err)
 	}
 	for _, client := range clients {
+		if err := client.AWGPing.Normalize(); err != nil {
+			return err
+		}
+		if client.AWGPing != nil && client.AWGPing.Enabled && settings.Server != nil && settings.Server.KernelMode {
+			return fmt.Errorf("AWG ping policy requires the embedded datapath")
+		}
 		for _, value := range []struct{ field, value string }{
 			{"email", client.Email},
 			{"publicKey", client.PublicKey},
@@ -222,7 +228,7 @@ func (s *ClientService) delInboundClients(inboundSvc *InboundService, inboundId 
 				return e
 			}
 			if len(t.email) > 0 {
-				if e := inboundSvc.DelClientStat(tx, t.email); e != nil {
+				if e := inboundSvc.DelClientStat(tx, t.email, trafficWindowDelete); e != nil {
 					logger.Error("Delete stats Data Error")
 					return e
 				}
@@ -486,6 +492,11 @@ func (s *ClientService) AddInboundClient(inboundSvc *InboundService, data *model
 			}
 		}
 	}
+	for _, c := range clients {
+		if err := inboundSvc.validateAWGPingTarget(oldInbound, c.AWGPing, c.Email); err != nil {
+			return false, err
+		}
+	}
 	if err := validateAmneziaWGClientWrite(oldInbound, clients); err != nil {
 		return false, err
 	}
@@ -664,20 +675,7 @@ func (s *ClientService) AddInboundClient(inboundSvc *InboundService, data *model
 				if oldInbound.Protocol == "shadowsocks" {
 					cipher, _ = oldSettings["method"].(string)
 				}
-				err1 := rt.AddUser(context.Background(), oldInbound, map[string]any{
-					"email":        client.Email,
-					"id":           client.ID,
-					"auth":         client.Auth,
-					"security":     client.Security,
-					"flow":         client.Flow,
-					"password":     client.Password,
-					"cipher":       cipher,
-					"publicKey":    client.PublicKey,
-					"allowedIPs":   client.AllowedIPs,
-					"preSharedKey": client.PreSharedKey,
-					"keepAlive":    keepAliveStr(client.KeepAliveSeconds()),
-					"reverse":      client.Reverse,
-				})
+				err1 := rt.AddUser(context.Background(), oldInbound, coreUserFromClient(&client, cipher))
 				if err1 == nil {
 					logger.Debug("Client added on", rt.Name(), ":", client.Email)
 				} else {
@@ -856,6 +854,15 @@ func (s *ClientService) UpdateInboundClient(inboundSvc *InboundService, data *mo
 			clients[0].ForwardedPorts = old.ForwardedPorts
 		}
 	}
+	for i, c := range clients {
+		previousEmail := c.Email
+		if i == 0 {
+			previousEmail = oldEmail
+		}
+		if err := inboundSvc.validateAWGPingTarget(oldInbound, c.AWGPing, previousEmail); err != nil {
+			return false, err
+		}
+	}
 	if err := validateAmneziaWGClientWrite(oldInbound, clients); err != nil {
 		return false, err
 	}
@@ -1027,7 +1034,7 @@ func (s *ClientService) UpdateInboundClient(inboundSvc *InboundService, data *mo
 						return sErr
 					}
 					if !stillUsed {
-						if e := inboundSvc.DelClientStat(tx, oldEmail); e != nil {
+						if e := inboundSvc.DelClientStat(tx, oldEmail, trafficWindowRename); e != nil {
 							return e
 						}
 						if e := inboundSvc.DelClientIPs(tx, oldEmail); e != nil {
@@ -1049,7 +1056,7 @@ func (s *ClientService) UpdateInboundClient(inboundSvc *InboundService, data *mo
 				return sErr
 			}
 			if !stillUsed {
-				if e := inboundSvc.DelClientStat(tx, oldEmail); e != nil {
+				if e := inboundSvc.DelClientStat(tx, oldEmail, trafficWindowDelete); e != nil {
 					return e
 				}
 				if e := inboundSvc.DelClientIPs(tx, oldEmail); e != nil {
@@ -1071,8 +1078,23 @@ func (s *ClientService) UpdateInboundClient(inboundSvc *InboundService, data *mo
 				return e
 			}
 			if renameTaken == 0 {
-				if e := tx.Model(&model.ClientRecord{}).Where("email = ?", oldEmail).Update("email", clients[0].Email).Error; e != nil {
+				res := tx.Model(&model.ClientRecord{}).Where("email = ?", oldEmail).Update("email", clients[0].Email)
+				if e := res.Error; e != nil {
 					return e
+				}
+				// RowsAffected is the duplicate fan-out guard: only the apply that
+				// actually renamed the record migrates the client's history.
+				if res.RowsAffected > 0 {
+					if e := migrateClientHistoryEmailTx(tx, oldEmail, clients[0].Email); e != nil {
+						return e
+					}
+					if e := logClientChangesTx(tx, []model.ClientChangeLog{{
+						Email: clients[0].Email, Field: "name",
+						OldValue: oldEmail, NewValue: clients[0].Email,
+						Source: clientChangeSourcePanel,
+					}}); e != nil {
+						return e
+					}
 				}
 			}
 		}
@@ -1125,20 +1147,7 @@ func (s *ClientService) UpdateInboundClient(inboundSvc *InboundService, data *mo
 					if oldInbound.Protocol == "shadowsocks" {
 						cipher, _ = oldSettings["method"].(string)
 					}
-					err1 := rt.AddUser(context.Background(), oldInbound, map[string]any{
-						"email":        clients[0].Email,
-						"id":           clients[0].ID,
-						"security":     clients[0].Security,
-						"flow":         clients[0].Flow,
-						"auth":         clients[0].Auth,
-						"password":     clients[0].Password,
-						"cipher":       cipher,
-						"publicKey":    clients[0].PublicKey,
-						"allowedIPs":   clients[0].AllowedIPs,
-						"preSharedKey": clients[0].PreSharedKey,
-						"keepAlive":    keepAliveStr(clients[0].KeepAliveSeconds()),
-						"reverse":      clients[0].Reverse,
-					})
+					err1 := rt.AddUser(context.Background(), oldInbound, coreUserFromClient(&clients[0], cipher))
 					if err1 == nil {
 						logger.Debug("Client edited on", rt.Name(), ":", clients[0].Email)
 					} else {
@@ -1260,7 +1269,7 @@ func (s *ClientService) DelInboundClientByEmail(inboundSvc *InboundService, inbo
 			}
 		}
 		if delStat {
-			if e := inboundSvc.DelClientStat(tx, email); e != nil {
+			if e := inboundSvc.DelClientStat(tx, email, trafficWindowDelete); e != nil {
 				logger.Error("Delete stats Data Error")
 				return e
 			}
@@ -1431,6 +1440,7 @@ func (s *ClientService) ToggleClientEnableByEmail(inboundSvc *InboundService, cl
 	if err != nil {
 		return false, needRestart, err
 	}
+	logClientChange(clientEmail, "enable", fmt.Sprintf("%t", current), fmt.Sprintf("%t", target), clientChangeSourceTgbot)
 	return target, needRestart, nil
 }
 
@@ -1448,6 +1458,7 @@ func (s *ClientService) SetClientEnableByEmail(inboundSvc *InboundService, clien
 	if err != nil {
 		return false, needRestart, err
 	}
+	logClientChange(clientEmail, "enable", fmt.Sprintf("%t", current), fmt.Sprintf("%t", enable), clientChangeSourceTgbot)
 	return true, needRestart, nil
 }
 
@@ -1536,22 +1547,46 @@ func (s *ClientService) applyClientFieldByEmail(inboundSvc *InboundService, clie
 }
 
 func (s *ClientService) ResetClientIpLimitByEmail(inboundSvc *InboundService, clientEmail string, count int) (bool, error) {
-	return s.applyClientFieldByEmail(inboundSvc, clientEmail, func(c map[string]any) {
+	oldLimit := ""
+	if rec, err := s.GetRecordByEmail(nil, clientEmail); err == nil {
+		oldLimit = fmt.Sprintf("%d", rec.LimitIP)
+	}
+	needRestart, err := s.applyClientFieldByEmail(inboundSvc, clientEmail, func(c map[string]any) {
 		c["limitIp"] = count
 	})
+	if err == nil {
+		logClientChange(clientEmail, "limitIp", oldLimit, fmt.Sprintf("%d", count), clientChangeSourceTgbot)
+	}
+	return needRestart, err
 }
 
 func (s *ClientService) ResetClientExpiryTimeByEmail(inboundSvc *InboundService, clientEmail string, expiry_time int64) (bool, error) {
-	return s.applyClientFieldByEmail(inboundSvc, clientEmail, func(c map[string]any) {
+	oldExpiry := ""
+	if rec, err := s.GetRecordByEmail(nil, clientEmail); err == nil {
+		oldExpiry = fmt.Sprintf("%d", rec.ExpiryTime)
+	}
+	needRestart, err := s.applyClientFieldByEmail(inboundSvc, clientEmail, func(c map[string]any) {
 		c["expiryTime"] = expiry_time
 	})
+	if err == nil {
+		logClientChange(clientEmail, "expiry", oldExpiry, fmt.Sprintf("%d", expiry_time), clientChangeSourceTgbot)
+	}
+	return needRestart, err
 }
 
 func (s *ClientService) ResetClientTrafficLimitByEmail(inboundSvc *InboundService, clientEmail string, totalGB int) (bool, error) {
 	if totalGB < 0 {
 		return false, common.NewError("totalGB must be >= 0")
 	}
-	return s.applyClientFieldByEmail(inboundSvc, clientEmail, func(c map[string]any) {
+	oldLimit := ""
+	if rec, err := s.GetRecordByEmail(nil, clientEmail); err == nil {
+		oldLimit = fmt.Sprintf("%d", rec.TotalGB)
+	}
+	needRestart, err := s.applyClientFieldByEmail(inboundSvc, clientEmail, func(c map[string]any) {
 		c["totalGB"] = totalGB * 1024 * 1024 * 1024
 	})
+	if err == nil {
+		logClientChange(clientEmail, "dataLimit", oldLimit, fmt.Sprintf("%d", int64(totalGB)*1024*1024*1024), clientChangeSourceTgbot)
+	}
+	return needRestart, err
 }

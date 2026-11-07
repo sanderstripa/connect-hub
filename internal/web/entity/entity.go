@@ -20,17 +20,19 @@ type Msg struct {
 }
 
 type AllSetting struct {
-	WebListen             string `json:"webListen" form:"webListen"`
-	WebDomain             string `json:"webDomain" form:"webDomain"`
-	WebPort               int    `json:"webPort" form:"webPort" validate:"gte=1,lte=65535"`
-	WebCertFile           string `json:"webCertFile" form:"webCertFile"`
-	WebKeyFile            string `json:"webKeyFile" form:"webKeyFile"`
-	WebBasePath           string `json:"webBasePath" form:"webBasePath"`
-	SessionMaxAge         int    `json:"sessionMaxAge" form:"sessionMaxAge" validate:"gte=1,lte=525600"`
-	TrustedProxyCIDRs     string `json:"trustedProxyCIDRs" form:"trustedProxyCIDRs"`
-	RealityScanCandidates string `json:"realityScanCandidates" form:"realityScanCandidates"`
-	IpLimitAllowlist      string `json:"ipLimitAllowlist" form:"ipLimitAllowlist"`
-	PanelOutbound         string `json:"panelOutbound" form:"panelOutbound"`
+	WebListen               string `json:"webListen" form:"webListen"`
+	WebDomain               string `json:"webDomain" form:"webDomain"`
+	WebPort                 int    `json:"webPort" form:"webPort" validate:"gte=1,lte=65535"`
+	WebCertFile             string `json:"webCertFile" form:"webCertFile"`
+	WebKeyFile              string `json:"webKeyFile" form:"webKeyFile"`
+	WebBasePath             string `json:"webBasePath" form:"webBasePath"`
+	SessionMaxAge           int    `json:"sessionMaxAge" form:"sessionMaxAge" validate:"gte=1,lte=525600"`
+	TrustedProxyCIDRs       string `json:"trustedProxyCIDRs" form:"trustedProxyCIDRs"`
+	RealityScanCandidates   string `json:"realityScanCandidates" form:"realityScanCandidates"`
+	IpLimitAllowlist        string `json:"ipLimitAllowlist" form:"ipLimitAllowlist"`
+	PanelOutbound           string `json:"panelOutbound" form:"panelOutbound"`
+	NetworkTrafficMode      string `json:"networkTrafficMode" form:"networkTrafficMode" validate:"omitempty,oneof=legacy auto manual" example:"legacy"`
+	NetworkTrafficInterface string `json:"networkTrafficInterface" form:"networkTrafficInterface" example:"eth0"`
 
 	PageSize                   int    `json:"pageSize" form:"pageSize" validate:"gte=0,lte=1000"`
 	ExpireDiff                 int    `json:"expireDiff" form:"expireDiff" validate:"gte=0"`
@@ -68,6 +70,17 @@ type AllSetting struct {
 	SmtpEnabledEvents  string `json:"smtpEnabledEvents" form:"smtpEnabledEvents"`
 	SmtpCpu            int    `json:"smtpCpu" form:"smtpCpu" validate:"gte=0,lte=100"`
 	SmtpMemory         int    `json:"smtpMemory" form:"smtpMemory" validate:"gte=0,lte=100"`
+
+	WechatEnable        bool   `json:"wechatEnable" form:"wechatEnable"`
+	WechatMode          string `json:"wechatMode" form:"wechatMode"`
+	WechatWebhookURL    string `json:"wechatWebhookURL" form:"wechatWebhookURL"`
+	WechatToken         string `json:"wechatToken" form:"wechatToken"`
+	WechatLang          string `json:"wechatLang" form:"wechatLang"`
+	WechatReportEnable  bool   `json:"wechatReportEnable" form:"wechatReportEnable"`
+	WechatRunTime       string `json:"wechatRunTime" form:"wechatRunTime"`
+	WechatEnabledEvents string `json:"wechatEnabledEvents" form:"wechatEnabledEvents"`
+	WechatCpu           int    `json:"wechatCpu" form:"wechatCpu" validate:"gte=0,lte=100"`
+	WechatMemory        int    `json:"wechatMemory" form:"wechatMemory" validate:"gte=0,lte=100"`
 
 	DiscordBotEnable     bool   `json:"discordBotEnable" form:"discordBotEnable"`
 	DiscordBotToken      string `json:"discordBotToken" form:"discordBotToken"`
@@ -221,14 +234,16 @@ type AllSetting struct {
 type AllSettingView struct {
 	AllSetting
 
-	HasTgBotToken      bool `json:"hasTgBotToken"`
-	HasTwoFactorToken  bool `json:"hasTwoFactorToken"`
-	HasLdapPassword    bool `json:"hasLdapPassword"`
-	HasApiToken        bool `json:"hasApiToken"`
-	HasWarpSecret      bool `json:"hasWarpSecret"`
-	HasNordSecret      bool `json:"hasNordSecret"`
-	HasSmtpPassword    bool `json:"hasSmtpPassword"`
-	HasDiscordBotToken bool `json:"hasDiscordBotToken"`
+	HasTgBotToken       bool `json:"hasTgBotToken"`
+	HasTwoFactorToken   bool `json:"hasTwoFactorToken"`
+	HasLdapPassword     bool `json:"hasLdapPassword"`
+	HasApiToken         bool `json:"hasApiToken"`
+	HasWarpSecret       bool `json:"hasWarpSecret"`
+	HasNordSecret       bool `json:"hasNordSecret"`
+	HasSmtpPassword     bool `json:"hasSmtpPassword"`
+	HasDiscordBotToken  bool `json:"hasDiscordBotToken"`
+	HasWechatWebhookURL bool `json:"hasWechatWebhookURL"`
+	HasWechatToken      bool `json:"hasWechatToken"`
 }
 
 func pathHasForbiddenChar(s string) bool {

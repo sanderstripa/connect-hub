@@ -22,10 +22,12 @@ import {
   MoonOutlined,
   SafetyOutlined,
   SearchOutlined,
+  RobotOutlined,
   SettingOutlined,
   SunOutlined,
   SwapOutlined,
   TelegramFilled,
+  WechatOutlined,
   ToolOutlined,
 } from '@ant-design/icons';
 import { HttpUtil } from '@/utils';
@@ -123,6 +125,11 @@ export default function AppSidebar() {
         label: t('pages.settings.discordSettings'),
       },
       {
+        key: '/settings#wechat',
+        icon: <WechatOutlined aria-hidden />,
+        label: t('pages.settings.wechatSettings'),
+      },
+      {
         key: '/settings#subscription',
         icon: <CloudServerOutlined aria-hidden />,
         label: t('pages.settings.subSettings'),
@@ -186,10 +193,22 @@ export default function AppSidebar() {
       active: ['/connections', '/inbounds', '/clients'].includes(pathname),
     },
     {
+      key: '/groups',
+      title: t('menu.groups'),
+      icon: <ApartmentOutlined aria-hidden />,
+      active: pathname === '/groups',
+    },
+    {
       key: '/logs',
       title: t('menu.logs'),
       icon: <FileTextOutlined aria-hidden />,
       active: pathname === '/logs',
+    },
+    {
+      key: '/assistant',
+      title: t('menu.assistant', { defaultValue: 'AI Assistant' }),
+      icon: <RobotOutlined aria-hidden />,
+      active: pathname === '/assistant',
     },
     {
       key: 'network',

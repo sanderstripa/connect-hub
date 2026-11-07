@@ -78,6 +78,7 @@ func allModels() []any {
 		&model.ClientHwid{},
 		&model.ClientExternalLink{},
 		&model.ClientGroup{},
+		&model.HostGroupClientGroup{},
 		&model.InboundFallback{},
 		&model.Host{},
 		&model.HostTombstone{},
@@ -88,6 +89,8 @@ func allModels() []any {
 		&model.OutboundSubscription{},
 		&model.SubBalancer{},
 		&model.TuicTrafficReceipt{},
+		&model.ClientTrafficWindow{},
+		&model.ClientChangeLog{},
 	}
 }
 
@@ -615,6 +618,7 @@ func seedWireguardPeersToClients() error {
 				c.Email = email
 
 				incoming := c.ToRecord()
+				incoming.AWGPing = nil
 				var row model.ClientRecord
 				err = tx.Where("email = ?", email).First(&row).Error
 				if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -744,6 +748,7 @@ func seedMtprotoSecretsToClients() error {
 			c := model.Client{Email: email, Secret: secret, Enable: true, SubID: obj["subId"].(string)}
 
 			incoming := c.ToRecord()
+			incoming.AWGPing = nil
 			var row model.ClientRecord
 			err := tx.Where("email = ?", email).First(&row).Error
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -1722,6 +1727,13 @@ func runSeeders(isUsersEmpty bool) error {
 	}
 
 	if err := backfillEmptyHostGroupIds(); err != nil {
+		return err
+	}
+
+	if err := EnsureClientGroupRows(); err != nil {
+		return err
+	}
+	if err := PruneHostGroupClientGroups(); err != nil {
 		return err
 	}
 
@@ -3149,6 +3161,7 @@ func seedClientsFromInboundJSON() error {
 					continue
 				}
 				incoming := c.ToRecord()
+				incoming.AWGPing = nil
 
 				row, dup := byEmail[email]
 				if !dup {

@@ -15,6 +15,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/amneziawgkern"
@@ -41,6 +42,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/web/service/email"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/service/panel"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/service/tgbot"
+	"github.com/mhsanaei/3x-ui/v3/internal/web/service/wechat"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/websocket"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 
@@ -141,12 +143,19 @@ type Server struct {
 	tgbotService   tgbot.Tgbot
 	discordService *discord.DiscordService
 	discordGateway *discord.GatewayClient
+	wechatService  *wechat.Service
 
 	wsHub *websocket.Hub
 
 	bus                  *eventbus.Bus
 	cron                 *cron.Cron
 	discordNotifyEntryID cron.EntryID
+	wechatNotifyEntryID  cron.EntryID
+	cpuAlarmEntryID      cron.EntryID
+	memoryAlarmEntryID   cron.EntryID
+	wechatScheduleMu     sync.Mutex
+	wechatScheduler      *cron.Cron
+	wechatReportSpec     string
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -280,6 +289,7 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 	s.api = controller.NewAPIController(g, engine)
 	controller.NewCleanIpRunController(g)
 	controller.NewDnsTunnelRunController(g)
+	controller.NewRealityFinderRunController(g)
 
 	// Initialize WebSocket hub
 	s.wsHub = websocket.NewHub()
@@ -441,15 +451,7 @@ func (s *Server) startTask(restartXray bool, loc *time.Location) {
 		s.discordNotifyEntryID = scheduleSettingJob(s.cron, "Discord notify", runtime, "@daily", job.NewDiscordNotifyJob(s.discordService))
 	}
 
-	// CPU monitor publishes cpu.high events; register it whenever any notifier
-	// (Telegram or Email) wants them, independent of the Telegram bot being on.
-	if s.cpuAlarmWanted() {
-		_, _ = s.cron.AddJob(cadenceCPUAlarm, job.NewCheckCpuJob())
-	}
-	// Memory monitor publishes memory.high events; register it whenever any notifier wants them.
-	if s.memoryAlarmWanted() {
-		_, _ = s.cron.AddJob(cadenceMemoryAlarm, job.NewCheckMemJob())
-	}
+	s.reloadWechatJobs()
 
 	if mins := sys.MemoryReleaseIntervalMinutes(); mins > 0 {
 		_, _ = s.cron.AddJob(fmt.Sprintf("@every %dm", mins), job.NewMemoryReleaseJob())
@@ -495,6 +497,13 @@ func (s *Server) cpuAlarmWanted() bool {
 			return true
 		}
 	}
+	if on, _ := s.settingService.GetWechatEnable(); on {
+		events, _ := s.settingService.GetWechatEnabledEvents()
+		threshold, _ := s.settingService.GetWechatCpu()
+		if wants(events, threshold) {
+			return true
+		}
+	}
 	return false
 }
 
@@ -529,6 +538,13 @@ func (s *Server) memoryAlarmWanted() bool {
 		events, _ := s.settingService.GetDiscordEnabledEvents()
 		mem, _ := s.settingService.GetDiscordMemory()
 		if wants(events, mem) {
+			return true
+		}
+	}
+	if on, _ := s.settingService.GetWechatEnable(); on {
+		events, _ := s.settingService.GetWechatEnabledEvents()
+		threshold, _ := s.settingService.GetWechatMemory()
+		if wants(events, threshold) {
 			return true
 		}
 	}
@@ -581,6 +597,7 @@ func (s *Server) start(restartXray bool, startTgBot bool) (err error) {
 		APIPort:          func() int { return s.xrayService.GetXrayAPIPort() },
 		SetNeedRestart:   func() { s.xrayService.SetToNeedRestart() },
 		RequestReconcile: func() { s.xrayService.SetToNeedReconcile() },
+		EchoGate:         (&service.InboundService{}).RecordAWGPing,
 	})
 	runtime.SetManager(mgr)
 	mgr.SetNodeEgressResolver(&s.settingService)
@@ -699,6 +716,12 @@ func (s *Server) start(restartXray bool, startTgBot bool) (err error) {
 
 	// Wire email service to controller for test endpoint
 	controller.SetEmailService(emailService)
+
+	s.wechatService = wechat.NewService(s.settingService)
+	wechatSub := wechat.NewSubscriber(s.settingService, s.wechatService)
+	s.bus.Subscribe("wechat-notifier", wechatSub.HandleEvent)
+	controller.SetWechatService(s.wechatService)
+	controller.SetReloadWechatFunc(s.reloadWechatJobs)
 
 	// Register discord subscriber (always — it checks discordBotEnable at runtime)
 	s.discordService = discord.NewDiscordService(s.settingService)
@@ -911,4 +934,3 @@ func scheduleSettingJob(c *cron.Cron, name, spec, fallback string, j cron.Job) c
 	logger.Infof("%s scheduled, run at %s", name, spec)
 	return c.Schedule(schedule, j)
 }
-

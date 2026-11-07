@@ -11,6 +11,7 @@ import (
 
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/common"
+	"github.com/mhsanaei/3x-ui/v3/internal/web/service"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 
 	"github.com/mymmrac/telego"
@@ -48,16 +49,23 @@ func (t *Tgbot) screenClientHome(chatID, userID int64) {
 	// one row each. Either way this is the client's top level, so no back button.
 	var rows [][]telego.InlineKeyboardButton
 	if len(traffics) == 1 {
-		rows = append(rows, tu.InlineKeyboardRow(
-			t.btn("tgbot.buttons.links", "client_sub_links"),
-			t.btn("tgbot.buttons.qrCode", "client_qr_links"),
-		))
+		rows = append(rows,
+			tu.InlineKeyboardRow(
+				t.btn("tgbot.buttons.links", "client_sub_links"),
+				t.btn("tgbot.buttons.qrCode", "client_qr_links"),
+			),
+			tu.InlineKeyboardRow(
+				t.btn("tgbot.buttons.getOneConfig", "client_one_link"),
+				t.btn("tgbot.buttons.setupGuide", cbClientGuide),
+			),
+		)
 	} else {
 		for _, traffic := range traffics {
 			rows = append(rows, tu.InlineKeyboardRow(
 				t.btn2(traffic.Email, t.encodeQuery("client_sub_links "+traffic.Email)),
 			))
 		}
+		rows = append(rows, tu.InlineKeyboardRow(t.btn("tgbot.buttons.setupGuide", cbClientGuide)))
 	}
 	t.renderScreen(chatID, t.rootScreen("main", body.String(), rows...))
 }
@@ -103,27 +111,32 @@ func (t *Tgbot) screenServer(chatID int64) {
 // screenOnlines lists who is connected right now; client names are plain text
 // (the inline browser takes over the per-client pick next).
 func (t *Tgbot) screenOnlines(chatID int64) {
-	process := xrayProcessOrNil()
+	process := service.XrayProcess()
 	if process == nil {
 		t.renderScreen(chatID, t.newScreen("onlines", t.I18nBot("tgbot.wentWrong"),
 			tu.InlineKeyboardRow(t.btn("tgbot.buttons.refresh", cbOnlines)), t.backRow()))
 		return
 	}
-	onlines := process.GetOnlineClients()
-	body := t.I18nBot("tgbot.messages.onlinesCount", "Count=="+strconv.Itoa(len(onlines)))
-	for _, online := range onlines {
-		label := online
-		if _, inbound, err := t.inboundService.GetClientInboundByEmail(online); err == nil && inbound != nil && inbound.Remark != "" {
-			label = online + " · " + inbound.Remark
-		}
-		body += "• " + html.EscapeString(label) + "\n"
-	}
+	body := t.onlineReport(process.GetOnlineClients())
 	body += t.I18nBot("tgbot.messages.refreshedOn", "Time=="+time.Now().Format("2006-01-02 15:04:05"))
 	rows := [][]telego.InlineKeyboardButton{
 		tu.InlineKeyboardRow(t.btn("tgbot.buttons.refresh", cbOnlines)),
 		t.backRow(),
 	}
 	t.renderScreen(chatID, t.newScreen("onlines", body, rows...))
+}
+
+func (t *Tgbot) onlineReport(emails []string) string {
+	seen := make(map[string]bool, len(emails))
+	var lines strings.Builder
+	for _, email := range emails {
+		if email == "" || seen[email] {
+			continue
+		}
+		seen[email] = true
+		lines.WriteString("• " + html.EscapeString(email) + "\n")
+	}
+	return t.I18nBot("tgbot.messages.onlinesCount", "Count=="+strconv.Itoa(len(seen))) + lines.String()
 }
 
 // screenDeplete renders the "running out" screen; the scheduled report and the
@@ -187,7 +200,7 @@ func (t *Tgbot) depleteReport() string {
 	body += t.I18nBot("tgbot.messages.disabled", "Disabled=="+strconv.Itoa(disabledClients))
 	body += t.I18nBot("tgbot.messages.depleteSoon", "Deplete=="+strconv.Itoa(exhaustedClients))
 	if clientLines.Len() > 0 {
-		body += "\n" + html.EscapeString(clientLines.String())
+		body += "\n" + clientLines.String()
 	}
 	body += t.I18nBot("tgbot.messages.refreshedOn", "Time=="+time.Now().Format("2006-01-02 15:04:05"))
 	return body
@@ -235,7 +248,7 @@ func (t *Tgbot) screenReport(chatID int64) {
 		tu.InlineKeyboardRow(t.btn("tgbot.buttons.refresh", cbReport)),
 		t.backRow(),
 	}
-	t.renderScreen(chatID, t.newScreen("reports", html.EscapeString(report.String()), rows...))
+	t.renderScreen(chatID, t.newScreen("reports", report.String(), rows...))
 }
 
 // screenCommands explains the classic commands; kept because muscle memory is
@@ -245,7 +258,11 @@ func (t *Tgbot) screenCommands(chatID int64, isAdmin bool) {
 	if isAdmin {
 		key = "tgbot.commands.helpAdminCommands"
 	}
-	t.renderScreen(chatID, t.newScreen("commands", t.I18nBot(key), t.backRow()))
+	body := t.I18nBot(key)
+	if isAdmin {
+		body += "\n\n" + t.I18nBot("tgbot.messages.workflowUsage")
+	}
+	t.renderScreen(chatID, t.newScreen("commands", body, t.backRow()))
 }
 
 // sendBackupScreen delivers the backup and summary as ONE message (file plus
@@ -266,11 +283,11 @@ func (t *Tgbot) sendBackupScreen(chatID int64) {
 	// carries the backup and what it is for.
 	body := summary + "\n\n" + t.depleteReport()
 	caption := trimCaption(body, botCaptionLimit)
-	if t.sendDocumentWithCaption(chatID, dbData, t.serverService.BackupFilename(""), caption) {
+	if t.sendBackupFile(chatID, dbData, t.serverService.BackupFilename(""), caption) {
 		// The generated config travels with the DB on both backup paths: an
 		// operator restoring from the file would otherwise lose it silently.
 		if config, err := os.ReadFile(xray.GetConfigPath()); err == nil {
-			t.sendDocumentWithCaption(chatID, config, "config.json", "")
+			t.sendBackupFile(chatID, config, "config.json", "")
 		}
 		if rest := strings.TrimSpace(strings.TrimPrefix(body, caption)); rest != "" {
 			// Rare: the summary outgrew a caption. The file already landed.

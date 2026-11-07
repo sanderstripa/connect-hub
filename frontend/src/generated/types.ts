@@ -4,11 +4,13 @@ export type GeoKind = string;
 export type OnlineAPISupport = number;
 export type ProcessState = string;
 export type Protocol = string;
-export type addrFamily = number;
 export type lineVisitor = unknown;
-export type staticEgressResolver = string;
-export type trafficLocalApplyAction = number;
-export type transportBits = number;
+
+export interface AWGPingPolicy {
+  allow: string[];
+  deny: string[];
+  enabled: boolean;
+}
 
 export interface AllSetting {
   datepicker: string;
@@ -49,6 +51,8 @@ export interface AllSetting {
   ldapUserAttr: string;
   ldapUserFilter: string;
   ldapVlessField: string;
+  networkTrafficInterface: string;
+  networkTrafficMode: string;
   nodeDownThreshold: number;
   outboundDownThreshold: number;
   pageSize: number;
@@ -193,6 +197,16 @@ export interface AllSetting {
   webKeyFile: string;
   webListen: string;
   webPort: number;
+  wechatCpu: number;
+  wechatEnable: boolean;
+  wechatEnabledEvents: string;
+  wechatLang: string;
+  wechatMemory: number;
+  wechatMode: string;
+  wechatReportEnable: boolean;
+  wechatRunTime: string;
+  wechatToken: string;
+  wechatWebhookURL: string;
 }
 
 export interface AllSettingView {
@@ -220,6 +234,8 @@ export interface AllSettingView {
   hasTgBotToken: boolean;
   hasTwoFactorToken: boolean;
   hasWarpSecret: boolean;
+  hasWechatToken: boolean;
+  hasWechatWebhookURL: boolean;
   ipLimitAllowlist: string;
   ldapAutoCreate: boolean;
   ldapAutoDelete: boolean;
@@ -242,6 +258,8 @@ export interface AllSettingView {
   ldapUserAttr: string;
   ldapUserFilter: string;
   ldapVlessField: string;
+  networkTrafficInterface: string;
+  networkTrafficMode: string;
   nodeDownThreshold: number;
   outboundDownThreshold: number;
   pageSize: number;
@@ -386,6 +404,16 @@ export interface AllSettingView {
   webKeyFile: string;
   webListen: string;
   webPort: number;
+  wechatCpu: number;
+  wechatEnable: boolean;
+  wechatEnabledEvents: string;
+  wechatLang: string;
+  wechatMemory: number;
+  wechatMode: string;
+  wechatReportEnable: boolean;
+  wechatRunTime: string;
+  wechatToken: string;
+  wechatWebhookURL: string;
 }
 
 export interface AmneziaWGLogs {
@@ -417,6 +445,21 @@ export interface ApiTokenView {
 export interface Blocker {
   code: BlockerCode;
   detail?: string;
+}
+
+export interface Capabilities {
+  arch: string;
+  carriers: string[];
+  error: string;
+  os: string;
+  rawSocket: boolean;
+  supported: boolean;
+  version: string;
+}
+
+export interface CarrierEndpoint {
+  carrier: string;
+  port: number;
 }
 
 export interface CleanIpCdn {
@@ -495,26 +538,12 @@ export interface CleanIpVerifyRequest {
   ips: string[];
 }
 
-export interface Capabilities {
-  arch: string;
-  carriers: string[];
-  error: string;
-  os: string;
-  rawSocket: boolean;
-  supported: boolean;
-  version: string;
-}
-
-export interface CarrierEndpoint {
-  carrier: string;
-  port: number;
-}
-
 export interface Client {
   adTag?: string;
   allowedIPs?: string[];
   allowedIPsByInbound?: Record<number, string[]>;
   auth?: string;
+  awgPing?: AWGPingPolicy | null;
   clientHostRuleIds?: number[];
   comment: string;
   created_at?: number;
@@ -547,11 +576,28 @@ export interface Client {
   updated_at?: number;
 }
 
+export interface ClientChangeLog {
+  at: number;
+  email: string;
+  field: string;
+  id: number;
+  newValue: string;
+  oldValue: string;
+  source: string;
+}
+
 export interface ClientInbound {
   clientId: number;
   createdAt: number;
   flowOverride: string;
   inboundId: number;
+}
+
+export interface ClientNodeUsage {
+  down: number;
+  nodeId: number;
+  nodeName: string;
+  up: number;
 }
 
 export interface ClientPageResponse {
@@ -568,6 +614,7 @@ export interface ClientRecord {
   adTag: string;
   allowedIPs: string;
   auth: string;
+  awgPing?: AWGPingPolicy | null;
   clientHostRuleIds?: number[];
   comment: string;
   createdAt: number;
@@ -667,6 +714,26 @@ export interface ClientTraffic {
   uuid: string;
 }
 
+export interface ClientTrafficWindow {
+  at: number;
+  down: number;
+  email: string;
+  id: number;
+  reason: string;
+  up: number;
+}
+
+export interface ClientUsageHistory {
+  changes: ClientChangeLog[];
+  currentDown: number;
+  currentUp: number;
+  email: string;
+  lifetimeDown: number;
+  lifetimeUp: number;
+  nodes: ClientNodeUsage[];
+  windows: ClientTrafficWindow[];
+}
+
 export interface ClientsSummary {
   active: number;
   deactive: string[];
@@ -678,6 +745,30 @@ export interface ClientsSummary {
   online: string[];
   onlineCount: number;
   total: number;
+}
+
+export interface Config {
+  bind: string;
+  candidates: CarrierEndpoint[];
+  carrier: string;
+  conns: number;
+  endpoint: string;
+  fec: boolean;
+  icmpType: string;
+  listen: string;
+  memoryMB: number;
+  mtu: number;
+  path: string;
+  port: number;
+  ports: Port[];
+  reverse: boolean;
+  reversePeer: string;
+  role: string;
+  sessions: number;
+  sni: string;
+  tlsCert: string;
+  tlsKey: string;
+  tlsPin: string;
 }
 
 export interface DnsResolverReport {
@@ -706,30 +797,6 @@ export interface DnsTunnelProfile {
   key: string;
   method: number;
   name: string;
-}
-
-export interface Config {
-  bind: string;
-  candidates: CarrierEndpoint[];
-  carrier: string;
-  conns: number;
-  endpoint: string;
-  fec: boolean;
-  icmpType: string;
-  listen: string;
-  memoryMB: number;
-  mtu: number;
-  path: string;
-  port: number;
-  ports: Port[];
-  reverse: boolean;
-  reversePeer: string;
-  role: string;
-  sessions: number;
-  sni: string;
-  tlsCert: string;
-  tlsKey: string;
-  tlsPin: string;
 }
 
 export interface FallbackParentInfo {
@@ -1075,6 +1142,24 @@ export interface Msg {
   success: boolean;
 }
 
+export interface NetworkInterfaceOption {
+  name: string;
+  up: boolean;
+}
+
+export interface NetworkInterfacesResponse {
+  automatic: string;
+  automaticError: string;
+  interfaces: NetworkInterfaceOption[];
+}
+
+export interface NetworkTrafficSelection {
+  available: boolean;
+  error: string;
+  mode: string;
+  name: string;
+}
+
 export interface NewUUIDResponse {
   uuid: string;
 }
@@ -1239,6 +1324,63 @@ export interface Readiness {
   blockers: Blocker[];
   installCommand: string;
   ready: boolean;
+}
+
+export interface RealityFinderCommand {
+  expiresAt: number;
+  scriptUrl: string;
+  server: string;
+  token: string;
+  unix: string;
+  windows: string;
+}
+
+export interface RealityFinderCommandRequest {
+  current: string;
+  nodeId?: number | null;
+  port: number;
+  scope: string;
+  server: string;
+}
+
+export interface RealityFinderNetwork {
+  asn: number;
+  country: string;
+  ip: string;
+  org: string;
+}
+
+export interface RealityFinderReport {
+  at: number;
+  filterTested: boolean;
+  network: RealityFinderNetwork;
+  port: number;
+  router: boolean;
+  server: RealityFinderServer;
+  targets: RealityFinderTarget[];
+  tested: number;
+  warning: string;
+}
+
+export interface RealityFinderServer {
+  asn: number;
+  holder: string;
+  ip: string;
+  prefix: string;
+}
+
+export interface RealityFinderTarget {
+  cdn: string;
+  dnsMatch: boolean;
+  expires: string;
+  filtered?: boolean | null;
+  ip: string;
+  issuer: string;
+  ms: number;
+  same24: boolean;
+  sameAsn: boolean;
+  score: number;
+  sni: string;
 }
 
 export interface RealityScanResult {
@@ -1414,6 +1556,8 @@ export interface TuicServerSettings {
   authentication_timeout: number;
   certificate: string;
   congestion_control: string;
+  disable_sni: boolean;
+  disable_sni_in_uri: boolean;
   log_level: string;
   max_idle_time: number;
   max_udp_relay_packet_size: number;

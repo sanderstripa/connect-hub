@@ -184,15 +184,33 @@ func TestAudit3UDPAssociationMustRecoverAfterBridgeReadFailure(t *testing.T) {
 			case <-time.After(time.Second):
 				t.Fatal("restarted bridge did not receive the retained association request")
 			}
-			_, payload, oldErr := audit3ReceivePacket(c, mode, 300*time.Millisecond)
-			// A different association proves QUIC, the restarted SOCKS bridge, and both transport modes remain functional.
+			// QUIC does not promise arrival order across unrelated UDP
+			// associations, and a queued "while-down" packet can race a
+			// recovered "after" response. Correlate by association and payload
+			// instead of mistakenly treating the first response as the fresh
+			// association's response. Both must arrive before the deadline.
 			audit3SendPacket(t, c, mode, 42132, 4, "fresh")
-			h, p, newErr := audit3ReceivePacket(c, mode, time.Second)
-			if newErr != nil || h.AssocID != 42132 || string(p) != "fresh" {
-				t.Fatalf("fresh association probe %v %q %v", h, p, newErr)
-			}
-			if oldErr != nil || string(payload) != "after" {
-				t.Fatalf("retained association became receive blackhole after read failure: response %q err=%v; fresh association works; user up=%d down=%d", payload, oldErr, user.Traffic.BytesUp.Load(), user.Traffic.BytesDown.Load())
+			oldSeen, freshSeen := false, false
+			receiveDeadline := time.Now().Add(2 * time.Second)
+			for !oldSeen || !freshSeen {
+				remaining := time.Until(receiveDeadline)
+				if remaining <= 0 {
+					t.Fatalf("UDP recovery: old=%v fresh=%v; user up=%d down=%d", oldSeen, freshSeen, user.Traffic.BytesUp.Load(), user.Traffic.BytesDown.Load())
+				}
+				h, p, err := audit3ReceivePacket(c, mode, remaining)
+				if err != nil {
+					t.Fatalf("UDP recovery: old=%v fresh=%v, receive error: %v", oldSeen, freshSeen, err)
+				}
+				switch {
+				case h.AssocID == 42131 && string(p) == "after":
+					oldSeen = true
+				case h.AssocID == 42132 && string(p) == "fresh":
+					freshSeen = true
+				case h.AssocID == 42131 && string(p) == "while-down":
+					// This packet may have been queued before the bridge restarted.
+				default:
+					t.Fatalf("unexpected UDP response for association %d: %q", h.AssocID, p)
+				}
 			}
 		})
 	}

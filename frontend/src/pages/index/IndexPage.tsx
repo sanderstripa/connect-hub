@@ -25,6 +25,7 @@ import { LazyMount } from '@/components/utility';
 import { setMessageInstance } from '@/utils/messageBus';
 import OverviewActionBar from './OverviewActionBar';
 import VitalTile from './VitalTile';
+import LoadAverage from './LoadAverage';
 import ThroughputCard from './ThroughputCard';
 import SystemStrip from './SystemStrip';
 import { mean, peak, useOverviewHistory } from './useOverviewHistory';
@@ -227,6 +228,7 @@ export default function IndexPage() {
                       icon={<DashboardOutlined aria-hidden />}
                       label={t('pages.index.cpu')}
                       available={status.metricAvailable('cpu')}
+                      extraContent={<LoadAverage status={status} />}
                       percent={status.cpu.percent}
                       statusColor={status.cpu.color}
                       detail={

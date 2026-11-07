@@ -38,8 +38,23 @@ func hasForbiddenClientChar(s string) bool {
 }
 
 func validateClientEmail(email string) error {
+	if email == "." || email == ".." {
+		return common.NewError("client email must not be '.' or '..'")
+	}
 	if hasForbiddenClientChar(email) {
 		return common.NewError("client email contains an invalid character:", email)
+	}
+	return nil
+}
+
+func validateClientsNames(clients []model.Client) error {
+	for _, client := range clients {
+		if err := validateClientEmail(client.Email); err != nil {
+			return err
+		}
+		if err := validateClientSubID(client.SubID); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -180,6 +195,9 @@ func (s *ClientService) Create(inboundSvc *InboundService, payload *ClientCreate
 		return false, common.NewError("empty payload")
 	}
 	client := payload.Client
+	if err := client.AWGPing.Normalize(); err != nil {
+		return false, err
+	}
 	if strings.TrimSpace(client.Email) == "" {
 		return false, common.NewError("client email is required")
 	}
@@ -278,6 +296,9 @@ func (s *ClientService) Create(inboundSvc *InboundService, payload *ClientCreate
 			// comment on the Attach path.
 			clientForInbound.AllowedIPs = nil
 		}
+		if err := inboundSvc.validateAWGPingTarget(inbound, clientForInbound.AWGPing, clientForInbound.Email); err != nil {
+			return false, err
+		}
 		if err := validateAmneziaWGClientWrite(inbound, []model.Client{clientForInbound}); err != nil {
 			return false, fmt.Errorf("inbound %d: %w", ibId, err)
 		}
@@ -301,7 +322,31 @@ func (s *ClientService) Create(inboundSvc *InboundService, payload *ClientCreate
 			return needRestart, err
 		}
 	}
+	if err := saveAWGPing(database.GetDB(), client.Email, client.AWGPing); err != nil {
+		return needRestart, err
+	}
 	return needRestart, s.setClientLimitHwidByEmail(client.Email, payload.LimitHwid)
+}
+
+func (s *ClientService) prepareClientAdd(client *model.Client, inbound *model.Inbound) (*model.Inbound, error) {
+	if err := s.fillProtocolDefaults(client, inbound); err != nil {
+		return nil, err
+	}
+	perInbound := *client
+	if ips, ok := client.AllowedIPsByInbound[inbound.Id]; ok {
+		perInbound.AllowedIPs = ips
+	} else if !addressesFitAmneziaWGInbound(perInbound.AllowedIPs, inbound) {
+		// Each tunnel allocates addresses from its own subnet.
+		perInbound.AllowedIPs = nil
+	}
+	if err := validateAmneziaWGClientWrite(inbound, []model.Client{perInbound}); err != nil {
+		return nil, err
+	}
+	settings, err := json.Marshal(map[string][]model.Client{"clients": {clientWithInboundFlow(perInbound, inbound)}})
+	if err != nil {
+		return nil, err
+	}
+	return &model.Inbound{Id: inbound.Id, Settings: string(settings)}, nil
 }
 
 // inboundFanoutConcurrency caps how many inbounds one client op applies at
@@ -663,6 +708,12 @@ func (s *ClientService) Update(inboundSvc *InboundService, id int, updated model
 	if err != nil {
 		return false, err
 	}
+	if updated.AWGPing == nil {
+		updated.AWGPing = existing.AWGPing.Clone()
+	}
+	if err := updated.AWGPing.Normalize(); err != nil {
+		return false, err
+	}
 	inboundIds, err := s.GetInboundIdsForRecord(id)
 	if err != nil {
 		return false, err
@@ -732,6 +783,13 @@ func (s *ClientService) Update(inboundSvc *InboundService, id int, updated model
 	}
 	normalizeClientTrafficReset(&updated)
 	updated.ClientHostRuleIds = model.NormalizeClientHostRuleIds(updated.ClientHostRuleIds)
+	if groupName := strings.TrimSpace(updated.Group); groupName != "" {
+		group, err := database.EnsureClientGroup(database.GetDB(), groupName)
+		if err != nil {
+			return false, err
+		}
+		updated.Group = group.Name
+	}
 	if updated.SubID == "" {
 		updated.SubID = existing.SubID
 	}
@@ -836,6 +894,9 @@ func (s *ClientService) Update(inboundSvc *InboundService, id int, updated model
 			// instead.
 			clientForInbound.AllowedIPs = nil
 		}
+		if err := inboundSvc.validateAWGPingTarget(inbound, clientForInbound.AWGPing, existing.Email); err != nil {
+			return false, err
+		}
 		if err := validateAmneziaWGClientWrite(inbound, []model.Client{clientForInbound}); err != nil {
 			return false, fmt.Errorf("inbound %d: %w", ibId, err)
 		}
@@ -861,10 +922,24 @@ func (s *ClientService) Update(inboundSvc *InboundService, id int, updated model
 	// UpdateInboundClient renames the record atomically with each inbound's
 	// settings JSON; this direct write only covers records with no inbound left.
 	if updated.Email != existing.Email {
-		if err := database.GetDB().Model(&model.ClientRecord{}).
+		res := database.GetDB().Model(&model.ClientRecord{}).
 			Where("id = ? AND email = ?", id, existing.Email).
-			Update("email", updated.Email).Error; err != nil {
-			return needRestart, err
+			Update("email", updated.Email)
+		if res.Error != nil {
+			return needRestart, res.Error
+		}
+		// RowsAffected is the "no inbound left" guard: with inbounds attached
+		// the fanout already renamed the record and migrated its history.
+		if res.RowsAffected > 0 {
+			if err := migrateClientHistoryEmailTx(database.GetDB(), existing.Email, updated.Email); err != nil {
+				return needRestart, err
+			}
+			if err := logClientChangesTx(database.GetDB(), []model.ClientChangeLog{{
+				Email: updated.Email, Field: "name",
+				OldValue: existing.Email, NewValue: updated.Email, Source: clientChangeSourcePanel,
+			}}); err != nil {
+				return needRestart, err
+			}
 		}
 	}
 
@@ -903,7 +978,7 @@ func (s *ClientService) Update(inboundSvc *InboundService, id int, updated model
 				"reset_max":            merged.ResetMax,
 				"traffic_reset":        merged.TrafficReset,
 				"traffic_reset_day":    merged.TrafficResetDay,
-				"sudoku_key": merged.SudokuKey,
+				"sudoku_key":           merged.SudokuKey,
 			}).Error; err != nil {
 			return needRestart, err
 		}
@@ -957,6 +1032,9 @@ func (s *ClientService) Update(inboundSvc *InboundService, id int, updated model
 		return needRestart, err
 	}
 
+	if err := saveAWGPing(database.GetDB(), updated.Email, updated.AWGPing); err != nil {
+		return needRestart, err
+	}
 	if err := s.setClientLimitHwidByEmail(updated.Email, limitHwid); err != nil {
 		return needRestart, err
 	}
@@ -965,6 +1043,20 @@ func (s *ClientService) Update(inboundSvc *InboundService, id int, updated model
 		Where("id = ?", id).
 		UpdateColumn("updated_at", time.Now().UnixMilli()).Error; err != nil {
 		return needRestart, err
+	}
+
+	// Record this save's client-info changes (the rename event is logged at
+	// the rename site above); a no-op save logs nothing.
+	newRec := updated.ToRecord()
+	newRec.LimitHwid = limitHwid
+	changes := diffClientChanges(existing, newRec)
+	for i := range changes {
+		changes[i].Source = clientChangeSourcePanel
+	}
+	if len(changes) > 0 {
+		if err := logClientChangesTx(database.GetDB(), changes); err != nil {
+			return needRestart, err
+		}
 	}
 	return needRestart, nil
 }
@@ -1038,6 +1130,22 @@ func (s *ClientService) Delete(inboundSvc *InboundService, id int, keepTraffic b
 			return err
 		}
 		if !keepTraffic && existing.Email != "" {
+			// Counters DelClientStat did not purge (shared or detached
+			// clients) survive to here: archive and log them before deleting.
+			if err := recordClosedWindowsTx(tx, []string{existing.Email}, trafficWindowDelete); err != nil {
+				return err
+			}
+			var survivors int64
+			if err := tx.Model(&xray.ClientTraffic{}).Where("email = ?", existing.Email).Count(&survivors).Error; err != nil {
+				return err
+			}
+			if survivors > 0 {
+				if err := logClientChangesTx(tx, []model.ClientChangeLog{{
+					Email: existing.Email, Field: "deleted", Source: clientChangeSourcePanel,
+				}}); err != nil {
+					return err
+				}
+			}
 			if err := tx.Where("email = ?", existing.Email).Delete(&xray.ClientTraffic{}).Error; err != nil {
 				return err
 			}

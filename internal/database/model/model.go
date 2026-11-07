@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -40,6 +41,14 @@ const (
 	TUIC        Protocol = "tuic"
 	MASQUE      Protocol = "masque"
 )
+
+func (p Protocol) SupportsClients() bool {
+	return slices.Contains(ClientProtocols(), p)
+}
+
+func ClientProtocols() []Protocol {
+	return []Protocol{VMESS, VLESS, Trojan, Shadowsocks, WireGuard, Hysteria, MTProto, AmneziaWG, TUIC, MASQUE}
+}
 
 // User represents a user account in the 3x-ui panel.
 type User struct {
@@ -953,6 +962,7 @@ type Client struct {
 	// before -- fully backward compatible for callers that never set this.
 	AllowedIPsByInbound map[int][]string `json:"allowedIPsByInbound,omitempty"`
 	PreSharedKey        string           `json:"preSharedKey,omitempty"`
+	AWGPing             *AWGPingPolicy   `json:"awgPing,omitempty"`
 	KeepAlive           *KeepAliveValue  `json:"keepAlive,omitempty"`      // Numeric values or AmneziaWG ranges; 0 disables, omission preserves.
 	ForwardedPorts      string           `json:"forwardedPorts,omitempty"` // AmneziaWG per-client port-forwarding spec, e.g. "80,443,8000-8100"
 	SudokuKey           string           `json:"sudokuKey,omitempty"`
@@ -996,6 +1006,8 @@ type ClientRecord struct {
 	KeepAlive         KeepAliveValue `json:"keepAlive" gorm:"-"` // Numeric values or AmneziaWG ranges.
 	KeepAliveLegacy   int            `json:"-" gorm:"column:wg_keep_alive;default:0"`
 	KeepAliveRange    KeepAliveValue `json:"-" gorm:"column:wg_keep_alive_range;type:text;default:''"`
+	AWGPing           *AWGPingPolicy `json:"awgPing,omitempty" gorm:"serializer:json;column:awg_ping;type:text"`
+	AWGPingRevision   uint64         `json:"-" gorm:"column:awg_ping_revision;default:0"`
 	ForwardedPorts    string         `json:"forwardedPorts" gorm:"column:wg_forwarded_ports"`
 	Secret            string         `json:"secret" gorm:"column:secret"`
 	AdTag             string         `json:"adTag" gorm:"column:ad_tag;default:''"`
@@ -1015,7 +1027,7 @@ type ClientRecord struct {
 	TrafficResetDay   int            `json:"trafficResetDay" gorm:"column:traffic_reset_day;default:1"`
 	CreatedAt         int64          `json:"createdAt" gorm:"autoCreateTime:milli"`
 	UpdatedAt         int64          `json:"updatedAt" gorm:"autoUpdateTime:milli"`
-	SudokuKey string `json:"sudokuKey,omitempty" gorm:"column:sudoku_key;default:''"`
+	SudokuKey         string         `json:"sudokuKey,omitempty" gorm:"column:sudoku_key;default:''"`
 	// Owned solely by the node-snapshot sweep, which soft-orphans instead of
 	// deleting; orphans from any other cause stay at zero and are never reaped.
 	SyncOrphanedAt int64 `json:"-" gorm:"column:sync_orphaned_at;default:0"`
@@ -1024,6 +1036,9 @@ type ClientRecord struct {
 func (ClientRecord) TableName() string { return "clients" }
 
 func (r *ClientRecord) BeforeSave(*gorm.DB) error {
+	if err := r.AWGPing.Normalize(); err != nil {
+		return err
+	}
 	legacy, ranged, err := splitKeepAliveStorage(r.KeepAlive)
 	if err != nil {
 		return err
@@ -1074,6 +1089,15 @@ type ClientGroup struct {
 }
 
 func (ClientGroup) TableName() string { return "client_groups" }
+
+// HostGroupClientGroup binds a host group (hosts.group_id) to a client group.
+// Rows added later to the host group inherit the binding; no FK cascade.
+type HostGroupClientGroup struct {
+	HostGroupId   string `json:"hostGroupId" gorm:"column:host_group_id;primaryKey"`
+	ClientGroupId int    `json:"clientGroupId" gorm:"column:client_group_id;primaryKey;index"`
+}
+
+func (HostGroupClientGroup) TableName() string { return "host_group_client_groups" }
 
 // MarshalJSON emits the reverse column as a nested JSON object rather than an
 // escaped JSON-text string, matching the same convention Inbound uses for its
@@ -1303,6 +1327,7 @@ func (c *Client) ToRecord() *ClientRecord {
 		AllowedIPs:     strings.Join(c.AllowedIPs, ","),
 		PreSharedKey:   c.PreSharedKey,
 		KeepAlive:      keepAliveValue(c.KeepAlive),
+		AWGPing:        c.AWGPing.Clone(),
 		ForwardedPorts: c.ForwardedPorts,
 		Secret:         c.Secret,
 		SudokuKey:      c.SudokuKey,
@@ -1364,6 +1389,7 @@ func (r *ClientRecord) ToClient() *Client {
 		AllowedIPs:     splitWireguardAllowedIPs(r.AllowedIPs),
 		PreSharedKey:   r.PreSharedKey,
 		KeepAlive:      keepAlivePtr(r.KeepAlive),
+		AWGPing:        r.AWGPing.Clone(),
 		ForwardedPorts: r.ForwardedPorts,
 		Secret:         r.Secret,
 		SudokuKey:      r.SudokuKey,

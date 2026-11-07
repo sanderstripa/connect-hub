@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AWGPingPolicySchema } from '@/schemas/primitives/awg-ping';
 import { OptionalClientKeepAliveSchema } from '@/schemas/primitives/keepalive';
 
 const nullableStringArray = z
@@ -55,6 +56,7 @@ export const ClientRecordSchema = z
     publicKey: z.string().optional(),
     allowedIPs: z.string().optional(),
     preSharedKey: z.string().optional(),
+    awgPing: AWGPingPolicySchema.nullable().optional(),
     keepAlive: OptionalClientKeepAliveSchema,
     forwardedPorts: z.string().optional(),
     secret: z.string().optional(),
@@ -113,6 +115,8 @@ export const TuicServerOptionSchema = z
     alpn: z.array(z.string()).optional(),
     udp_relay_mode: z.string().optional(),
     zero_rtt_handshake: z.boolean().optional(),
+    disable_sni: z.boolean().optional(),
+    disable_sni_in_uri: z.boolean().optional(),
     log_level: z.string().optional(),
     max_idle_time: z.number().optional(),
     authentication_timeout: z.number().optional(),
@@ -285,8 +289,13 @@ export const ActiveInboundsByNodeSchema = z
   .transform((v) => v ?? {});
 
 export const GroupSummarySchema = z.object({
+  id: z.number(),
   name: z.string(),
   clientCount: z.number(),
+  hostGroupIds: z
+    .array(z.string())
+    .nullish()
+    .transform((v) => v ?? []),
   trafficUsed: z
     .number()
     .nullable()

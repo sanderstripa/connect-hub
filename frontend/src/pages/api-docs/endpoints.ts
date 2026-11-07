@@ -260,6 +260,52 @@ const LOG_QUERY_PARAMS: EndpointParam[] = [
 
 export const sections: readonly Section[] = [
   {
+    id: 'client-usage-history-0-8-9',
+    title: 'Client usage and change history',
+    description: 'Review the client’s lifetime traffic and historically closed usage windows, with detailed changes and per-node traffic data.',
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/clients/usageHistory/:email',
+        summary: 'Fetch client lifetime traffic, change history and node usage.',
+        params: [{ name: 'email', in: 'path', type: 'string', desc: 'Client email.' }],
+      },
+    ],
+  },
+  {
+    id: 'new-network-admin-0-8-9',
+    title: 'Network administration and REALITY target finder',
+    description: 'Administrator-authenticated server tools. The REALITY Finder runs an opt-in ISP-side target scan and collects results using a short-lived token.',
+    endpoints: [
+      {
+        method: 'POST',
+        path: '/panel/api/server/realityFinder/command',
+        summary: 'Create a short-lived REALITY Finder scan command for a client device.',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/server/realityFinder/command/:token',
+        summary: 'Read an existing REALITY Finder scan report by its token.',
+        params: [{ name: 'token', in: 'path', type: 'string' }],
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/clients/groups/:name/hosts',
+        summary: 'Replace the host-rule groups assigned to a client group.',
+        params: [{ name: 'name', in: 'path', type: 'string' }],
+      },
+    ],
+  },
+  {
+    id: 'assistant',
+    title: 'AI Assistant',
+    description: 'Optional in-panel assistant. The operator configures an OpenAI-compatible provider through server environment variables. The API key is never returned to the browser. Chat messages are sent to the configured external provider only after the administrator submits them.',
+    endpoints: [
+      { method: 'GET', path: '/panel/api/assistant/status', summary: 'Whether the AI assistant provider is configured; does not expose secrets.' },
+      { method: 'POST', path: '/panel/api/assistant/chat', summary: 'Chat with the configured AI provider. Admin only; bounded messages, no autonomous control actions, secrets are not recorded.', requestSchema: { type: 'object', properties: { messages: { type: 'array', items: { type: 'object', properties: { role: { type: 'string', enum: ['user', 'assistant'] }, content: { type: 'string' } } } } }, required: ['messages'] } },
+    ],
+  },
+  {
     id: 'tunnels',
     title: 'Tunnels',
     description:
@@ -494,6 +540,13 @@ export const sections: readonly Section[] = [
       },
       {
         method: 'GET',
+        path: '/panel/api/inbounds/amneziawgPingReadiness',
+        summary:
+          'Probe IPv4 raw ICMP socket availability on the local panel host without sending a packet or changing privileges. This reports host capability only; per-client awgPing policy and account limits still apply. Remote node support is negotiated separately when saving.',
+        responseObjectSchema: { type: 'object', properties: { available: { type: 'boolean' } } },
+      },
+      {
+        method: 'GET',
         path: '/panel/api/inbounds/amneziawgKernelReadiness',
         responseSchema: 'Readiness',
         summary:
@@ -664,8 +717,7 @@ export const sections: readonly Section[] = [
         path: '/panel/api/server/status',
         summary:
           'Real-time machine snapshot: CPU, memory, swap, disk, network IO, load averages, open connections, Xray state. Cached and refreshed every 2 seconds in the background.',
-        response:
-          '{\n  "success": true,\n  "obj": {\n    "cpu": 12.5,\n    "mem": { "current": 2147483648, "total": 8589934592 },\n    "swap": { "current": 0, "total": 4294967296 },\n    "disk": { "current": 53687091200, "total": 268435456000 },\n    "netIO": { "up": 1073741824, "down": 2147483648 },\n    "xray": { "state": "running", "version": "v25.10.31" },\n    "tcpCount": 42,\n    "load": { "load1": 0.5, "load5": 0.3, "load15": 0.2 }\n  }\n}',
+        responseSchema: 'Status',
       },
       {
         method: 'GET',
@@ -674,6 +726,13 @@ export const sections: readonly Section[] = [
           'Reports whether per-client IP limits can be enforced on this host. The panel uses it to gate the "IP Limit" field, since enforcement depends on Fail2ban being installed.',
         response:
           '{\n  "success": true,\n  "obj": {\n    "enabled": true,\n    "installed": true,\n    "usable": true,\n    "windows": false\n  }\n}',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/server/networkInterfaces',
+        summary:
+          'List network interface names and resolve the primary default-route interface in this panel network namespace. Requires an admin session or admin API token. No addresses or hardware identifiers are returned.',
+        responseSchema: 'NetworkInterfacesResponse',
       },
       {
         method: 'GET',
@@ -1031,7 +1090,7 @@ export const sections: readonly Section[] = [
             name: 'keepHostSettings',
             in: 'body (multipart)',
             type: 'boolean',
-            desc: "Keep this machine's addresses, certificates and node identity. Default true.",
+            desc: "Keep this machine's addresses, certificates, node identity, and network traffic interface selection. Default true.",
             optional: true,
             defaultValue: true,
           },
@@ -1157,6 +1216,22 @@ export const sections: readonly Section[] = [
         ],
         body: 'targets=104.16.0.0/24,www.apple.com:443',
         responseSchema: 'RealityScanResult',
+        responseSchemaArray: true,
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/server/realityFinder/command',
+        summary:
+          "Make a one-day command that finds REALITY targets from a device on the users' ISP: it reads the certificates of the server's neighbours, checks each name (TLS 1.3, X25519, h2, valid certificate) and sends it as SNI to the inbound's port to see whether the ISP cuts it. This server sends no probes; the script reports back with the token alone. An empty server is this server's public IPv4; port 0 skips the filter test.",
+        body: '{\n  "server": "203.0.113.10",\n  "port": 443,\n  "scope": "24",\n  "current": "www.example.com"\n}',
+        responseSchema: 'RealityFinderCommand',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/server/realityFinder/command/:token',
+        summary: 'The reports the runs of a REALITY finder command sent back so far, oldest first.',
+        params: [{ name: 'token', in: 'path', type: 'string', desc: 'The command token.' }],
+        responseSchema: 'RealityFinderReport',
         responseSchemaArray: true,
       },
       {
@@ -1404,7 +1479,7 @@ export const sections: readonly Section[] = [
         summary:
           'Create a new client and attach it to one or more inbounds in a single call. Body is JSON. Per-protocol secrets are generated server-side when omitted, so callers can send only the universal fields.',
         description:
-          'Fields the server fills in when they are omitted — a valid value sent by the caller is never overwritten. Re-adding an email that already exists, with its stored `subId`, reuses the stored `id`, `password`, `auth` and `secret` instead of minting new ones, so the identity stays in sync across its inbounds.\n\n- **VLESS / VMess** — `id`, a fresh UUID\n- **Trojan** — `password`\n- **Shadowsocks** — `password`. On a `2022-blake3-*` inbound a supplied password that does not base64-decode to the key length of the cipher (16 or 32 bytes) is replaced by a generated key and the call still succeeds, so read the client back if you did not let the server pick. Legacy ciphers keep any non-empty password\n- **Hysteria** — `auth`\n- **mtproto** — `secret`, a FakeTLS secret derived from the fronting domain of the inbound, or from `www.cloudflare.com` when it has none\n- **WireGuard** — `privateKey` and `publicKey` when both are blank, or `publicKey` alone when only a `privateKey` was sent, plus `allowedIPs`: one free `/32` taken from the /24 the existing peers of that inbound already sit in, or from `10.0.0.0/24` when it has none\n\nAccepted on the same body but never generated: `preSharedKey` and `keepAlive` (WireGuard), `adTag` (mtproto).\n\nWireGuard is the only one of these that can fail. Allocation widens the search to the containing /16 before giving up with `inbound <id>: wireguard: no free address available in <scope>`, and an `allowedIPs` supplied by the caller is validated instead of allocated: `inbound <id>: wireguard: allowedIPs entry <entry> overlaps <address> used by another client` when its range overlaps an address or prefix a different client of that same inbound holds, or `... used by a client on <inbound>` when the holder sits on another WireGuard or AmneziaWG inbound. Ranges are compared, not strings, so `10.0.0.9/24` collides with `10.0.0.5/32`; a `0.0.0.0/0` or `::/0` default route claims no address. Allocation likewise skips every address inside a prefix another client holds. The same validation runs on POST /panel/api/clients/{email}/attach, where a client that already carries an address brings it along.\n\nAn `inboundIds` entry that names no existing inbound rejects the whole call before anything is written. Past that, the inbounds are applied concurrently and independently: one that fails no longer stops the others, so a `success:false` response can still have created the client on the rest. Every error names the inbound it came from (`inbound 7: <message>`), and several failures are reported together, one per line. `limitHwid` is applied only when every inbound succeeded, so re-run the call after fixing the failure.',
+          'Optional client.awgPing = {enabled, allow: IPv4/CIDR[], deny: IPv4/CIDR[]} grants embedded AWG IPv4 Echo independently of TCP/UDP routing. Defaults disabled; empty allow denies all; deny wins. Omitted on update preserves, explicit empty lists clear. Lists have at most 256 entries each. Kernel mode and nodes without awg-ping4 support reject enabling.\n\nFields the server fills in when they are omitted — a valid value sent by the caller is never overwritten. Re-adding an email that already exists, with its stored `subId`, reuses the stored `id`, `password`, `auth` and `secret` instead of minting new ones, so the identity stays in sync across its inbounds.\n\n- **VLESS / VMess** — `id`, a fresh UUID\n- **Trojan** — `password`\n- **Shadowsocks** — `password`. On a `2022-blake3-*` inbound a supplied password that does not base64-decode to the key length of the cipher (16 or 32 bytes) is replaced by a generated key and the call still succeeds, so read the client back if you did not let the server pick. Legacy ciphers keep any non-empty password\n- **Hysteria** — `auth`\n- **mtproto** — `secret`, a FakeTLS secret derived from the fronting domain of the inbound, or from `www.cloudflare.com` when it has none\n- **WireGuard** — `privateKey` and `publicKey` when both are blank, or `publicKey` alone when only a `privateKey` was sent, plus `allowedIPs`: one free `/32` taken from the /24 the existing peers of that inbound already sit in, or from `10.0.0.0/24` when it has none\n\nAccepted on the same body but never generated: `preSharedKey` and `keepAlive` (WireGuard), `adTag` (mtproto).\n\nWireGuard is the only one of these that can fail. Allocation widens the search to the containing /16 before giving up with `inbound <id>: wireguard: no free address available in <scope>`, and an `allowedIPs` supplied by the caller is validated instead of allocated: `inbound <id>: wireguard: allowedIPs entry <entry> overlaps <address> used by another client` when its range overlaps an address or prefix a different client of that same inbound holds, or `... used by a client on <inbound>` when the holder sits on another WireGuard or AmneziaWG inbound. Ranges are compared, not strings, so `10.0.0.9/24` collides with `10.0.0.5/32`; a `0.0.0.0/0` or `::/0` default route claims no address. Allocation likewise skips every address inside a prefix another client holds. The same validation runs on POST /panel/api/clients/{email}/attach, where a client that already carries an address brings it along.\n\nAn `inboundIds` entry that names no existing inbound rejects the whole call before anything is written. Past that, the inbounds are applied concurrently and independently: one that fails no longer stops the others, so a `success:false` response can still have created the client on the rest. Every error names the inbound it came from (`inbound 7: <message>`), and several failures are reported together, one per line. `limitHwid` is applied only when every inbound succeeded, so re-run the call after fixing the failure.',
         params: [
           {
             name: 'client',
@@ -1714,9 +1789,18 @@ export const sections: readonly Section[] = [
         method: 'GET',
         path: '/panel/api/clients/groups',
         summary:
-          'List all client groups with their member counts. Merges persisted groups (rows in client_groups, including empty placeholders) with the distinct group_name values currently set on clients. Sorted alphabetically (case-insensitive).',
+          'List all client groups with their member counts and the host groups bound to each. Merges persisted groups (rows in client_groups, including empty placeholders) with the distinct group_name values currently set on clients. Sorted alphabetically (case-insensitive).',
         response:
-          '{\n  "success": true,\n  "obj": [\n    { "name": "customer-a", "clientCount": 5 },\n    { "name": "internal", "clientCount": 0 }\n  ]\n}',
+          '{\n  "success": true,\n  "obj": [\n    { "id": 1, "name": "customer-a", "clientCount": 5, "hostGroupIds": ["cdn-front"] },\n    { "id": 2, "name": "internal", "clientCount": 0, "hostGroupIds": [] }\n  ]\n}',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/clients/groups/:name/hosts',
+        summary:
+          'Replace the host groups attached to a client group. Clients in this group receive the bound host groups instead of the inbound default host pool; other clients are unaffected. An empty array clears the bindings. Returns the saved host group IDs.',
+        params: [{ name: 'name', in: 'path', type: 'string', desc: 'Group name (URL-encoded).' }],
+        body: '{\n  "hostGroupIds": ["cdn-front"]\n}',
+        response: '{\n  "success": true,\n  "obj": {\n    "hostGroupIds": ["cdn-front"]\n  }\n}',
       },
       {
         method: 'GET',
@@ -1730,16 +1814,16 @@ export const sections: readonly Section[] = [
         method: 'POST',
         path: '/panel/api/clients/groups/create',
         summary:
-          'Create a new empty (placeholder) group. The group becomes selectable in client forms and the filter drawer even before any client is added to it. Errors if a group with the same name already exists.',
-        body: '{\n  "name": "customer-a"\n}',
+          'Create a new group, optionally with host rules bound to it. The group becomes selectable in client forms and the filter drawer even before any client is added to it. Host group IDs are validated before the group is created. Errors if a group with the same name already exists.',
+        body: '{\n  "name": "customer-a",\n  "hostGroupIds": ["cdn-front"]\n}',
         response: '{\n  "success": true,\n  "obj": {\n    "name": "customer-a"\n  }\n}',
       },
       {
         method: 'POST',
         path: '/panel/api/clients/groups/rename',
         summary:
-          "Rename a group. The new name is applied to the client_groups row AND propagated to every matching client (both clients.group_name and the client entry inside every owning inbound's settings JSON) in a single transaction. Returns the number of clients whose label was updated.",
-        body: '{\n  "oldName": "customer-a",\n  "newName": "tier-1"\n}',
+          "Rename a group and optionally replace its host rules in one transaction. The new name is applied to the client_groups row AND propagated to every matching client (both clients.group_name and the client entry inside every owning inbound's settings JSON). Omit hostGroupIds to leave the bindings unchanged; send an empty array to clear them. Returns the number of clients whose label was updated.",
+        body: '{\n  "oldName": "customer-a",\n  "newName": "tier-1",\n  "hostGroupIds": ["cdn-front"]\n}',
         response: '{\n  "success": true,\n  "obj": {\n    "affected": 5\n  }\n}',
       },
       {
@@ -2020,6 +2104,20 @@ export const sections: readonly Section[] = [
         method: 'POST',
         path: '/panel/api/nodes/probe/:id',
         summary: 'Probe an existing node, updating its cached health state.',
+        params: [{ name: 'id', in: 'path', type: 'number', desc: 'Node ID.' }],
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/nodes/restartXray/:id',
+        summary:
+          'Restart Xray on one enabled, directly configured node. Active Xray connections are interrupted. Uses the node runtime and accepts admin, node-admin or node-sync credentials on the node. A stale heartbeat does not prevent the request.',
+        params: [{ name: 'id', in: 'path', type: 'number', desc: 'Node ID.' }],
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/nodes/restartPanel/:id',
+        summary:
+          'Request a restart of the panel and subscription services on one enabled, directly configured node. Requires admin or node-admin credentials on the node; mTLS requires an explicit node-admin bearer token. Success acknowledges scheduling, before the three-second restart delay. A stale heartbeat does not prevent the request. Older nodes may reject node-admin access until upgraded.',
         params: [{ name: 'id', in: 'path', type: 'number', desc: 'Node ID.' }],
       },
       {
@@ -2484,6 +2582,12 @@ export const sections: readonly Section[] = [
         path: '/panel/api/setting/testDiscord',
         summary: 'Test Discord bot connection by sending a test embed to the configured channel.',
         response: '{\n  "success": true,\n  "msg": "Test notification sent successfully"\n}',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/setting/testWechat',
+        summary:
+          'Send a text test notification using the saved WeChat destination. Supports WeCom group robots and compatible personal WeChat webhook gateways. Requires WeChat notifications to be enabled.',
       },
       {
         method: 'GET',

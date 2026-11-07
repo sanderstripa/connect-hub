@@ -157,7 +157,7 @@ func (t *Tgbot) screenClientLinks(chatID int64, email string) {
 		t.sendNotice(chatID, t.I18nBot("tgbot.answers.errorOperation"))
 		return
 	}
-	body := t.clientScreenBody(email, "")
+	body := t.clientHeader(email)
 	body += t.I18nBot("tgbot.messages.subURL", "URL=="+html.EscapeString(subURL))
 	if subJSON != "" {
 		body += t.I18nBot("tgbot.messages.jsonURL", "URL=="+html.EscapeString(subJSON))
@@ -165,7 +165,10 @@ func (t *Tgbot) screenClientLinks(chatID int64, email string) {
 	body += t.I18nBot("tgbot.messages.refreshedOn", "Time=="+time.Now().Format("2006-01-02 15:04:05"))
 	rows := [][]telego.InlineKeyboardButton{
 		tu.InlineKeyboardRow(t.btn("tgbot.buttons.individualLinks", t.encodeQuery("client_individual_links "+email))),
-		tu.InlineKeyboardRow(t.btn("tgbot.buttons.qrCode", t.encodeQuery("client_qr_links "+email))),
+		tu.InlineKeyboardRow(
+			t.btn("tgbot.buttons.getOneConfig", t.encodeQuery("client_one_link "+email)),
+			t.btn("tgbot.buttons.qrCode", t.encodeQuery("client_qr_links "+email)),
+		),
 	}
 	// A client looking at its own subscription has nothing behind the admin's
 	// card: it only repeats the usage already on its home screen.
@@ -191,7 +194,8 @@ func (t *Tgbot) screenIndividualLinks(chatID int64, email string) {
 		return
 	}
 	var body strings.Builder
-	body.WriteString(t.clientScreenBody(email, t.I18nBot("tgbot.buttons.individualLinks")))
+	body.WriteString(t.clientHeader(email))
+	body.WriteString(html.EscapeString(t.I18nBot("tgbot.buttons.individualLinks")) + "\n\n")
 	for _, link := range links {
 		body.WriteString("<code>" + html.EscapeString(link) + "</code>\n")
 	}
@@ -245,7 +249,7 @@ func (t *Tgbot) renderPickerOnClient(chatID int64, email string, picker [][]tele
 	}
 	rows := append([][]telego.InlineKeyboardButton{}, picker...)
 	rows = append(rows, t.backRow())
-	body := t.clientScreenBody(email, t.clientInfoMsg(traffic, true, true, true, true, true, false))
+	body := t.clientScreenBody(email, "") + t.clientInfoMsg(traffic, true, true, true, true, true, false) + "\n\n"
 	t.renderScreen(chatID, t.newScreen("client", body, rows...))
 }
 
@@ -379,5 +383,7 @@ func (t *Tgbot) openClientAction(chatID int64, action, email string) {
 		t.screenIndividualLinks(chatID, email)
 	case "client_qr_links":
 		t.screenClientQR(chatID, email)
+	case "client_one_link":
+		t.screenOneLinkPicker(chatID, email)
 	}
 }

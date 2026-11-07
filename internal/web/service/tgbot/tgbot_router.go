@@ -156,6 +156,9 @@ func (t *Tgbot) OnReceive() {
 			userStateMgr.maybePrune(time.Hour)
 			actor := messageActor(message)
 			if userState, exists := userStateMgr.get(actor); exists {
+				if t.handleAdminWorkflowInput(&message, actor, userState) {
+					return nil
+				}
 				if userState == broadcastAwaitingText {
 					t.handleBroadcastInput(&message, actor)
 					return nil
@@ -164,6 +167,9 @@ func (t *Tgbot) OnReceive() {
 				draft := addClientDrafts.forActor(actor)
 				draft.Lock()
 				defer draft.Unlock()
+				if draft.plan != nil && !privateAdmin(message.Chat, actor.userID) {
+					return nil
+				}
 				switch userState {
 				case "awaiting_email":
 					if draft.email == strings.TrimSpace(message.Text) {
@@ -241,6 +247,9 @@ func (t *Tgbot) OnReceive() {
 
 // answerCommand processes incoming command messages from Telegram users.
 func (t *Tgbot) answerCommand(message *telego.Message, chatId int64, isAdmin bool) {
+	if t.handleAdminWorkflowCommand(message) {
+		return
+	}
 	// onlyMessage is deliberately unused: every command path either renders a
 	// screen or sends a notice, both of which carry their own keyboard.
 	msg := ""
@@ -361,6 +370,15 @@ func isCommandForBot(text string, username string) bool {
 
 // answerCallback processes callback queries from inline keyboards.
 func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool) {
+	if t.handleClientExport(callbackQuery) {
+		return
+	}
+	if t.handleAdminWorkflowCallback(callbackQuery) {
+		return
+	}
+	if callbackQuery == nil || callbackQuery.Message == nil {
+		return
+	}
 	chatId := callbackQuery.Message.GetChat().ID
 	actor := callbackActor(callbackQuery)
 
@@ -371,6 +389,9 @@ func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool
 		draft = addClientDrafts.forActor(actor)
 		draft.Lock()
 		defer draft.Unlock()
+		if draft.plan != nil && !privateAdmin(callbackQuery.Message.GetChat(), callbackQuery.From.ID) {
+			return
+		}
 	}
 
 	if isAdmin {
@@ -419,6 +440,19 @@ func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool
 				return
 			case "client_qr_links":
 				t.screenClientQR(chatId, email)
+				return
+			case "client_one_link":
+				t.answerSilent(callbackQuery.ID)
+				t.screenOneLinkPicker(chatId, email)
+				return
+			case "link_one":
+				_, target, index, ok := splitClientLinkCallback(decodedQuery)
+				if !ok {
+					t.sendCallbackAnswerTgBot(callbackQuery.ID, t.I18nBot("tgbot.answers.errorOperation"))
+					return
+				}
+				t.answerSilent(callbackQuery.ID)
+				t.screenOneLink(chatId, target, index)
 				return
 			case "client_get_usage":
 				t.sendCallbackAnswerTgBot(callbackQuery.ID, t.I18nBot("tgbot.messages.email", "Email=="+email))
@@ -905,6 +939,21 @@ func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool
 				draft.receiverInboundID = inboundIdInt
 				draft.receiverInboundIDs = []int{inboundIdInt}
 				t.addClient(callbackQuery.Message.GetChat().ID, draft, t.BuildClientDraftMessage(draft))
+			case "add_client_attach_page":
+				page, err := strconv.Atoi(dataArray[1])
+				if err != nil || page < 0 {
+					t.sendCallbackAnswerTgBot(callbackQuery.ID, t.I18nBot("tgbot.messages.workflowError"))
+					return
+				}
+				previousPage := draft.attachPage
+				draft.attachPage = page
+				picker, err := t.getInboundsAttachPicker(draft)
+				if err != nil {
+					draft.attachPage = previousPage
+					t.sendCallbackAnswerTgBot(callbackQuery.ID, err.Error())
+					return
+				}
+				t.renderDraftPicker(chatId, draft, picker.InlineKeyboard)
 			case "add_client_toggle_attach":
 				inboundIdStr := dataArray[1]
 				inboundIdInt, err := strconv.Atoi(inboundIdStr)
@@ -995,6 +1044,8 @@ func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool
 	case "bkp", "get_backup":
 		t.answerSilent(callbackQuery.ID)
 		t.sendBackupScreen(chatId)
+		// The files landed under the menu; bring it back below them so it stays in view.
+		t.screenCategory(chatId, "maintenance", screenSendNew)
 	case "ban", "get_banlogs":
 		t.answerSilent(callbackQuery.ID)
 		t.screenBanLogs(chatId)
@@ -1024,10 +1075,13 @@ func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool
 	case "client_traffic":
 		t.answerSilent(callbackQuery.ID)
 		t.getClientUsage(chatId, callbackQuery.From.ID)
-	case "client_sub_links", "client_individual_links", "client_qr_links":
+	case "client_sub_links", "client_individual_links", "client_qr_links", "client_one_link":
 		// A client tapped its own link button: its identity already says which
 		// subscription, so it opens directly. A second one still needs a choice.
 		t.openOwnClientScreen(chatId, callbackQuery.From.ID, callbackQuery.Data)
+	case cbClientGuide:
+		t.answerSilent(callbackQuery.ID)
+		t.screenGuide(chatId, "")
 	case "add_client_ch_default_email":
 		userStateMgr.set(actor, "awaiting_email")
 		t.wizardPrompt(chatId, draft, t.I18nBot("tgbot.messages.email_prompt", "ClientEmail=="+html.EscapeString(draft.email)))
@@ -1157,6 +1211,10 @@ func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool
 		}
 		t.addClient(chatId, draft, t.BuildClientDraftMessage(draft), callbackQuery.Message.GetMessageID())
 	case "add_client_submit_disable", "add_client_submit_enable":
+		if draft.plan != nil {
+			t.sendCallbackAnswerTgBot(callbackQuery.ID, t.I18nBot("tgbot.answers.errorOperation"))
+			return
+		}
 		// Both submits land here and differ only in the enable flag; the data is
 		// short enough never to be hashed, so its raw form is the discriminator.
 		draft.enable = callbackQuery.Data == "add_client_submit_enable"
@@ -1199,7 +1257,12 @@ func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool
 		// only button being the one just pressed.
 		t.screenHome(chatId, callbackQuery.From.ID)
 	default:
-		action, email, ok := splitClientLinkCallback(callbackQuery.Data)
+		if messageKey, ok := parseGuideCallback(callbackQuery.Data); ok {
+			t.answerSilent(callbackQuery.ID)
+			t.screenGuide(chatId, messageKey)
+			return
+		}
+		action, email, index, ok := splitClientLinkCallback(callbackQuery.Data)
 		if !ok {
 			// Nothing matched: an unknown button still has to be answered, or it
 			// keeps spinning until Telegram times the callback out.
@@ -1219,6 +1282,12 @@ func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool
 			t.screenIndividualLinks(chatId, email)
 		case "client_qr_links":
 			t.screenClientQR(chatId, email)
+		case "client_one_link":
+			t.answerSilent(callbackQuery.ID)
+			t.screenOneLinkPicker(chatId, email)
+		case "link_one":
+			t.answerSilent(callbackQuery.ID)
+			t.screenOneLink(chatId, email, index)
 		}
 	}
 }
@@ -1232,25 +1301,38 @@ func checkAdmin(tgId int64) bool {
 // admin-only; the caller still has to prove the client is its own.
 func isClientSelfCallback(data string) bool {
 	switch data {
-	// "hide" is how any recipient puts a message away: it carries no target of its
-	// own (it is the message it sits on), so it is safe for anyone to reach.
+	// "hide" carries no target; it only dismisses the current screen.
 	case "home", "hide", "client_traffic", "client_commands", "client_sub_links",
-		"client_individual_links", "client_qr_links":
+		"client_individual_links", "client_qr_links", "client_one_link", cbClientGuide:
+		return true
+	case cbPageNext, cbPagePrev, cbPageNone:
 		return true
 	}
-	_, _, ok := splitClientLinkCallback(data)
+	if _, ok := parseGuideCallback(data); ok {
+		return true
+	}
+	_, _, _, ok := splitClientLinkCallback(data)
 	return ok
 }
 
-// splitClientLinkCallback splits "<action> <email>" for the per-client link
-// callbacks; ok is false for every other data.
-func splitClientLinkCallback(data string) (action, email string, ok bool) {
-	for _, candidate := range []string{"client_sub_links", "client_individual_links", "client_qr_links"} {
-		if rest, found := strings.CutPrefix(data, candidate+" "); found && rest != "" {
-			return candidate, rest, true
+// All client link callbacks that encode an email require ownership checks.
+var clientLinkActions = []string{"client_sub_links", "client_individual_links", "client_qr_links", "client_one_link", "link_one"}
+
+// splitClientLinkCallback splits "<action> <email>" and the optional link index.
+// The index is never interpreted as the client identity.
+func splitClientLinkCallback(data string) (action, email string, index int, ok bool) {
+	for _, candidate := range clientLinkActions {
+		rest, found := strings.CutPrefix(data, candidate+" ")
+		if !found || rest == "" {
+			continue
 		}
+		if candidate == "link_one" {
+			email, index, ok = splitEmailIndex(rest)
+			return candidate, email, index, ok
+		}
+		return candidate, rest, 0, true
 	}
-	return "", "", false
+	return "", "", 0, false
 }
 
 // refuseGroups keeps every update in a private chat: a group shares one screen and keyboard among its

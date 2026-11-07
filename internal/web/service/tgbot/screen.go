@@ -16,6 +16,11 @@ import (
 // error, so a screen pages its body instead of risking a lost render.
 const botCaptionLimit = 1024
 
+// screenSendNew places a fresh menu after separately sent backup documents.
+// Ordinary interactions edit their tracked screen in place instead.
+type screenDelivery uint8
+const screenSendNew screenDelivery = 1
+
 // screen is the bot's only chat surface: one photo message whose caption and
 // keyboard are edited on every action, so a chat never grows a second menu.
 type screen struct {
@@ -132,7 +137,7 @@ func (t *Tgbot) newScreen(kind, body string, rows ...[]telego.InlineKeyboardButt
 
 // renderScreen is the single entry point for drawing a screen: EDIT first, and
 // replace (send then delete) only when the edit is genuinely impossible.
-func (t *Tgbot) renderScreen(chatID int64, sc *screen) {
+func (t *Tgbot) renderScreen(chatID int64, sc *screen, delivery ...screenDelivery) {
 	if sc == nil || liveBot() == nil {
 		return
 	}
@@ -150,7 +155,8 @@ func (t *Tgbot) renderScreen(chatID int64, sc *screen) {
 	}
 	sc.markup = tu.InlineKeyboard(rows...)
 
-	if prev, ok := t.screens().get(chatID); ok && prev.msgID != 0 {
+	forceSend := len(delivery) > 0 && delivery[0] == screenSendNew
+	if prev, ok := t.screens().get(chatID); ok && prev.msgID != 0 && !forceSend {
 		if t.editScreen(chatID, prev, sc) {
 			sc.msgID = prev.msgID
 			t.screens().put(chatID, sc)

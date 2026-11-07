@@ -1,0 +1,81 @@
+name: Port overlapping feature hunks for Connect Hub 0.8.9
+on:
+  push:
+    branches:
+      - feat/complete-11-upstream-features-0.8.9
+    paths:
+      - .github/workflows/import-overlap-0.8.9.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: upstream-0.8.9-overlap
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Port nonconflicting hunks without overwriting Connect Hub
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          PRS=(7064 7031 7048 6970 6972 7086 6958 7088 6952 7012 7006)
+          mkdir -p /tmp/port-rejects
+          for n in "${PRS[@]}"; do
+            echo "::group::Upstream #${n}"
+            if ! curl -fsSL --retry 3 --max-time 120 "https://github.com/MHSanaei/3x-ui/pull/${n}.patch" -o /tmp/port-all.patch; then
+              echo "DOWNLOAD FAILED #${n}" | tee -a /tmp/port-rejects/status.txt
+              echo "::endgroup::"
+              continue
+            fi
+            # Split GitHub mail-format patches by path, preserving per-file hunk headers.
+            python3 - <<'PY'
+          import re, pathlib
+          data=pathlib.Path('/tmp/port-all.patch').read_text(errors='replace')
+          d=pathlib.Path('/tmp/port-files')
+          d.mkdir(exist_ok=True)
+          for f in d.glob('*.patch'): f.unlink()
+          pieces=re.split(r'(?=^diff --git a/)',data,flags=re.M)
+          for ix,p in enumerate(pieces):
+              if not p.startswith('diff --git '): continue
+              first=p.splitlines()[0]
+              m=re.match(r'diff --git a/(.*?) b/(.*)$',first)
+              if not m:continue
+              path=m.group(2)
+              if path.startswith(('internal/web/translation/','frontend/src/generated/','docs/','frontend/public/openapi.json')):continue
+              (d/f'{ix:04d}.patch').write_text(p)
+          PY
+            direct=0; rejected=0
+            for f in /tmp/port-files/*.patch; do
+              [ -f "$f" ] || continue
+              if git apply --check "$f" 2>/dev/null; then
+                git apply "$f"
+                direct=$((direct + 1))
+              elif git apply --reject --whitespace=nowarn "$f" > /tmp/port-output 2>&1; then
+                direct=$((direct + 1))
+              else
+                rejected=$((rejected + 1))
+                grep -E 'Applying patch|Rejected hunk|already exists|error:' /tmp/port-output | tail -n 5 || true
+                find . -name '*.rej' -type f -print -exec sh -c 'for p do printf "### %s\n" "$p" >> /tmp/port-rejects/hunks.txt; cat "$p" >> /tmp/port-rejects/hunks.txt; done' sh {} + 2>/dev/null || true
+                find . -name '*.rej' -type f -delete
+              fi
+            done
+            git add -A
+            if ! git diff --cached --quiet; then
+              git commit -m "feat(upstream): integrate nonconflicting code for PR #${n}"
+            fi
+            echo "PR #${n}: applied_file_patches=${direct}; rejected_file_patches=${rejected}" | tee -a /tmp/port-rejects/status.txt
+            echo "::endgroup::"
+          done
+          git push origin "HEAD:refs/heads/feat/complete-11-upstream-features-0.8.9"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: upstream-0-8-9-integration-rejects
+          path: /tmp/port-rejects/

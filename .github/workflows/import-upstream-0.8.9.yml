@@ -1,0 +1,68 @@
+name: Import audited upstream feature patches for Connect Hub 0.8.9
+on:
+  push:
+    branches:
+      - feat/complete-11-upstream-features-0.8.9
+    paths:
+      - .github/workflows/import-upstream-0.8.9.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: upstream-0.8.9-import
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Import conflict-free, complete upstream feature PRs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # All-or-nothing per PR; any conflicting patch leaves Connect Hub unchanged.
+          # Do not auto-favour upstream over local code: this would overwrite features.
+          PRS=(7085 7083 7046 6969 7064 7031 7048 6970 6972 7086 6958 7043 6985 7088 6952 7012 7092 7006)
+          applied=()
+          blocked=()
+          for n in "${PRS[@]}"; do
+            echo "::group::Upstream PR #${n}"
+            if ! curl --retry 3 --retry-delay 2 --fail --location --silent --show-error --max-time 120 \
+              "https://github.com/MHSanaei/3x-ui/pull/${n}.patch" -o /tmp/upstream.patch; then
+              echo "FETCH_FAILED #${n}"
+              blocked+=("${n}:fetch")
+              echo "::endgroup::"
+              continue
+            fi
+            if git apply --check /tmp/upstream.patch; then
+              git apply /tmp/upstream.patch
+              git add -A
+              git commit -m "feat(upstream): port complete 3x-ui PR #${n}"
+              applied+=("${n}:direct")
+              echo "APPLIED_DIRECT #${n}"
+            else
+              # git apply --3way can merge edits to unchanged overlapping lines.
+              if git apply --3way --index /tmp/upstream.patch; then
+                git add -A
+                git commit -m "feat(upstream): port complete 3x-ui PR #${n}"
+                applied+=("${n}:3way")
+                echo "APPLIED_3WAY #${n}"
+              else
+                git reset --hard HEAD
+                git clean -fd
+                blocked+=("${n}:conflict")
+                echo "CONFLICT #${n}"
+              fi
+            fi
+            echo "::endgroup::"
+          done
+          echo "APPLIED: ${applied[*]}"
+          echo "NEEDS_INTEGRATION: ${blocked[*]}"
+          if [ ${#applied[@]} -gt 0 ]; then
+            git push origin "HEAD:refs/heads/feat/complete-11-upstream-features-0.8.9"
+          fi

@@ -96,6 +96,7 @@ type Remote struct {
 	// from one this Remote has not heard from yet.
 	capsSeen          bool
 	supportsAWGKernel bool
+	supportsAWGPing   bool
 
 	// Per-node client honoring the TLS verify mode, built once and reused; a
 	// node config change drops the cached Remote so the next one rebuilds it.
@@ -140,6 +141,7 @@ func (r *Remote) recordCaps(h http.Header) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.capsSeen = true
+	r.supportsAWGPing = slices.Contains(caps, wirecodec.CapAWGPing)
 	r.supportsAWGKernel = slices.Contains(caps, wirecodec.CapAmneziaWGKernel)
 	if slices.Contains(caps, wirecodec.CapZstd) {
 		r.supportsZstd = true
@@ -149,6 +151,20 @@ func (r *Remote) recordCaps(h http.Header) {
 // requireAmneziaWGKernel refuses to push a kernel-mode AmneziaWG inbound to a
 // node that would drop the flag and silently serve it on the embedded datapath.
 func (r *Remote) requireAmneziaWGKernel(ctx context.Context, ib *model.Inbound) error {
+	if ib.Protocol == model.AmneziaWG {
+		var pingSettings amneziawg.InboundSettings
+		if err := json.Unmarshal([]byte(ib.Settings), &pingSettings); err != nil {
+			return err
+		}
+		for _, c := range pingSettings.Clients {
+			if c.AWGPing != nil && c.AWGPing.Enabled {
+				if err := r.RequireAWGPing(ctx); err != nil {
+					return err
+				}
+				break
+			}
+		}
+	}
 	if ib.Protocol != model.AmneziaWG {
 		return nil
 	}
@@ -706,6 +722,11 @@ func (r *Remote) RestartXray(ctx context.Context) error {
 	return err
 }
 
+func (r *Remote) RestartPanel(ctx context.Context) error {
+	_, err := r.do(ctx, http.MethodPost, "panel/api/setting/restartPanel", nil)
+	return err
+}
+
 // UpdatePanel asks the node to run its own official self-updater (update.sh)
 // and restart onto the latest release. The node returns as soon as the job is
 // launched; the new version surfaces on the next heartbeat. When dev is true the
@@ -1019,4 +1040,17 @@ func (r *Remote) FetchClientIpsByGuid(ctx context.Context) (map[string]map[strin
 		}
 	}
 	return out, nil
+}
+
+func (r *Remote) RequireAWGPing(ctx context.Context) error {
+	if err := r.refreshRemoteIDs(ctx); err != nil {
+		return err
+	}
+	r.mu.RLock()
+	supported := r.supportsAWGPing
+	r.mu.RUnlock()
+	if !supported {
+		return fmt.Errorf("node %s does not support AWG IPv4 ping; upgrade its panel first", r.node.Name)
+	}
+	return nil
 }

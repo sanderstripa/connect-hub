@@ -530,6 +530,8 @@ func inboundTuicServer(protocol string, settings string) *tuic.TuicServerSetting
 		AuthenticationTimeout: inst.AuthenticationTimeout,
 		MaxUdpRelayPacketSize: inst.MaxUdpRelayPacketSize,
 		SNI:                   inst.SNI,
+		DisableSNI:            inst.DisableSNI,
+		DisableSNIInURI:       inst.DisableSNIInURI,
 	}
 }
 
@@ -559,6 +561,35 @@ func (s *InboundService) GetAllInbounds() ([]*model.Inbound, error) {
 	}
 	s.enrichClientStats(db, inbounds)
 	return inbounds, nil
+}
+
+func (s *InboundService) GetInboundLabelsByIDs(ids []int) ([]*model.Inbound, error) {
+	var rows []*model.Inbound
+	for _, batch := range chunkInts(ids, sqlInChunk) {
+		var page []*model.Inbound
+		if err := database.GetDB().Select("id", "remark", "protocol").Where("id IN ?", batch).Find(&page).Error; err != nil {
+			return nil, err
+		}
+		rows = append(rows, page...)
+	}
+	return rows, nil
+}
+
+func (s *InboundService) GetClientInboundLabelPage(page int) ([]*model.Inbound, bool, error) {
+	const size = 20
+	if page < 0 || page > int(^uint(0)>>1)/size {
+		return nil, false, common.NewError("invalid inbound page")
+	}
+	var rows []*model.Inbound
+	err := database.GetDB().Select("id", "remark", "protocol").Where("protocol IN ?", model.ClientProtocols()).Order("id ASC").Offset(page * size).Limit(size + 1).Find(&rows).Error
+	if err != nil {
+		return nil, false, err
+	}
+	more := len(rows) > size
+	if more {
+		rows = rows[:size]
+	}
+	return rows, more, nil
 }
 
 func (s *InboundService) GetInboundsByTrafficReset(period string) ([]*model.Inbound, error) {
@@ -1346,6 +1377,12 @@ func (s *InboundService) AddInbound(inbound *model.Inbound) (*model.Inbound, boo
 	if err := validateClientsKeepAlive(inbound.Protocol, clients); err != nil {
 		return inbound, false, err
 	}
+	// The names the client API refuses; a master's push may carry a legacy one.
+	if !s.FromNodeSync {
+		if err := validateClientsNames(clients); err != nil {
+			return inbound, false, err
+		}
+	}
 	for _, traffic := range inbound.ClientStats {
 		if err := validateClientRenewal(model.Client{Reset: traffic.Reset, ResetDay: traffic.ResetDay, ResetWeekday: traffic.ResetWeekday}); err != nil {
 			return inbound, false, err
@@ -1536,6 +1573,11 @@ func (s *InboundService) AddInbound(inbound *model.Inbound) (*model.Inbound, boo
 		}
 		if err := s.clientService.SyncInbound(tx, inbound.Id, clients); err != nil {
 			return err
+		}
+		if s.FromNodeSync {
+			if err := syncAWGPing(tx, clients); err != nil {
+				return err
+			}
 		}
 		if _, err := database.CreateHostsFromExternalProxy(tx, inbound.Id, inbound.StreamSettings); err != nil {
 			return err
@@ -1924,6 +1966,9 @@ func (s *InboundService) SetInboundEnable(id int, enable bool) (bool, error) {
 }
 
 func (s *InboundService) validateUpdatedInboundClients(inbound, existing *model.Inbound) error {
+	if err := validateStoredAWGPingForKernel(database.GetDB(), inbound); err != nil {
+		return err
+	}
 	clients, err := s.GetClients(inbound)
 	if err != nil {
 		return err
@@ -2297,6 +2342,11 @@ func (s *InboundService) UpdateInbound(inbound *model.Inbound) (*model.Inbound, 
 		if err := s.clientService.SyncInbound(tx, oldInbound.Id, newClients); err != nil {
 			return err
 		}
+		if s.FromNodeSync {
+			if err := syncAWGPing(tx, newClients); err != nil {
+				return err
+			}
+		}
 		if oldInbound.NodeID != nil {
 			if err := (&NodeService{}).MarkNodeDirtyTx(tx, *oldInbound.NodeID); err != nil {
 				return err
@@ -2523,7 +2573,7 @@ func (s *InboundService) updateClientTraffics(tx *gorm.DB, oldInbound *model.Inb
 		if stillUsed {
 			continue
 		}
-		if err := s.DelClientStat(tx, email); err != nil {
+		if err := s.DelClientStat(tx, email, trafficWindowDelete); err != nil {
 			return err
 		}
 		// Keep inbound_client_ips in sync when the inbound edit drops an

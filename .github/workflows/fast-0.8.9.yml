@@ -1,0 +1,43 @@
+name: Fast 0.8.9 integration smoke
+on:
+  push:
+    branches: [feat/complete-11-upstream-features-0.8.9]
+    paths:
+      - .github/workflows/fast-0.8.9.yml
+      - internal/database/model/model.go
+      - internal/web/service/**
+      - internal/tuic/**
+      - internal/web/controller/**
+      - frontend/src/**
+      - tools/openapigen/**
+      - internal/web/translation/**
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compile-go:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Prepare embedded web placeholder for build-only test
+        run: mkdir -p internal/web/dist && echo '<html></html>' > internal/web/dist/index.html
+      - name: Compile Go packages
+        run: go test ./internal/... ./tools/... -run '___DO_NOT_RUN_TESTS___' -count=1
+      - name: Repeat critical feature regression tests
+        run: go test -shuffle=on -count=2 ./internal/web/service ./internal/web/service/tgbot ./internal/tuic -run 'Test(ClientGroup_|BulkSetEnableOfSidecarClientReachesTheDevice|AddInboundRefusesClientNamesTheClientAPIRefuses|ClientHeaderEscapesTheEmailOnce|ScreenArtReprobeWindow|LegacyLinksIndividualAndQRScreensAcceptCustomPrimaryURI|LinkPagesCarryTheHeader|Audit3UDPAssociationMustRecoverAfterBridgeReadFailure)'
+  check-frontend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --ignore-scripts
+        working-directory: frontend
+      - run: npm run typecheck
+        working-directory: frontend

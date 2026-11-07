@@ -10,6 +10,7 @@ import {
   FileTextOutlined,
   GlobalOutlined,
   ImportOutlined,
+  RobotOutlined,
   SettingOutlined,
   SwapOutlined,
   TeamOutlined,
@@ -25,13 +26,14 @@ function LegacyConnections({ keys = false }: { keys?: boolean }) {
 }
 const LegacyInbounds = () => <LegacyConnections />;
 const LegacyClients = () => <LegacyConnections keys />;
-const GroupsPage = LegacyClients;
+const GroupsPage = lazy(() => import('@/pages/groups/GroupsPage'));
 const TunnelsPage = lazy(() => import('@/pages/tunnels/TunnelsPage'));
 const NodesPage = lazy(() => import('@/pages/nodes/NodesPage'));
 const HostsPage = lazy(() => import('@/pages/hosts/HostsPage'));
 const CleanIpPage = lazy(() => import('@/pages/clean-ip/CleanIpPage'));
 const DnsTunnelPage = lazy(() => import('@/pages/dns-tunnel/DnsTunnelPage'));
 const LogsPage = lazy(() => import('@/pages/logs/LogsPage'));
+const AssistantPage = lazy(() => import('@/pages/assistant/AssistantPage'));
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
 const XrayPage = lazy(() => import('@/pages/xray/XrayPage'));
 const ApiDocsPage = lazy(() => import('@/pages/api-docs/ApiDocsPage'));
@@ -52,7 +54,7 @@ export const PANEL_ROUTES: PanelRoute[] = [
   { path: '/connections', titleKey: 'menu.connections', icon: ImportOutlined, component: ConnectionsPage },
   { path: '/inbounds', titleKey: 'menu.connections', icon: ImportOutlined, component: LegacyInbounds, hidden: true },
   { path: '/clients', titleKey: 'menu.connections', icon: TeamOutlined, component: LegacyClients, hidden: true },
-  { path: '/groups', titleKey: 'menu.groups', icon: TeamOutlined, component: GroupsPage, hidden: true },
+  { path: '/groups', titleKey: 'menu.groups', icon: TeamOutlined, component: GroupsPage },
   { path: '/tunnels', titleKey: 'menu.tunnels', icon: SwapOutlined, component: TunnelsPage },
   { path: '/nodes', titleKey: 'menu.nodes', icon: ClusterOutlined, component: NodesPage },
   { path: '/hosts', titleKey: 'menu.hosts', icon: GlobalOutlined, component: HostsPage },
@@ -71,6 +73,7 @@ export const PANEL_ROUTES: PanelRoute[] = [
   { path: '/outbound', titleKey: 'menu.outbounds', icon: ExportOutlined, component: XrayPage },
   { path: '/routing', titleKey: 'menu.routing', icon: SwapOutlined, component: XrayPage },
   { path: '/logs', titleKey: 'menu.logs', icon: FileTextOutlined, component: LogsPage },
+  { path: '/assistant', titleKey: 'menu.assistant', icon: RobotOutlined, component: AssistantPage },
   { path: '/settings', titleKey: 'menu.settings', icon: SettingOutlined, component: SettingsPage },
   { path: '/xray', titleKey: 'menu.xray', icon: ToolOutlined, component: XrayPage },
   { path: '/api-docs', titleKey: 'menu.apiDocs', icon: ApiOutlined, component: ApiDocsPage },

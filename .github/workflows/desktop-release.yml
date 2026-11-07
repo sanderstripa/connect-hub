@@ -132,7 +132,7 @@ jobs:
             echo 'A release already exists for this installer version; refusing to replace published binaries.'
             exit 1
           fi
-          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — Tunnels, Logs and Network Tools" --notes-file release-notes.md --latest=true
+          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — 11 New Feature Families" --notes-file release-notes.md --latest=true
   public-install:
     needs: publish
     runs-on: ubuntu-24.04
