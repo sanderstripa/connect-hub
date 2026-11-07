@@ -86,6 +86,7 @@ export const PALETTE_KEYWORDS: Record<string, string[]> = {
   '/routing': ['routing', 'rules', 'geoip', 'geosite', 'direct', 'block'],
   '/settings': ['settings', 'config', 'port', 'password', 'ssl', 'telegram'],
   '/xray': ['xray', 'templates', 'balancer', 'dns'],
+  '/logs': ['logs', 'log files', 'errors', 'access log', 'analytics', 'search logs'],
   '/api-docs': ['api', 'api docs', 'swagger', 'rest api', 'endpoints'],
   '/hub': ['sudoku', 'connect', 'hub'],
 };
