@@ -419,6 +419,21 @@ export const sections: readonly Section[] = [
       },
       {
         method: 'GET',
+        path: '/panel/hub/api/sudoku/monitor',
+        summary: 'Read sanitized Sudoku tunnel health, runtime state, and per-inbound monitoring details.',
+      },
+      {
+        method: 'GET',
+        path: '/panel/hub/api/sudoku/releases',
+        summary: 'List available Sudoku update/release metadata without modifying the running installation.',
+      },
+      {
+        method: 'POST',
+        path: '/panel/hub/api/sudoku-profiles',
+        summary: 'Manage bundled Sudoku profiles through the authenticated Connect Hub integration.',
+      },
+      {
+        method: 'GET',
         path: '/panel/hub/api/status',
         summary:
           'Sudoku process state and sanitized read-only Core alpha status. No private keys or tokens are returned.',
@@ -1848,6 +1863,15 @@ export const sections: readonly Section[] = [
           },
         ],
         responseSchema: 'ClientTraffic',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/clients/inboundLinks/:inboundId/:email',
+        summary: 'Get connection links for one client on a selected inbound.',
+        params: [
+          { name: 'inboundId', in: 'path', type: 'integer', desc: 'Inbound ID.' },
+          { name: 'email', in: 'path', type: 'string', desc: 'Client identifier.' },
+        ],
       },
       {
         method: 'GET',
