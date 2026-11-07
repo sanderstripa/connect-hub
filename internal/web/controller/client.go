@@ -673,6 +673,16 @@ func (a *ClientController) getTrafficByEmail(c *gin.Context) {
 	jsonObj(c, traffic, nil)
 }
 
+func (a *ClientController) getUsageHistory(c *gin.Context) {
+	email := c.Param("email")
+	history, err := a.clientService.GetUsageHistory(email)
+	if err != nil {
+		jsonMsg(c, I18nWeb(c, "pages.inbounds.toasts.trafficGetError"), err)
+		return
+	}
+	jsonObj(c, history, nil)
+}
+
 func (a *ClientController) getSubLinks(c *gin.Context) {
 	links, err := a.inboundService.GetSubLinks(resolveHost(c), c.Param("subId"))
 	if err != nil {

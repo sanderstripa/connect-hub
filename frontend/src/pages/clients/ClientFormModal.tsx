@@ -24,6 +24,7 @@ import {
 import {
   DeleteOutlined,
   EyeOutlined,
+  HistoryOutlined,
   PlusOutlined,
   ReloadOutlined,
   RetweetOutlined,
@@ -43,6 +44,7 @@ import { useRawHostsQuery } from '@/api/queries/useRawHostsQuery';
 import { DateTimePicker, SelectAllClearButtons } from '@/components/form';
 import { FormField, rhfZodValidate } from '@/components/form/rhf';
 import ClientHwidListModal from '@/components/clients/ClientHwidList';
+import ClientUsageHistoryModal from '@/components/clients/ClientUsageHistoryModal';
 import { TLS_FLOW_CONTROL, TRAFFIC_RESETS } from '@/schemas/primitives';
 import {
   OptionalAmneziaWGKeepAliveInputSchema,
@@ -313,6 +315,7 @@ export default function ClientFormModal({
     deleteHwid,
   } = useClientHwids(client?.email);
   const [hwidsModalOpen, setHwidsModalOpen] = useState(false);
+  const [usageHistoryOpen, setUsageHistoryOpen] = useState(false);
   const { datepicker } = useDatepicker();
   const hwidDateLabel = (ts: number) =>
     !ts || ts <= 0 ? '-' : IntlUtil.formatDate(ts, datepicker);
@@ -932,6 +935,15 @@ export default function ClientFormModal({
                   {t('pages.inbounds.resetTraffic')}
                 </Button>
               </Popconfirm>
+            )}
+            {isEdit && client?.email && (
+              <Button
+                aria-label={t('pages.clients.usageHistory')}
+                icon={<HistoryOutlined aria-hidden />}
+                onClick={() => setUsageHistoryOpen(true)}
+              >
+                {t('pages.clients.usageHistory')}
+              </Button>
             )}
             <div style={{ marginInlineStart: 'auto', display: 'flex', gap: 8 }}>
               <Button onClick={close}>{t('cancel')}</Button>
@@ -1792,6 +1804,13 @@ export default function ClientFormModal({
         onClearAll={clearHwids}
         onDelete={deleteHwid}
         onClose={() => setHwidsModalOpen(false)}
+      />
+
+      <ClientUsageHistoryModal
+        open={usageHistoryOpen}
+        email={client?.email}
+        zIndex={CLIENT_IP_LOG_MODAL_Z_INDEX}
+        onClose={() => setUsageHistoryOpen(false)}
       />
     </>
   );

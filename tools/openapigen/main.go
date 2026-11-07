@@ -41,6 +41,8 @@ func run(root, outDir string) error {
 				"InboundFallback",
 				"Host",
 				"SubBalancer",
+				"ClientTrafficWindow",
+				"ClientChangeLog",
 			),
 			AliasAllow: setOf("Protocol"),
 			Overrides: map[string][]walkOverride{
@@ -133,6 +135,8 @@ func run(root, outDir string) error {
 				"AmneziaWGLogs",
 				"PeerActivity",
 				"HwidSlotStatus",
+				"ClientUsageHistory",
+				"ClientNodeUsage",
 			),
 		},
 		{
