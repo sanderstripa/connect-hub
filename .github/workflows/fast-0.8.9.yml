@@ -5,6 +5,11 @@ on:
     paths:
       - .github/workflows/fast-0.8.9.yml
       - internal/database/model/model.go
+      - internal/web/service/**
+      - internal/web/controller/**
+      - frontend/src/**
+      - tools/openapigen/**
+      - internal/web/translation/**
   workflow_dispatch:
 permissions:
   contents: read
