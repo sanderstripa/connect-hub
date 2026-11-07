@@ -1731,6 +1731,16 @@ func (s *ClientService) BulkSetEnable(inboundSvc *InboundService, emails []strin
 		}
 	}
 
+	// Sidecars read the committed client state and must be refreshed AFTER the
+	// serialized traffic/client transaction. The per-inbound fanout has already
+	// released its locks, so reapplication cannot deadlock with the update.
+	for i, ibRes := range enableResults {
+		if enablePanics[i] != nil || ibRes.sidecar == "" {
+			continue
+		}
+		applyBulkSidecar(inboundSvc, enableIds[i], ibRes.sidecar)
+	}
+
 	result.Changed = len(successEmails)
 	for email, reason := range skippedReasons {
 		result.Skipped = append(result.Skipped, BulkSetEnableReport{Email: email, Reason: reason})
