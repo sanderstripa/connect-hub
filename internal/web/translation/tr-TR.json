@@ -1411,8 +1411,6 @@
       "totalUpDown": "Toplam yükleme / indirme",
       "addGroup": "Grup ekle",
       "createSuccess": "«{name}» grubu oluşturuldu.",
-      "rename": "Yeniden adlandır",
-      "renameTitle": "{name} yeniden adlandır",
       "renameCollision": "«{name}» adında bir grup zaten var.",
       "renameSuccess": "{count} kullanıcının grubu yeniden adlandırıldı.",
       "deleteConfirmTitle": "{name} Grubunu Sil?",

@@ -1411,8 +1411,6 @@
       "totalUpDown": "Tổng tải lên / tải xuống",
       "addGroup": "Thêm nhóm",
       "createSuccess": "Đã tạo nhóm «{name}».",
-      "rename": "Đổi tên",
-      "renameTitle": "Đổi tên {name}",
       "renameCollision": "Nhóm có tên «{name}» đã tồn tại.",
       "renameSuccess": "Đã đổi tên nhóm trên {count} client.",
       "deleteConfirmTitle": "Xóa nhóm {name}?",

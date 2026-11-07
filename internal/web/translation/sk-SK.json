@@ -1411,8 +1411,6 @@
       "totalUpDown": "Celkom odoslané / prijaté",
       "addGroup": "Pridať skupinu",
       "createSuccess": "Skupina „{name}“ bola vytvorená.",
-      "rename": "Premenovať",
-      "renameTitle": "Premenovať skupinu {name}",
       "renameCollision": "Skupina s názvom „{name}“ už existuje.",
       "renameSuccess": "Názov skupiny bol zmenený pri klientoch: {count}.",
       "deleteConfirmTitle": "Odstrániť skupinu {name}?",

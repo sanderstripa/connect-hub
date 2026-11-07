@@ -1411,8 +1411,6 @@
       "totalUpDown": "总上传 / 下载",
       "addGroup": "添加分组",
       "createSuccess": "已创建分组 “{name}”。",
-      "rename": "重命名",
-      "renameTitle": "重命名 {name}",
       "renameCollision": "已存在名为 “{name}” 的分组。",
       "renameSuccess": "已为 {count} 个客户端重命名分组。",
       "deleteConfirmTitle": "删除分组 {name}?",

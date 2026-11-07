@@ -1411,8 +1411,6 @@
       "totalUpDown": "Всего отправлено / получено",
       "addGroup": "Добавить группу",
       "createSuccess": "Группа «{name}» создана.",
-      "rename": "Переименовать",
-      "renameTitle": "Переименовать {name}",
       "renameCollision": "Группа с именем «{name}» уже существует.",
       "renameSuccess": "Группа переименована для {count} клиент(ов).",
       "deleteConfirmTitle": "Удалить группу {name}?",

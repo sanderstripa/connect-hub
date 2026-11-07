@@ -1411,8 +1411,6 @@
       "totalUpDown": "Всього вивантажено / завантажено",
       "addGroup": "Додати групу",
       "createSuccess": "Групу «{name}» створено.",
-      "rename": "Перейменувати",
-      "renameTitle": "Перейменувати {name}",
       "renameCollision": "Група з назвою «{name}» вже існує.",
       "renameSuccess": "Групу перейменовано на {count} клієнт(ах).",
       "deleteConfirmTitle": "Видалити групу {name}?",
