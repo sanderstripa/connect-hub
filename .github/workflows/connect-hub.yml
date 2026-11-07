@@ -82,7 +82,7 @@ jobs:
         run: python3 hub/browser-smoke.py
       - name: Two actual version changes using the ordinary web update button
         run: python3 hub/web-update-smoke.py
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: connect-hub-linux-amd64
@@ -132,7 +132,7 @@ jobs:
           $digest = (Get-FileHash -Algorithm SHA256 ../../dist/windows-installer/Connect-Hub-Setup.exe).Hash.ToLowerInvariant()
           [IO.File]::WriteAllText((Join-Path (Resolve-Path ../../dist/windows-installer) 'SHA256SUMS'), "$digest  Connect-Hub-Setup.exe`n", [Text.UTF8Encoding]::new($false))
           Copy-Item assets/BUILD.json ../../dist/windows-installer/BUILD.json
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: connect-hub-windows-installer
@@ -140,7 +140,7 @@ jobs:
             dist/windows-installer/Connect-Hub-Setup.exe
             dist/windows-installer/SHA256SUMS
             dist/windows-installer/BUILD.json
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: connect-hub-windows-evidence
