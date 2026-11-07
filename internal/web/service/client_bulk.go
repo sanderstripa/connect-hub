@@ -1725,8 +1725,9 @@ func (s *ClientService) BulkSetEnable(inboundSvc *InboundService, emails []strin
 				})
 			}
 			return logClientChangesTx(tx, enableChanges)
-		}); err != nil {
-			return result, needRestart, err
+		})
+		if trafficErr != nil {
+			return result, needRestart, trafficErr
 		}
 	}
 
