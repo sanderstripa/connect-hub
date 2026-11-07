@@ -1075,10 +1075,13 @@ func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool
 	case "client_traffic":
 		t.answerSilent(callbackQuery.ID)
 		t.getClientUsage(chatId, callbackQuery.From.ID)
-	case "client_sub_links", "client_individual_links", "client_qr_links":
+	case "client_sub_links", "client_individual_links", "client_qr_links", "client_one_link":
 		// A client tapped its own link button: its identity already says which
 		// subscription, so it opens directly. A second one still needs a choice.
 		t.openOwnClientScreen(chatId, callbackQuery.From.ID, callbackQuery.Data)
+	case cbClientGuide:
+		t.answerSilent(callbackQuery.ID)
+		t.screenGuide(chatId, "")
 	case "add_client_ch_default_email":
 		userStateMgr.set(actor, "awaiting_email")
 		t.wizardPrompt(chatId, draft, t.I18nBot("tgbot.messages.email_prompt", "ClientEmail=="+html.EscapeString(draft.email)))
@@ -1298,25 +1301,38 @@ func checkAdmin(tgId int64) bool {
 // admin-only; the caller still has to prove the client is its own.
 func isClientSelfCallback(data string) bool {
 	switch data {
-	// "hide" is how any recipient puts a message away: it carries no target of its
-	// own (it is the message it sits on), so it is safe for anyone to reach.
+	// "hide" carries no target; it only dismisses the current screen.
 	case "home", "hide", "client_traffic", "client_commands", "client_sub_links",
-		"client_individual_links", "client_qr_links":
+		"client_individual_links", "client_qr_links", "client_one_link", cbClientGuide:
+		return true
+	case cbPageNext, cbPagePrev, cbPageNone:
 		return true
 	}
-	_, _, ok := splitClientLinkCallback(data)
+	if _, ok := parseGuideCallback(data); ok {
+		return true
+	}
+	_, _, _, ok := splitClientLinkCallback(data)
 	return ok
 }
 
-// splitClientLinkCallback splits "<action> <email>" for the per-client link
-// callbacks; ok is false for every other data.
-func splitClientLinkCallback(data string) (action, email string, ok bool) {
-	for _, candidate := range []string{"client_sub_links", "client_individual_links", "client_qr_links"} {
-		if rest, found := strings.CutPrefix(data, candidate+" "); found && rest != "" {
-			return candidate, rest, true
+// All client link callbacks that encode an email require ownership checks.
+var clientLinkActions = []string{"client_sub_links", "client_individual_links", "client_qr_links", "client_one_link", "link_one"}
+
+// splitClientLinkCallback splits "<action> <email>" and the optional link index.
+// The index is never interpreted as the client identity.
+func splitClientLinkCallback(data string) (action, email string, index int, ok bool) {
+	for _, candidate := range clientLinkActions {
+		rest, found := strings.CutPrefix(data, candidate+" ")
+		if !found || rest == "" {
+			continue
 		}
+		if candidate == "link_one" {
+			email, index, ok = splitEmailIndex(rest)
+			return candidate, email, index, ok
+		}
+		return candidate, rest, 0, true
 	}
-	return "", "", false
+	return "", "", 0, false
 }
 
 // refuseGroups keeps every update in a private chat: a group shares one screen and keyboard among its

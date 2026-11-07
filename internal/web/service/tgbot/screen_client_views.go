@@ -165,7 +165,10 @@ func (t *Tgbot) screenClientLinks(chatID int64, email string) {
 	body += t.I18nBot("tgbot.messages.refreshedOn", "Time=="+time.Now().Format("2006-01-02 15:04:05"))
 	rows := [][]telego.InlineKeyboardButton{
 		tu.InlineKeyboardRow(t.btn("tgbot.buttons.individualLinks", t.encodeQuery("client_individual_links "+email))),
-		tu.InlineKeyboardRow(t.btn("tgbot.buttons.qrCode", t.encodeQuery("client_qr_links "+email))),
+		tu.InlineKeyboardRow(
+			t.btn("tgbot.buttons.getOneConfig", t.encodeQuery("client_one_link "+email)),
+			t.btn("tgbot.buttons.qrCode", t.encodeQuery("client_qr_links "+email)),
+		),
 	}
 	// A client looking at its own subscription has nothing behind the admin's
 	// card: it only repeats the usage already on its home screen.
