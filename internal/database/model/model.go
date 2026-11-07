@@ -1026,7 +1026,7 @@ type ClientRecord struct {
 	TrafficResetDay   int            `json:"trafficResetDay" gorm:"column:traffic_reset_day;default:1"`
 	CreatedAt         int64          `json:"createdAt" gorm:"autoCreateTime:milli"`
 	UpdatedAt         int64          `json:"updatedAt" gorm:"autoUpdateTime:milli"`
-	SudokuKey string `json:"sudokuKey,omitempty" gorm:"column:sudoku_key;default:''"`
+	SudokuKey         string         `json:"sudokuKey,omitempty" gorm:"column:sudoku_key;default:''"`
 	// Owned solely by the node-snapshot sweep, which soft-orphans instead of
 	// deleting; orphans from any other cause stay at zero and are never reaped.
 	SyncOrphanedAt int64 `json:"-" gorm:"column:sync_orphaned_at;default:0"`

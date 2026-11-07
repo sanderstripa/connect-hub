@@ -975,7 +975,7 @@ func (s *ClientService) Update(inboundSvc *InboundService, id int, updated model
 				"reset_max":            merged.ResetMax,
 				"traffic_reset":        merged.TrafficReset,
 				"traffic_reset_day":    merged.TrafficResetDay,
-				"sudoku_key": merged.SudokuKey,
+				"sudoku_key":           merged.SudokuKey,
 			}).Error; err != nil {
 			return needRestart, err
 		}

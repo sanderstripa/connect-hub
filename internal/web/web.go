@@ -933,4 +933,3 @@ func scheduleSettingJob(c *cron.Cron, name, spec, fallback string, j cron.Job) c
 	logger.Infof("%s scheduled, run at %s", name, spec)
 	return c.Schedule(schedule, j)
 }
-

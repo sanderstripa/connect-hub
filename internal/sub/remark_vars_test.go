@@ -800,17 +800,17 @@ func TestInboundTrafficOnAllLinks(t *testing.T) {
 		usageShown:       map[string]bool{},
 	}
 	inbound1 := &model.Inbound{
-		Remark: "DE",
-		Total:  500 * gb,
-		Up:     50 * gb,
-		Down:   50 * gb,
+		Remark:      "DE",
+		Total:       500 * gb,
+		Up:          50 * gb,
+		Down:        50 * gb,
 		ClientStats: []xray.ClientTraffic{{Email: "alice@x", Enable: true, Total: 100 * gb, Up: 10 * gb}},
 	}
 	inbound2 := &model.Inbound{
-		Remark: "FR",
-		Total:  200 * gb,
-		Up:     20 * gb,
-		Down:   30 * gb,
+		Remark:      "FR",
+		Total:       200 * gb,
+		Up:          20 * gb,
+		Down:        30 * gb,
 		ClientStats: []xray.ClientTraffic{{Email: "alice@x", Enable: true, Total: 100 * gb, Up: 10 * gb}},
 	}
 	client := model.Client{Email: "alice@x"}
@@ -835,10 +835,10 @@ func TestInboundTrafficPreservedWithSubInfoNode(t *testing.T) {
 		subInfoNodeEnable: true,
 	}
 	inbound := &model.Inbound{
-		Remark: "DE",
-		Total:  500 * gb,
-		Up:     50 * gb,
-		Down:   50 * gb,
+		Remark:      "DE",
+		Total:       500 * gb,
+		Up:          50 * gb,
+		Down:        50 * gb,
 		ClientStats: []xray.ClientTraffic{{Email: "alice@x", Enable: true, Total: 100 * gb, Up: 10 * gb}},
 	}
 	client := model.Client{Email: "alice@x"}
@@ -858,10 +858,10 @@ func TestInboundTrafficStrippedInDisplay(t *testing.T) {
 		subscriptionBody: false,
 	}
 	inbound := &model.Inbound{
-		Remark: "DE",
-		Total:  500 * gb,
-		Up:     50 * gb,
-		Down:   50 * gb,
+		Remark:      "DE",
+		Total:       500 * gb,
+		Up:          50 * gb,
+		Down:        50 * gb,
 		ClientStats: []xray.ClientTraffic{{Email: "alice@x", Enable: true, Total: 100 * gb, Up: 10 * gb}},
 	}
 	client := model.Client{Email: "alice@x"}
@@ -871,4 +871,3 @@ func TestInboundTrafficStrippedInDisplay(t *testing.T) {
 		t.Fatalf("display remark should strip inbound and client traffic: got %q, want %q", remark, "DE")
 	}
 }
-
