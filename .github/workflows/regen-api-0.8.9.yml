@@ -1,4 +1,5 @@
 name: Regenerate 0.8.9 API schemas and format integrations
+# Re-run after status schema collision was corrected.
 on:
   push:
     branches:
