@@ -354,6 +354,25 @@ func (s *InboundService) adjustTraffics(tx *gorm.DB, dbClientTraffics []*xray.Cl
 	return dbClientTraffics, newExpiryByEmail, nil
 }
 
+// coreUserFromClient is the account map the runtime AddUser expects; WireGuard
+// peers fail it without publicKey/allowedIPs, and a failed add restarts Xray.
+func coreUserFromClient(c *model.Client, cipher string) map[string]any {
+	return map[string]any{
+		"email":        c.Email,
+		"id":           c.ID,
+		"auth":         c.Auth,
+		"security":     c.Security,
+		"flow":         c.Flow,
+		"password":     c.Password,
+		"cipher":       cipher,
+		"publicKey":    c.PublicKey,
+		"allowedIPs":   c.AllowedIPs,
+		"preSharedKey": c.PreSharedKey,
+		"keepAlive":    keepAliveStr(c.KeepAliveSeconds()),
+		"reverse":      c.Reverse,
+	}
+}
+
 // apiUserFromClient prepares a stored client object for the runtime AddUser
 // call. The copy matters twice over: the stored object keeps being mutated and
 // marshalled back into the inbound's settings, which must not gain an API-only
@@ -367,6 +386,10 @@ func apiUserFromClient(client map[string]any, cipher string) map[string]any {
 	}
 	if cipher != "" {
 		user["cipher"] = cipher
+	}
+	// Stored JSON holds keepAlive as a number; the core's builder takes a string.
+	if seconds, ok := user["keepAlive"].(float64); ok {
+		user["keepAlive"] = keepAliveStr(int(seconds))
 	}
 	return user
 }
