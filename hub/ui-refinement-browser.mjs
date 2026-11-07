@@ -50,7 +50,7 @@ try {
    const more=page.getByRole('button',{name:i.more,exact:true});
    await more.click();await page.getByText(i.maintenance,{exact:true}).waitFor({state:'visible'});await page.getByText(i.diagnostics,{exact:true}).waitFor({state:'visible'});
    await page.waitForTimeout(350);const menuBox=await page.locator('.ant-dropdown:visible').boundingBox();assert.ok(menuBox.x>=0&&menuBox.x+menuBox.width<=1440&&menuBox.y>=0&&menuBox.y+menuBox.height<=1000);await shot(language+'-more-'+dark);await page.keyboard.press('Escape');assert.equal(await more.getAttribute('aria-expanded'),'false');
-   await more.focus();await page.keyboard.press('Enter');await page.getByText(i.maintenance,{exact:true}).waitFor({state:'visible'});await page.locator('.ov-state').click({position:{x:4,y:4}});await page.waitForFunction(()=>document.querySelector('.ov-bar-actions .ant-dropdown-trigger')?.getAttribute('aria-expanded')==='false');
+   await more.focus();await page.keyboard.press('Enter');await page.getByText(i.maintenance,{exact:true}).waitFor({state:'visible'});await page.locator('.ov-state').first().click({position:{x:4,y:4}});await page.waitForFunction(()=>document.querySelector('.ov-bar-actions .ant-dropdown-trigger')?.getAttribute('aria-expanded')==='false');
    for(const label of [i.config,i.backupTitle,i.systemHistoryTitle,i.xrayMetricsTitle]){
     await more.click();await page.locator('.ant-dropdown:visible').getByRole('menuitem',{name:label,exact:false}).click();const modal=page.getByRole('dialog').last();await modal.waitFor();await modal.locator('.ant-modal-close').click();await modal.waitFor({state:'hidden'});
    }
