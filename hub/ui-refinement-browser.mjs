@@ -57,6 +57,12 @@ try {
    await page.locator('.ov-bar-actions').getByRole('button',{name:i.logs,exact:true}).click();const logs=page.getByRole('dialog');await logs.waitFor();
    await logs.locator('.ant-select').nth(1).click();const selected=page.locator('.ant-select-dropdown:visible .ant-select-item-option-selected');await selected.waitFor();
    await page.waitForTimeout(350);
+   // The fast browser lab reuses a previously packed binary while testing the
+   // *newly authored* palette CSS. Full release tests omit this override and
+   // exercise the exact embedded production stylesheet.
+   if (process.env.CONNECT_HUB_BROWSER_WORKTREE_CSS === '1') {
+     await page.addStyleTag({content:fs.readFileSync(new URL('../frontend/src/styles/palettes.css',import.meta.url),'utf8')});
+   }
    const colors=await selected.evaluate(el=>{const s=getComputedStyle(el);return {fg:s.color,bg:s.backgroundColor};});const ratio=contrast(colors.fg,colors.bg);assert.ok(ratio>=4.5,'Log select contrast '+ratio+' '+JSON.stringify(colors));
    await shot(language+'-logs-'+dark);await page.keyboard.press('Escape');
    for(const label of [i.logLevelDebug,i.logLevelInfo,i.logLevelNotice,i.logLevelWarning,i.logLevelError]){await logs.locator('.ant-select').nth(1).click();await page.locator('.ant-select-dropdown:visible').getByText(label,{exact:true}).click();assert.ok((await logs.locator('.ant-select').nth(1).innerText()).includes(label));}
