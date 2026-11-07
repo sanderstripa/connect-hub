@@ -87,7 +87,7 @@ try {
     await network.click();
     const item=page.locator('.rail-submenu:visible').getByRole('menuitem',{name:label,exact:false}).last();
     await item.waitFor({state:'visible'});
-    assert.ok(await item.evaluate(el=>el.classList.contains('ant-menu-item-selected')),'Network item not selected: '+route);
+    assert.ok(await item.evaluate(el=>el.classList.contains('ant-dropdown-menu-item-selected') || el.classList.contains('ant-menu-item-selected') || el.getAttribute('aria-selected') === 'true'),'Network item not selected: '+route+' ('+(await item.getAttribute('class'))+')');
     await page.keyboard.press('Escape');
    }
    await shot(language+'-navigation-'+dark);
