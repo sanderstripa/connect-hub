@@ -1411,8 +1411,6 @@
       "totalUpDown": "Total upload / download",
       "addGroup": "Add Group",
       "createSuccess": "Group \"{name}\" created.",
-      "rename": "Rename",
-      "renameTitle": "Rename {name}",
       "renameCollision": "A group named \"{name}\" already exists.",
       "renameSuccess": "Renamed group on {count} client(s).",
       "deleteConfirmTitle": "Delete group {name}?",

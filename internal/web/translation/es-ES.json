@@ -1411,8 +1411,6 @@
       "totalUpDown": "Subida / bajada total",
       "addGroup": "Añadir grupo",
       "createSuccess": "Grupo «{name}» creado.",
-      "rename": "Renombrar",
-      "renameTitle": "Renombrar {name}",
       "renameCollision": "Ya existe un grupo llamado «{name}».",
       "renameSuccess": "Grupo renombrado en {count} cliente(s).",
       "deleteConfirmTitle": "¿Eliminar el grupo {name}?",

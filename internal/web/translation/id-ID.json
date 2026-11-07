@@ -1411,8 +1411,6 @@
       "totalUpDown": "Total unggah / unduh",
       "addGroup": "Tambah grup",
       "createSuccess": "Grup «{name}» dibuat.",
-      "rename": "Ubah nama",
-      "renameTitle": "Ubah nama {name}",
       "renameCollision": "Grup bernama «{name}» sudah ada.",
       "renameSuccess": "Grup diubah namanya pada {count} klien.",
       "deleteConfirmTitle": "Hapus grup {name}?",

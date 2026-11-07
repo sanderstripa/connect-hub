@@ -1411,8 +1411,6 @@
       "totalUpDown": "مجموع آپلود / دانلود",
       "addGroup": "افزودن گروه",
       "createSuccess": "گروه «{name}» ایجاد شد.",
-      "rename": "تغییر نام",
-      "renameTitle": "تغییر نام {name}",
       "renameCollision": "گروهی به نام «{name}» از قبل وجود دارد.",
       "renameSuccess": "گروه روی {count} کاربر تغییر نام داده شد.",
       "deleteConfirmTitle": "حذف گروه {name}؟",

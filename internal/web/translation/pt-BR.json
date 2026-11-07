@@ -1411,8 +1411,6 @@
       "totalUpDown": "Total de envio / recebimento",
       "addGroup": "Adicionar grupo",
       "createSuccess": "Grupo «{name}» criado.",
-      "rename": "Renomear",
-      "renameTitle": "Renomear {name}",
       "renameCollision": "Já existe um grupo chamado «{name}».",
       "renameSuccess": "Grupo renomeado em {count} cliente(s).",
       "deleteConfirmTitle": "Excluir o grupo {name}?",

@@ -1411,8 +1411,6 @@
       "totalUpDown": "合計アップロード / ダウンロード",
       "addGroup": "グループ追加",
       "createSuccess": "グループ「{name}」を作成しました。",
-      "rename": "名前変更",
-      "renameTitle": "{name} の名前を変更",
       "renameCollision": "「{name}」という名前のグループは既に存在します。",
       "renameSuccess": "{count} クライアントのグループ名を変更しました。",
       "deleteConfirmTitle": "グループ {name} を削除?",

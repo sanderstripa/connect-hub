@@ -1411,8 +1411,6 @@
       "totalUpDown": "إجمالي الرفع / التنزيل",
       "addGroup": "إضافة مجموعة",
       "createSuccess": "تم إنشاء المجموعة «{name}».",
-      "rename": "إعادة تسمية",
-      "renameTitle": "إعادة تسمية {name}",
       "renameCollision": "مجموعة باسم «{name}» موجودة بالفعل.",
       "renameSuccess": "تمت إعادة تسمية المجموعة على {count} عميل.",
       "deleteConfirmTitle": "حذف المجموعة {name}؟",
