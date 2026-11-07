@@ -26,7 +26,9 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           mapfile -t files < <(git diff --name-only --diff-filter=ACM origin/main...HEAD -- '*.go')
-          if [ ${#files[@]} -gt 0 ]; then gofmt -w "${files[@]}"; fi
+          broken=0
+          for file in "${files[@]}"; do gofmt -w "$file" || broken=1; done
+          if [ "$broken" -ne 0 ]; then echo "Fix Go syntax before regenerating"; exit 1; fi
           go run ./tools/openapigen -root . -out frontend/src/generated
           git add -- '*.go' frontend/src/generated
           if ! git diff --cached --quiet; then
