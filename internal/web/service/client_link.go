@@ -115,6 +115,26 @@ func (s *ClientService) syncInboundClients(tx *gorm.DB, inboundId int, clients [
 		tx = database.GetDB()
 	}
 
+	// Existing group names are normalized in the same transaction as the
+	// inbound/client sync so subscription host rules use stable group IDs.
+	groupNames := make(map[string]string)
+	for i := range clients {
+		name := strings.TrimSpace(clients[i].Group)
+		if name == "" {
+			continue
+		}
+		canonical, ok := groupNames[name]
+		if !ok {
+			group, err := database.EnsureClientGroup(tx, name)
+			if err != nil {
+				return err
+			}
+			canonical = group.Name
+			groupNames[name] = canonical
+		}
+		clients[i].Group = canonical
+	}
+
 	var inbound model.Inbound
 	if err := tx.Select("protocol").Where("id = ?", inboundId).Take(&inbound).Error; err != nil {
 		return err

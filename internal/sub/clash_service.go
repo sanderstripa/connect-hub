@@ -87,7 +87,7 @@ func (s *SubClashService) getClash(subId string, host string, legacy bool) (stri
 			}
 			seenEmails[client.Email] = struct{}{}
 			if subReq.hostsFirst {
-				variants, closed := subReq.clientHostVariants(inbound, client, "clash")
+				variants, closed := subReq.selectHostVariants(inbound, client, "clash")
 				hasBoundClosed = hasBoundClosed || closed
 				for _, variant := range variants {
 					render := func() []map[string]any { return s.getProxies(subReq, variant.inbound(subReq, inbound), client, host) }
