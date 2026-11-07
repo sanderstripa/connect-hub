@@ -1724,6 +1724,10 @@ type SecretClears struct {
 }
 
 func (s *SettingService) UpdateAllSetting(allSetting *entity.AllSetting, clears SecretClears) error {
+	preserveTrafficSelection := allSetting.NetworkTrafficMode == ""
+	if err := validateNetworkTrafficSettings(allSetting); err != nil {
+		return err
+	}
 	switch allSetting.SubHostSortMode {
 	case "":
 		allSetting.SubHostSortMode = defaultValueMap["subHostSortMode"]
