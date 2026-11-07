@@ -1,0 +1,31 @@
+name: Integrate upstream locales for Connect Hub 0.8.9
+on:
+  push:
+    branches:
+      - feat/complete-11-upstream-features-0.8.9
+    paths:
+      - .github/workflows/merge-locales-0.8.9.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  merge:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply upstream locale additions and safe updates
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/integrate-upstream-locales-0.8.9.py
+      - name: Commit merged locale keys
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add internal/web/translation/
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(i18n): merge all upstream feature translations for 0.8.9'
+            git push origin 'HEAD:refs/heads/feat/complete-11-upstream-features-0.8.9'
+          fi
