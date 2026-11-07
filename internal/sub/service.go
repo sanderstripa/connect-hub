@@ -81,9 +81,14 @@ type SubService struct {
 	// subscription bodies read through it, never panel link rendering.
 	settingsCache   *inboundSettingsCache
 	hostsByInbound  map[int][]*model.Host
+	hostsLoaded     map[int]bool
 	hostGroupOrders map[string]hostEntryOrder
 	hostsFirst      bool
 	sharedGroupSni  map[string]string
+	// Request-scoped, lazily loaded group-to-host mappings.
+	clientGroupIDsByName    map[string]int
+	hostGroupsByClientGroup map[int]map[string]struct{}
+	clientGroupIndexLoaded  bool
 }
 
 // NewSubService creates a new subscription service with the given configuration.
@@ -127,8 +132,12 @@ func (s *SubService) PrepareForRequest(host string) {
 	s.fullyPrimedInbounds = map[int]bool{}
 	s.settingsByInbound = map[int]map[string]any{}
 	s.hostsByInbound = nil
+	s.hostsLoaded = nil
 	s.hostGroupOrders = nil
 	s.sharedGroupSni = nil
+	s.clientGroupIDsByName = nil
+	s.hostGroupsByClientGroup = nil
+	s.clientGroupIndexLoaded = false
 	mode, _ := s.settingService.GetSubHostSortMode()
 	s.hostsFirst = mode == "hosts-first"
 	s.loadNodes()
