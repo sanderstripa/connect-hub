@@ -27,6 +27,7 @@ import {
   SunOutlined,
   SwapOutlined,
   TelegramFilled,
+  WechatOutlined,
   ToolOutlined,
 } from '@ant-design/icons';
 import { HttpUtil } from '@/utils';

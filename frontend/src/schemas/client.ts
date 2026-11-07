@@ -56,6 +56,7 @@ export const ClientRecordSchema = z
     publicKey: z.string().optional(),
     allowedIPs: z.string().optional(),
     preSharedKey: z.string().optional(),
+    awgPing: AWGPingPolicySchema.nullable().optional(),
     keepAlive: OptionalClientKeepAliveSchema,
     forwardedPorts: z.string().optional(),
     secret: z.string().optional(),

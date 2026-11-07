@@ -2,7 +2,6 @@ import { Select } from 'antd';
 import { useTranslation } from 'react-i18next';
 
 import { useHostsQuery } from '@/api/queries/useHostsQuery';
-import { selectTagRender } from '@/components/form';
 
 interface HostGroupSelectProps {
   value: string[];
@@ -30,7 +29,6 @@ export default function HostGroupSelect({ value, onChange, ariaLabel }: HostGrou
       options={options}
       optionFilterProp="label"
       aria-label={ariaLabel ?? t('pages.groups.hostRules')}
-      tagRender={selectTagRender}
       placeholder={t('pages.groups.hostRulesPlaceholder')}
       style={{ width: '100%' }}
     />

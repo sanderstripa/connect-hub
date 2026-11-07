@@ -43,6 +43,8 @@ export default function RealityWatchSection({
   const [tests, setTests] = useState<Record<string, RealityScanResult>>({});
   const [scannerOpen, setScannerOpen] = useState(false);
   const formTarget = useWatch({ name: 'streamSettings.realitySettings.target' }) as unknown;
+  const formPort = useWatch({ name: 'port' }) as number | undefined;
+  const formListen = useWatch({ name: 'listen' }) as string | undefined;
   const isDraft = !inboundId;
   const currentTarget = isDraft
     ? typeof formTarget === 'string'
@@ -295,6 +297,10 @@ export default function RealityWatchSection({
         open={scannerOpen}
         onClose={() => setScannerOpen(false)}
         scanRealityCandidates={scanRealityCandidates}
+        inboundPort={formPort ?? 0}
+        listen={formListen ?? ''}
+        currentTarget={currentTarget}
+        onPickTarget={(target) => { setSpares((prev) => addSpare(prev, target, currentTarget)); setDirty(true); }}
         onPick={(r) => {
           setSpares((prev) => addSpare(prev, r.target, currentTarget));
           setDirty(true);

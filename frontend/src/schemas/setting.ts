@@ -13,6 +13,9 @@ export type SubProfileMode = z.infer<typeof SubProfileModeSchema>;
 export const SubHostSortModeSchema = z.enum(['inbound-first', 'hosts-first']);
 export type SubHostSortMode = z.infer<typeof SubHostSortModeSchema>;
 
+export const WechatModeSchema = z.enum(['wecom', 'webhook']);
+export type WechatMode = z.infer<typeof WechatModeSchema>;
+
 export const AllSettingFieldsSchema = z
   .object({
     webListen: z.string().optional(),

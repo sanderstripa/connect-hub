@@ -1,5 +1,5 @@
 import { ObjectUtil } from '@/utils';
-import type { SubProfileMode, SubHostSortMode, NetworkTrafficMode } from '@/schemas/setting';
+import type { SubProfileMode, SubHostSortMode, NetworkTrafficMode, WechatMode } from '@/schemas/setting';
 
 export class AllSetting {
   webListen = '';
