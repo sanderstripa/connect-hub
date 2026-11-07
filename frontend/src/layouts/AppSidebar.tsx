@@ -123,6 +123,11 @@ export default function AppSidebar() {
         label: t('pages.settings.discordSettings'),
       },
       {
+        key: '/settings#wechat',
+        icon: <WechatOutlined aria-hidden />,
+        label: t('pages.settings.wechatSettings'),
+      },
+      {
         key: '/settings#subscription',
         icon: <CloudServerOutlined aria-hidden />,
         label: t('pages.settings.subSettings'),

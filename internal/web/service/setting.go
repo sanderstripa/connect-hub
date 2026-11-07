@@ -102,6 +102,16 @@ var defaultValueMap = map[string]string{
 	"tgCpu":                       "80",
 	"tgMemory":                    "80",
 	"tgLang":                      "en-US",
+	"wechatEnable":                "false",
+	"wechatMode":                  "wecom",
+	"wechatWebhookURL":            "",
+	"wechatToken":                 "",
+	"wechatLang":                  "en-US",
+	"wechatReportEnable":          "false",
+	"wechatRunTime":               "@daily",
+	"wechatEnabledEvents":         "login.attempt,cpu.high",
+	"wechatCpu":                   "80",
+	"wechatMemory":                "80",
 	"twoFactorEnable":             "false",
 	"twoFactorToken":              "",
 	"happLinkEnable":              "false",
@@ -368,6 +378,8 @@ func (s *SettingService) GetAllSettingView() (*entity.AllSettingView, error) {
 	view.HasNordSecret = secretConfigured(mustString(s.GetNord()))
 	view.HasSmtpPassword = secretConfigured(allSetting.SmtpPassword)
 	view.HasDiscordBotToken = secretConfigured(allSetting.DiscordBotToken)
+	view.HasWechatWebhookURL = secretConfigured(allSetting.WechatWebhookURL)
+	view.HasWechatToken = secretConfigured(allSetting.WechatToken)
 	var apiTokenCount int64
 	if err := database.GetDB().Model(model.ApiToken{}).Where("enabled = ?", true).Count(&apiTokenCount).Error; err == nil {
 		view.HasApiToken = apiTokenCount > 0
@@ -377,6 +389,8 @@ func (s *SettingService) GetAllSettingView() (*entity.AllSettingView, error) {
 	view.LdapPassword = ""
 	view.SmtpPassword = ""
 	view.DiscordBotToken = ""
+	view.WechatWebhookURL = ""
+	view.WechatToken = ""
 	return view, nil
 }
 
@@ -1692,10 +1706,12 @@ func (s *SettingService) SetNodeDownThreshold(value int) error {
 // flag, a blank submitted secret means "unchanged" (the field is always served
 // blank to the browser) and the stored value is preserved.
 type SecretClears struct {
-	TgBotToken      bool
-	LdapPassword    bool
-	SmtpPassword    bool
-	DiscordBotToken bool
+	TgBotToken       bool
+	LdapPassword     bool
+	SmtpPassword     bool
+	DiscordBotToken  bool
+	WechatWebhookURL bool
+	WechatToken      bool
 }
 
 func (s *SettingService) UpdateAllSetting(allSetting *entity.AllSetting, clears SecretClears) error {
@@ -1713,6 +1729,9 @@ func (s *SettingService) UpdateAllSetting(allSetting *entity.AllSetting, clears 
 		return errors.New("subscription profile mode must be none, builtin, or custom")
 	}
 	if err := s.preserveRedactedSecrets(allSetting, clears); err != nil {
+		return err
+	}
+	if err := validateWechatSettings(allSetting); err != nil {
 		return err
 	}
 	if err := validateSettingsURLs(allSetting); err != nil {
@@ -1868,6 +1887,20 @@ func (s *SettingService) preserveRedactedSecrets(allSetting *entity.AllSetting, 
 			return err
 		}
 		allSetting.DiscordBotToken = value
+	}
+	if !clears.WechatWebhookURL && strings.TrimSpace(allSetting.WechatWebhookURL) == "" {
+		value, err := s.GetWechatWebhookURL()
+		if err != nil {
+			return err
+		}
+		allSetting.WechatWebhookURL = value
+	}
+	if !clears.WechatToken && strings.TrimSpace(allSetting.WechatToken) == "" {
+		value, err := s.GetWechatToken()
+		if err != nil {
+			return err
+		}
+		allSetting.WechatToken = value
 	}
 	return nil
 }
@@ -2080,11 +2113,13 @@ func (s *SettingService) GetDefaultSettings(host string) (any, error) {
 }
 
 var factoryDefaultSecretKeys = map[string]bool{
-	"tgBotToken":      true,
-	"twoFactorToken":  true,
-	"ldapPassword":    true,
-	"smtpPassword":    true,
-	"discordBotToken": true,
+	"tgBotToken":       true,
+	"twoFactorToken":   true,
+	"ldapPassword":     true,
+	"smtpPassword":     true,
+	"discordBotToken":  true,
+	"wechatWebhookURL": true,
+	"wechatToken":      true,
 }
 
 /*
