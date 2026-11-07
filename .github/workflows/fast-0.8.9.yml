@@ -4,6 +4,7 @@ on:
     branches: [feat/complete-11-upstream-features-0.8.9]
     paths:
       - .github/workflows/fast-0.8.9.yml
+      - internal/database/model/model.go
   workflow_dispatch:
 permissions:
   contents: read
@@ -16,7 +17,21 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - run: go test ./internal/... ./tools/... -run '^$' -count=1
+      - run: mkdir -p internal/web/dist && printf '<html></html>\n' > internal/web/dist/index.html
+      - run: go test ./internal/... ./tools/... -run '^
+  check-frontend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --ignore-scripts
+        working-directory: frontend
+      - run: npm run typecheck
+        working-directory: frontend
+ -count=1
   check-frontend:
     runs-on: ubuntu-24.04
     timeout-minutes: 18

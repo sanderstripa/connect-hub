@@ -6,6 +6,8 @@ on:
       - feat/complete-11-upstream-features-0.8.9
     paths:
       - .github/workflows/regen-api-0.8.9.yml
+      - internal/database/model/model.go
+      - tools/openapigen/main.go
   workflow_dispatch:
 permissions:
   contents: write
