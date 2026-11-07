@@ -97,6 +97,7 @@ const TextModal = lazy(() => import('@/components/feedback/TextModal'));
 const PromptModal = lazy(() => import('@/components/feedback/PromptModal'));
 import { ClientInboundChips, ClientRowActions } from './RowCells';
 import ClientColumnPicker from './ClientColumnPicker';
+import { useFitTableBodyHeight } from './useFitTableBodyHeight';
 import { clientColumnOptions, hideClientColumns, useHiddenClientColumns } from './columnVisibility';
 import { emptyFilters, activeFilterCount } from './filters';
 import type { ClientFilters } from './filters';
@@ -1267,6 +1268,9 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
   const columnOptions = useMemo(() => clientColumnOptions(baseColumns), [baseColumns]);
   const columns = useMemo(() => hideClientColumns(baseColumns, hiddenColumns), [baseColumns, hiddenColumns]);
 
+  const [tableBox, setTableBox] = useState<HTMLDivElement | null>(null);
+  const fitBodyHeight = useFitTableBodyHeight(tableBox);
+
   const tablePagination = {
     current: currentPage,
     pageSize: tablePageSize,
@@ -1767,7 +1771,8 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                       )}
 
                       {!isMobile && !(explorer && isNarrowWorkspace) ? (
-                        <Table<ClientRecord>
+                        <div ref={setTableBox}>
+                          <Table<ClientRecord>
                           columns={explorer && inboundId !== undefined ? compactColumns : columns}
                           dataSource={sortedClients}
                           loading={transitioning}
@@ -1779,7 +1784,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                           }}
                           pagination={tablePagination}
                           size="small"
-                          scroll={{ x: explorer && inboundId !== undefined ? 740 : 'max-content' }}
+                          scroll={{ x: explorer && inboundId !== undefined ? 740 : 'max-content', y: fitBodyHeight }}
                           onChange={onTableChange}
                           locale={{
                             emptyText: (
@@ -1792,7 +1797,8 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                               </div>
                             ),
                           }}
-                        />
+                          />
+                        </div>
                       ) : (
                         <Spin spinning={transitioning}>
                           <div className="client-cards">
