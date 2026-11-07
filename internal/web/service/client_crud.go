@@ -325,6 +325,27 @@ func (s *ClientService) Create(inboundSvc *InboundService, payload *ClientCreate
 	return needRestart, s.setClientLimitHwidByEmail(client.Email, payload.LimitHwid)
 }
 
+func (s *ClientService) prepareClientAdd(client *model.Client, inbound *model.Inbound) (*model.Inbound, error) {
+	if err := s.fillProtocolDefaults(client, inbound); err != nil {
+		return nil, err
+	}
+	perInbound := *client
+	if ips, ok := client.AllowedIPsByInbound[inbound.Id]; ok {
+		perInbound.AllowedIPs = ips
+	} else if !addressesFitAmneziaWGInbound(perInbound.AllowedIPs, inbound) {
+		// Each tunnel allocates addresses from its own subnet.
+		perInbound.AllowedIPs = nil
+	}
+	if err := validateAmneziaWGClientWrite(inbound, []model.Client{perInbound}); err != nil {
+		return nil, err
+	}
+	settings, err := json.Marshal(map[string][]model.Client{"clients": {clientWithInboundFlow(perInbound, inbound)}})
+	if err != nil {
+		return nil, err
+	}
+	return &model.Inbound{Id: inbound.Id, Settings: string(settings)}, nil
+}
+
 // inboundFanoutConcurrency caps how many inbounds one client op applies at
 // once, so a client spanning many of them can't start an unbounded RPC burst.
 const inboundFanoutConcurrency = 4

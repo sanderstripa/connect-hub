@@ -761,6 +761,19 @@ func (s *InboundService) ResetClientTrafficByEmail(clientEmail string) error {
 	return err
 }
 
+func resetClientTrafficAccounting(tx *gorm.DB, email string, enabled bool) error {
+	if err := adjustGroupBaselinesForRemovedTraffic(tx, []string{email}); err != nil {
+		return err
+	}
+	if err := clearGlobalTraffic(tx, email); err != nil {
+		return err
+	}
+	if err := tx.Model(&xray.ClientTraffic{}).Where("email = ?", email).Updates(map[string]any{"up": 0, "down": 0, "enable": enabled}).Error; err != nil {
+		return err
+	}
+	return tx.Where("email = ?", email).Delete(&model.NodeClientTraffic{}).Error
+}
+
 func (s *InboundService) ResetClientTraffic(id int, clientEmail string) (needRestart bool, err error) {
 	var ownNode *int
 	err = submitTrafficWrite(func() error {
@@ -1256,7 +1269,9 @@ func (s *InboundService) GetClientTrafficByEmail(email string) (traffic *xray.Cl
 	if len(traffics) == 0 {
 		return nil, nil
 	}
-	overlayGlobalTraffic(db, traffics)
+	if err := overlayGlobalTrafficChecked(db, traffics); err != nil {
+		return nil, err
+	}
 	t := traffics[0]
 
 	if rec, rErr := s.clientService.GetRecordByEmail(db, email); rErr == nil && rec != nil {
