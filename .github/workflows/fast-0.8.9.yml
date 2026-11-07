@@ -17,21 +17,10 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - run: mkdir -p internal/web/dist && printf '<html></html>\n' > internal/web/dist/index.html
-      - run: go test ./internal/... ./tools/... -run '^
-  check-frontend:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 18
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-      - run: npm ci --ignore-scripts
-        working-directory: frontend
-      - run: npm run typecheck
-        working-directory: frontend
- -count=1
+      - name: Prepare embedded web placeholder for build-only test
+        run: mkdir -p internal/web/dist && echo '<html></html>' > internal/web/dist/index.html
+      - name: Compile Go packages
+        run: go test ./internal/... ./tools/... -run '___DO_NOT_RUN_TESTS___' -count=1
   check-frontend:
     runs-on: ubuntu-24.04
     timeout-minutes: 18
