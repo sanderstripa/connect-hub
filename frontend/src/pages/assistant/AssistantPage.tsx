@@ -35,19 +35,19 @@ export default function AssistantPage() {
   async function send() {
     const content = draft.trim();
     if (!content || busy || !provider?.configured) return;
-    const next: ChatMessage[] = [...messages, { role: 'user', content }].slice(-15);
+    const next: ChatMessage[] = [...messages, { role: 'user' as const, content }].slice(-15);
     setMessages(next);
     setDraft('');
     setBusy(true);
     setError('');
     try {
       const response = await HttpUtil.post('/panel/api/assistant/chat', { messages: next }, {
-        'Content-Type': 'application/json',
+        headers: { 'Content-Type': 'application/json' },
       });
       if (!response?.success) throw new Error(response?.msg || 'Provider error');
       const answer = response.obj as ProviderReply;
       if (!answer?.content) throw new Error('Empty provider response');
-      setMessages((prev) => [...prev, { role: 'assistant', content: answer.content }].slice(-16));
+      setMessages((prev) => [...prev, { role: 'assistant' as const, content: answer.content }].slice(-16));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'AI provider unavailable');
     } finally {

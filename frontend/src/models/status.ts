@@ -74,7 +74,7 @@ interface StatusInput extends Pick<ParsedStatusInput, 'resourceScope' | 'unavail
   logicalPro?: number;
   cpuSpeedMhz?: number;
   disk?: { current?: number; total?: number };
-  loads?: number[];
+  loads?: number[] | null;
   mem?: { current?: number; total?: number };
   netIO?: NetIO;
   netTraffic?: NetTraffic;

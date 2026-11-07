@@ -102,7 +102,6 @@ func run(root, outDir string) error {
 				"NetworkInterfaceOption",
 				"NetworkInterfacesResponse",
 				"NetworkTrafficSelection",
-				"Status",
 				"RealityFinderCommandRequest",
 				"RealityFinderCommand",
 				"RealityFinderNetwork",
