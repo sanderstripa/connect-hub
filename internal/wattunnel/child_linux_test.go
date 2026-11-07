@@ -4,6 +4,7 @@ package wattunnel
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -100,7 +101,7 @@ func TestLinuxParentDeathTerminatesChild(t *testing.T) {
 	deadline := time.Now().Add(3 * time.Second)
 	for time.Now().Before(deadline) {
 		raw, err := os.ReadFile(fmt.Sprintf("/proc/%d/stat", pid))
-		if os.IsNotExist(err) {
+		if os.IsNotExist(err) || errors.Is(err, unix.ESRCH) {
 			return
 		}
 		if err != nil {

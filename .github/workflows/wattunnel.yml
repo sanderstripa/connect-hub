@@ -45,7 +45,7 @@ jobs:
         shell: bash
         run: |
           caps=()
-          while read -r cap; do caps+=(--cap-add "$cap"); done < <(sed -n 's/^CapabilityBoundingSet=//p' x-ui.service.debian | tr ' ' '\n')
+          while read -r cap; do caps+=(--cap-add "$cap"); done < <(sed -n 's/^CapabilityBoundingSet=//p' hub/install.sh | tr ' ' '\n')
           # Create the restricted service account while building the image, before
           # dropping privileges. useradd cannot update /etc/shadow in the
           # CAP_NET_RAW/CAP_NET_BIND_SERVICE-only runtime container.
@@ -53,7 +53,7 @@ jobs:
           FROM ubuntu:24.04
           RUN useradd --system --no-create-home --shell /usr/sbin/nologin connect-hub-wattunnel
           DOCKERFILE
-          # Derive allowed root capabilities from the production systemd unit.
+          # Derive allowed root capabilities from the native Connect Hub install unit.
           docker run --rm --network none --security-opt no-new-privileges --cap-drop ALL "${caps[@]}" \
             -v "$PWD:/workspace:ro" -w /workspace \
             -e WATTUN_E2E_BINARY="/workspace/.cache/wattunnel/wattun-${{ matrix.target }}" -e WATTUN_E2E_ICMP=1 \

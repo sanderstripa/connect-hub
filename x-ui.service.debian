@@ -89,7 +89,9 @@ RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
 # the unprivileged WatTunnel child (verified by the Linux child tests).
 # CAP_KILL is required to stop WatTunnel after it drops to its dedicated UID.
 # The child does not inherit this capability; it is for the root supervisor only.
-CapabilityBoundingSet=CAP_CHOWN CAP_SETUID CAP_SETGID CAP_KILL CAP_DAC_OVERRIDE CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_RAW
+# CAP_FOWNER lets the root supervisor re-secure tunnel files after the
+# dedicated child UID has owned them during a previous run.
+CapabilityBoundingSet=CAP_CHOWN CAP_FOWNER CAP_SETUID CAP_SETGID CAP_KILL CAP_DAC_OVERRIDE CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_RAW
 SystemCallArchitectures=native
 # No seccomp whitelist here on purpose. @system-service needs systemd >= 239
 # (other @-named groups exist since 231), and older systemd does not ignore an
