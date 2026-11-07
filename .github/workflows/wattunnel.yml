@@ -46,10 +46,17 @@ jobs:
         run: |
           caps=()
           while read -r cap; do caps+=(--cap-add "$cap"); done < <(sed -n 's/^CapabilityBoundingSet=//p' x-ui.service.debian | tr ' ' '\n')
+          # Create the restricted service account while building the image, before
+          # dropping privileges. useradd cannot update /etc/shadow in the
+          # CAP_NET_RAW/CAP_NET_BIND_SERVICE-only runtime container.
+          docker build -t connect-hub-wattunnel-ci:${{ matrix.target }} - <<'DOCKERFILE'
+          FROM ubuntu:24.04
+          RUN useradd --system --no-create-home --shell /usr/sbin/nologin x-ui-wattunnel
+          DOCKERFILE
           docker run --rm --network none --security-opt no-new-privileges --cap-drop ALL "${caps[@]}" \
+            --cap-add SETUID --cap-add SETGID \
             -v "$PWD:/workspace:ro" -w /workspace \
             -e WATTUN_E2E_BINARY="/workspace/.cache/wattunnel/wattun-${{ matrix.target }}" -e WATTUN_E2E_ICMP=1 \
-            ubuntu:24.04 bash -ec '
-              useradd --system --no-create-home --shell /usr/sbin/nologin x-ui-wattunnel
+            connect-hub-wattunnel-ci:${{ matrix.target }} bash -ec '
               .cache/wattunnel/process-tests.exe -test.v -test.run "TestManagedProcessE2E|TestLinuxChild|TestLinuxParentDeath"
             '
