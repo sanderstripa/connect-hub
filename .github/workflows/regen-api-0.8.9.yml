@@ -1,0 +1,35 @@
+name: Regenerate 0.8.9 API schemas and format integrations
+on:
+  push:
+    branches:
+      - feat/complete-11-upstream-features-0.8.9
+    paths:
+      - .github/workflows/regen-api-0.8.9.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  regen:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Format Go changes and regenerate generated API models
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          mapfile -t files < <(git diff --name-only --diff-filter=ACM origin/main...HEAD -- '*.go')
+          if [ ${#files[@]} -gt 0 ]; then gofmt -w "${files[@]}"; fi
+          go run ./tools/openapigen -root . -out frontend/src/generated
+          git add -- '*.go' frontend/src/generated
+          if ! git diff --cached --quiet; then
+            git commit -m 'chore(api): regenerate models for all imported 0.8.9 features'
+            git push origin 'HEAD:refs/heads/feat/complete-11-upstream-features-0.8.9'
+          fi
