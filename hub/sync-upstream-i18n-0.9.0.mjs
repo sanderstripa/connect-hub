@@ -98,7 +98,11 @@ const unresolved = [];
 for (const key of referenced) {
   if (leaf(english, key) !== undefined) continue;
   const fromUpstream = enSources.map((src) => leaf(src.value, key)).find((value) => value !== undefined);
-  const value = fromUpstream ?? (key === 'import' ? 'Import' : undefined);
+  const missingLegacyValues = {
+    import: 'Import',
+    'pages.inbounds.realityWatch.saveFailed': 'Unable to save REALITY monitoring settings',
+  };
+  const value = fromUpstream ?? missingLegacyValues[key];
   if (value === undefined) unresolved.push(key);
   else {
     writeLeaf(english, key, value);
