@@ -1324,10 +1324,9 @@ func keepAliveValue(value *KeepAliveValue) KeepAliveValue {
 
 // ForwardedPortsSpec is the client's port-forwarding spec, "" when unset.
 func (c Client) ForwardedPortsSpec() string {
-	if c.ForwardedPorts == nil {
-		return ""
-	}
-	return strings.TrimSpace(*c.ForwardedPorts)
+	// Connect Hub stores the forwarded-port spec as a string, not a pointer.
+	// The zero value is already the absent/empty value for persisted clients.
+	return strings.TrimSpace(c.ForwardedPorts)
 }
 
 // ForwardedPortsPtr wraps an explicit spec, "" included: distinct from a nil
