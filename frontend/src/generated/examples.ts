@@ -235,6 +235,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "hasWarpSecret": false,
     "hasWechatToken": false,
     "hasWechatWebhookURL": false,
+    "inboundListOrder": "id",
     "ipLimitAllowlist": "",
     "ldapAutoCreate": false,
     "ldapAutoDelete": false,
@@ -594,7 +595,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "enable": false,
     "expiryTime": 0,
     "flow": "",
-    "forwardedPorts": null,
+    "forwardedPorts": "",
     "group": "",
     "id": "",
     "keepAlive": 0,
@@ -1189,13 +1190,6 @@ export const EXAMPLES: Record<string, unknown> = {
     "wgPublicKey": "",
     "wgVkTurn": null
   },
-  "InboundTagChangeCheck": {
-    "nodeTagConflict": false,
-    "reason": "",
-    "routingRefs": 2,
-    "unchanged": false,
-    "valid": true
-  },
   "InboundTrafficSummary": {
     "down": 2097152,
     "enable": true,
@@ -1774,6 +1768,11 @@ export const EXAMPLES: Record<string, unknown> = {
     "id": 0,
     "key": "",
     "value": ""
+  },
+  "Settings": {
+    "callLink": "",
+    "enabled": false,
+    "port": 0
   },
   "Spec": {
     "config": {

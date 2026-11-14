@@ -966,6 +966,10 @@ export const SCHEMAS: Record<string, unknown> = {
       "hasWechatWebhookURL": {
         "type": "boolean"
       },
+      "inboundListOrder": {
+        "example": "id",
+        "type": "string"
+      },
       "ipLimitAllowlist": {
         "type": "string"
       },
@@ -1582,6 +1586,7 @@ export const SCHEMAS: Record<string, unknown> = {
       "hasWarpSecret",
       "hasWechatToken",
       "hasWechatWebhookURL",
+      "inboundListOrder",
       "ipLimitAllowlist",
       "ldapAutoCreate",
       "ldapAutoDelete",
@@ -2356,8 +2361,7 @@ export const SCHEMAS: Record<string, unknown> = {
         "type": "string"
       },
       "forwardedPorts": {
-        "description": "AmneziaWG port-forwarding spec, e.g. \"80,443,8000-8100\"; \"\" withdraws the forwards, omit to keep them",
-        "nullable": true,
+        "description": "AmneziaWG per-client port-forwarding spec, e.g. \"80,443,8000-8100\"",
         "type": "string"
       },
       "group": {
@@ -4484,40 +4488,6 @@ export const SCHEMAS: Record<string, unknown> = {
       "ssMethod",
       "tag",
       "tlsFlowCapable"
-    ],
-    "type": "object"
-  },
-  "InboundTagChangeCheck": {
-    "description": "InboundTagChangeCheck is the pre-flight report for an inbound ID (tag)\nchange: whether the target is usable and what a rename would touch, so the\npanel can show the impact before committing.",
-    "properties": {
-      "nodeTagConflict": {
-        "description": "NodeTagConflict reports a same-name inbound on the hosting node that the\nnew tag would collide with once the prefix is stripped.",
-        "example": false,
-        "type": "boolean"
-      },
-      "reason": {
-        "type": "string"
-      },
-      "routingRefs": {
-        "description": "RoutingRefs is how many routing rules on this panel reference the\ncurrent tag; a rename rewrites them all.",
-        "example": 2,
-        "type": "integer"
-      },
-      "unchanged": {
-        "example": false,
-        "type": "boolean"
-      },
-      "valid": {
-        "example": true,
-        "type": "boolean"
-      }
-    },
-    "required": [
-      "nodeTagConflict",
-      "reason",
-      "routingRefs",
-      "unchanged",
-      "valid"
     ],
     "type": "object"
   },
@@ -6656,6 +6626,25 @@ export const SCHEMAS: Record<string, unknown> = {
       "id",
       "key",
       "value"
+    ],
+    "type": "object"
+  },
+  "Settings": {
+    "properties": {
+      "callLink": {
+        "type": "string"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "port": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "callLink",
+      "enabled",
+      "port"
     ],
     "type": "object"
   },

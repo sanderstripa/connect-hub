@@ -253,6 +253,7 @@ export const AllSettingViewSchema = z.object({
   hasWarpSecret: z.boolean(),
   hasWechatToken: z.boolean(),
   hasWechatWebhookURL: z.boolean(),
+  inboundListOrder: z.string(),
   ipLimitAllowlist: z.string(),
   ldapAutoCreate: z.boolean(),
   ldapAutoDelete: z.boolean(),
@@ -587,7 +588,7 @@ export const ClientSchema = z.object({
   enable: z.boolean(),
   expiryTime: z.number().int(),
   flow: z.string().optional(),
-  forwardedPorts: z.string().nullable().optional(),
+  forwardedPorts: z.string().optional(),
   group: z.string().optional(),
   id: z.string().optional(),
   keepAlive: z.union([z.number().int(), z.string()]).optional(),
@@ -1020,6 +1021,7 @@ export const InboundSchema = z.object({
   nodeId: z.number().int().nullable().optional(),
   originNodeGuid: z.string().optional(),
   port: z.number().int().min(0).max(65535),
+  preserveClientTraffic: z.boolean().nullable().optional(),
   protocol: z.enum(['vmess', 'vless', 'trojan', 'shadowsocks', 'wireguard', 'hysteria', 'http', 'mixed', 'tunnel', 'tun', 'mtproto', 'sudoku', 'amneziawg', 'tuic', 'masque']),
   remark: z.string(),
   settings: z.unknown(),
@@ -1081,15 +1083,6 @@ export const InboundOptionSchema = z.object({
   wgVkTurn: z.lazy(() => SettingsSchema).nullable().optional(),
 });
 export type InboundOption = z.infer<typeof InboundOptionSchema>;
-
-export const InboundTagChangeCheckSchema = z.object({
-  nodeTagConflict: z.boolean(),
-  reason: z.string(),
-  routingRefs: z.number().int(),
-  unchanged: z.boolean(),
-  valid: z.boolean(),
-});
-export type InboundTagChangeCheck = z.infer<typeof InboundTagChangeCheckSchema>;
 
 export const InboundTrafficSummarySchema = z.object({
   down: z.number().int(),
@@ -1610,6 +1603,13 @@ export const SettingSchema = z.object({
   value: z.string(),
 });
 export type Setting = z.infer<typeof SettingSchema>;
+
+export const SettingsSchema = z.object({
+  callLink: z.string(),
+  enabled: z.boolean(),
+  port: z.number().int(),
+});
+export type Settings = z.infer<typeof SettingsSchema>;
 
 export const SpecSchema = z.object({
   config: z.lazy(() => ConfigSchema),

@@ -239,6 +239,7 @@ export interface AllSettingView {
   hasWarpSecret: boolean;
   hasWechatToken: boolean;
   hasWechatWebhookURL: boolean;
+  inboundListOrder: string;
   ipLimitAllowlist: string;
   ldapAutoCreate: boolean;
   ldapAutoDelete: boolean;
@@ -556,7 +557,7 @@ export interface Client {
   enable: boolean;
   expiryTime: number;
   flow?: string;
-  forwardedPorts?: string | null;
+  forwardedPorts?: string;
   group?: string;
   id?: string;
   keepAlive?: number | string;
@@ -1015,14 +1016,6 @@ export interface InboundOption {
   wgMtu?: number;
   wgPublicKey?: string;
   wgVkTurn?: Settings | null;
-}
-
-export interface InboundTagChangeCheck {
-  nodeTagConflict: boolean;
-  reason: string;
-  routingRefs: number;
-  unchanged: boolean;
-  valid: boolean;
 }
 
 export interface InboundTrafficSummary {
@@ -1503,6 +1496,12 @@ export interface Setting {
   id: number;
   key: string;
   value: string;
+}
+
+export interface Settings {
+  callLink: string;
+  enabled: boolean;
+  port: number;
 }
 
 export interface Spec {
