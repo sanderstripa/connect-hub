@@ -1,0 +1,86 @@
+name: Connect Hub 0.9.0 — isolated merge compatibility lab
+on:
+  push:
+    branches: [feat/connect-hub-0.9.0-merge-lab]
+    paths: ['.github/workflows/merge-lab-0.9.0.yml']
+permissions:
+  contents: write
+concurrency:
+  group: connect-hub-0.9.0-merge-lab
+  cancel-in-progress: false
+jobs:
+  merge-and-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Attempt conflict-aware upstream merges into temporary integration branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          upstream=https://github.com/MHSanaei/3x-ui.git
+          report=/tmp/connect-hub-0.9.0-merge-report.md
+          printf '# Connect Hub 0.9.0 — isolated merge compatibility test\n\n**Experimental branch only. No release or main updates.**\nGit merges favor Connect Hub on conflicted hunks, but merged code must be manually reviewed and comprehensively tested before use.\n\n| Upstream | Merge status | Notes |\n|---|---|---|\n' > "$report"
+          imported=0
+          blocked=0
+          merge_ref() {
+            kind="$1"
+            number="$2"
+            source="$3"
+            before="$(git rev-parse HEAD)"
+            if ! git fetch --no-tags "$upstream" "$source"; then
+              echo "| $kind $number | FETCH FAILED | Could not fetch ref |" >> "$report"
+              blocked=$((blocked+1))
+              return
+            fi
+            echo "::group::Try $kind $number"
+            if git merge --no-edit --no-ff -X ours FETCH_HEAD; then
+              # Do not let upstream replace Connect Hub's installer, release
+              # pipeline, native setup and rollback behavior, or product identity.
+              git restore --source="$before" --staged --worktree -- .github/workflows apps/windows-installer hub README.md install.sh x-ui.sh update.sh || true
+              if ! git diff --quiet || ! git diff --cached --quiet; then
+                git add -A
+                git commit --no-verify -m "chore(0.9.0): restore protected Connect Hub paths after $kind $number"
+              fi
+              printf '| %s %s | MERGED, UNREVIEWED | Conflicted hunks preferred Connect Hub; protected files restored |\n' "$kind" "$number" >> "$report"
+              imported=$((imported+1))
+            else
+              git merge --abort || git reset --hard "$before"
+              git clean -fd
+              printf '| %s %s | BLOCKED | Git merge reported unresolved conflicts |\n' "$kind" "$number" >> "$report"
+              blocked=$((blocked+1))
+            fi
+            echo "::endgroup::"
+          }
+          merge_ref main 2026-11-13 main
+          for number in 7109 7120 7134 7133 7139 7136 7132 7111; do
+            merge_ref pull "$number" "refs/pull/$number/head"
+          done
+          printf '\n## Merge totals\n\n- Source refs incorporated (unreviewed): **%s**\n- Ref merges blocked: **%s**\n\nNetwork feature requests #7137 and #7140, and report #7119, are still non-implemented issues. Git merging cannot turn them into code.\n\n**Do not publish v0.9.0 from this laboratory.**\n' "$imported" "$blocked" >> "$report"
+          mkdir -p docs
+          cp "$report" docs/0.9.0-merge-lab-report.md
+          git add docs/0.9.0-merge-lab-report.md
+          git commit --no-verify -m "docs(0.9.0): record experimental merge results"
+          git push origin HEAD:refs/heads/feat/connect-hub-0.9.0-merge-lab
+      - name: Check changed-file whitespace and unresolved conflict markers
+        run: |
+          git diff --check HEAD~1 HEAD
+          if git grep -n '^<<<<<<< \|^=======\|^>>>>>>> ' -- ':!frontend/package-lock.json' ':!docs/0.9.0-merge-lab-report.md'; then exit 1; fi
+      - name: Verify frontend types (no release)
+        working-directory: frontend
+        run: npm ci --ignore-scripts && npm run typecheck
+      - name: Compile Go packages (no tests or release)
+        run: |
+          mkdir -p internal/web/dist
+          printf '<html></html>\n' > internal/web/dist/index.html
+          go test ./internal/... ./tools/... -run '^__DO_NOT_RUN_TESTS__$' -count=1
