@@ -1065,7 +1065,11 @@
         "finderNone": "Không có đích nào đạt. Hãy thử phạm vi rộng hơn.",
         "finderReport": "Báo cáo",
         "finderCommandError": "Không thể tạo lệnh",
-        "finderExpired": "Lệnh này đã hết hạn. Hãy tạo lệnh mới."
+        "finderExpired": "Lệnh này đã hết hạn. Hãy tạo lệnh mới.",
+        "chainNone": "Kết nối trực tiếp",
+        "chainSelectorSuffix": "bộ chọn",
+        "chain": "Chuỗi của ứng dụng",
+        "chainHelp": "Cho ứng dụng kết nối tới inbound này qua proxy SOCKS/HTTP thượng nguồn. Áp dụng cho đăng ký JSON và Mihomo."
       },
       "info": {
         "mode": "Chế độ",
@@ -1114,8 +1118,19 @@
           "failed": "Không lưu được dự phòng",
           "switchFailed": "Không chuyển được: mục tiêu không qua phép kiểm tra hoặc kiểm tra REALITY thật",
           "switched": "Đã chuyển sang {target}"
-        }
-      }
+        },
+        "saveFailed": "Unable to save REALITY monitoring settings"
+      },
+      "changeIdInvalid": "The new ID is unavailable ({reason}).",
+      "changeIdUnchanged": "The ID is unchanged.",
+      "changeIdRoutingRefs": "{count} routing rule(s) point at the current ID and will be updated.",
+      "changeIdNodeConflict": "The hosting node already has an inbound with this name.",
+      "changeIdValid": "The new ID is available.",
+      "changeIdTitle": "Change inbound ID — {tag}",
+      "changeIdApply": "Apply",
+      "changeIdDesc": "Changing the inbound ID updates every routing rule and node reference that points at the current ID. The check below runs before anything is saved.",
+      "changeIdLabel": "New inbound ID (tag)",
+      "changeId": "Change ID"
     },
     "clients": {
       "columns": "Cột",
@@ -2337,7 +2352,16 @@
       "wechatReportTime": "Lịch báo cáo",
       "wechatReportTimeDesc": "Dùng biểu thức cron hoặc giá trị như @daily.",
       "wechatEvents": "Cảnh báo sự kiện",
-      "wechatEventsDesc": "Chọn sự kiện gửi thông báo và đặt ngưỡng cảnh báo."
+      "wechatEventsDesc": "Chọn sự kiện gửi thông báo và đặt ngưỡng cảnh báo.",
+      "inboundListOrder": "Inbound list order",
+      "inboundListOrderDesc": "Default order of the inbound list in the panel. Applies to local inbounds and to inbounds adopted from all nodes.",
+      "inboundListOrderOptionId": "ID",
+      "inboundListOrderOptionRemark": "Remark",
+      "inboundListOrderOptionPort": "Port",
+      "inboundListOrderOptionProtocol": "Protocol",
+      "inboundListOrderOptionSubSortIndex": "Subscription order",
+      "nodeRoutingControl": "Node routing control",
+      "nodeRoutingControlDesc": "Let this panel control the routing of connected nodes. When enabled, the Node Routing page can push a shared routing policy to each node."
     },
     "xray": {
       "importRules": "Nhập quy tắc",
@@ -3063,6 +3087,36 @@
       "unavailable": "Nút không khả dụng",
       "latencyLoss": "RTT / Mất gói",
       "unsupportedPlatform": "Nền tảng này có thể quản lý đường hầm từ xa. Chọn một nút được hỗ trợ để chạy WatTunnel."
+    },
+    "nodeRouting": {
+      "policySaved": "Routing policy saved",
+      "cleared": "Routing policy cleared on {name}.",
+      "applied": "Routing policy applied to {name}.",
+      "applyFailed": "Apply failed on {name}: {reason}",
+      "noNodes": "No online, enabled nodes to apply to.",
+      "appliedAll": "Routing policy applied to {count} node(s).",
+      "appliedMixed": "Routing policy applied to {ok} node(s), {failed} failed.",
+      "node": "Node",
+      "status": "Status",
+      "egress": "Egress",
+      "direct": "direct",
+      "policy": "Master policy",
+      "policyActive": "active",
+      "none": "none",
+      "actions": "Actions",
+      "apply": "Apply",
+      "clear": "Clear",
+      "title": "Node routing control",
+      "control": "Control",
+      "policyTitle": "Shared routing policy",
+      "controlDisabled": "Node routing control is disabled. Enable it to push routing policies to nodes.",
+      "policyDesc": "JSON array of Xray routing rules (the same shape as the routing rules on the Routing page). When applied, a node runs these rules ahead of its own rules; the node's internal stats rule is always kept first.",
+      "policyInvalid": "The policy must be a JSON array of routing rule objects.",
+      "savePolicy": "Save policy",
+      "clearPolicy": "Clear policy",
+      "ruleCount": "{count} rule(s)",
+      "nodesTitle": "Nodes",
+      "applyAll": "Apply to all online nodes"
     }
   },
   "tgbot": {
@@ -3506,5 +3560,6 @@
       "trafficRemaining": "Lưu lượng 3x-ui còn lại",
       "trafficQuotaUnset": "Chưa đặt hạn mức"
     }
-  }
+  },
+  "import": "Import"
 }

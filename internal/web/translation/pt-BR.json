@@ -1065,7 +1065,11 @@
         "finderNone": "Nenhum destino passou. Tente um escopo maior.",
         "finderReport": "Relatório",
         "finderCommandError": "Não foi possível criar o comando",
-        "finderExpired": "Este comando expirou. Crie um novo."
+        "finderExpired": "Este comando expirou. Crie um novo.",
+        "chainNone": "Conexão direta",
+        "chainSelectorSuffix": "seletor",
+        "chain": "Cadeia do cliente",
+        "chainHelp": "Faça o cliente conectar a este inbound através de um proxy SOCKS/HTTP superior. Aplica-se às assinaturas JSON e Mihomo."
       },
       "info": {
         "mode": "Modo",
@@ -1114,8 +1118,19 @@
           "failed": "Não foi possível salvar as reservas",
           "switchFailed": "Não foi possível trocar: o destino falhou na verificação ou no teste REALITY real",
           "switched": "Trocado para {target}"
-        }
-      }
+        },
+        "saveFailed": "Unable to save REALITY monitoring settings"
+      },
+      "changeIdInvalid": "The new ID is unavailable ({reason}).",
+      "changeIdUnchanged": "The ID is unchanged.",
+      "changeIdRoutingRefs": "{count} routing rule(s) point at the current ID and will be updated.",
+      "changeIdNodeConflict": "The hosting node already has an inbound with this name.",
+      "changeIdValid": "The new ID is available.",
+      "changeIdTitle": "Change inbound ID — {tag}",
+      "changeIdApply": "Apply",
+      "changeIdDesc": "Changing the inbound ID updates every routing rule and node reference that points at the current ID. The check below runs before anything is saved.",
+      "changeIdLabel": "New inbound ID (tag)",
+      "changeId": "Change ID"
     },
     "clients": {
       "columns": "Colunas",
@@ -2337,7 +2352,16 @@
       "wechatReportTime": "Agendamento do relatório",
       "wechatReportTimeDesc": "Use uma expressão cron ou uma opção como @daily.",
       "wechatEvents": "Alertas de eventos",
-      "wechatEventsDesc": "Escolha os eventos que enviam notificações e os limites de alerta."
+      "wechatEventsDesc": "Escolha os eventos que enviam notificações e os limites de alerta.",
+      "inboundListOrder": "Inbound list order",
+      "inboundListOrderDesc": "Default order of the inbound list in the panel. Applies to local inbounds and to inbounds adopted from all nodes.",
+      "inboundListOrderOptionId": "ID",
+      "inboundListOrderOptionRemark": "Remark",
+      "inboundListOrderOptionPort": "Port",
+      "inboundListOrderOptionProtocol": "Protocol",
+      "inboundListOrderOptionSubSortIndex": "Subscription order",
+      "nodeRoutingControl": "Node routing control",
+      "nodeRoutingControlDesc": "Let this panel control the routing of connected nodes. When enabled, the Node Routing page can push a shared routing policy to each node."
     },
     "xray": {
       "importRules": "Importar regras",
@@ -3063,6 +3087,36 @@
       "unavailable": "Nó indisponível",
       "latencyLoss": "RTT / Perda",
       "unsupportedPlatform": "Esta plataforma pode gerenciar túneis remotos. Selecione um nó compatível para executar o WatTunnel."
+    },
+    "nodeRouting": {
+      "policySaved": "Routing policy saved",
+      "cleared": "Routing policy cleared on {name}.",
+      "applied": "Routing policy applied to {name}.",
+      "applyFailed": "Apply failed on {name}: {reason}",
+      "noNodes": "No online, enabled nodes to apply to.",
+      "appliedAll": "Routing policy applied to {count} node(s).",
+      "appliedMixed": "Routing policy applied to {ok} node(s), {failed} failed.",
+      "node": "Node",
+      "status": "Status",
+      "egress": "Egress",
+      "direct": "direct",
+      "policy": "Master policy",
+      "policyActive": "active",
+      "none": "none",
+      "actions": "Actions",
+      "apply": "Apply",
+      "clear": "Clear",
+      "title": "Node routing control",
+      "control": "Control",
+      "policyTitle": "Shared routing policy",
+      "controlDisabled": "Node routing control is disabled. Enable it to push routing policies to nodes.",
+      "policyDesc": "JSON array of Xray routing rules (the same shape as the routing rules on the Routing page). When applied, a node runs these rules ahead of its own rules; the node's internal stats rule is always kept first.",
+      "policyInvalid": "The policy must be a JSON array of routing rule objects.",
+      "savePolicy": "Save policy",
+      "clearPolicy": "Clear policy",
+      "ruleCount": "{count} rule(s)",
+      "nodesTitle": "Nodes",
+      "applyAll": "Apply to all online nodes"
     }
   },
   "tgbot": {
@@ -3506,5 +3560,6 @@
       "trafficRemaining": "Tráfego restante do 3x-ui",
       "trafficQuotaUnset": "Cota não configurada"
     }
-  }
+  },
+  "import": "Import"
 }

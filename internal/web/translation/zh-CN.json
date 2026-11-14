@@ -1065,7 +1065,11 @@
         "finderNone": "没有目标通过。请尝试更大的范围。",
         "finderReport": "报告",
         "finderCommandError": "无法生成命令",
-        "finderExpired": "此命令已过期,请重新生成。"
+        "finderExpired": "此命令已过期,请重新生成。",
+        "chainNone": "直连",
+        "chainSelectorSuffix": "选择器",
+        "chain": "客户端链",
+        "chainHelp": "让客户端通过上游 SOCKS/HTTP 代理拨号到此入站。适用于 JSON 与 Mihomo 订阅。"
       },
       "info": {
         "mode": "模式",
@@ -1114,8 +1118,19 @@
           "failed": "无法保存备用目标",
           "switchFailed": "无法切换：目标未通过检查或真实 REALITY 测试",
           "switched": "已切换到 {target}"
-        }
-      }
+        },
+        "saveFailed": "Unable to save REALITY monitoring settings"
+      },
+      "changeIdInvalid": "The new ID is unavailable ({reason}).",
+      "changeIdUnchanged": "The ID is unchanged.",
+      "changeIdRoutingRefs": "{count} routing rule(s) point at the current ID and will be updated.",
+      "changeIdNodeConflict": "The hosting node already has an inbound with this name.",
+      "changeIdValid": "The new ID is available.",
+      "changeIdTitle": "Change inbound ID — {tag}",
+      "changeIdApply": "Apply",
+      "changeIdDesc": "Changing the inbound ID updates every routing rule and node reference that points at the current ID. The check below runs before anything is saved.",
+      "changeIdLabel": "New inbound ID (tag)",
+      "changeId": "Change ID"
     },
     "clients": {
       "columns": "列",
@@ -2337,7 +2352,16 @@
       "wechatReportTime": "报告时间",
       "wechatReportTimeDesc": "使用 Cron 表达式或 @daily 等预设。",
       "wechatEvents": "事件告警",
-      "wechatEventsDesc": "选择需要发送微信通知的面板事件，并设置告警阈值。"
+      "wechatEventsDesc": "选择需要发送微信通知的面板事件，并设置告警阈值。",
+      "inboundListOrder": "Inbound list order",
+      "inboundListOrderDesc": "Default order of the inbound list in the panel. Applies to local inbounds and to inbounds adopted from all nodes.",
+      "inboundListOrderOptionId": "ID",
+      "inboundListOrderOptionRemark": "Remark",
+      "inboundListOrderOptionPort": "Port",
+      "inboundListOrderOptionProtocol": "Protocol",
+      "inboundListOrderOptionSubSortIndex": "Subscription order",
+      "nodeRoutingControl": "Node routing control",
+      "nodeRoutingControlDesc": "Let this panel control the routing of connected nodes. When enabled, the Node Routing page can push a shared routing policy to each node."
     },
     "xray": {
       "importRules": "导入规则",
@@ -3063,6 +3087,36 @@
       "unavailable": "节点不可用",
       "latencyLoss": "RTT / 丢包",
       "unsupportedPlatform": "此平台可管理远程隧道。请选择受支持的节点来运行 WatTunnel。"
+    },
+    "nodeRouting": {
+      "policySaved": "Routing policy saved",
+      "cleared": "Routing policy cleared on {name}.",
+      "applied": "Routing policy applied to {name}.",
+      "applyFailed": "Apply failed on {name}: {reason}",
+      "noNodes": "No online, enabled nodes to apply to.",
+      "appliedAll": "Routing policy applied to {count} node(s).",
+      "appliedMixed": "Routing policy applied to {ok} node(s), {failed} failed.",
+      "node": "Node",
+      "status": "Status",
+      "egress": "Egress",
+      "direct": "direct",
+      "policy": "Master policy",
+      "policyActive": "active",
+      "none": "none",
+      "actions": "Actions",
+      "apply": "Apply",
+      "clear": "Clear",
+      "title": "Node routing control",
+      "control": "Control",
+      "policyTitle": "Shared routing policy",
+      "controlDisabled": "Node routing control is disabled. Enable it to push routing policies to nodes.",
+      "policyDesc": "JSON array of Xray routing rules (the same shape as the routing rules on the Routing page). When applied, a node runs these rules ahead of its own rules; the node's internal stats rule is always kept first.",
+      "policyInvalid": "The policy must be a JSON array of routing rule objects.",
+      "savePolicy": "Save policy",
+      "clearPolicy": "Clear policy",
+      "ruleCount": "{count} rule(s)",
+      "nodesTitle": "Nodes",
+      "applyAll": "Apply to all online nodes"
     }
   },
   "tgbot": {
@@ -3506,5 +3560,6 @@
       "trafficRemaining": "3x-ui 剩余流量",
       "trafficQuotaUnset": "未配置额度"
     }
-  }
+  },
+  "import": "Import"
 }

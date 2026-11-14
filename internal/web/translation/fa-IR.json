@@ -1065,7 +1065,11 @@
         "finderNone": "هیچ هدفی رد نشد. محدوده‌ی بزرگ‌تری را امتحان کن.",
         "finderReport": "گزارش",
         "finderCommandError": "ساخت دستور ممکن نشد",
-        "finderExpired": "این دستور منقضی شده. یک دستور جدید بساز."
+        "finderExpired": "این دستور منقضی شده. یک دستور جدید بساز.",
+        "chainNone": "اتصال مستقیم",
+        "chainSelectorSuffix": "انتخابگر",
+        "chain": "زنجیره کلاینت",
+        "chainHelp": "کلاینت با یک پروکسی بالادستی SOCKS/HTTP به این شنونده وصل شود. برای اشتراک JSON و Mihomo اعمال می‌شود."
       },
       "info": {
         "mode": "حالت",
@@ -1114,8 +1118,19 @@
           "failed": "ذخیرهٔ یدک‌ها ممکن نشد",
           "switchFailed": "تعویض ممکن نشد: تارگت بررسی یا تست واقعی REALITY را رد نکرد",
           "switched": "به {target} تعویض شد"
-        }
-      }
+        },
+        "saveFailed": "Unable to save REALITY monitoring settings"
+      },
+      "changeIdInvalid": "The new ID is unavailable ({reason}).",
+      "changeIdUnchanged": "The ID is unchanged.",
+      "changeIdRoutingRefs": "{count} routing rule(s) point at the current ID and will be updated.",
+      "changeIdNodeConflict": "The hosting node already has an inbound with this name.",
+      "changeIdValid": "The new ID is available.",
+      "changeIdTitle": "Change inbound ID — {tag}",
+      "changeIdApply": "Apply",
+      "changeIdDesc": "Changing the inbound ID updates every routing rule and node reference that points at the current ID. The check below runs before anything is saved.",
+      "changeIdLabel": "New inbound ID (tag)",
+      "changeId": "Change ID"
     },
     "clients": {
       "columns": "ستون‌ها",
@@ -2337,7 +2352,16 @@
       "wechatReportTime": "زمان‌بندی گزارش",
       "wechatReportTimeDesc": "از عبارت cron یا پیش‌تنظیمی مانند @daily استفاده کنید.",
       "wechatEvents": "هشدارهای رویداد",
-      "wechatEventsDesc": "رویدادهای ارسال اعلان و آستانه هشدار را انتخاب کنید."
+      "wechatEventsDesc": "رویدادهای ارسال اعلان و آستانه هشدار را انتخاب کنید.",
+      "inboundListOrder": "Inbound list order",
+      "inboundListOrderDesc": "Default order of the inbound list in the panel. Applies to local inbounds and to inbounds adopted from all nodes.",
+      "inboundListOrderOptionId": "ID",
+      "inboundListOrderOptionRemark": "Remark",
+      "inboundListOrderOptionPort": "Port",
+      "inboundListOrderOptionProtocol": "Protocol",
+      "inboundListOrderOptionSubSortIndex": "Subscription order",
+      "nodeRoutingControl": "Node routing control",
+      "nodeRoutingControlDesc": "Let this panel control the routing of connected nodes. When enabled, the Node Routing page can push a shared routing policy to each node."
     },
     "xray": {
       "save": "ذخیره",
@@ -3063,6 +3087,36 @@
       "unavailable": "نود در دسترس نیست",
       "latencyLoss": "RTT / اتلاف",
       "unsupportedPlatform": "این پلتفرم می‌تواند تونل‌های راه دور را مدیریت کند. برای اجرای WatTunnel یک نود پشتیبانی‌شده انتخاب کنید."
+    },
+    "nodeRouting": {
+      "policySaved": "Routing policy saved",
+      "cleared": "Routing policy cleared on {name}.",
+      "applied": "Routing policy applied to {name}.",
+      "applyFailed": "Apply failed on {name}: {reason}",
+      "noNodes": "No online, enabled nodes to apply to.",
+      "appliedAll": "Routing policy applied to {count} node(s).",
+      "appliedMixed": "Routing policy applied to {ok} node(s), {failed} failed.",
+      "node": "Node",
+      "status": "Status",
+      "egress": "Egress",
+      "direct": "direct",
+      "policy": "Master policy",
+      "policyActive": "active",
+      "none": "none",
+      "actions": "Actions",
+      "apply": "Apply",
+      "clear": "Clear",
+      "title": "Node routing control",
+      "control": "Control",
+      "policyTitle": "Shared routing policy",
+      "controlDisabled": "Node routing control is disabled. Enable it to push routing policies to nodes.",
+      "policyDesc": "JSON array of Xray routing rules (the same shape as the routing rules on the Routing page). When applied, a node runs these rules ahead of its own rules; the node's internal stats rule is always kept first.",
+      "policyInvalid": "The policy must be a JSON array of routing rule objects.",
+      "savePolicy": "Save policy",
+      "clearPolicy": "Clear policy",
+      "ruleCount": "{count} rule(s)",
+      "nodesTitle": "Nodes",
+      "applyAll": "Apply to all online nodes"
     }
   },
   "tgbot": {
@@ -3506,5 +3560,6 @@
       "trafficRemaining": "ترافیک باقی‌مانده 3x-ui",
       "trafficQuotaUnset": "سهمیه تنظیم نشده است"
     }
-  }
+  },
+  "import": "Import"
 }
