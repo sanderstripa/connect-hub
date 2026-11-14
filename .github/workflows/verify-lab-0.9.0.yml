@@ -5,7 +5,7 @@ on:
     paths: ['.github/workflows/verify-lab-0.9.0.yml']
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   frontend:
     runs-on: ubuntu-24.04
@@ -40,8 +40,19 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+      - name: Reconcile Go dependency hashes in isolated branch
+        run: go mod tidy
+      - name: Save dependency lockfile changes to isolated lab only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add go.mod go.sum
+          if ! git diff --cached --quiet; then
+            git commit -m 'chore(0.9.0-lab): regenerate Go module checksum lockfile'
+            git push origin HEAD:refs/heads/feat/connect-hub-0.9.0-merge-lab
+          fi
       - name: Compile merged Go without runtime side effects
         run: |
           mkdir -p internal/web/dist
           printf '<html></html>\n' > internal/web/dist/index.html
-          go test ./internal/... ./tools/... -run '^__NO_TESTS__$' -count=1
+          go test ./internal/... ./tools/... -run '^__NO_TESTS__ -count=1
