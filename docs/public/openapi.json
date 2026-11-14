@@ -3385,6 +3385,11 @@
             "minimum": 0,
             "type": "integer"
           },
+          "preserveClientTraffic": {
+            "description": "Older snapshots omit this field.\nKeep client usage during scheduled inbound resets",
+            "nullable": true,
+            "type": "boolean"
+          },
           "protocol": {
             "enum": [
               "vmess",
@@ -5664,6 +5669,7 @@
                       "nodeId": null,
                       "originNodeGuid": "",
                       "port": 443,
+                      "preserveClientTraffic": null,
                       "protocol": "vless",
                       "remark": "VLESS-443",
                       "settings": null,
@@ -18304,6 +18310,7 @@
                   "nodeId": null,
                   "originNodeGuid": "",
                   "port": 443,
+                  "preserveClientTraffic": null,
                   "protocol": "vless",
                   "remark": "VLESS-443",
                   "settings": null,
