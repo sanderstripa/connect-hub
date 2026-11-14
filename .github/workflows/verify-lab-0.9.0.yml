@@ -1,0 +1,47 @@
+name: Connect Hub 0.9.0 — lab compile verification
+on:
+  push:
+    branches: [feat/connect-hub-0.9.0-merge-lab]
+    paths: ['.github/workflows/verify-lab-0.9.0.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  frontend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --ignore-scripts
+        working-directory: frontend
+      - name: Regenerate API bindings from merged Go models, not stale upstream types
+        run: |
+          mkdir -p internal/web/dist
+          printf '<html></html>\n' > internal/web/dist/index.html
+          cd frontend
+          npm run gen:zod
+      - name: Verify TypeScript
+        run: npm run typecheck
+        working-directory: frontend
+      - name: Frontend unit and component suites
+        run: npm test -- --project unit --project components
+        working-directory: frontend
+  backend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Compile merged Go without runtime side effects
+        run: |
+          mkdir -p internal/web/dist
+          printf '<html></html>\n' > internal/web/dist/index.html
+          go test ./internal/... ./tools/... -run '^__NO_TESTS__$' -count=1
