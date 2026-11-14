@@ -25,6 +25,7 @@ import ClientHwidListModal from '@/components/clients/ClientHwidList';
 import ConfigBlock from '@/components/clients/ConfigBlock';
 import {
   buildWireguardClientConfig,
+  buildWireguardVkTurnLink,
   findWireguardInbounds,
   isWireguardClient,
 } from './wireguardConfig';
@@ -207,6 +208,7 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
           inbound: ib,
           endpoint: tunnelEndpointLabel(ep),
           text: buildWireguardClientConfig(client, ib, host, publicHost, address, ep),
+          vkLink: buildWireguardVkTurnLink(client, ib, host, publicHost, address, ep),
         }));
       })
       .filter((c) => !!c.text);
@@ -804,7 +806,7 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
             {wgConfigs.length > 0 && client && (
               <>
                 <Divider>{t('pages.clients.wireguardConfig')}</Divider>
-                {wgConfigs.map(({ inbound, endpoint, text }) => {
+                {wgConfigs.map(({ inbound, endpoint, text, vkLink }) => {
                   const meta = formatTunnelConfigMeta(
                     inbound,
                     client.email,
@@ -812,14 +814,24 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
                     endpoint,
                   );
                   return (
-                    <ConfigBlock
-                      key={`wg-${inbound.id}-${endpoint}`}
-                      label={meta.label || t('pages.clients.config')}
-                      text={text}
-                      fileName={meta.fileName}
-                      qrRemark={meta.qrRemark}
-                      tagColor="cyan"
-                    />
+                    <Fragment key={`wg-${inbound.id}-${endpoint}`}>
+                      <ConfigBlock
+                        label={meta.label || t('pages.clients.config')}
+                        text={text}
+                        fileName={meta.fileName}
+                        qrRemark={meta.qrRemark}
+                        tagColor="cyan"
+                      />
+                      {vkLink && (
+                        <ConfigBlock
+                          label={t('pages.xray.wireguard.vkTurnProfile')}
+                          text={vkLink}
+                          fileName={meta.fileName.replace(/\.conf$/, '-vk.txt')}
+                          qrRemark={meta.qrRemark}
+                          tagColor="blue"
+                        />
+                      )}
+                    </Fragment>
                   );
                 })}
               </>

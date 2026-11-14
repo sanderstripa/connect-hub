@@ -1013,6 +1013,7 @@ export interface InboundOption {
   wgDns?: string;
   wgMtu?: number;
   wgPublicKey?: string;
+  wgVkTurn?: Settings | null;
 }
 
 export interface InboundTagChangeCheck {

@@ -3637,6 +3637,14 @@
           },
           "wgPublicKey": {
             "type": "string"
+          },
+          "wgVkTurn": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Settings"
+              }
+            ],
+            "nullable": true
           }
         },
         "required": [
@@ -4900,6 +4908,25 @@
         ],
         "type": "object"
       },
+      "Settings": {
+        "properties": {
+          "callLink": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "port": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "callLink",
+          "enabled",
+          "port"
+        ],
+        "type": "object"
+      },
       "Sponsor": {
         "description": "Sponsor is one paid placement published in the repo's sponsors.json.",
         "properties": {
@@ -5761,7 +5788,8 @@
                       "tuicServer": null,
                       "wgDns": "",
                       "wgMtu": 0,
-                      "wgPublicKey": ""
+                      "wgPublicKey": "",
+                      "wgVkTurn": null
                     }
                   ]
                 }

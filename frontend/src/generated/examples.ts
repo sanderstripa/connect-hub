@@ -1185,7 +1185,8 @@ export const EXAMPLES: Record<string, unknown> = {
     "tuicServer": null,
     "wgDns": "",
     "wgMtu": 0,
-    "wgPublicKey": ""
+    "wgPublicKey": "",
+    "wgVkTurn": null
   },
   "InboundTagChangeCheck": {
     "nodeTagConflict": false,

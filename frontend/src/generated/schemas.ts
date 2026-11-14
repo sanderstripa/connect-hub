@@ -4460,6 +4460,14 @@ export const SCHEMAS: Record<string, unknown> = {
       },
       "wgPublicKey": {
         "type": "string"
+      },
+      "wgVkTurn": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Settings"
+          }
+        ],
+        "nullable": true
       }
     },
     "required": [

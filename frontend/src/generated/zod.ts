@@ -1078,6 +1078,7 @@ export const InboundOptionSchema = z.object({
   wgDns: z.string().optional(),
   wgMtu: z.number().int().optional(),
   wgPublicKey: z.string().optional(),
+  wgVkTurn: z.lazy(() => SettingsSchema).nullable().optional(),
 });
 export type InboundOption = z.infer<typeof InboundOptionSchema>;
 

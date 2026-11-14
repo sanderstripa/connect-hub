@@ -332,6 +332,7 @@ const (
 	cadenceMtproto       = "@every 10s"
 	cadenceAmneziaWG     = "@every 10s"
 	cadenceTuic          = "@every 10s"
+	cadenceVKTurn        = "@every 10s"
 	cadenceClientIPScan  = "@every 10s"
 	cadenceNodeHeartbeat = "@every 5s"
 	cadenceNodeTraffic   = "@every 5s"
@@ -382,6 +383,10 @@ func (s *Server) startTask(restartXray bool, loc *time.Location) {
 	awgJob := job.NewAmneziaWGJob()
 	_, _ = s.cron.AddJob(cadenceAmneziaWG, awgJob)
 	go awgJob.Run()
+
+	vkTurnJob := job.NewVKTurnJob()
+	_, _ = s.cron.AddJob(cadenceVKTurn, vkTurnJob)
+	go vkTurnJob.Run()
 
 	tuicJob := job.NewTuicJob()
 	_, _ = s.cron.AddJob(cadenceTuic, tuicJob)

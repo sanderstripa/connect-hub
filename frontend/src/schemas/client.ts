@@ -141,6 +141,7 @@ export const InboundOptionSchema = z
     wgPublicKey: z.string().optional(),
     wgMtu: z.number().optional(),
     wgDns: z.string().optional(),
+    wgVkTurn: VkTurnSettingsSchema.nullable().optional(),
     awgServer: AwgServerOptionSchema.nullable().optional(),
     tuicServer: TuicServerOptionSchema.nullable().optional(),
     mtprotoDomain: z.string().optional(),
