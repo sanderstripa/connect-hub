@@ -1800,7 +1800,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                           />
                         </div>
                       ) : (
-                        <Spin spinning={transitioning}>
+                        <Spin aria-live="off" spinning={transitioning}>
                           <div className="client-cards">
                             {filteredClients.length > 0 && (
                               <div className="card-bulk-bar">

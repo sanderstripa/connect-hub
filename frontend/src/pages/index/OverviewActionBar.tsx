@@ -81,6 +81,7 @@ export default function OverviewActionBar({
   const stateText = t(XRAY_STATE_KEYS[status.xray.state] ?? 'pages.index.xrayStatusUnknown');
   const hasVersion = !!status.xray.version && status.xray.version !== 'Unknown';
   const size = isMobile ? ('small' as const) : ('middle' as const);
+  const isStopped = status.xray.state === 'stop';
 
   const [moreOpen, setMoreOpen] = useState(false);
   useEffect(() => {

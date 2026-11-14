@@ -28,8 +28,9 @@ var (
 	artOverrides = map[string]string{}
 	// artFromAvatar records whether the cached ids came from the bot's avatar: a
 	// tile cached from an upload must never win over an avatar set afterwards.
-	artFromAvatar bool
-	artProbedAt   time.Time
+	artFromAvatar    bool
+	artProbedAt      time.Time
+	rejectedAvatarID string
 	// artProbeRunning keeps a burst of renders from starting a burst of probes.
 	artProbeRunning atomic.Bool
 	// Incremented on bot/test resets: a completed probe from a previous bot
@@ -89,12 +90,17 @@ func (t *Tgbot) resolveScreenArtForEpoch(epoch uint64) {
 		// Remember the miss so the next render does not probe again, but keep
 		// any tile already cached: an avatar-less bot still shows a picture.
 		artFromAvatar = false
+		rejectedAvatarID = ""
 		logger.Debug("Bot has no avatar; screens will use the black fallback")
 		return
 	}
 	// The last entry is the largest size Telegram keeps.
 	sizes := photos.Photos[0]
 	fileID := sizes[len(sizes)-1].FileID
+	if fileID == rejectedAvatarID {
+		return
+	}
+	rejectedAvatarID = ""
 	screenArtIDs = map[string]string{}
 	for _, kind := range screenKinds {
 		screenArtIDs[kind] = fileID
@@ -181,8 +187,31 @@ func cacheArtFileID(kind, fileID string) {
 	screenArtMu.Unlock()
 }
 
+// Compare before eviction: an asynchronous probe may already have installed a new avatar.
+func rejectArtFileID(fileID string) {
+	screenArtMu.Lock()
+	defer screenArtMu.Unlock()
+	for kind, id := range screenArtIDs {
+		if id == fileID {
+			delete(screenArtIDs, kind)
+			if artFromAvatar {
+				rejectedAvatarID = fileID
+			}
+		}
+	}
+	if rejectedAvatarID == fileID {
+		artFromAvatar = false
+	}
+	for kind, id := range artOverrides {
+		if id == fileID {
+			delete(artOverrides, kind)
+		}
+	}
+}
+
 // resetScreenArt drops the cached file_ids; tests use it between mock servers.
 func resetScreenArt() {
+	artProbes.Wait()
 	screenArtMu.Lock()
 	artProbeEpoch.Add(1)
 	// A stale 15s GetMe/profile request must not prevent the replacement
@@ -191,6 +220,7 @@ func resetScreenArt() {
 	screenArtIDs = map[string]string{}
 	artOverrides = map[string]string{}
 	artFromAvatar = false
+	rejectedAvatarID = ""
 	artProbedAt = time.Time{}
 	screenArtMu.Unlock()
 }

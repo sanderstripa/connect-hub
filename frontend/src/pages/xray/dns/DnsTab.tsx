@@ -23,6 +23,7 @@ import {
   SettingOutlined,
 } from '@ant-design/icons';
 
+import { selectTagRender } from '@/components/form';
 import { onNumber } from '@/utils/onNumber';
 import { SettingListItem } from '@/components/ui';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -163,6 +164,17 @@ export default function DnsTab({ templateSettings, setTemplateSettings }: DnsTab
       mutate((tt) => {
         const cfg = tt.dns as DnsConfig | undefined;
         if (cfg?.servers) cfg.servers.splice(idx, 1);
+      });
+    },
+    [mutate],
+  );
+  const moveServer = useCallback(
+    (from: number, to: number) => {
+      mutate((tt) => {
+        const servers = (tt.dns as DnsConfig | undefined)?.servers;
+        if (!servers) return;
+        const [moved] = servers.splice(from, 1);
+        servers.splice(to, 0, moved);
       });
     },
     [mutate],
@@ -444,6 +456,7 @@ export default function DnsTab({ templateSettings, setTemplateSettings }: DnsTab
                   />
                   <Select
                     mode="tags"
+                    tagRender={selectTagRender}
                     value={row.values}
                     aria-label={t('pages.xray.dns.hostsValues')}
                     placeholder={t('pages.xray.dns.hostsValues')}
