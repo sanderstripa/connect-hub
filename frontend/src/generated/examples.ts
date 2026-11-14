@@ -1099,6 +1099,8 @@ export const EXAMPLES: Record<string, unknown> = {
     "remaining": 1
   },
   "Inbound": {
+    "chainProxyId": 0,
+    "chainSelectorId": 0,
     "clientStats": [
       {
         "down": 2097152,

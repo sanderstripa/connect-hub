@@ -144,6 +144,7 @@ func (s *SubService) PrepareForRequest(host string) {
 	s.socketFronts = nil
 	s.tuicByInbound = map[int]*tuicLinkInstance{}
 	s.amneziaWGServerByInbound = map[int]*amneziawg.ServerSettings{}
+	s.chainPlans = nil
 	s.hostsByInbound = nil
 	s.hostsLoaded = nil
 	s.hostGroupOrders = nil
@@ -578,6 +579,14 @@ func (s *SubService) getSubs(subId string) ([]string, []string, int64, xray.Clie
 			continue
 		}
 		if inbound.ExcludeFromSub {
+			if countHiddenClients(clients, seenEmails) {
+				hasEnabledClient = true
+			}
+			continue
+		}
+		// A share link has no field for an upstream hop, so a chained inbound
+		// would silently connect around it — leave it out of the raw output.
+		if !s.chainAssignmentFor(inbound).direct() {
 			if countHiddenClients(clients, seenEmails) {
 				hasEnabledClient = true
 			}

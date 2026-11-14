@@ -88,6 +88,8 @@ func allModels() []any {
 		&model.NodePendingReset{},
 		&model.OutboundSubscription{},
 		&model.SubBalancer{},
+		&model.ChainProxy{},
+		&model.ChainSelector{},
 		&model.TuicTrafficReceipt{},
 		&model.ClientTrafficWindow{},
 		&model.ClientChangeLog{},
@@ -118,6 +120,31 @@ func migrateInboundExcludeFromSubColumn() error {
 	return migrator.AddColumn(&model.Inbound{}, "ExcludeFromSub")
 }
 
+// ChainProxyId/ChainSelectorId default to 0 so rows that predate the feature
+// read as "direct" rather than as a dangling reference.
+func migrateInboundChainColumns() error {
+	migrator := db.Migrator()
+	if !migrator.HasTable(&model.Inbound{}) {
+		return nil
+	}
+	columns := []struct {
+		column string
+		field  string
+	}{
+		{"chain_proxy_id", "ChainProxyId"},
+		{"chain_selector_id", "ChainSelectorId"},
+	}
+	for _, c := range columns {
+		if migrator.HasColumn(&model.Inbound{}, c.column) {
+			continue
+		}
+		if err := migrator.AddColumn(&model.Inbound{}, c.field); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func migrateClientKeepAliveRangeColumn() error {
 	migrator := db.Migrator()
 	if !migrator.HasTable(&model.ClientRecord{}) || migrator.HasColumn(&model.ClientRecord{}, "wg_keep_alive_range") {
@@ -137,6 +164,9 @@ func initModels() error {
 		return err
 	}
 	if err := migrateInboundExcludeFromSubColumn(); err != nil {
+		return err
+	}
+	if err := migrateInboundChainColumns(); err != nil {
 		return err
 	}
 	models := allModels()

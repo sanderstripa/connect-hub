@@ -96,6 +96,7 @@ import {
 import { RealityForm, TlsForm } from './security';
 import { useSecurityActions } from './useSecurityActions';
 import { useInboundFallbacks } from './useInboundFallbacks';
+import ChainAssignmentFields from './ChainAssignmentFields';
 import FallbacksCard from './FallbacksCard';
 import SniffingTab from './SniffingTab';
 
@@ -781,6 +782,8 @@ export default function InboundFormModal({
       >
         <Switch />
       </FormField>
+
+      <ChainAssignmentFields protocol={protocol} />
 
       {protocol === Protocols.VLESS && (
         <FormField

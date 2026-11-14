@@ -1005,6 +1005,8 @@ export const HwidSlotStatusSchema = z.object({
 export type HwidSlotStatus = z.infer<typeof HwidSlotStatusSchema>;
 
 export const InboundSchema = z.object({
+  chainProxyId: z.number().int(),
+  chainSelectorId: z.number().int(),
   clientStats: z.array(z.lazy(() => ClientTrafficSchema)),
   disableFlow: z.boolean(),
   down: z.number().int(),

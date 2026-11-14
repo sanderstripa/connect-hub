@@ -4130,6 +4130,15 @@ export const SCHEMAS: Record<string, unknown> = {
   "Inbound": {
     "description": "Inbound represents an Xray inbound configuration with traffic statistics and settings.",
     "properties": {
+      "chainProxyId": {
+        "description": "ChainProxyId/ChainSelectorId name the client-side chain this inbound's\nsubscribers hop through; 0 means direct. At most one may be set.",
+        "example": 0,
+        "type": "integer"
+      },
+      "chainSelectorId": {
+        "example": 0,
+        "type": "integer"
+      },
       "clientStats": {
         "description": "Client traffic statistics",
         "items": {
@@ -4277,6 +4286,8 @@ export const SCHEMAS: Record<string, unknown> = {
       }
     },
     "required": [
+      "chainProxyId",
+      "chainSelectorId",
       "clientStats",
       "disableFlow",
       "down",

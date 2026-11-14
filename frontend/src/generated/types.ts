@@ -943,6 +943,8 @@ export interface HwidSlotStatus {
 }
 
 export interface Inbound {
+  chainProxyId: number;
+  chainSelectorId: number;
   clientStats: ClientTraffic[];
   disableFlow: boolean;
   down: number;
