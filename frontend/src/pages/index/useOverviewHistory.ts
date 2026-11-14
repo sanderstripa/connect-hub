@@ -171,28 +171,7 @@ export function useOverviewHistory(
     };
   }, [hasData, status.resourceScope, bucketSeconds]);
 
-  // Each polled status is appended during render; an effect would show the
-  // chart one sample behind the numbers beside it.
-  const [sampledStatus, setSampledStatus] = useState<Status | null>(null);
-  if (hasData && status !== sampledStatus) {
-    setSampledStatus(status);
-    setTrend((prev) => {
-      const scopeChanged = sampledStatus && sampledStatus.resourceScope !== status.resourceScope;
-      const point = sampleOf(status);
-      const next = emptyWindow();
-      next.times = tailWindow(prev.times.concat(Math.floor(Date.now() / 1000)));
-      for (const key of SERIES_KEYS) {
-        const scoped = key === 'cpu' || key === 'swap';
-        const previous = scoped && scopeChanged ? [] : prev.series[key];
-        next.series[key] = status.metricAvailable(key)
-          ? tailWindow(previous.concat(point[key]))
-          : previous;
-      }
-      return next;
-    });
-  }
-
-  const labels = useMemo(() => trend.times.map(TimeFormatter.formatClock), [trend.times]);
+  const labels = useMemo(() => formatTimeAxis(trend.times), [trend.times]);
 
   return useMemo(() => ({ series: trend.series, labels }), [trend.series, labels]);
 }
