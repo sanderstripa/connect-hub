@@ -15,8 +15,8 @@ interface VitalTileProps {
   statusColor: string;
   detail: string;
   extraContent?: ReactNode;
-  footLeft: string;
-  footRight: string;
+  footLeft: ReactNode;
+  footRight: ReactNode;
   data: number[];
   isMobile: boolean;
   range?: OverviewRange;
