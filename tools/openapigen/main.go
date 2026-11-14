@@ -21,6 +21,9 @@ func main() {
 
 func run(root, outDir string) error {
 	requests := []packageRequest{
+		// InboundOption.WgVkTurn refers to vkturn.Settings. Register the owning
+		// package so generated TS/Zod cannot emit an unresolved Settings symbol.
+		{Path: resolveRel(root, "internal/vkturn"), StructAllow: setOf("Settings")},
 		{Path: resolveRel(root, "internal/wattunnel"), StructAllow: setOf("Config", "Port", "CarrierEndpoint", "Status", "Metrics", "Capabilities", "Spec")},
 		{
 			Path: resolveRel(root, "internal/database/model"),
