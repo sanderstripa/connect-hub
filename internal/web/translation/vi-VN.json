@@ -723,7 +723,9 @@
         "invalidClientField": "Khách hàng {client}: trường {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "Chứng chỉ TLS {index}: {reason}",
-        "moreIssues": "{message}  (+{count} lỗi khác)"
+        "moreIssues": "{message}  (+{count} lỗi khác)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "echSockopt": "ECH Sockopt",

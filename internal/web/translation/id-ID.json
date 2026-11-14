@@ -723,7 +723,9 @@
         "invalidClientField": "Klien {client}: kolom {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "Sertifikat TLS {index}: {reason}",
-        "moreIssues": "{message}  (+{count} lainnya)"
+        "moreIssues": "{message}  (+{count} lainnya)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "moveUp": "Naik",

@@ -723,7 +723,9 @@
         "invalidClientField": "Клієнт {client}: поле {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "Сертифікат TLS {index}: {reason}",
-        "moreIssues": "{message}  (+{count} ще)"
+        "moreIssues": "{message}  (+{count} ще)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "moveUp": "Вгору",

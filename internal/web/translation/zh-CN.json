@@ -723,7 +723,9 @@
         "invalidClientField": "客户端 {client}：字段 {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "第 {index} 组 TLS 证书：{reason}",
-        "moreIssues": "{message}  (另有 {count} 项)"
+        "moreIssues": "{message}  (另有 {count} 项)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "echSockopt": "ECH Sockopt",

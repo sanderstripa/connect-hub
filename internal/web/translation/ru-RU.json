@@ -724,7 +724,9 @@
         "invalidClientField": "Клиент {client}: поле {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "Сертификат TLS {index}: {reason}",
-        "moreIssues": "{message}  (+{count} ещё)"
+        "moreIssues": "{message}  (+{count} ещё)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "autoFill": "Автозаполнение",

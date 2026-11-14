@@ -723,7 +723,9 @@
         "invalidClientField": "العميل {client}: الحقل {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "شهادة TLS رقم {index}: {reason}",
-        "moreIssues": "{message}  (+{count} أخرى)"
+        "moreIssues": "{message}  (+{count} أخرى)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "moveUp": "أعلى",

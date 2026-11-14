@@ -136,6 +136,7 @@ func run(root, outDir string) error {
 				"NodeMutationRequest",
 				"TunnelMutation", "TunnelView", "TunnelToken",
 				"NodeView",
+				"NodeRoutingApplyResult",
 				"ProbeResultUI",
 				"RealityScanResult",
 				"RealityWatchEntry",

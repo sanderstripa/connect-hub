@@ -723,7 +723,9 @@
         "invalidClientField": "クライアント {client}: フィールド {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "TLS 証明書 {index}: {reason}",
-        "moreIssues": "{message}  (他 {count} 件)"
+        "moreIssues": "{message}  (他 {count} 件)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "echSockopt": "ECH Sockopt",

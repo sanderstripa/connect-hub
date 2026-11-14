@@ -724,7 +724,9 @@
         "invalidClientField": "Client {client}: {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "TLS certificate {index}: {reason}",
-        "moreIssues": "{message}  (+{count} more)"
+        "moreIssues": "{message}  (+{count} more)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "autoFill": "Auto Fill",

@@ -723,7 +723,9 @@
         "invalidClientField": "Cliente {client}: campo {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "Certificado TLS {index}: {reason}",
-        "moreIssues": "{message}  (+{count} mais)"
+        "moreIssues": "{message}  (+{count} mais)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "echSockopt": "Sockopt ECH",

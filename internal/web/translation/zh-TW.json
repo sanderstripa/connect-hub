@@ -723,7 +723,9 @@
         "invalidClientField": "用戶端 {client}：欄位 {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "第 {index} 組 TLS 憑證：{reason}",
-        "moreIssues": "{message}  (另有 {count} 項)"
+        "moreIssues": "{message}  (另有 {count} 項)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "moveUp": "上移",

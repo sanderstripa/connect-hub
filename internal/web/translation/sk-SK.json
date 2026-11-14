@@ -724,7 +724,9 @@
         "invalidClientField": "Klient {client}: {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "Certifikát TLS {index}: {reason}",
-        "moreIssues": "{message}  (ďalšie: +{count})"
+        "moreIssues": "{message}  (ďalšie: +{count})",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "autoFill": "Vyplniť automaticky",
