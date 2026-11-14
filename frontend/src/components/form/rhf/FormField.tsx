@@ -1,5 +1,5 @@
 import { cloneElement, useId } from 'react';
-import type { AriaAttributes, CSSProperties, ReactElement, ReactNode } from 'react';
+import type { CSSProperties, ReactElement, ReactNode } from 'react';
 import { Controller } from 'react-hook-form';
 import type { Control, ControllerProps, FieldValues, Path } from 'react-hook-form';
 import { Form } from 'antd';
@@ -64,14 +64,8 @@ export function FormField<T extends FieldValues = FieldValues>({
         const help = fieldState.error?.message
           ? t(fieldState.error.message, { defaultValue: fieldState.error.message })
           : undefined;
-        const describedBy =
-          [childOwnProps['aria-describedby'], tooltip && hintId, extra && extraId, help && errorId]
-            .filter(Boolean)
-            .join(' ') || undefined;
         const childProps: Record<string, unknown> = {
           id: fieldId,
-          'aria-describedby': describedBy,
-          'aria-invalid': fieldState.invalid || childOwnProps['aria-invalid'],
           [valueProp]: displayValue,
           onChange: (...args: unknown[]) => {
             const raw = normalizeAntdOnChange(args, valueProp);
@@ -94,10 +88,10 @@ export function FormField<T extends FieldValues = FieldValues>({
             label={label}
             htmlFor={label ? fieldId : undefined}
             tooltip={tooltip}
-            extra={extra ? <span id={extraId}>{extra}</span> : extra}
+            extra={extra}
             required={required}
             validateStatus={fieldState.error ? 'error' : undefined}
-            help={help ? <span id={errorId}>{help}</span> : undefined}
+            help={help}
             noStyle={noStyle}
             className={className}
             style={style}
