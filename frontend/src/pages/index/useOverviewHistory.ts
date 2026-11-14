@@ -49,6 +49,55 @@ function emptyWindow(scope = '', bucketSeconds = 0): HistoryWindow {
   return { series: emptySeries(), times: [], scope, bucketSeconds };
 }
 
+function tailWindow<T>(values: T[]): T[] {
+  return values.slice(-OVERVIEW_WINDOW);
+}
+
+// Keep the original Connect Hub live status history. An unavailable metric is
+// not a real sample of zero and must not erase earlier valid observations.
+function sampleOf(status: Status): Record<OverviewSeriesKey, number> {
+  return {
+    cpu: status.cpu.percent,
+    mem: status.mem.percent,
+    swap: status.swap.percent,
+    diskUsage: status.disk.percent,
+    netUp: status.netIO.up,
+    netDown: status.netIO.down,
+    tcpCount: status.tcpCount,
+    udpCount: status.udpCount,
+  };
+}
+
+// Older Connect Hub installations expose a per-metric history API, while the
+// new dashboard uses one batched endpoint. Preserve both wire contracts.
+function mergeLegacyHistory(
+  previous: HistoryWindow,
+  responses: Map<OverviewSeriesKey, HistoryPoint[]>,
+  scope: string,
+  bucketSeconds: number,
+): HistoryWindow {
+  const oldTimes = Array.from(new Set(
+    Array.from(responses.values()).flatMap((points) => points.map((point) => point.t)),
+  )).filter(Number.isFinite).sort((a, b) => a - b);
+  const sameWindow = previous.bucketSeconds === bucketSeconds;
+  const result = emptyWindow(scope, bucketSeconds);
+  result.times = tailWindow([
+    ...oldTimes,
+    ...(sameWindow ? previous.times : []),
+  ]);
+  for (const key of SERIES_KEYS) {
+    const scoped = key === 'cpu' || key === 'swap';
+    const live = sameWindow && !(scoped && previous.scope !== scope)
+      ? previous.series[key] : [];
+    const archived = responses.get(key) ?? [];
+    result.series[key] = tailWindow([
+      ...archived.slice().sort((a, b) => a.t - b.t).map((point) => point.v),
+      ...live,
+    ]);
+  }
+  return result;
+}
+
 function formatTimeAxis(times: number[]): string[] {
   if (times.length === 0) return [];
   const first = new Date(times[0] * 1000);
@@ -123,10 +172,41 @@ export function useOverviewHistory(
     emptyWindow(status.resourceScope, bucketSeconds),
   );
 
+  const [sampledStatus, setSampledStatus] = useState<Status | null>(null);
+  if (hasData && status !== sampledStatus) {
+    setSampledStatus(status);
+    setTrend((previous) => {
+      const rangeChanged = previous.bucketSeconds !== bucketSeconds;
+      const next = rangeChanged
+        ? emptyWindow(status.resourceScope, bucketSeconds)
+        : {
+            ...previous,
+            times: [...previous.times],
+            series: Object.fromEntries(
+              SERIES_KEYS.map((key) => [key, [...previous.series[key]]]),
+            ) as Record<OverviewSeriesKey, number[]>,
+            scope: status.resourceScope,
+          };
+      if (previous.scope !== status.resourceScope) {
+        next.series.cpu = [];
+        next.series.swap = [];
+      }
+      next.times = tailWindow(next.times.concat(Math.floor(Date.now() / 1000)));
+      const sample = sampleOf(status);
+      for (const key of SERIES_KEYS) {
+        if (status.metricAvailable(key)) {
+          next.series[key] = tailWindow(next.series[key].concat(sample[key]));
+        }
+      }
+      return next;
+    });
+  }
+
   useEffect(() => {
     if (!hasData) return undefined;
     let cancelled = false;
     let timeout: number | undefined;
+    let seededFallback = false;
 
     const refresh = async () => {
       const responses = new Map<OverviewSeriesKey, HistoryPoint[]>();
@@ -152,10 +232,42 @@ export function useOverviewHistory(
         // Keep the last successful window when a history request fails.
       }
       if (cancelled) return;
-      if (responses.size === SERIES_KEYS.length) {
+      const batchHasData =
+        responses.size === SERIES_KEYS.length &&
+        Array.from(responses.values()).some((points) => points.length > 0);
+      if (batchHasData) {
         setTrend((previous) =>
           mergeHistory(previous, responses, status.resourceScope, bucketSeconds),
         );
+      } else if (!seededFallback) {
+        // The old endpoint is only queried when the newer batch API is absent.
+        // This also preserves the existing live values from Connect Hub.
+        const archived = new Map<OverviewSeriesKey, HistoryPoint[]>();
+        await Promise.all(
+          SERIES_KEYS.map(async (key) => {
+            try {
+              const response = await HttpUtil.get<HistoryPoint[]>(
+                `/panel/api/server/history/${key}/${bucketSeconds}`,
+                undefined,
+                { silent: true },
+              );
+              if (!response?.success || !Array.isArray(response.obj)) return;
+              const points = response.obj
+                .map((point) => ({ t: Number(point.t), v: Number(point.v) }))
+                .filter((point) => Number.isFinite(point.t) && Number.isFinite(point.v));
+              if (points.length > 0) archived.set(key, points);
+            } catch {
+              // An unavailable legacy endpoint must not clear live status samples.
+            }
+          }),
+        );
+        if (cancelled) return;
+        if (archived.size > 0) {
+          seededFallback = true;
+          setTrend((previous) =>
+            mergeLegacyHistory(previous, archived, status.resourceScope, bucketSeconds),
+          );
+        }
       }
       const refreshInterval = Math.max(
         MIN_REFRESH_INTERVAL_MS,
