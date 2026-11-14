@@ -318,9 +318,11 @@ export default function ClientFormModal({
     hwidsLoading,
     hwidsClearing,
     deletingHwidId,
+    blockingHwidId,
     loadHwids,
     clearHwids,
     deleteHwid,
+    setHwidBlocked,
   } = useClientHwids(client?.email);
   const [hwidsModalOpen, setHwidsModalOpen] = useState(false);
   const [usageHistoryOpen, setUsageHistoryOpen] = useState(false);
@@ -1874,10 +1876,12 @@ export default function ClientFormModal({
         loading={hwidsLoading}
         clearing={hwidsClearing}
         deletingId={deletingHwidId}
+        blockingId={blockingHwidId}
         formatDate={hwidDateLabel}
         onRefresh={loadHwids}
         onClearAll={clearHwids}
         onDelete={deleteHwid}
+        onSetBlocked={setHwidBlocked}
         onClose={() => setHwidsModalOpen(false)}
       />
 
