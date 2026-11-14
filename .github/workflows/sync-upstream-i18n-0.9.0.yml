@@ -1,0 +1,49 @@
+name: Connect Hub 0.9.0 — preserve and complete localization
+on:
+  push:
+    branches: [feat/connect-hub-0.9.0-merge-lab]
+    paths: ['.github/workflows/sync-upstream-i18n-0.9.0.yml', 'hub/sync-upstream-i18n-0.9.0.mjs']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Retrieve upstream translation dictionaries from merged PR branches
+        run: |
+          git fetch --no-tags --depth=1 https://github.com/MHSanaei/3x-ui.git \
+            main:refs/remotes/upstream/main \
+            refs/pull/7109/head:refs/remotes/upstream/pr7109 \
+            refs/pull/7120/head:refs/remotes/upstream/pr7120 \
+            refs/pull/7134/head:refs/remotes/upstream/pr7134 \
+            refs/pull/7133/head:refs/remotes/upstream/pr7133 \
+            refs/pull/7139/head:refs/remotes/upstream/pr7139 \
+            refs/pull/7136/head:refs/remotes/upstream/pr7136 \
+            refs/pull/7132/head:refs/remotes/upstream/pr7132 \
+            refs/pull/7111/head:refs/remotes/upstream/pr7111
+      - name: Fill only missing keys — preserve existing Connect Hub wording
+        run: node hub/sync-upstream-i18n-0.9.0.mjs
+      - name: Verify i18n keys and 14 locale parity
+        working-directory: frontend
+        run: npm ci --ignore-scripts && npx vitest run src/test/i18n-dead-keys.test.ts --project unit
+      - name: Commit only verified translation changes to isolated branch
+        run: |
+          set -euo pipefail
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add internal/web/translation
+          if ! git diff --cached --quiet; then
+            git commit -m 'i18n(0.9.0): add missing translations without replacing existing keys'
+            git push origin HEAD:refs/heads/feat/connect-hub-0.9.0-merge-lab
+          fi
