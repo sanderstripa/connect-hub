@@ -1,5 +1,5 @@
 import { ObjectUtil } from '@/utils';
-import type { SubProfileMode, SubHostSortMode, NetworkTrafficMode, WechatMode } from '@/schemas/setting';
+import type { SubProfileMode, SubHostSortMode, NetworkTrafficMode, WechatMode, InboundListOrder } from '@/schemas/setting';
 
 export class AllSetting {
   webListen = '';
@@ -23,6 +23,9 @@ export class AllSetting {
   subShowIdentityOnAllLinks = false;
   subInfoNodeEnable = false;
   subHostSortMode: SubHostSortMode = 'hosts-first';
+  inboundListOrder: InboundListOrder = 'id';
+  nodeRoutingControl = false;
+  nodeRoutingRules = '';
   subCalendarExpireInclusive = false;
   subExpiredTemplate = '⛔ {{EMAIL}} | Expired: {{EXPIRE_DATE}}';
   subTrafficDepletedTemplate =
