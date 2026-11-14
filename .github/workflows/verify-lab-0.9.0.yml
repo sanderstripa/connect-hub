@@ -55,4 +55,4 @@ jobs:
         run: |
           mkdir -p internal/web/dist
           printf '<html></html>\n' > internal/web/dist/index.html
-          go test ./internal/... ./tools/... -run '^__NO_TESTS__ -count=1
+          go test ./internal/... ./tools/... -run '__NO_TESTS__' -count=1
