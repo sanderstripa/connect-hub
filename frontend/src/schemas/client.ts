@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { VkTurnSettingsSchema } from '@/schemas/protocols/inbound/wireguard';
 import { AWGPingPolicySchema } from '@/schemas/primitives/awg-ping';
 import { OptionalClientKeepAliveSchema } from '@/schemas/primitives/keepalive';
 
