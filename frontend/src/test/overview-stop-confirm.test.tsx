@@ -54,7 +54,7 @@ describe('Connect Hub Xray stop guard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onStopXray).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Stop Xray' }));
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Stop Xray' })).at(-1)!);
     await waitFor(() => expect(onStopXray).toHaveBeenCalledOnce());
   });
 
