@@ -5,7 +5,15 @@ import { CheckOutlined } from '@ant-design/icons';
 
 import { HttpUtil } from '@/utils';
 import type { DBInbound } from '@/models/dbinbound';
-import type { InboundTagChangeCheck } from '@/generated/types';
+// The preflight response is used only by this dialog; the shared generated
+// OpenAPI model does not currently expose the private checkTag endpoint.
+interface InboundTagChangeCheck {
+  unchanged: boolean;
+  valid: boolean;
+  reason: string;
+  routingRefs: number;
+  nodeTagConflict: boolean;
+}
 
 interface ChangeInboundIdModalProps {
   open: boolean;
