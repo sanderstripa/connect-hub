@@ -16,8 +16,8 @@ interface ThroughputCardProps {
   down: number[];
   labels: string[];
   isMobile: boolean;
-  range: OverviewRange;
-  onRangeChange: (range: OverviewRange) => void;
+  range?: OverviewRange;
+  onRangeChange?: (range: OverviewRange) => void;
 }
 
 export default function ThroughputCard({
@@ -26,8 +26,8 @@ export default function ThroughputCard({
   down,
   labels,
   isMobile,
-  range,
-  onRangeChange,
+  range = 2,
+  onRangeChange = () => undefined,
 }: ThroughputCardProps) {
   const { t } = useTranslation();
   const { token } = theme.useToken();
