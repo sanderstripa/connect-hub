@@ -1,0 +1,21 @@
+name: Connect Hub 0.9.0 — Xray stop regression test
+on:
+  push:
+    branches: [feat/connect-hub-0.9.0-upstream-2026-11]
+    paths: ['.github/workflows/xray-stop-test-0.9.0.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --ignore-scripts
+        working-directory: frontend
+      - run: npm run typecheck && npx vitest run src/test/overview-stop-confirm.test.tsx --project components
+        working-directory: frontend
