@@ -22,6 +22,11 @@ import (
 	"gorm.io/gorm"
 )
 
+// Explicitly request the default edit-or-replace delivery path. The screen
+// implementation now represents this mode by the zero value, instead of an
+// exported named constant.
+const screenEditOrReplace screenDelivery = 0
+
 // A login success must not fold into the failure card of the same IP: the
 // sequence is the alert. The live-card key therefore carries the outcome.
 func TestLoginSuccessAndFailureGetSeparateCards(t *testing.T) {
