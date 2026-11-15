@@ -530,7 +530,7 @@ func (s *ClientService) AddInboundClient(inboundSvc *InboundService, data *model
 			return false, err
 		}
 	}
-	if err := validateAmneziaWGClientWrite(oldInbound, clients); err != nil {
+	if err := validateAmneziaWGClientWrite(oldInbound, clients, ""); err != nil {
 		return false, err
 	}
 
@@ -883,7 +883,7 @@ func (s *ClientService) UpdateInboundClient(inboundSvc *InboundService, data *mo
 			clients[0].KeepAlive = old.KeepAlive
 		}
 		// AWG partial edits (nil: the field was not sent) keep the stored spec; "" withdraws it.
-		if oldInbound.Protocol == model.AmneziaWG && clients[0].ForwardedPorts == nil {
+		if oldInbound.Protocol == model.AmneziaWG && clients[0].ForwardedPorts == "" {
 			clients[0].ForwardedPorts = old.ForwardedPorts
 		}
 	}
