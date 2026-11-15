@@ -17,7 +17,7 @@ func TestClientToRecordRoundTripWireGuard(t *testing.T) {
 		PreSharedKey: "cHNrLWJhc2U2NC0zMmJ5dGVzLXBsYWNlaG9sZGVyISE=",
 		KeepAlive:    KeepAlivePtr(25),
 
-		ForwardedPorts: ForwardedPortsPtr("80,8000-8100"),
+		ForwardedPorts: "80,8000-8100",
 	}
 
 	rec := c.ToRecord()
@@ -66,8 +66,8 @@ func TestClientToClientOmitsUnsetKeepAlive(t *testing.T) {
 func TestClientToClientOmitsUnsetForwardedPorts(t *testing.T) {
 	rec := &ClientRecord{Email: "awg@example.test", Enable: true}
 
-	if got := rec.ToClient().ForwardedPorts; got != nil {
-		t.Fatalf("ForwardedPorts for a record that never set any = %q, want nil", *got)
+	if got := rec.ToClient().ForwardedPorts; got != "" {
+		t.Fatalf("ForwardedPorts for a record that never set any = %q, want empty", got)
 	}
 }
 
