@@ -296,12 +296,8 @@ func liftClientLifecycleInSettings(settings string, trafficByEmail map[string]*x
 	if len(trafficByEmail) == 0 {
 		return settings, false
 	}
-	parsed, err := decodeInboundSettingsObject(settings)
-	if err != nil {
-		return settings, false
-	}
-	clients, _ := parsed["clients"].([]any)
-	if len(clients) == 0 {
+	members, entries, ok := splitSettingsClients(settings)
+	if !ok || len(entries) == 0 {
 		return settings, false
 	}
 	changed := false
