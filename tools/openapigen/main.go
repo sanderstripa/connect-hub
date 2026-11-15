@@ -42,6 +42,8 @@ func run(root, outDir string) error {
 				"InboundFallback",
 				"Host",
 				"SubBalancer",
+				"ChainProxy",
+				"ChainSelector",
 				"ClientTrafficWindow",
 				"ClientChangeLog",
 			),
@@ -136,6 +138,7 @@ func run(root, outDir string) error {
 				"NodeMutationRequest",
 				"TunnelMutation", "TunnelView", "TunnelToken",
 				"NodeView",
+				"NodeRoutingApplyResult",
 				"ProbeResultUI",
 				"RealityScanResult",
 				"RealityWatchEntry",
@@ -183,6 +186,10 @@ func run(root, outDir string) error {
 		{
 			Path:        resolveRel(root, "internal/tuic"),
 			StructAllow: setOf("TuicServerSettings", "TuicClientSettings"),
+		},
+		{
+			Path:        resolveRel(root, "internal/vkturn"),
+			StructAllow: setOf("Settings"),
 		},
 	}
 

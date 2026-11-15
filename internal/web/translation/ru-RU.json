@@ -10,6 +10,7 @@
   "create": "Создать",
   "add": "Добавить",
   "remove": "Удалить",
+  "removeItem": "Удалить {item}",
   "update": "Обновить",
   "copy": "Копировать",
   "copied": "Скопировано",
@@ -39,6 +40,7 @@
   "indefinite": "Бесконечно",
   "unlimited": "Безлимит",
   "none": "Нет",
+  "empty": "Пусто",
   "qrCode": "QR-код",
   "info": "Информация",
   "edit": "Изменить",
@@ -46,6 +48,7 @@
   "reset": "Сброс",
   "noData": "Нет данных.",
   "copySuccess": "Скопировано",
+  "copyFail": "Не удалось скопировать",
   "sure": "Да",
   "encryption": "Шифрование",
   "transmission": "Транспорт",
@@ -128,7 +131,8 @@
     "subFormats": "Форматы подписки",
     "connections": "Подключения",
     "tunnels": "Туннели",
-    "assistant": "ИИ-помощник"
+    "assistant": "ИИ-помощник",
+    "nodeRouting": "Node Routing"
   },
   "pages": {
     "logs": {
@@ -380,6 +384,11 @@
       "xrayStatus": "Xray",
       "stopXray": "Стоп",
       "restartXray": "Перезапуск",
+      "startXray": "Запуск",
+      "stopXrayDisabledHint": "Xray не запущен",
+      "stopXrayConfirmTitle": "Остановить Xray?",
+      "stopXrayConfirmContent": "Остановка Xray немедленно разорвёт все прокси-соединения. Продолжить?",
+      "stopXrayConfirmOk": "Остановить Xray",
       "xraySwitch": "Выбор версии",
       "xrayUpdates": "Обновления Xray",
       "xraySwitchClickDesk": "Важно: старые версии могут не поддерживать текущие настройки",
@@ -469,7 +478,7 @@
       "geodataConfirmTitle": "Сохранить настройки geodata?",
       "geodataConfirmContent": "Шаблон конфигурации Xray будет обновлён, а Xray перезапущен.",
       "geodataInvalidUrl": "Для каждого файла нужен HTTPS URL.",
-      "geodataInvalidFile": "Имя файла должно быть простым, например geosite_custom.dat (без путей).",
+      "geodataInvalidFile": "Имя файла должно быть простым именем .dat, например geosite_custom.dat (без путей).",
       "geodataInvalidCron": "Cron должен содержать 5 полей, напр. 0 4 * * *",
       "geodataEmpty": "Файлы не настроены. В правилах маршрутизации файлы указываются как ext:geosite_custom.dat:category.",
       "dontRefresh": "Установка в процессе. Не обновляйте страницу",
@@ -555,7 +564,9 @@
         "pickInbound": "Выберите инбаунд",
         "matchAny": "любой",
         "destPlaceholder": "авто (listen:порт дочернего)",
-        "needsTls": "Fallbacks станут доступны после выбора TLS или Reality на вкладке «Безопасность» (только VLESS/Trojan поверх RAW)."
+        "needsTls": "Fallbacks станут доступны после выбора TLS или Reality на вкладке «Безопасность» (только VLESS/Trojan поверх RAW).",
+        "decryptionConflict": "Fallback несовместим с активной серверной расшифровкой VLESS. Перед её включением удалите и сохраните правила fallback либо отключите расшифровку.",
+        "saveFailed": "Не удалось загрузить или сохранить правила fallback. Черновик остаётся открытым; проверьте ошибку и повторите попытку."
       },
       "protocol": "Протокол",
       "port": "Порт",
@@ -677,6 +688,8 @@
       "importInbound": "Импорт подключений",
       "periodicTrafficResetTitle": "Сброс трафика",
       "periodicTrafficResetDay": "День ежемесячного сброса",
+      "preserveClientTraffic": "Сохранять трафик клиентов",
+      "preserveClientTrafficHelp": "Сброс по расписанию обнуляет только счётчики этого входящего подключения. Клиенты сохраняют собственные графики сброса.",
       "periodicTrafficReset": {
         "never": "Никогда",
         "daily": "Ежедневно",
@@ -714,7 +727,9 @@
         "invalidClientField": "Клиент {client}: поле {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "Сертификат TLS {index}: {reason}",
-        "moreIssues": "{message}  (+{count} ещё)"
+        "moreIssues": "{message}  (+{count} ещё)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "autoFill": "Автозаполнение",
@@ -984,6 +999,14 @@
           "clientId": "Client ID",
           "clientSecret": "Client Secret",
           "refreshToken": "Refresh Token",
+          "accessKeyId": "ID ключа доступа",
+          "secretAccessKey": "Секретный ключ доступа",
+          "sessionToken": "Токен сессии",
+          "s3Endpoint": "Endpoint",
+          "s3Region": "Регион",
+          "s3Bucket": "Бакет",
+          "s3PathStyle": "Адресация через путь",
+          "s3PathStyleDesc": "Вкл.: бакет указывается в пути URL. Выкл.: в имени хоста, для чего нужен DNS-endpoint.",
           "secrets": "Секреты",
           "secretsDesc": "Значения, которые шаблон читает как {secret0}, {secret1}, …",
           "template": "Шаблон хранилища",
@@ -1009,7 +1032,7 @@
         "autoSystemDnsToGateway": "Системный DNS на шлюз",
         "autoSystemDnsToGatewayTooltip": "Только Linux: направляет systemd-resolved на шлюз TUN, чтобы системные запросы шли через Xray. Нужен шлюз; при ошибке TUN не запустится.",
         "autoSystemWfpBlockLeak": "Блокировка утечек (WFP)",
-        "autoSystemWfpBlockLeakTooltip": "Только Windows, вместе с авто-маршрутами системы: dns удерживает DNS внутри TUN (нужны DNS-серверы), misconfigtun блокирует версию IP, которую ни один маршрут не ведёт в TUN.",
+        "autoSystemWfpBlockLeakTooltip": "Только Windows, вместе с авто-маршрутами системы: all блокирует всё вне TUN, allexceptlan делает то же, но оставляет доступной локальную сеть; dns удерживает DNS (порты 53 и 853 и службу DNS-клиента) внутри TUN; windnsclient охватывает только эту службу; tcp, udp и icmp блокируют протокол целиком; для отдельных портов введите tcp/ПОРТ, udp/ПОРТ, просто ПОРТ или диапазон ОТ-ДО; CIDR в начале (1.1.1.0/24:53, [::/0]:all) ограничивает значение этими адресами; misconfigtun блокирует версию IP, которую ни один маршрут не ведёт в TUN. Любому значению, охватывающему порт 53, нужны DNS-серверы.",
         "maxVersion": "Максимальная версия",
         "headerName": "Имя заголовка",
         "headerValue": "Значение заголовка",
@@ -1044,7 +1067,11 @@
         "finderNone": "Ни одна цель не прошла. Попробуйте более широкий диапазон.",
         "finderReport": "Отчёт",
         "finderCommandError": "Не удалось создать команду",
-        "finderExpired": "Срок действия команды истёк. Создайте новую."
+        "finderExpired": "Срок действия команды истёк. Создайте новую.",
+        "chainNone": "Прямое подключение",
+        "chainSelectorSuffix": "селектор",
+        "chain": "Цепочка клиента",
+        "chainHelp": "Пусть клиент подключается к этому инбаунду через вышестоящий SOCKS/HTTP-прокси. Действует для JSON- и Mihomo-подписок."
       },
       "info": {
         "mode": "Режим",
@@ -1092,8 +1119,19 @@
           "failed": "Не удалось сохранить запасные",
           "switchFailed": "Не удалось переключить: цель не прошла проверку или реальный тест REALITY",
           "switched": "Переключено на {target}"
-        }
-      }
+        },
+        "saveFailed": "Unable to save REALITY monitoring settings"
+      },
+      "changeIdInvalid": "The new ID is unavailable ({reason}).",
+      "changeIdUnchanged": "The ID is unchanged.",
+      "changeIdRoutingRefs": "{count} routing rule(s) point at the current ID and will be updated.",
+      "changeIdNodeConflict": "The hosting node already has an inbound with this name.",
+      "changeIdValid": "The new ID is available.",
+      "changeIdTitle": "Change inbound ID — {tag}",
+      "changeIdApply": "Apply",
+      "changeIdDesc": "Changing the inbound ID updates every routing rule and node reference that points at the current ID. The check below runs before anything is saved.",
+      "changeIdLabel": "New inbound ID (tag)",
+      "changeId": "Change ID"
     },
     "clients": {
       "columns": "Столбцы",
@@ -1164,7 +1202,13 @@
       "deleteHwid": "Удалить устройство",
       "deleteHwidConfirm": "Удалить это устройство? При следующем запросе подписки оно зарегистрируется заново.",
       "hwidDeleted": "Устройство удалено.",
-      "clearHwidsConfirm": "Удалить все зарегистрированные устройства? Каждое устройство зарегистрируется заново при следующем запросе подписки.",
+      "blockHwid": "Заблокировать",
+      "unblockHwid": "Разблокировать",
+      "hwidBlocked": "Заблокировано",
+      "blockHwidConfirm": "Запретить этому устройству получать эту подписку?",
+      "unblockHwidConfirm": "Снова разрешить этому устройству получать эту подписку?",
+      "hwidBlockHint": "Блокировка действует для этой подписки даже при лимите HWID 0. Очистка списка сохраняет блокировки.",
+      "clearHwidsConfirm": "Удалить все незаблокированные устройства? Они зарегистрируются заново при следующем запросе подписки. Заблокированные устройства останутся заблокированными.",
       "limitIpFail2banMissing": "Fail2ban не установлен, поэтому ограничение по IP не может быть применено. Установите Fail2ban из bash-меню x-ui, чтобы включить эту опцию.",
       "limitIpFail2banWindows": "Fail2ban недоступен в Windows, поэтому ограничение по IP не может быть применено.",
       "limitIpDisabled": "Функция ограничения по IP отключена на этом сервере.",
@@ -1174,6 +1218,7 @@
       "subIdDesc": "Также служит кодом приглашения этого клиента в Telegram-боте: тот, кто отправит его боту, будет привязан к этому клиенту. Используйте длинное случайное значение — короткий или легко угадываемый ID может присвоить кто-то другой.",
       "online": "В сети",
       "email": "Email",
+      "emailReservedName": "Имя клиента не может состоять только из «.» или «..»",
       "emailInvalidChars": "Email не может содержать пробелы, '/', '\\' или управляющие символы",
       "subIdInvalidChars": "ID подписки не может содержать пробелы, '/', '\\' или управляющие символы",
       "group": "Группа",
@@ -1537,7 +1582,7 @@
       "tlsPin": "Закрепить сертификат (SHA-256)",
       "tlsSkip": "Пропустить проверку",
       "tlsMtls": "Взаимный TLS (клиентский сертификат)",
-      "mtlsFormHint": "Этот узел аутентифицирует панель с помощью клиентского сертификата. Скопируйте CA этой панели из раздела «mTLS узла» на узел, задайте его доверенный CA и перезапустите узел.",
+      "mtlsFormHint": "Этот узел аутентифицирует панель с помощью клиентского сертификата. Скопируйте CA этой панели из раздела «mTLS узла» на узел, задайте его доверенный CA и перезапустите узел. Для обновления панели этого узла отсюда по-прежнему нужен API-токен с областью node-admin.",
       "mtls": {
         "title": "mTLS узла",
         "intro": "Взаимный TLS добавляет фактор клиентского сертификата поверх API-токена для вызовов между узлами. Это необязательно: оставьте пустым, чтобы использовать только аутентификацию по токену.",
@@ -1791,6 +1836,7 @@
         "applyTo": "Применить к",
         "addNoise": "+ Шум",
         "concurrency": "Параллелизм",
+        "concurrencyHint": "Число потоков на соединение. xray-core 26.11.9 и новее поднимает любое значение от 0 до 128 до 128; более старые ядра используют число как есть (0 означает 8). -1 отключает TCP-mux.",
         "xudpConcurrency": "Параллелизм xudp",
         "xudpUdp443": "xudp UDP 443"
       },
@@ -1989,6 +2035,71 @@
           "httpMethod": "HTTP-метод",
           "httpMethodDesc": "Метод запросов при проверках.",
           "note": "Балансировщики leastPing/leastLoad всегда содержат burst-обсерваторию. Этот переключатель настраивает её параметры проб — выключите, чтобы использовать встроенные значения по умолчанию. Изменения применяются после перезапуска панели."
+        }
+      },
+      "chainProxies": {
+        "menu": "Цепочки прокси",
+        "title": "Прокси в цепочке",
+        "add": "Добавить прокси",
+        "desc": "Вышестоящие SOCKS- и HTTP-прокси, через которые клиент подписчика подключается, прежде чем попасть на этот инбаунд. Каждому инбаунду назначается один прокси или один селектор; JSON- и Mihomo-подписки передают этот хоп, а raw-ссылки и legacy-Clash такие инбаунды пропускают.",
+        "remark": "Название",
+        "remarkPlaceholder": "entry-de-fra",
+        "type": "Протокол",
+        "typeSocks": "SOCKS",
+        "typeHttp": "HTTP",
+        "server": "Сервер",
+        "port": "Порт",
+        "username": "Логин",
+        "usernamePlaceholder": "Оставьте пустым для открытого прокси",
+        "password": "Пароль",
+        "tls": "HTTPS-прокси",
+        "tlsHelp": "Подключаться к прокси по TLS. У SOCKS-аутбаунда xray нет TLS, поэтому доступно только для HTTP.",
+        "auth": "Авторизация",
+        "authPassword": "Логин и пароль",
+        "authNone": "Нет",
+        "endpoint": "Адрес",
+        "enabled": "Включено",
+        "empty": "Прокси пока нет",
+        "deleteConfirm": "Удалить этот прокси? Назначенные на него инбаунды будут подключаться напрямую.",
+        "errRemarkRequired": "Укажите название (не более 256 символов)",
+        "errServerRequired": "Укажите сервер",
+        "errServerInvalid": "Сервер должен быть хостом или IP без пробелов",
+        "errPortRequired": "Порт должен быть от 1 до 65535",
+        "tabProxies": "Прокси",
+        "toasts": {
+          "list": "Не удалось загрузить прокси",
+          "create": "Не удалось создать прокси",
+          "update": "Не удалось обновить прокси",
+          "delete": "Не удалось удалить прокси",
+          "invalidId": "Неверный id прокси"
+        }
+      },
+      "chainSelectors": {
+        "title": "Селектор цепочек",
+        "add": "Добавить селектор",
+        "desc": "Несколько прокси, сгруппированных так, чтобы клиент выбирал хоп по стратегии. Инбаунду назначается селектор вместо одного прокси; JSON-подписка маршрутизирует через балансировщик, а Mihomo получает соответствующую группу.",
+        "remark": "Название",
+        "remarkPlaceholder": "entries-fastest",
+        "strategy": "Стратегия",
+        "strategyHelp": "leastPing и leastLoad проверяют каждый хоп; random и roundRobin чередуют. Mihomo приближает их через url-test и load-balance.",
+        "strategyLeastLoad": "Наименьшая нагрузка",
+        "strategyLeastPing": "Наименьший пинг",
+        "strategyRandom": "Случайно",
+        "strategyRoundRobin": "По кругу",
+        "proxies": "Прокси в цепочке",
+        "proxiesCount": "Прокси: {count}",
+        "enabled": "Включено",
+        "empty": "Селекторов пока нет",
+        "deleteConfirm": "Удалить этот селектор? Назначенные на него инбаунды будут подключаться напрямую.",
+        "errRemarkRequired": "Укажите название (не более 256 символов)",
+        "errProxiesRequired": "Выберите хотя бы один прокси",
+        "tabSelectors": "Селекторы",
+        "toasts": {
+          "list": "Не удалось загрузить селекторы",
+          "create": "Не удалось создать селектор",
+          "update": "Не удалось обновить селектор",
+          "delete": "Не удалось удалить селектор",
+          "invalidId": "Неверный id селектора"
         }
       },
       "subCalendarExpireInclusive": "Month-end subscription expiry display",
@@ -2242,7 +2353,16 @@
       "wechatReportTime": "Расписание отчётов",
       "wechatReportTimeDesc": "Используйте выражение cron или шаблон, например @daily.",
       "wechatEvents": "Оповещения о событиях",
-      "wechatEventsDesc": "Выберите события для уведомлений и пороговые значения."
+      "wechatEventsDesc": "Выберите события для уведомлений и пороговые значения.",
+      "inboundListOrder": "Inbound list order",
+      "inboundListOrderDesc": "Default order of the inbound list in the panel. Applies to local inbounds and to inbounds adopted from all nodes.",
+      "inboundListOrderOptionId": "ID",
+      "inboundListOrderOptionRemark": "Remark",
+      "inboundListOrderOptionPort": "Port",
+      "inboundListOrderOptionProtocol": "Protocol",
+      "inboundListOrderOptionSubSortIndex": "Subscription order",
+      "nodeRoutingControl": "Node routing control",
+      "nodeRoutingControlDesc": "Let this panel control the routing of connected nodes. When enabled, the Node Routing page can push a shared routing policy to each node."
     },
     "xray": {
       "importRules": "Импорт правил",
@@ -2587,7 +2707,14 @@
         "subnetCidr": "Маска подсети (CIDR)",
         "allowedIPs": "Разрешенные IP-адреса",
         "endpoint": "Конечная точка",
-        "domainStrategy": "Стратегия домена"
+        "domainStrategy": "Стратегия домена",
+        "vkTurnEnabled": "Туннель через VK",
+        "vkTurnHint": "Совместимый клиент VK TURN передаёт трафик WireGuard через релеи VK на SRTP-прокси этого сервера, который направляет его в это подключение WireGuard. Разрешите UDP-порт прокси в firewall.",
+        "vkTurnCallLink": "Ссылка на звонок VK",
+        "vkTurnCallLinkHint": "Клиент получает и обновляет TURN-credentials по этой ссылке. Вход в VK нужен, если анонимный доступ недоступен.",
+        "vkTurnPort": "UDP-порт VK-прокси",
+        "vkTurnInvalidLink": "Введите ссылку на звонок VK вида https://vk.ru/call/join/...",
+        "vkTurnProfile": "Профиль VK TURN"
       },
       "amneziawg": {
         "privateKey": "Приватный ключ",
@@ -2847,7 +2974,7 @@
         "allowInsecure": "Пропустить проверку TLS-сертификата (allowInsecure / skip-cert-verify).",
         "vlessRoute": "Одно значение маршрута VLESS (0-65535), встраиваемое в UUID, напр. 443. Оставьте пустым, чтобы отключить.",
         "mihomoX25519": "Только для Mihomo: REALITY-рукопожатие с обычным X25519, без ML-KEM (support-x25519mlkem768: false). Для серверов на Xray-core ниже 26.9.8, которым ML-KEM не нужен.",
-        "remark": "Обычная метка для этого хоста. Используется как имя конфигурации, только если у входящего нет собственного примечания."
+        "remark": "Обычная метка для этого хоста. Вставьте {{HOST}} в шаблон ремарки, чтобы включить ее в имя конфигурации."
       },
       "remarkVars": {
         "title": "Переменные шаблона",
@@ -2961,6 +3088,36 @@
       "unavailable": "Нода недоступна",
       "latencyLoss": "RTT / Потери",
       "unsupportedPlatform": "На этой платформе доступны удалённые туннели. Для запуска WatTunnel выберите поддерживаемую ноду."
+    },
+    "nodeRouting": {
+      "policySaved": "Routing policy saved",
+      "cleared": "Routing policy cleared on {name}.",
+      "applied": "Routing policy applied to {name}.",
+      "applyFailed": "Apply failed on {name}: {reason}",
+      "noNodes": "No online, enabled nodes to apply to.",
+      "appliedAll": "Routing policy applied to {count} node(s).",
+      "appliedMixed": "Routing policy applied to {ok} node(s), {failed} failed.",
+      "node": "Node",
+      "status": "Status",
+      "egress": "Egress",
+      "direct": "direct",
+      "policy": "Master policy",
+      "policyActive": "active",
+      "none": "none",
+      "actions": "Actions",
+      "apply": "Apply",
+      "clear": "Clear",
+      "title": "Node routing control",
+      "control": "Control",
+      "policyTitle": "Shared routing policy",
+      "controlDisabled": "Node routing control is disabled. Enable it to push routing policies to nodes.",
+      "policyDesc": "JSON array of Xray routing rules (the same shape as the routing rules on the Routing page). When applied, a node runs these rules ahead of its own rules; the node's internal stats rule is always kept first.",
+      "policyInvalid": "The policy must be a JSON array of routing rule objects.",
+      "savePolicy": "Save policy",
+      "clearPolicy": "Clear policy",
+      "ruleCount": "{count} rule(s)",
+      "nodesTitle": "Nodes",
+      "applyAll": "Apply to all online nodes"
     }
   },
   "tgbot": {
@@ -3404,5 +3561,6 @@
       "trafficRemaining": "Оставшийся трафик 3x-ui",
       "trafficQuotaUnset": "Лимит не задан"
     }
-  }
+  },
+  "import": "Import"
 }

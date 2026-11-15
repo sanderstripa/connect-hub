@@ -22,9 +22,14 @@ try {
  let modal=page.getByRole('dialog');
  await modal.getByRole('textbox',{name:'Remark',exact:true}).fill('Unified Sudoku');
  await modal.getByRole('spinbutton',{name:'Port',exact:true}).fill(String(cfg.port));
- await modal.locator('#protocol').click();
- const dropdown=page.locator('.ant-select-dropdown:visible').last();await dropdown.hover();await page.mouse.wheel(0,2400);await page.waitForTimeout(200);
- await dropdown.getByText('Sudoku',{exact:true}).click();
+ const protocolField=modal.locator('#protocol');
+ if(await protocolField.evaluate(el=>el.tagName)==='SELECT'){
+  await protocolField.selectOption({label:'Sudoku'});
+ }else{
+  await protocolField.click();
+  const dropdown=page.locator('.ant-select-dropdown:visible').last();await dropdown.hover();await page.mouse.wheel(0,2400);await page.waitForTimeout(200);
+  await dropdown.getByText('Sudoku',{exact:true}).click();
+ }
  await checkBrand(page,cfg.output,'inbound-form');
  if(await modal.getByRole('textbox',{name:'Remark',exact:true}).inputValue()!=='Unified Sudoku')throw Error('Lost shared remark');
  if(await modal.getByRole('spinbutton',{name:'Port',exact:true}).inputValue()!==String(cfg.port))throw Error('Lost shared port');

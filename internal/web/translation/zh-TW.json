@@ -10,6 +10,7 @@
   "create": "建立",
   "add": "新增",
   "remove": "移除",
+  "removeItem": "移除 {item}",
   "update": "更新",
   "copy": "複製",
   "copied": "已複製",
@@ -39,6 +40,7 @@
   "indefinite": "無限期",
   "unlimited": "無限制",
   "none": "無",
+  "empty": "空",
   "qrCode": "二維碼",
   "info": "更多資訊",
   "edit": "編輯",
@@ -46,6 +48,7 @@
   "reset": "重置",
   "noData": "無數據。",
   "copySuccess": "複製成功",
+  "copyFail": "複製失敗",
   "sure": "確定",
   "encryption": "加密",
   "transmission": "傳輸",
@@ -128,7 +131,8 @@
     "subFormats": "Sub Formats",
     "connections": "Connections",
     "tunnels": "隧道",
-    "assistant": "AI Assistant"
+    "assistant": "AI Assistant",
+    "nodeRouting": "Node Routing"
   },
   "pages": {
     "logs": {
@@ -380,6 +384,11 @@
       "xrayStatus": "Xray",
       "stopXray": "停止",
       "restartXray": "重新啟動",
+      "startXray": "啟動",
+      "stopXrayDisabledHint": "Xray 未執行",
+      "stopXrayConfirmTitle": "停止 Xray?",
+      "stopXrayConfirmContent": "停止 Xray 將立即中斷所有代理連線。確定要繼續嗎?",
+      "stopXrayConfirmOk": "停止 Xray",
       "xraySwitch": "版本",
       "xrayUpdates": "Xray 更新",
       "xraySwitchClickDesk": "請謹慎選擇，因為較舊版本可能與當前配置不相容",
@@ -469,7 +478,7 @@
       "geodataConfirmTitle": "儲存 geodata 設定？",
       "geodataConfirmContent": "將更新 Xray 設定範本並重啟 Xray。",
       "geodataInvalidUrl": "每個檔案都需要 HTTPS 位址。",
-      "geodataInvalidFile": "檔案名稱必須是純檔名，例如 geosite_custom.dat（不能包含路徑）。",
+      "geodataInvalidFile": "檔案名稱必須是純 .dat 檔名，例如 geosite_custom.dat（不能包含路徑）。",
       "geodataInvalidCron": "Cron 必須為 5 段，例如 0 4 * * *",
       "geodataEmpty": "尚未設定檔案。路由規則中可透過 ext:geosite_custom.dat:category 引用檔案。",
       "dontRefresh": "安裝中，請勿重新整理此頁面",
@@ -555,7 +564,9 @@
         "pickInbound": "選擇一個入站",
         "matchAny": "任何",
         "destPlaceholder": "自動（子入站 listen:port）",
-        "needsTls": "在「安全」分頁選擇 TLS 或 Reality 後即可設定回落（僅限 RAW 上的 VLESS/Trojan）。"
+        "needsTls": "在「安全」分頁選擇 TLS 或 Reality 後即可設定回落（僅限 RAW 上的 VLESS/Trojan）。",
+        "decryptionConflict": "VLESS 伺服器端解密啟用時無法使用回落。請先刪除並儲存回落規則再啟用解密，或關閉解密。",
+        "saveFailed": "無法載入或儲存回落規則。草稿保持開啟；請檢查錯誤後重試。"
       },
       "protocol": "協議",
       "port": "連接埠",
@@ -676,6 +687,8 @@
       "importInbound": "匯入入站規則",
       "periodicTrafficResetTitle": "流量重置",
       "periodicTrafficResetDay": "每月重置日",
+      "preserveClientTraffic": "保留客戶端用量",
+      "preserveClientTrafficHelp": "定時重置只會清除此入站的流量，客戶端繼續依自己的週期累計用量。",
       "periodicTrafficReset": {
         "never": "從不",
         "daily": "每日",
@@ -713,7 +726,9 @@
         "invalidClientField": "用戶端 {client}：欄位 {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "第 {index} 組 TLS 憑證：{reason}",
-        "moreIssues": "{message}  (另有 {count} 項)"
+        "moreIssues": "{message}  (另有 {count} 項)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "moveUp": "上移",
@@ -983,6 +998,14 @@
           "clientId": "用戶端 ID",
           "clientSecret": "用戶端密鑰",
           "refreshToken": "重新整理權杖",
+          "accessKeyId": "存取金鑰 ID",
+          "secretAccessKey": "秘密存取金鑰",
+          "sessionToken": "工作階段權杖",
+          "s3Endpoint": "端點",
+          "s3Region": "區域",
+          "s3Bucket": "儲存貯體",
+          "s3PathStyle": "路徑樣式定址",
+          "s3PathStyleDesc": "開啟：儲存貯體名稱放在 URL 路徑中。關閉：放在主機名稱中，需要使用網域端點。",
           "secrets": "密鑰",
           "secretsDesc": "範本中以 {secret0}、{secret1}… 引用的值",
           "template": "儲存範本",
@@ -1008,7 +1031,7 @@
         "autoSystemDnsToGateway": "系統 DNS 指向閘道",
         "autoSystemDnsToGatewayTooltip": "僅限 Linux：將 systemd-resolved 指向 TUN 閘道，使系統解析經過 Xray。需要設定閘道，失敗時 TUN 不會啟動。",
         "autoSystemWfpBlockLeak": "阻止洩漏 (WFP)",
-        "autoSystemWfpBlockLeakTooltip": "僅限 Windows，需搭配自動系統路由：dns 讓 DNS 只走 TUN（需設定 DNS 伺服器），misconfigtun 阻止沒有任何路由指向 TUN 的 IP 版本。",
+        "autoSystemWfpBlockLeakTooltip": "僅限 Windows，需搭配自動系統路由：all 阻止 TUN 之外的所有流量，allexceptlan 同樣如此但保留區域網路可達；dns 讓 DNS（連接埠 53、853 及 DNS Client 服務）只走 TUN；windnsclient 只針對該服務；tcp、udp、icmp 阻止整個協定；指定連接埠請輸入 tcp/連接埠、udp/連接埠、單獨的連接埠或 起-迄 範圍；在前面加上 CIDR（1.1.1.0/24:53、[::/0]:all）可將該值限定於這些位址；misconfigtun 阻止沒有任何路由指向 TUN 的 IP 版本。凡是涵蓋連接埠 53 的值都需設定 DNS 伺服器。",
         "maxVersion": "最高版本",
         "headerName": "標頭名稱",
         "headerValue": "標頭值",
@@ -1043,7 +1066,11 @@
         "finderNone": "沒有目標通過。請嘗試更大的範圍。",
         "finderReport": "報告",
         "finderCommandError": "無法產生命令",
-        "finderExpired": "此命令已過期,請重新產生。"
+        "finderExpired": "此命令已過期,請重新產生。",
+        "chainNone": "直連",
+        "chainSelectorSuffix": "選擇器",
+        "chain": "用戶端鏈",
+        "chainHelp": "讓用戶端經由上游 SOCKS/HTTP 代理撥號到此入站。適用於 JSON 與 Mihomo 訂閱。"
       },
       "info": {
         "mode": "模式",
@@ -1092,8 +1119,19 @@
           "failed": "無法儲存備用目標",
           "switchFailed": "無法切換：目標未通過檢查或真實 REALITY 測試",
           "switched": "已切換到 {target}"
-        }
-      }
+        },
+        "saveFailed": "Unable to save REALITY monitoring settings"
+      },
+      "changeIdInvalid": "The new ID is unavailable ({reason}).",
+      "changeIdUnchanged": "The ID is unchanged.",
+      "changeIdRoutingRefs": "{count} routing rule(s) point at the current ID and will be updated.",
+      "changeIdNodeConflict": "The hosting node already has an inbound with this name.",
+      "changeIdValid": "The new ID is available.",
+      "changeIdTitle": "Change inbound ID — {tag}",
+      "changeIdApply": "Apply",
+      "changeIdDesc": "Changing the inbound ID updates every routing rule and node reference that points at the current ID. The check below runs before anything is saved.",
+      "changeIdLabel": "New inbound ID (tag)",
+      "changeId": "Change ID"
     },
     "clients": {
       "columns": "欄位",
@@ -1164,7 +1202,13 @@
       "deleteHwid": "移除裝置",
       "deleteHwidConfirm": "移除此裝置？下次取得訂閱時它將需要重新註冊。",
       "hwidDeleted": "裝置已移除。",
-      "clearHwidsConfirm": "移除所有已註冊的裝置？每台裝置在下次取得訂閱時都需要重新註冊。",
+      "blockHwid": "封鎖",
+      "unblockHwid": "解除封鎖",
+      "hwidBlocked": "已封鎖",
+      "blockHwidConfirm": "禁止此裝置取得此訂閱？",
+      "unblockHwidConfirm": "重新允許此裝置取得此訂閱？",
+      "hwidBlockHint": "即使 HWID 限制為 0，裝置封鎖仍對此訂閱生效。清空清單不會解除封鎖。",
+      "clearHwidsConfirm": "移除所有未封鎖的裝置？它們將在下次取得訂閱時重新註冊。已封鎖的裝置將保持封鎖。",
       "limitIpFail2banMissing": "未安裝 Fail2ban，無法實施 IP 限制。請從 x-ui 命令列選單安裝 Fail2ban 以啟用此選項。",
       "limitIpFail2banWindows": "Windows 上不支援 Fail2ban，無法實施 IP 限制。",
       "limitIpDisabled": "此伺服器已停用 IP 限制功能。",
@@ -1174,6 +1218,7 @@
       "subIdDesc": "同時作為此用戶端的 Telegram 機器人邀請碼：任何人將其傳送給機器人即會綁定到此用戶端。請保持足夠長且隨機——過短或容易猜到的 ID 可能被他人搶先綁定。",
       "online": "上線",
       "email": "電子郵件",
+      "emailReservedName": "用戶端名稱不能僅為「.」或「..」",
       "emailInvalidChars": "電子郵件不能包含空格、'/'、'\\' 或控制字元",
       "subIdInvalidChars": "訂閱 ID 不能包含空格、'/'、'\\' 或控制字元",
       "group": "群組",
@@ -1537,7 +1582,7 @@
       "tlsPin": "釘選憑證（SHA-256）",
       "tlsSkip": "略過驗證",
       "tlsMtls": "雙向 TLS（用戶端憑證）",
-      "mtlsFormHint": "此節點使用用戶端憑證對面板進行驗證。請從「節點 mTLS」區域複製本面板的 CA 到該節點，設定其受信任的 CA，然後重新啟動該節點。",
+      "mtlsFormHint": "此節點使用用戶端憑證對面板進行驗證。請從「節點 mTLS」區域複製本面板的 CA 到該節點，設定其受信任的 CA，然後重新啟動該節點。 從這裡更新此節點的面板仍需要具有 node-admin 權限範圍的 API 權杖。",
       "mtls": {
         "title": "節點 mTLS",
         "intro": "雙向 TLS 在節點間呼叫的 API 權杖之上增加用戶端憑證驗證。此為選用項目：留空則僅使用權杖驗證。",
@@ -1791,6 +1836,7 @@
         "applyTo": "套用至",
         "addNoise": "+ 雜訊",
         "concurrency": "並發",
+        "concurrencyHint": "每個連線承載的串流數量。xray-core 26.11.9 及更新版本會把 0 到 128 之間的值一律提高到 128；更早的核心依填寫的數值使用（0 表示 8）。-1 關閉 TCP mux。",
         "xudpConcurrency": "xudp 並發",
         "xudpUdp443": "xudp UDP 443"
       },
@@ -1989,6 +2035,71 @@
           "httpMethod": "HTTP 方法",
           "httpMethodDesc": "探活請求使用的 HTTP 方法。",
           "note": "leastPing/leastLoad 平衡器始終帶有 burstObservatory。此開關自訂其探活參數 — 關閉以使用內建預設值。變更在面板重啟後生效。"
+        }
+      },
+      "chainProxies": {
+        "menu": "鏈式代理",
+        "title": "鏈式代理",
+        "add": "新增鏈式代理",
+        "desc": "訂閱用戶端在連到本面板入站前先撥號的上游 SOCKS/HTTP 代理。每個入站可指定一個代理或一個選擇器；JSON 與 Mihomo 訂閱會帶上該跳，而原始連結與舊版 Clash 輸出會略過這些入站。",
+        "remark": "備註",
+        "remarkPlaceholder": "entry-de-fra",
+        "type": "協定",
+        "typeSocks": "SOCKS",
+        "typeHttp": "HTTP",
+        "server": "伺服器",
+        "port": "連接埠",
+        "username": "使用者名稱",
+        "usernamePlaceholder": "留空表示開放代理",
+        "password": "密碼",
+        "tls": "HTTPS 代理",
+        "tlsHelp": "以 TLS 撥號至該代理。xray 的 SOCKS 出站不支援 TLS，因此僅限 HTTP。",
+        "auth": "驗證",
+        "authPassword": "使用者名稱 + 密碼",
+        "authNone": "無",
+        "endpoint": "位址",
+        "enabled": "啟用",
+        "empty": "尚無鏈式代理",
+        "deleteConfirm": "刪除此鏈式代理？指定它的入站將改為直連。",
+        "errRemarkRequired": "需要備註（最多 256 個字元）",
+        "errServerRequired": "需要伺服器",
+        "errServerInvalid": "伺服器必須是不含空白的主機名稱或 IP",
+        "errPortRequired": "連接埠必須介於 1 到 65535",
+        "tabProxies": "代理",
+        "toasts": {
+          "list": "載入鏈式代理失敗",
+          "create": "建立鏈式代理失敗",
+          "update": "更新鏈式代理失敗",
+          "delete": "刪除鏈式代理失敗",
+          "invalidId": "鏈式代理 id 無效"
+        }
+      },
+      "chainSelectors": {
+        "title": "鏈式選擇器",
+        "add": "新增鏈式選擇器",
+        "desc": "把多個鏈式代理分組，讓用戶端依策略選擇其中一跳。入站可指定選擇器而非單一代理；JSON 輸出會經由負載平衡器路由，Mihomo 會得到對應的代理群組。",
+        "remark": "備註",
+        "remarkPlaceholder": "entries-fastest",
+        "strategy": "策略",
+        "strategyHelp": "leastPing 與 leastLoad 會探測每一跳；random 與 roundRobin 輪替。Mihomo 以 url-test 與 load-balance 近似實作。",
+        "strategyLeastLoad": "最小負載",
+        "strategyLeastPing": "最小延遲",
+        "strategyRandom": "隨機",
+        "strategyRoundRobin": "輪詢",
+        "proxies": "鏈式代理",
+        "proxiesCount": "{count} 個代理",
+        "enabled": "啟用",
+        "empty": "尚無鏈式選擇器",
+        "deleteConfirm": "刪除此鏈式選擇器？指定它的入站將改為直連。",
+        "errRemarkRequired": "需要備註（最多 256 個字元）",
+        "errProxiesRequired": "至少選擇一個鏈式代理",
+        "tabSelectors": "選擇器",
+        "toasts": {
+          "list": "載入鏈式選擇器失敗",
+          "create": "建立鏈式選擇器失敗",
+          "update": "更新鏈式選擇器失敗",
+          "delete": "刪除鏈式選擇器失敗",
+          "invalidId": "鏈式選擇器 id 無效"
         }
       },
       "subCalendarExpireInclusive": "訂閱到期日期顯示為月底",
@@ -2242,7 +2353,16 @@
       "wechatReportTime": "報告時間",
       "wechatReportTimeDesc": "使用 Cron 運算式或 @daily 等預設。",
       "wechatEvents": "事件警報",
-      "wechatEventsDesc": "選擇需要傳送微信通知的面板事件，並設定警報門檻。"
+      "wechatEventsDesc": "選擇需要傳送微信通知的面板事件，並設定警報門檻。",
+      "inboundListOrder": "Inbound list order",
+      "inboundListOrderDesc": "Default order of the inbound list in the panel. Applies to local inbounds and to inbounds adopted from all nodes.",
+      "inboundListOrderOptionId": "ID",
+      "inboundListOrderOptionRemark": "Remark",
+      "inboundListOrderOptionPort": "Port",
+      "inboundListOrderOptionProtocol": "Protocol",
+      "inboundListOrderOptionSubSortIndex": "Subscription order",
+      "nodeRoutingControl": "Node routing control",
+      "nodeRoutingControlDesc": "Let this panel control the routing of connected nodes. When enabled, the Node Routing page can push a shared routing policy to each node."
     },
     "xray": {
       "save": "儲存",
@@ -2587,7 +2707,14 @@
         "subnetCidr": "子網路 CIDR",
         "allowedIPs": "允許的 IP",
         "endpoint": "端點",
-        "domainStrategy": "域策略"
+        "domainStrategy": "域策略",
+        "vkTurnEnabled": "Tunnel through VK",
+        "vkTurnHint": "A compatible VK TURN client sends WireGuard traffic through VK relays to this server's SRTP proxy. The proxy forwards it to this WireGuard inbound. Allow the proxy UDP port through your firewall.",
+        "vkTurnCallLink": "VK call link",
+        "vkTurnCallLinkHint": "The client obtains and refreshes TURN credentials using this link. VK sign-in is needed only if anonymous access is unavailable.",
+        "vkTurnPort": "VK proxy UDP port",
+        "vkTurnInvalidLink": "Enter a VK call link, such as https://vk.ru/call/join/...",
+        "vkTurnProfile": "VK TURN profile"
       },
       "amneziawg": {
         "privateKey": "私鑰",
@@ -2847,7 +2974,7 @@
         "allowInsecure": "略過 TLS 憑證驗證（allowInsecure / skip-cert-verify）。",
         "vlessRoute": "嵌入 UUID 的單一 VLESS 路由值（0-65535），例如 443。留空表示無。",
         "mihomoX25519": "僅 Mihomo：REALITY 握手只使用一般 X25519，不帶 ML-KEM（support-x25519mlkem768: false）。適用於執行 Xray-core 26.9.8 以下、不要求 ML-KEM 的伺服器。",
-        "remark": "此 Host 的純文字標籤。僅當入站本身沒有備註時，才作為配置名稱顯示。"
+        "remark": "此 Host 的純文字標籤。在備註範本中使用 {{HOST}} 可將其包含在設定名稱中。"
       },
       "remarkVars": {
         "title": "範本變數",
@@ -2961,6 +3088,36 @@
       "unavailable": "節點無法使用",
       "latencyLoss": "RTT / 丟包",
       "unsupportedPlatform": "此平台可管理遠端隧道。請選擇受支援的節點來執行 WatTunnel。"
+    },
+    "nodeRouting": {
+      "policySaved": "Routing policy saved",
+      "cleared": "Routing policy cleared on {name}.",
+      "applied": "Routing policy applied to {name}.",
+      "applyFailed": "Apply failed on {name}: {reason}",
+      "noNodes": "No online, enabled nodes to apply to.",
+      "appliedAll": "Routing policy applied to {count} node(s).",
+      "appliedMixed": "Routing policy applied to {ok} node(s), {failed} failed.",
+      "node": "Node",
+      "status": "Status",
+      "egress": "Egress",
+      "direct": "direct",
+      "policy": "Master policy",
+      "policyActive": "active",
+      "none": "none",
+      "actions": "Actions",
+      "apply": "Apply",
+      "clear": "Clear",
+      "title": "Node routing control",
+      "control": "Control",
+      "policyTitle": "Shared routing policy",
+      "controlDisabled": "Node routing control is disabled. Enable it to push routing policies to nodes.",
+      "policyDesc": "JSON array of Xray routing rules (the same shape as the routing rules on the Routing page). When applied, a node runs these rules ahead of its own rules; the node's internal stats rule is always kept first.",
+      "policyInvalid": "The policy must be a JSON array of routing rule objects.",
+      "savePolicy": "Save policy",
+      "clearPolicy": "Clear policy",
+      "ruleCount": "{count} rule(s)",
+      "nodesTitle": "Nodes",
+      "applyAll": "Apply to all online nodes"
     }
   },
   "tgbot": {
@@ -3404,5 +3561,6 @@
       "trafficRemaining": "3x-ui 剩餘流量",
       "trafficQuotaUnset": "未設定額度"
     }
-  }
+  },
+  "import": "Import"
 }

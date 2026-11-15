@@ -90,7 +90,10 @@ func (s *NodeService) FetchCertFingerprint(ctx context.Context, n *model.Node) (
 			DialContext:     netsafe.SSRFGuardedDialContext,
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // lgtm[go/disabled-certificate-check]
 		},
+		// The pin must be the certificate of the host asked, not of wherever it redirects.
+		CheckRedirect: runtime.NoCrossHostRedirect,
 	}
+	defer client.CloseIdleConnections()
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
@@ -746,6 +749,66 @@ type staticEgressResolver string
 
 func (r staticEgressResolver) NodeEgressProxyURL(int) string { return string(r) }
 
+// NodeRoutingApplyResult is one node's outcome in a bulk routing apply; a
+// failed node never blocks the rest, each row carries its own error.
+type NodeRoutingApplyResult struct {
+	NodeId  int    `json:"nodeId" example:"1"`
+	Name    string `json:"name" example:"edge-1"`
+	Applied bool   `json:"applied" example:"true"`
+	Error   string `json:"error"`
+}
+
+// ApplyRoutingControl pushes a routing policy (JSON array of Xray routing
+// rules, "" clears) to the given nodes and mirrors it on their rows for the
+// central panel's display. Each node is pushed through its egress bridge when
+// it has one, like the other master-driven node calls.
+func (s *NodeService) ApplyRoutingControl(nodeIDs []int, rules string) ([]NodeRoutingApplyResult, error) {
+	if len(nodeIDs) == 0 {
+		return nil, errors.New("no nodes selected")
+	}
+	if err := validateNodeRoutingRules(rules); err != nil {
+		return nil, err
+	}
+	rules = strings.TrimSpace(rules)
+	results := make([]NodeRoutingApplyResult, 0, len(nodeIDs))
+	for _, id := range nodeIDs {
+		result := NodeRoutingApplyResult{NodeId: id}
+		n, err := s.GetById(id)
+		if err != nil {
+			result.Error = err.Error()
+			results = append(results, result)
+			continue
+		}
+		result.Name = n.Name
+		if err := s.normalize(n); err != nil {
+			result.Error = err.Error()
+			results = append(results, result)
+			continue
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		var pushErr error
+		s.withOutboundBridge(n.Id, n.OutboundTag, func(proxyURL string) {
+			pushErr = runtime.NewRemote(n, staticEgressResolver(proxyURL)).PushRoutingRules(ctx, rules)
+		})
+		cancel()
+		if pushErr != nil {
+			result.Error = pushErr.Error()
+			results = append(results, result)
+			continue
+		}
+		result.Applied = true
+		// Mirror for the central panel's display; the node's own stored policy
+		// stays the source of truth.
+		if err := database.GetDB().Model(&model.Node{}).Where("id = ?", n.Id).
+			Update("master_routing_rules", rules).Error; err != nil {
+			result.Error = err.Error()
+			result.Applied = false
+		}
+		results = append(results, result)
+	}
+	return results, nil
+}
+
 // EnsureInboundTagAllowed adds a panel-managed inbound's tag to the node's
 // selection when the node syncs in "selected" mode. Without it, the next
 // traffic sync would filter the tag out of the snapshot and the orphan sweep
@@ -1301,6 +1364,10 @@ func (b *outboundBridge) removeInbound() {
 // broken node from dictating the master's allocation on every heartbeat.
 const maxProbeBodyBytes = 1 << 20 // 1 MiB
 
+// maxPanelGuidLen bounds a GUID a peer reports: panels mint 36-character UUIDs, and the
+// value is copied into every inbound row and indexed columns.
+const maxPanelGuidLen = 64
+
 func (s *NodeService) probe(ctx context.Context, n *model.Node, proxyURL string) (HeartbeatPatch, error) {
 	patch := HeartbeatPatch{LastHeartbeat: time.Now().Unix()}
 
@@ -1408,6 +1475,10 @@ func (s *NodeService) probe(ctx context.Context, n *model.Node, proxyURL string)
 	patch.XrayState = o.Xray.State
 	patch.XrayError = o.Xray.ErrorMsg
 	patch.PanelVersion = o.PanelVersion
+	if len(o.PanelGuid) > maxPanelGuidLen {
+		patch.LastError = fmt.Sprintf("remote panel reported a %d-byte panelGuid", len(o.PanelGuid))
+		return patch, errors.New(patch.LastError)
+	}
 	patch.Guid = o.PanelGuid
 	patch.UptimeSecs = o.Uptime
 	patch.NetUp = o.NetIO.Up

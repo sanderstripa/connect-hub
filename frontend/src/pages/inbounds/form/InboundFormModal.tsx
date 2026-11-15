@@ -1,8 +1,22 @@
+import { NativeSelect } from '@/components/form/NativeSelect';
 import { useEffect, useRef, useState, useId } from 'react';
+import type { KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import dayjs from 'dayjs';
-import { Alert, Form, Input, InputNumber, Modal, Radio, Select, Switch, Tabs, message } from 'antd';
+import {
+  Alert,
+  ConfigProvider,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Radio,
+  Select,
+  Switch,
+  Tabs,
+  message,
+} from 'antd';
 import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
 
 import { HttpUtil, NumberFormatter, RandomUtil, SizeFormatter, Wireguard } from '@/utils';
@@ -82,6 +96,7 @@ import {
 import { RealityForm, TlsForm } from './security';
 import { useSecurityActions } from './useSecurityActions';
 import { useInboundFallbacks } from './useInboundFallbacks';
+import ChainAssignmentFields from './ChainAssignmentFields';
 import FallbacksCard from './FallbacksCard';
 import SniffingTab from './SniffingTab';
 
@@ -92,6 +107,28 @@ const PROTOCOL_OPTIONS = Object.values(Protocols).map((p) => ({ value: p, label:
 const SHARE_ADDR_STRATEGIES = ['node', 'listen', 'custom'] as const;
 const SHARE_ADDR_HOSTNAME_RE =
   /^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)*$/;
+
+function inboundPopupContainer(trigger?: HTMLElement): HTMLElement {
+  return (
+    trigger?.closest<HTMLElement>('.ant-modal-body') ?? trigger?.parentElement ?? document.body
+  );
+}
+
+function loopInboundFocus(event: KeyboardEvent<HTMLDivElement>) {
+  if (event.key !== 'Tab') return;
+  const first = event.currentTarget.querySelector<HTMLButtonElement>(
+    '.ant-modal-close:not(:disabled)',
+  );
+  const last = Array.from(
+    event.currentTarget.querySelectorAll<HTMLButtonElement>(
+      '.ant-modal-footer button:not(:disabled)',
+    ),
+  ).at(-1);
+  if (first && last && event.target === (event.shiftKey ? first : last)) {
+    event.preventDefault();
+    (event.shiftKey ? last : first).focus();
+  }
+}
 
 function isValidShareAddrInput(value: string): boolean {
   const v = value.trim();
@@ -227,11 +264,14 @@ export default function InboundFormModal({
   const getV = methods.getValues as unknown as (name?: string) => unknown;
   const control = methods.control;
   const [saving, setSaving] = useState(false);
+  const savedInboundId = useRef<number | null>(null);
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<RealityScanResult | null>(null);
   const [activeTab, setActiveTab] = useState('basic');
   const {
     fallbacks,
+    hasStoredFallbacks,
+    fallbacksLoaded,
     fallbackChildOptions,
     loadFallbacks,
     saveFallbacks,
@@ -251,6 +291,7 @@ export default function InboundFormModal({
    * always empty. Offer it only then; `listen`/`custom` work for local inbounds.
    */
   const nodeShareOptionAvailable = selectableNodes.length > 0 && isNodeEligible;
+  const vlessDecryption = useWatch({ control, name: 'settings.decryption' }) ?? '';
   const vlessEncryption = useWatch({ control, name: 'settings.encryption' }) ?? '';
   const ssMethod = useWatch({ control, name: 'settings.method' });
   const isSSWith2022 = isSS2022({
@@ -297,7 +338,10 @@ export default function InboundFormModal({
     streamSettings: { network },
     settings: { network: wSsNetwork, allowedNetwork: wTunnelNetwork, udp: mixedUdpOn },
   });
+  const hasVlessDecryption =
+    protocol === Protocols.VLESS && vlessDecryption !== '' && vlessDecryption !== 'none';
   const isFallbackHost =
+    !hasVlessDecryption &&
     (protocol === Protocols.VLESS || protocol === Protocols.TROJAN) &&
     network === 'tcp' &&
     (security === 'tls' || security === 'reality');
@@ -577,13 +621,36 @@ export default function InboundFormModal({
       );
       return;
     }
+    if (saving) return;
+    if (!fallbacksLoaded) {
+      messageApi.error(t('pages.inbounds.fallbacks.saveFailed'));
+      return;
+    }
+    if (!isFallbackHost && fallbacks.length > 0) {
+      setActiveTab('protocol');
+      messageApi.error(
+        t(
+          hasVlessDecryption
+            ? 'pages.inbounds.fallbacks.decryptionConflict'
+            : 'pages.inbounds.fallbacks.needsTls',
+        ),
+      );
+      return;
+    }
     setSaving(true);
     try {
-      const payload = formValuesToWirePayload(parsed.data, { omitClients: mode === 'edit' });
-      const url =
-        mode === 'edit' && dbInbound
-          ? `/panel/api/inbounds/update/${dbInbound.id}`
-          : '/panel/api/inbounds/add';
+      // Persist an explicit removal before the backend checks the new decryption setting.
+      if (!isFallbackHost && hasStoredFallbacks && dbInbound) {
+        if (!(await saveFallbacks(dbInbound.id))) {
+          messageApi.error(t('pages.inbounds.fallbacks.saveFailed'));
+          return;
+        }
+      }
+      const existingId = mode === 'edit' ? dbInbound?.id : savedInboundId.current;
+      const payload = formValuesToWirePayload(parsed.data, { omitClients: !!existingId });
+      const url = existingId
+        ? `/panel/api/inbounds/update/${existingId}`
+        : '/panel/api/inbounds/add';
       const msg = await HttpUtil.post(url, payload);
       if (msg?.success) {
         const obj = msg.obj as { id?: number; Id?: number } | null;
@@ -654,7 +721,7 @@ export default function InboundFormModal({
       )}
 
       <FormField name="protocol" label={t('pages.inbounds.protocol')}>
-        <Select id="protocol" disabled={mode === 'edit'} options={PROTOCOL_OPTIONS} />
+        <NativeSelect id="protocol" disabled={mode === 'edit'} options={PROTOCOL_OPTIONS} />
       </FormField>
 
       <FormField
@@ -672,7 +739,7 @@ export default function InboundFormModal({
             label={t('pages.inbounds.form.shareAddrStrategy')}
             tooltip={t('pages.inbounds.form.shareAddrStrategyHelp')}
           >
-            <Select
+            <NativeSelect
               options={SHARE_ADDR_STRATEGIES.filter(
                 (strategy) => strategy !== 'node' || nodeShareOptionAvailable,
               ).map((strategy) => ({
@@ -716,6 +783,8 @@ export default function InboundFormModal({
         <Switch />
       </FormField>
 
+      <ChainAssignmentFields protocol={protocol} />
+
       {protocol === Protocols.VLESS && (
         <FormField
           name="disableFlow"
@@ -757,7 +826,7 @@ export default function InboundFormModal({
       </Form.Item>
 
       <FormField name="trafficReset" label={t('pages.inbounds.periodicTrafficResetTitle')}>
-        <Select
+        <NativeSelect
           options={TRAFFIC_RESETS.map((r) => ({
             value: r,
             label: t(`pages.inbounds.periodicTrafficReset.${r}`),
@@ -772,6 +841,17 @@ export default function InboundFormModal({
           rules={{ validate: rhfZodValidate(InboundDbFieldsSchema.shape.trafficResetDay) }}
         >
           <InputNumber min={1} max={31} />
+        </FormField>
+      )}
+
+      {trafficReset !== 'never' && (
+        <FormField
+          name="preserveClientTraffic"
+          valueProp="checked"
+          label={t('pages.inbounds.preserveClientTraffic')}
+          tooltip={t('pages.inbounds.preserveClientTrafficHelp')}
+        >
+          <Switch />
         </FormField>
       )}
 
@@ -795,6 +875,7 @@ export default function InboundFormModal({
 
   const fallbacksCard = (
     <FallbacksCard
+      canAdd={isFallbackHost && fallbacksLoaded}
       fallbacks={fallbacks}
       fallbackChildOptions={fallbackChildOptions}
       addFallback={addFallback}
@@ -847,9 +928,18 @@ export default function InboundFormModal({
         />
       )}
 
-      {isFallbackHost && fallbacksCard}
+      {(isFallbackHost || fallbacks.length > 0) && fallbacksCard}
+      {hasVlessDecryption && (
+        <Alert
+          className="mt-12"
+          type="warning"
+          showIcon
+          title={t('pages.inbounds.fallbacks.decryptionConflict')}
+        />
+      )}
       {(protocol === Protocols.VLESS || protocol === Protocols.TROJAN) &&
         network === 'tcp' &&
+        !hasVlessDecryption &&
         !isFallbackHost && (
           <Alert
             className="mt-12"
@@ -926,7 +1016,7 @@ export default function InboundFormModal({
     <>
       {hasSelectableTransport && (
         <Form.Item htmlFor={`${uid}-network`} label={t('transmission')}>
-          <Select
+          <NativeSelect
             id={`${uid}-network`}
             style={{ width: '75%' }}
             value={network}
@@ -1002,8 +1092,11 @@ export default function InboundFormModal({
 
   const securityTab = (
     <>
-      <Form.Item label={t('pages.inbounds.securityTab')}>
+      <Form.Item
+        label={<span id={`${uid}-security-label`}>{t('pages.inbounds.securityTab')}</span>}
+      >
         <Radio.Group
+          aria-labelledby={`${uid}-security-label`}
           value={security}
           buttonStyle="solid"
           disabled={!tlsOk}
@@ -1152,7 +1245,7 @@ export default function InboundFormModal({
   const sniffingTab = <SniffingTab />;
 
   return (
-    <>
+    <ConfigProvider virtual={false} getPopupContainer={inboundPopupContainer}>
       {messageContextHolder}
       {modalContextHolder}
       <Modal
@@ -1166,6 +1259,11 @@ export default function InboundFormModal({
         onOk={submit}
         onCancel={onClose}
         destroyOnHidden
+        modalRender={(content) => (
+          <div role="presentation" onKeyDown={loopInboundFocus}>
+            {content}
+          </div>
+        )}
       >
         <FormProvider {...methods}>
           <Form
@@ -1199,7 +1297,9 @@ export default function InboundFormModal({
                     Protocols.TUIC,
                     Protocols.MASQUE,
                   ] as string[]
-                ).includes(protocol) || isFallbackHost
+                ).includes(protocol) ||
+                isFallbackHost ||
+                fallbacks.length > 0
                   ? [
                       {
                         key: 'protocol',
@@ -1250,6 +1350,6 @@ export default function InboundFormModal({
           </Form>
         </FormProvider>
       </Modal>
-    </>
+    </ConfigProvider>
   );
 }

@@ -56,6 +56,7 @@ export interface RawInboundRow {
   expiryTime?: number;
   trafficReset?: string;
   trafficResetDay?: number;
+  preserveClientTraffic?: boolean;
   lastTrafficResetTime?: number;
   nodeId?: number | null;
   shareAddrStrategy?: string;
@@ -63,6 +64,8 @@ export interface RawInboundRow {
   subSortIndex?: number;
   excludeFromSub?: boolean;
   disableFlow?: boolean;
+  chainProxyId?: number;
+  chainSelectorId?: number;
   clientStats?: unknown;
 }
 
@@ -78,6 +81,7 @@ export interface WireInboundPayload {
   expiryTime: number;
   trafficReset: TrafficReset;
   trafficResetDay: number;
+  preserveClientTraffic: boolean;
   lastTrafficResetTime: number;
   listen: string;
   port: number;
@@ -93,6 +97,8 @@ export interface WireInboundPayload {
   subSortIndex: number;
   excludeFromSub: boolean;
   disableFlow: boolean;
+  chainProxyId: number;
+  chainSelectorId: number;
 }
 
 function coerceJsonObject(value: unknown): Record<string, unknown> {
@@ -231,6 +237,7 @@ export function rawInboundToFormValues(row: RawInboundRow): InboundFormValues {
     total: row.total ?? 0,
     trafficReset: coerceTrafficReset(row.trafficReset),
     trafficResetDay: Math.min(31, Math.max(1, row.trafficResetDay ?? 1)),
+    preserveClientTraffic: row.preserveClientTraffic ?? false,
     lastTrafficResetTime: row.lastTrafficResetTime ?? 0,
     nodeId: row.nodeId ?? null,
     shareAddrStrategy: coerceShareAddrStrategy(row.shareAddrStrategy),
@@ -238,6 +245,8 @@ export function rawInboundToFormValues(row: RawInboundRow): InboundFormValues {
     subSortIndex: row.subSortIndex == null || row.subSortIndex === 0 ? 1 : row.subSortIndex,
     excludeFromSub: row.excludeFromSub ?? false,
     disableFlow: row.disableFlow ?? false,
+    chainProxyId: row.chainProxyId ?? 0,
+    chainSelectorId: row.chainSelectorId ?? 0,
     protocol,
     settings,
   } as InboundFormValues;
@@ -389,6 +398,7 @@ export function formValuesToWirePayload(
     expiryTime: values.expiryTime,
     trafficReset: values.trafficReset,
     trafficResetDay: values.trafficResetDay,
+    preserveClientTraffic: values.preserveClientTraffic,
     lastTrafficResetTime: values.lastTrafficResetTime,
     listen: values.listen,
     port: values.port,
@@ -406,6 +416,8 @@ export function formValuesToWirePayload(
     subSortIndex: values.subSortIndex,
     excludeFromSub: values.excludeFromSub,
     disableFlow: values.disableFlow,
+    chainProxyId: values.chainProxyId,
+    chainSelectorId: values.chainSelectorId,
   };
   if (values.nodeId != null) payload.nodeId = values.nodeId;
   return payload;

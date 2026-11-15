@@ -4,6 +4,7 @@ package model
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -75,6 +76,9 @@ type Inbound struct {
 	LastTrafficResetTime int64                `json:"lastTrafficResetTime" form:"lastTrafficResetTime" gorm:"default:0"`                                                                                            // Last traffic reset timestamp
 	ClientStats          []xray.ClientTraffic `gorm:"foreignKey:InboundId;references:Id" json:"clientStats" form:"clientStats"`                                                                                     // Client traffic statistics
 
+	// Older snapshots omit this field.
+	PreserveClientTraffic *bool `json:"preserveClientTraffic,omitempty" form:"preserveClientTraffic" gorm:"not null;default:false"` // Keep client usage during scheduled inbound resets
+
 	// Xray configuration fields
 	Listen            string   `json:"listen" form:"listen"`
 	Port              int      `json:"port" form:"port" validate:"gte=0,lte=65535" example:"443"`
@@ -86,6 +90,11 @@ type Inbound struct {
 	NodeID            *int     `json:"nodeId,omitempty" form:"nodeId" gorm:"index"`
 	ShareAddrStrategy string   `json:"shareAddrStrategy" form:"shareAddrStrategy" gorm:"column:share_addr_strategy;default:node" validate:"omitempty,oneof=node listen custom"`
 	ShareAddr         string   `json:"shareAddr" form:"shareAddr" gorm:"column:share_addr"`
+
+	// ChainProxyId/ChainSelectorId name the client-side chain this inbound's
+	// subscribers hop through; 0 means direct. At most one may be set.
+	ChainProxyId    int `json:"chainProxyId" form:"chainProxyId" gorm:"column:chain_proxy_id;default:0" example:"0"`
+	ChainSelectorId int `json:"chainSelectorId" form:"chainSelectorId" gorm:"column:chain_selector_id;default:0" example:"0"`
 
 	DisableFlow bool `json:"disableFlow" form:"disableFlow" gorm:"column:disable_flow;default:false" example:"false"`
 
@@ -196,6 +205,11 @@ type ApiToken struct {
 	CreatedAt int64  `json:"createdAt" gorm:"autoCreateTime"`
 	Scope     string `json:"scope" gorm:"not null;default:admin"`
 	ExpiresAt int64  `json:"expiresAt" gorm:"not null;default:0"`
+}
+
+// PreservesClientTraffic reports whether a scheduled inbound reset keeps client usage.
+func (i Inbound) PreservesClientTraffic() bool {
+	return i.PreserveClientTraffic != nil && *i.PreserveClientTraffic
 }
 
 // MarshalJSON emits settings, streamSettings, and sniffing as nested JSON
@@ -366,7 +380,9 @@ func (i *Inbound) GenXrayInboundConfig() *xray.InboundConfig {
 	if listen == "" {
 		listen = "0.0.0.0"
 	}
-	listen = fmt.Sprintf("\"%v\"", listen)
+	// Encoded, not quoted by hand: an escaped "env:" prefix must stay literal text.
+	encodedListen, _ := json.Marshal(listen)
+	listen = string(encodedListen)
 	protocol := string(i.Protocol)
 	settings := i.Settings
 	switch i.Protocol {
@@ -512,18 +528,8 @@ func WireguardPeerFromClient(c Client) map[string]any {
 	return peer
 }
 
-// WireguardClientsToPeers rewrites a WireGuard inbound's settings JSON from the
-// panel's client representation into the peers array xray-core's wireguard
-// inbound expects. The panel stores WireGuard clients under "clients" (the shape
-// every other protocol uses); xray is configured with "peers". GetXrayConfig
-// already does this conversion when it builds the full config, but the live
-// gRPC AddInbound paths (inbound create/edit and node reconcile) go through
-// GenXrayInboundConfig directly — without the conversion they re-add the
-// wireguard inbound with no peers, dropping every connected client until the
-// next full restart. Clients are the source of truth and are always rebuilt
-// into peers (matching GetXrayConfig), so the panel's empty "peers" placeholder
-// never blocks the conversion. Idempotent: converting removes "clients", so a
-// second call is a no-op, as is any inbound that carries no "clients".
+// WireguardClientsToPeers builds core peers from panel clients and removes
+// panel-only VK transport metadata from both current and legacy settings.
 func WireguardClientsToPeers(settings string) (string, bool) {
 	if settings == "" {
 		return settings, false
@@ -532,8 +538,10 @@ func WireguardClientsToPeers(settings string) (string, bool) {
 	if err := json.Unmarshal([]byte(settings), &parsed); err != nil {
 		return settings, false
 	}
+	_, hasVKTurn := parsed["vkTurn"]
+	delete(parsed, "vkTurn")
 	clients, ok := parsed["clients"].([]any)
-	if !ok {
+	if !ok && !hasVKTurn {
 		return settings, false
 	}
 	peers := make([]any, 0, len(clients))
@@ -555,8 +563,10 @@ func WireguardClientsToPeers(settings string) (string, bool) {
 		}
 		peers = append(peers, WireguardPeerFromClient(c))
 	}
-	delete(parsed, "clients")
-	parsed["peers"] = peers
+	if ok {
+		delete(parsed, "clients")
+		parsed["peers"] = peers
+	}
 	out, err := json.MarshalIndent(parsed, "", "  ")
 	if err != nil {
 		return settings, false
@@ -715,6 +725,16 @@ func ValidMtprotoAdTag(tag string) bool {
 	return err == nil
 }
 
+// ValidMtprotoSecret mirrors mtg's secret parser: hex, else unpadded URL-safe
+// base64, of the 0xee FakeTLS marker, a 16-byte key and a non-empty host name.
+func ValidMtprotoSecret(secret string) bool {
+	decoded, err := hex.DecodeString(secret)
+	if err != nil {
+		decoded, err = base64.RawURLEncoding.DecodeString(secret)
+	}
+	return err == nil && len(decoded) > 17 && decoded[0] == 0xee
+}
+
 // StripMtprotoInboundSecret removes the vestigial inbound-level `secret` from an
 // mtproto inbound's settings JSON. MTProto is multi-client: every secret lives on
 // a client, and mtg's [secrets] config plus every share link read only the
@@ -855,6 +875,9 @@ type Node struct {
 	InboundSyncMode     string   `json:"inboundSyncMode" form:"inboundSyncMode" gorm:"column:inbound_sync_mode;default:all" validate:"omitempty,oneof=all selected"`
 	InboundTags         []string `json:"inboundTags" form:"inboundTags" gorm:"serializer:json;column:inbound_tags"`
 	OutboundTag         string   `json:"outboundTag" form:"outboundTag" gorm:"column:outbound_tag"`
+	// MasterRoutingRules mirrors the routing policy the master last pushed to
+	// this node (stored on the node itself); "" means no active policy.
+	MasterRoutingRules string `json:"-" gorm:"column:master_routing_rules"`
 
 	// Guid is the remote panel's stable self-identifier (its panelGuid),
 	// learned from each heartbeat. It is the globally stable node identity used
@@ -965,6 +988,7 @@ type Client struct {
 	AWGPing             *AWGPingPolicy   `json:"awgPing,omitempty"`
 	KeepAlive           *KeepAliveValue  `json:"keepAlive,omitempty"`      // Numeric values or AmneziaWG ranges; 0 disables, omission preserves.
 	ForwardedPorts      string           `json:"forwardedPorts,omitempty"` // AmneziaWG per-client port-forwarding spec, e.g. "80,443,8000-8100"
+	ForwardedPortsSpecified bool `json:"-"` // True when an edit explicitly sends the field (including empty = remove forwards).
 	SudokuKey           string           `json:"sudokuKey,omitempty"`
 	Secret              string           `json:"secret,omitempty" example:"ee1234567890abcdef1234567890abcd7777772e636c6f7564666c6172652e636f6d"`
 	AdTag               string           `json:"adTag,omitempty" example:"0123456789abcdef0123456789abcdef"`
@@ -1031,6 +1055,8 @@ type ClientRecord struct {
 	// Owned solely by the node-snapshot sweep, which soft-orphans instead of
 	// deleting; orphans from any other cause stay at zero and are never reaped.
 	SyncOrphanedAt int64 `json:"-" gorm:"column:sync_orphaned_at;default:0"`
+	// The node whose merge orphaned the record: only that node may take it back.
+	SyncOrphanedBy int `json:"-" gorm:"column:sync_orphaned_by;default:0"`
 }
 
 func (ClientRecord) TableName() string { return "clients" }
@@ -1143,6 +1169,7 @@ type ClientHwid struct {
 	Id          int    `json:"id" gorm:"primaryKey;autoIncrement"`
 	SubID       string `json:"subId" gorm:"column:sub_id;not null;index;uniqueIndex:idx_client_hwids_sub_hash,priority:1"`
 	HwidHash    string `json:"-" gorm:"column:hwid_hash;size:64;not null;uniqueIndex:idx_client_hwids_sub_hash,priority:2"`
+	Blocked     bool   `json:"blocked" gorm:"not null;default:false"`
 	FirstSeen   int64  `json:"firstSeen" gorm:"column:first_seen;not null"`
 	LastSeen    int64  `json:"lastSeen" gorm:"column:last_seen;not null;index"`
 	UserAgent   string `json:"userAgent" gorm:"column:user_agent"`
@@ -1296,6 +1323,26 @@ func keepAliveValue(value *KeepAliveValue) KeepAliveValue {
 	return *value
 }
 
+// ForwardedPortsSpec is the client's port-forwarding spec, "" when unset.
+func (c Client) ForwardedPortsSpec() string {
+	// Connect Hub stores the forwarded-port spec as a string, not a pointer.
+	// The zero value is already the absent/empty value for persisted clients.
+	return strings.TrimSpace(c.ForwardedPorts)
+}
+
+// ForwardedPortsPtr wraps an explicit spec, "" included: distinct from a nil
+// ForwardedPorts, which means the field was never sent.
+func ForwardedPortsPtr(spec string) *string { return &spec }
+
+// nonEmptyForwardedPorts keeps a stored "" nil: a record re-saved as a client must not
+// read as a request to withdraw the forwards.
+func nonEmptyForwardedPorts(spec string) *string {
+	if spec == "" {
+		return nil
+	}
+	return ForwardedPortsPtr(spec)
+}
+
 func (c *Client) ToRecord() *ClientRecord {
 	rec := &ClientRecord{
 		Email:             c.Email,
@@ -1311,7 +1358,7 @@ func (c *Client) ToRecord() *ClientRecord {
 		ExpiryTime:        c.ExpiryTime,
 		Enable:            c.Enable,
 		TgID:              c.TgID,
-		Group:             c.Group,
+		Group:             strings.TrimSpace(c.Group),
 		Comment:           c.Comment,
 		Reset:             c.Reset,
 		ResetDay:          c.ResetDay,
@@ -1506,6 +1553,41 @@ type SubBalancer struct {
 	// with Strategy "leastLoad" — xray ignores costs on every other strategy.
 	MemberWeights map[int]float64 `json:"memberWeights,omitempty" form:"memberWeights" gorm:"serializer:json;column:member_weights"`
 	SortOrder     int             `json:"sortOrder" form:"sortOrder" gorm:"column:sort_order" validate:"omitempty,gte=1" example:"1"`
+	// No gorm default:true — a bool default makes an explicit false at insert
+	// collapse back to the column default (zero value is skipped).
+	Enabled   bool  `json:"enabled" form:"enabled" example:"true"`
+	CreatedAt int64 `json:"createdAt" gorm:"autoCreateTime:milli" example:"1710000000000"`
+	UpdatedAt int64 `json:"updatedAt" gorm:"autoUpdateTime:milli" example:"1710000000000"`
+}
+
+// ChainProxy is one upstream SOCKS/HTTP proxy a subscriber's client dials
+// before this panel's inbound — a client-side chain entry, not a panel outbound.
+// Its credentials travel into the subscriber's config, so no panel secret lives here.
+type ChainProxy struct {
+	Id     int    `json:"id" form:"id" gorm:"primaryKey;autoIncrement" example:"1"`
+	Remark string `json:"remark" form:"remark" validate:"required,max=256" example:"entry-de-fra"`
+	Type   string `json:"type" form:"type" validate:"required,oneof=socks http" example:"socks"`
+	Server string `json:"server" form:"server" validate:"required,max=253" example:"proxy.example.com"`
+	Port   int    `json:"port" form:"port" validate:"required,gte=1,lte=65535" example:"1080"`
+	// Username/Password are optional SOCKS5/HTTP basic-auth credentials; both
+	// empty means the hop proxy accepts anonymous connections.
+	Username string `json:"username" form:"username" example:"operator"`
+	Password string `json:"password" form:"password" example:"secret"`
+	// TLS marks an HTTPS proxy (http type only) — xray's http outbound reaches it
+	// over TLS; the socks outbound has no TLS support.
+	TLS       bool  `json:"tls" form:"tls" example:"false"`
+	Enabled   bool  `json:"enabled" form:"enabled" example:"true"`
+	CreatedAt int64 `json:"createdAt" gorm:"autoCreateTime:milli" example:"1710000000000"`
+	UpdatedAt int64 `json:"updatedAt" gorm:"autoUpdateTime:milli" example:"1710000000000"`
+}
+
+// ChainSelector groups chain proxies so a client picks between several entry
+// hops by strategy; an inbound names either one hop or one selector, never both.
+type ChainSelector struct {
+	Id       int    `json:"id" form:"id" gorm:"primaryKey;autoIncrement" example:"1"`
+	Remark   string `json:"remark" form:"remark" validate:"required,max=256" example:"entries-fastest"`
+	Strategy string `json:"strategy" form:"strategy" validate:"omitempty,oneof=leastLoad leastPing random roundRobin" example:"leastPing"`
+	ProxyIds []int  `json:"proxyIds" form:"proxyIds" gorm:"serializer:json;column:proxy_ids" example:"[1,2]"`
 	// No gorm default:true — a bool default makes an explicit false at insert
 	// collapse back to the column default (zero value is skipped).
 	Enabled   bool  `json:"enabled" form:"enabled" example:"true"`

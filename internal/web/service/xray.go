@@ -184,6 +184,9 @@ func (s *XrayService) GetXrayConfig() (*xray.Config, error) {
 	xrayConfig.API = ensureAPIServices(xrayConfig.API)
 	xrayConfig.Policy = ensureStatsPolicy(xrayConfig.Policy)
 	xrayConfig.RouterConfig = stripDisabledRules(xrayConfig.RouterConfig)
+	if masterRules, err := s.settingService.GetMasterRoutingRules(); err == nil {
+		xrayConfig.RouterConfig = mergeMasterRoutingRules(xrayConfig.RouterConfig, masterRules)
+	}
 	// A pasted or restored template can carry pre-#6258 XHTTP keys, a pre-26.10.10 xdns mask or a
 	// pre-26.9.9 quicParams.udpHop, which the core ignores, or a udphop not last, which it cannot dial.
 	xrayConfig.OutboundConfigs = healOutboundStreams(xrayConfig.OutboundConfigs,
@@ -204,6 +207,7 @@ func (s *XrayService) GetXrayConfig() (*xray.Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	excludedClients, excludedInbounds := 0, 0
 	for _, inbound := range inbounds {
 		if !inbound.Enable {
 			continue
@@ -213,6 +217,12 @@ func (s *XrayService) GetXrayConfig() (*xray.Config, error) {
 		}
 		if inbound.Protocol == model.Sudoku || inbound.Protocol == model.MTProto || inbound.Protocol == model.AmneziaWG || inbound.Protocol == model.TUIC {
 			continue
+		}
+		if err := normalizeVlessFallbacks(inbound); err != nil {
+			return nil, err
+		}
+		if err := validateVlessManagedFallbacks(nil, inbound); err != nil {
+			return nil, err
 		}
 		settings := map[string]any{}
 		_ = json.Unmarshal([]byte(inbound.Settings), &settings)
@@ -242,10 +252,11 @@ func (s *XrayService) GetXrayConfig() (*xray.Config, error) {
 
 		finalClients := make([]any, 0, len(dbClients))
 		var wgPeers []any
+		excludedBefore := excludedClients
 		for i := range dbClients {
 			c := dbClients[i]
 			if enable, exists := enableMap[c.Email]; exists && !enable {
-				logger.Infof("Remove Inbound User %s due to expiration or traffic limit", c.Email)
+				excludedClients++
 				continue
 			}
 			if !c.Enable {
@@ -314,9 +325,13 @@ func (s *XrayService) GetXrayConfig() (*xray.Config, error) {
 			}
 			finalClients = append(finalClients, entry)
 		}
+		if excludedClients > excludedBefore {
+			excludedInbounds++
+		}
 
 		var mutated bool
 		if inbound.Protocol == model.WireGuard {
+			delete(settings, "vkTurn")
 			delete(settings, "clients")
 			if wgPeers == nil {
 				wgPeers = []any{}
@@ -328,6 +343,9 @@ func (s *XrayService) GetXrayConfig() (*xray.Config, error) {
 			mutated = hadClients || len(finalClients) > 0
 			if mutated {
 				settings["clients"] = finalClients
+			}
+			if inbound.Protocol == model.Shadowsocks && xray.LockShadowsocks2022(settings) {
+				mutated = true
 			}
 		}
 
@@ -482,6 +500,9 @@ func (s *XrayService) GetXrayConfig() (*xray.Config, error) {
 
 	xrayConfig.RouterConfig = dropRefusedScript(xrayConfig.RouterConfig, "routing", routingScriptRefused)
 	xrayConfig.DNSConfig = dropRefusedScript(xrayConfig.DNSConfig, "dns", dnsScriptRefused)
+	if excludedClients > 0 {
+		logger.Infof("Xray config generated: excluded %d disabled client entries across %d inbounds", excludedClients, excludedInbounds)
+	}
 	return xrayConfig, nil
 }
 
@@ -959,6 +980,17 @@ func amneziawgV6EgressTag(inboundID int, email string) string {
 	return fmt.Sprintf("amneziawg-v6-%d-%s", inboundID, email)
 }
 
+// amneziawgV6EgressSettings carries the template's private-range egress block:
+// the per-peer rule is matched ahead of the routing-level geoip:private rule.
+func amneziawgV6EgressSettings() map[string]any {
+	return map[string]any{
+		"finalRules": []any{
+			map[string]any{"action": "block", "ip": []any{"geoip:private"}},
+			map[string]any{"action": "allow"},
+		},
+	}
+}
+
 // injectAmneziawgV6Egress gives every enabled, non-node-hosted AmneziaWG
 // peer with an IPv6 AllowedIPs entry its own single-purpose freedom
 // outbound, bound via sendThrough to that exact address, plus a routing
@@ -1058,7 +1090,7 @@ func injectAmneziawgV6Egress(cfg *xray.Config, inbounds []*model.Inbound) {
 				"tag":         tag,
 				"protocol":    "freedom",
 				"sendThrough": v6,
-				"settings":    map[string]any{},
+				"settings":    amneziawgV6EgressSettings(),
 			})
 			newRules = append(newRules, map[string]any{
 				"type":        "field",
@@ -1113,10 +1145,24 @@ func mergeSubscriptionOutbounds(cfg *xray.Config, prepend, appendList []any) {
 			return
 		}
 	}
+
+	// Template outbounds take tag priority (must not be altered by injected subscriptions).
+	usedTags := make(map[string]bool)
+	for _, item := range templateOutbounds {
+		if ob, ok := item.(map[string]any); ok {
+			if tag, _ := ob["tag"].(string); tag != "" {
+				usedTags[tag] = true
+			}
+		}
+	}
+
+	prependClean := dedupeSubscriptionOutboundList(prepend, usedTags)
+	appendClean := dedupeSubscriptionOutboundList(appendList, usedTags)
+
 	var merged []any
-	merged = append(merged, prepend...)
+	merged = append(merged, prependClean...)
 	merged = append(merged, templateOutbounds...)
-	merged = append(merged, appendList...)
+	merged = append(merged, appendClean...)
 	combined, err := json.MarshalIndent(merged, "", "  ")
 	if err != nil {
 		return
@@ -1336,6 +1382,60 @@ func stripDisabledRules(routerCfg json_util.RawMessage) json_util.RawMessage {
 	return out
 }
 
+// mergeMasterRoutingRules prepends the master-pushed routing policy (raw JSON
+// array of Xray routing rules) to the generated routing config so it takes
+// precedence over this panel's own rules, while keeping the pinned api stats
+// rule at index 0. Blank or unparseable policy leaves the config untouched.
+func mergeMasterRoutingRules(routerCfg json_util.RawMessage, masterRules string) json_util.RawMessage {
+	trimmed := strings.TrimSpace(masterRules)
+	if trimmed == "" {
+		return routerCfg
+	}
+	var policy []map[string]any
+	if err := json.Unmarshal([]byte(trimmed), &policy); err != nil {
+		logger.Warning("master routing policy unparseable, ignoring:", err)
+		return routerCfg
+	}
+	parsed := map[string]any{}
+	if len(routerCfg) > 0 {
+		if err := json.Unmarshal(routerCfg, &parsed); err != nil {
+			return routerCfg
+		}
+	}
+	var rules []any
+	if raw, ok := parsed["rules"].([]any); ok {
+		rules = raw
+	}
+	// Never let the policy starve the panel's internal api stats rule.
+	insertAt := 0
+	if len(rules) > 0 {
+		if first, ok := rules[0].(map[string]any); ok && isApiRule(first) {
+			insertAt = 1
+		}
+	}
+	merged := make([]any, 0, len(rules)+len(policy))
+	merged = append(merged, rules[:insertAt]...)
+	for _, rule := range policy {
+		// Honour the per-rule "enabled" flag the same way stripDisabledRules
+		// does for the node's own rules: a rule explicitly disabled in the
+		// policy must not become live on the node.
+		if enabled, ok := rule["enabled"].(bool); ok && !enabled {
+			continue
+		}
+		// Panel-only keys are stripped the same way stripDisabledRules does.
+		delete(rule, "enabled")
+		delete(rule, "comment")
+		merged = append(merged, rule)
+	}
+	merged = append(merged, rules[insertAt:]...)
+	parsed["rules"] = merged
+	out, err := json.Marshal(parsed)
+	if err != nil {
+		return routerCfg
+	}
+	return out
+}
+
 // GetXrayTraffic fetches the current traffic statistics from the running Xray process.
 func (s *XrayService) GetXrayTraffic() ([]*xray.Traffic, []*xray.ClientTraffic, error) {
 	process := currentXrayProcess()
@@ -1489,6 +1589,9 @@ func (s *XrayService) RestartXray(isForce bool) error {
 
 	xrayConfig, err := s.GetXrayConfig()
 	if err != nil {
+		if process := currentXrayProcess(); process != nil && process.IsRunning() {
+			xrayState.holdBack(fmt.Sprintf("config refused: %v", err))
+		}
 		return err
 	}
 
@@ -1989,37 +2092,12 @@ func normalizeStreamUDPHop(stream map[string]any) bool {
 	return maskcompat.NormalizeUDPHop(stream["finalmask"])
 }
 
-// forceUserspaceWireGuardTun moves every WireGuard outbound to the gVisor TUN (#6796). Values
-// stay raw so the template's other keys reach the core byte for byte.
+// forceUserspaceWireGuardTun moves every WireGuard outbound to the gVisor TUN (#6796) and
+// warns for each one it moves off a kernel TUN.
 func forceUserspaceWireGuardTun(raw json_util.RawMessage) json_util.RawMessage {
-	var outbounds []map[string]json.RawMessage
-	if err := json.Unmarshal(raw, &outbounds); err != nil {
-		return raw
-	}
-	for _, ob := range outbounds {
-		var protocol, tag string
-		if json.Unmarshal(ob["protocol"], &protocol) != nil || !strings.EqualFold(protocol, "wireguard") {
-			continue
-		}
-		var settings map[string]json.RawMessage
-		if json.Unmarshal(ob["settings"], &settings) != nil || settings == nil {
-			continue
-		}
-		wasUserspace := string(settings["noKernelTun"]) == "true"
-		settings["noKernelTun"] = json.RawMessage("true")
-		rewritten, err := json.Marshal(settings)
-		if err != nil {
-			continue
-		}
-		ob["settings"] = rewritten
-		if !wasUserspace {
-			_ = json.Unmarshal(ob["tag"], &tag)
-			logger.Warningf("Outbound %q: kernel TUN cannot be set up here, running WireGuard on the userspace TUN instead (#6796)", tag)
-		}
-	}
-	rewritten, err := json.Marshal(outbounds)
-	if err != nil {
-		return raw
+	rewritten, moved := xray.ForceUserspaceWireGuardTun(raw)
+	for _, tag := range moved {
+		logger.Warningf("Outbound %q: kernel TUN cannot be set up here, running WireGuard on the userspace TUN instead (#6796)", tag)
 	}
 	return rewritten
 }

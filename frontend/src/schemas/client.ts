@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { VkTurnSettingsSchema } from '@/schemas/protocols/inbound/wireguard';
 import { AWGPingPolicySchema } from '@/schemas/primitives/awg-ping';
 import { OptionalClientKeepAliveSchema } from '@/schemas/primitives/keepalive';
 
@@ -141,6 +142,7 @@ export const InboundOptionSchema = z
     wgPublicKey: z.string().optional(),
     wgMtu: z.number().optional(),
     wgDns: z.string().optional(),
+    wgVkTurn: VkTurnSettingsSchema.nullable().optional(),
     awgServer: AwgServerOptionSchema.nullable().optional(),
     tuicServer: TuicServerOptionSchema.nullable().optional(),
     mtprotoDomain: z.string().optional(),
@@ -329,6 +331,7 @@ export const ClientFormSchema = z.object({
     .string()
     .trim()
     .min(1, 'pages.clients.email')
+    .refine((v) => v !== '.' && v !== '..', 'pages.clients.emailReservedName')
     .refine((v) => !hasForbiddenClientChars(v), 'pages.clients.emailInvalidChars'),
   subId: z.string().refine((v) => !hasForbiddenClientChars(v), 'pages.clients.subIdInvalidChars'),
   uuid: z.string(),

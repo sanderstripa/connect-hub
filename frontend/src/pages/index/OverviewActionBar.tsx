@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Dropdown, Tag, Tooltip } from 'antd';
+import { Button, Dropdown, Modal, Tag, Tooltip } from 'antd';
 import {
   ApiOutlined,
   ArrowUpOutlined,
@@ -11,6 +11,7 @@ import {
   ControlOutlined,
   FileTextOutlined,
   MoreOutlined,
+  PlayCircleOutlined,
   PoweroffOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
@@ -26,7 +27,7 @@ interface OverviewActionBarProps {
   panelVersion: string;
   latestVersion: string;
   updateAvailable: boolean;
-  onStopXray: () => void;
+  onStopXray: () => void | Promise<void>;
   onRestartXray: () => void;
   onOpenLogs: () => void;
   onOpenXrayLogs: () => void;
@@ -45,6 +46,8 @@ interface BarAction {
   text: string;
   onClick: () => void;
   primary?: boolean;
+  disabled?: boolean;
+  hint?: string;
 }
 
 const XRAY_STATE_KEYS: Record<string, string> = {
@@ -73,9 +76,11 @@ export default function OverviewActionBar({
   onOpenVersionSwitch,
 }: OverviewActionBarProps) {
   const { t } = useTranslation();
+  const [modal, modalContextHolder] = Modal.useModal();
   const stateText = t(XRAY_STATE_KEYS[status.xray.state] ?? 'pages.index.xrayStatusUnknown');
   const hasVersion = !!status.xray.version && status.xray.version !== 'Unknown';
   const size = isMobile ? ('small' as const) : ('middle' as const);
+  const isStopped = status.xray.state === 'stop';
 
   const [moreOpen, setMoreOpen] = useState(false);
   useEffect(() => {
@@ -90,8 +95,8 @@ export default function OverviewActionBar({
     [
       {
         key: 'restart',
-        icon: <ReloadOutlined aria-hidden />,
-        text: t('pages.index.restartXray'),
+        icon: isStopped ? <PlayCircleOutlined aria-hidden /> : <ReloadOutlined aria-hidden />,
+        text: t(isStopped ? 'pages.index.startXray' : 'pages.index.restartXray'),
         onClick: onRestartXray,
         primary: true,
       },
@@ -99,7 +104,19 @@ export default function OverviewActionBar({
         key: 'stop',
         icon: <PoweroffOutlined aria-hidden />,
         text: t('pages.index.stopXray'),
-        onClick: onStopXray,
+        disabled: isStopped,
+        hint: isStopped ? t('pages.index.stopXrayDisabledHint') : undefined,
+        onClick: () => {
+          modal.confirm({
+            title: t('pages.index.stopXrayConfirmTitle'),
+            content: t('pages.index.stopXrayConfirmContent'),
+            okText: t('pages.index.stopXrayConfirmOk'),
+            okType: 'danger',
+            cancelText: t('cancel'),
+            focusable: { autoFocusButton: 'cancel' },
+            onOk: onStopXray,
+          });
+        },
       },
     ],
     [
@@ -174,6 +191,7 @@ export default function OverviewActionBar({
 
   return (
     <div className="ov-bar">
+      {modalContextHolder}
       {status.xray.errorMsg ? (
         <Tooltip title={<span className="ov-error-detail">{status.xray.errorMsg}</span>}>
           {statePill}
@@ -211,7 +229,8 @@ export default function OverviewActionBar({
             key={action.key}
             type="text"
             className={`ov-icon-action ov-action-${action.key}`}
-            title={action.text}
+            title={action.hint || action.text}
+            disabled={action.disabled}
             size={size}
             icon={action.icon}
             aria-label={action.text}

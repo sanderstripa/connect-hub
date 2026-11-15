@@ -32,6 +32,7 @@ import WechatTab from './WechatTab';
 import SubscriptionGeneralTab from './SubscriptionGeneralTab';
 import SubscriptionFormatsTab from './SubscriptionFormatsTab';
 import SubscriptionBalancersTab from './SubscriptionBalancersTab';
+import SubscriptionChainProxiesTab from './SubscriptionChainProxiesTab';
 import './SettingsPage.css';
 
 interface ApiMsg {
@@ -48,6 +49,7 @@ const tabSlugs = [
   'subscription',
   'subscription-formats',
   'subscription-balancers',
+  'subscription-chains',
 ];
 
 function isIp(h: string): boolean {
@@ -237,6 +239,8 @@ export default function SettingsPage() {
         return <SubscriptionFormatsTab allSetting={allSetting} updateSetting={updateSetting} />;
       case 'subscription-balancers':
         return <SubscriptionBalancersTab allSetting={allSetting} updateSetting={updateSetting} />;
+      case 'subscription-chains':
+        return <SubscriptionChainProxiesTab />;
       default:
         return <GeneralTab allSetting={allSetting} updateSetting={updateSetting} />;
     }
@@ -252,6 +256,7 @@ export default function SettingsPage() {
         <Layout className="content-shell">
           <Layout.Content id="content-layout" className="content-area">
             <Spin
+              aria-live="off"
               spinning={spinning || !fetched}
               delay={200}
               description={t('loading')}

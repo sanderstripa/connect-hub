@@ -26,6 +26,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "externalTrafficInformEnable": false,
     "externalTrafficInformURI": "",
     "happLinkEnable": false,
+    "inboundListOrder": "id",
     "ipLimitAllowlist": "",
     "ldapAutoCreate": false,
     "ldapAutoDelete": false,
@@ -51,6 +52,8 @@ export const EXAMPLES: Record<string, unknown> = {
     "networkTrafficInterface": "eth0",
     "networkTrafficMode": "legacy",
     "nodeDownThreshold": 1,
+    "nodeRoutingControl": false,
+    "nodeRoutingRules": "",
     "outboundDownThreshold": 1,
     "pageSize": 0,
     "panelOutbound": "",
@@ -232,6 +235,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "hasWarpSecret": false,
     "hasWechatToken": false,
     "hasWechatWebhookURL": false,
+    "inboundListOrder": "id",
     "ipLimitAllowlist": "",
     "ldapAutoCreate": false,
     "ldapAutoDelete": false,
@@ -257,6 +261,8 @@ export const EXAMPLES: Record<string, unknown> = {
     "networkTrafficInterface": "eth0",
     "networkTrafficMode": "legacy",
     "nodeDownThreshold": 1,
+    "nodeRoutingControl": false,
+    "nodeRoutingRules": "",
     "outboundDownThreshold": 1,
     "pageSize": 0,
     "panelOutbound": "",
@@ -467,6 +473,31 @@ export const EXAMPLES: Record<string, unknown> = {
   "CarrierEndpoint": {
     "carrier": "tcp",
     "port": 4443
+  },
+  "ChainProxy": {
+    "createdAt": 1710000000000,
+    "enabled": true,
+    "id": 1,
+    "password": "secret",
+    "port": 1080,
+    "remark": "entry-de-fra",
+    "server": "proxy.example.com",
+    "tls": false,
+    "type": "socks",
+    "updatedAt": 1710000000000,
+    "username": "operator"
+  },
+  "ChainSelector": {
+    "createdAt": 1710000000000,
+    "enabled": true,
+    "id": 1,
+    "proxyIds": [
+      1,
+      2
+    ],
+    "remark": "entries-fastest",
+    "strategy": "leastPing",
+    "updatedAt": 1710000000000
   },
   "CleanIpCdn": {
     "groups": [
@@ -1094,6 +1125,8 @@ export const EXAMPLES: Record<string, unknown> = {
     "remaining": 1
   },
   "Inbound": {
+    "chainProxyId": 0,
+    "chainSelectorId": 0,
     "clientStats": [
       {
         "down": 2097152,
@@ -1127,6 +1160,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "nodeId": null,
     "originNodeGuid": "",
     "port": 443,
+    "preserveClientTraffic": null,
     "protocol": "vless",
     "remark": "VLESS-443",
     "settings": null,
@@ -1178,7 +1212,8 @@ export const EXAMPLES: Record<string, unknown> = {
     "tuicServer": null,
     "wgDns": "",
     "wgMtu": 0,
-    "wgPublicKey": ""
+    "wgPublicKey": "",
+    "wgVkTurn": null
   },
   "InboundTrafficSummary": {
     "down": 2097152,
@@ -1468,6 +1503,12 @@ export const EXAMPLES: Record<string, unknown> = {
     "scheme": "http",
     "tlsVerifyMode": "verify"
   },
+  "NodeRoutingApplyResult": {
+    "applied": true,
+    "error": "",
+    "name": "edge-1",
+    "nodeId": 1
+  },
   "NodeView": {
     "activeCount": 20,
     "address": "node.example.com",
@@ -1492,6 +1533,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "lastError": "",
     "lastHeartbeat": 1700000000,
     "latencyMs": 42,
+    "masterRoutingRules": "",
     "memPct": 45.2,
     "name": "edge-1",
     "netDown": 1048576,
@@ -1751,6 +1793,11 @@ export const EXAMPLES: Record<string, unknown> = {
     "id": 0,
     "key": "",
     "value": ""
+  },
+  "Settings": {
+    "callLink": "",
+    "enabled": false,
+    "port": 0
   },
   "Spec": {
     "config": {

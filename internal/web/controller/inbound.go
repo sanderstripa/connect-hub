@@ -9,6 +9,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/amneziawgkern"
 	"github.com/mhsanaei/3x-ui/v3/internal/amneziawgnet"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/util/json_util"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/wirecodec"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/middleware"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/service"
@@ -91,6 +92,8 @@ func (a *InboundController) initRouter(g *gin.RouterGroup) {
 	g.POST("/del/:id", a.delInbound)
 	g.POST("/bulkDel", a.bulkDelInbounds)
 	g.POST("/update/:id", a.updateInbound)
+	g.POST("/checkTag", a.checkTag)
+	g.POST("/changeTag/:id", a.changeTag)
 	g.POST("/setEnable/:id", a.setInboundEnable)
 	g.POST("/:id/subSortIndex", a.setInboundSubSortIndex)
 	g.POST("/:id/resetTraffic", a.resetInboundTraffic)
@@ -281,6 +284,52 @@ func (a *InboundController) updateInbound(c *gin.Context) {
 	notifyClientsChanged()
 }
 
+// checkTag validates a prospective inbound ID (tag) change and reports its
+// impact without committing anything; the panel shows it before the rename.
+func (a *InboundController) checkTag(c *gin.Context) {
+	user := session.GetLoginUser(c)
+	var req struct {
+		InboundId int    `json:"inboundId" form:"inboundId"`
+		NewTag    string `json:"newTag" form:"newTag"`
+	}
+	if err := c.ShouldBind(&req); err != nil {
+		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
+		return
+	}
+	result, err := a.inboundService.CheckTagChange(user.Id, req.InboundId, req.NewTag)
+	jsonObj(c, result, err)
+}
+
+// changeTag renames an inbound's identifier (tag) by driving the proven
+// UpdateInbound path, so routing rewrites, node re-push and the xray restart
+// all happen exactly as for a form edit.
+func (a *InboundController) changeTag(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
+		return
+	}
+	var req struct {
+		NewTag string `json:"newTag" form:"newTag"`
+	}
+	if err := c.ShouldBind(&req); err != nil {
+		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
+		return
+	}
+	user := session.GetLoginUser(c)
+	needRestart, err := a.inboundService.ChangeInboundTag(user.Id, id, req.NewTag)
+	if err != nil {
+		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
+		return
+	}
+	jsonMsg(c, I18nWeb(c, "pages.inbounds.toasts.inboundUpdateSuccess"), nil)
+	if needRestart {
+		a.xrayService.SetToNeedRestart()
+	}
+	a.broadcastInboundsUpdate(user.Id)
+	notifyClientsChanged()
+}
+
 // setInboundSubSortIndex changes only subscription ordering without sending
 // the inbound's settings/client payload.
 func (a *InboundController) setInboundSubSortIndex(c *gin.Context) {
@@ -343,11 +392,12 @@ func (a *InboundController) resetInboundTraffic(c *gin.Context) {
 		return
 	}
 
-	err = a.inboundService.ResetInboundTraffic(id)
+	needRestart, err := a.inboundService.ResetInboundTraffic(id)
 	if err != nil {
 		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
 		return
-	} else {
+	}
+	if needRestart {
 		a.xrayService.SetToNeedRestart()
 	}
 	jsonMsg(c, I18nWeb(c, "pages.inbounds.toasts.resetInboundTrafficSuccess"), nil)
@@ -389,28 +439,37 @@ func (a *InboundController) delAllInboundClients(c *gin.Context) {
 
 // resetAllTraffics resets all traffic counters across all inbounds.
 func (a *InboundController) resetAllTraffics(c *gin.Context) {
-	err := a.inboundService.ResetAllTraffics()
+	needRestart, err := a.inboundService.ResetAllTraffics()
 	if err != nil {
 		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
 		return
-	} else {
+	}
+	if needRestart {
 		a.xrayService.SetToNeedRestart()
 	}
 	jsonMsg(c, I18nWeb(c, "pages.inbounds.toasts.resetAllTrafficSuccess"), nil)
 }
 
+// maxPushedClientTraffics bounds one push: each entry decodes into a whole traffic row.
+const maxPushedClientTraffics = 1 << 18
+
 // pushClientTraffics receives a master panel's aggregated per-client usage
 // (see InboundService.AcceptGlobalTraffic for the storage semantics).
 func (a *InboundController) pushClientTraffics(c *gin.Context) {
 	var req struct {
-		MasterGuid string                `json:"masterGuid"`
-		Traffics   []*xray.ClientTraffic `json:"traffics"`
+		MasterGuid string          `json:"masterGuid"`
+		Traffics   json.RawMessage `json:"traffics"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
 		return
 	}
-	if err := a.inboundService.AcceptGlobalTraffic(req.MasterGuid, req.Traffics); err != nil {
+	traffics, err := json_util.DecodeCappedList[*xray.ClientTraffic](req.Traffics, maxPushedClientTraffics)
+	if err != nil {
+		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
+		return
+	}
+	if err := a.inboundService.AcceptGlobalTraffic(req.MasterGuid, traffics); err != nil {
 		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
 		return
 	}

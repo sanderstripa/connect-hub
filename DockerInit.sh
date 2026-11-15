@@ -52,7 +52,7 @@ if [ -z "$MTG_MULTI_VER" ]; then
 fi
 mkdir -p build/bin
 cd build/bin
-curl -sfLRO "https://github.com/XTLS/Xray-core/releases/download/v26.10.21/Xray-linux-${XRAY_ZIP}.zip"
+curl -sfLRO "https://github.com/XTLS/Xray-core/releases/download/v26.11.9/Xray-linux-${XRAY_ZIP}.zip"
 unzip "Xray-linux-${XRAY_ZIP}.zip"
 rm -f "Xray-linux-${XRAY_ZIP}.zip" geoip.dat geosite.dat
 mv xray "${XRAY_BIN}"
@@ -64,6 +64,7 @@ tar -xzf "${MTG_PKG}.tar.gz"
 mv "${MTG_PKG}/mtg-multi" "${MTG_BIN}"
 rm -rf "${MTG_PKG}" "${MTG_PKG}.tar.gz"
 chmod +x "${MTG_BIN}"
+sh ../../scripts/download-vk-turn.sh linux "$PLATFORM" "$PWD/vk-turn-proxy-server"
 curl -sfLRO https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat
 curl -sfLRO https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
 curl -sfLRo geoip_IR.dat https://github.com/chocolate4u/Iran-v2ray-rules/releases/latest/download/geoip.dat

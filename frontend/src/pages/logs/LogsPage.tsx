@@ -86,7 +86,7 @@ export default function LogsPage() {
         <AppSidebar />
         <Layout className="content-shell">
           <Layout.Content id="content-layout" className="content-area">
-            <Spin spinning={firstLoad} delay={200} description={t('loading')} size="large">
+            <Spin aria-live="off" spinning={firstLoad} delay={200} description={t('loading')} size="large">
               {firstLoad ? (
                 <div className="loading-spacer" />
               ) : filesQuery.isError ? (

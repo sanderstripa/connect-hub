@@ -2,7 +2,6 @@ package tgbot
 
 import (
 	"fmt"
-	"html"
 	"time"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
@@ -47,7 +46,7 @@ func (t *Tgbot) clientHeader(email string) string {
 		remaining = common.FormatTraffic(left)
 	}
 	return t.I18nBot("tgbot.messages.clientHeader",
-		"Email=="+html.EscapeString(email),
+		"Email=="+email,
 		"Expiry=="+t.headerExpiry(traffic.ExpiryTime),
 		"Remaining=="+remaining) + "\r\n\r\n"
 }

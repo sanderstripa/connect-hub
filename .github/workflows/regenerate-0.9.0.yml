@@ -1,0 +1,43 @@
+name: Connect Hub 0.9.0 — reconcile generated API types
+on:
+  push:
+    branches: [feat/connect-hub-0.9.0-merge-lab]
+    paths: ['.github/workflows/regenerate-0.9.0.yml', 'tools/openapigen/main.go']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  regenerate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Generate from Go sources
+        run: go run ./tools/openapigen
+      - name: Verify frontend type safety
+        run: npm ci --ignore-scripts && npm run typecheck
+        working-directory: frontend
+      - name: Save generator-produced files on lab branch only
+        run: |
+          set -eu
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add frontend/src/generated
+          if ! git diff --cached --quiet; then
+            git commit -m 'chore(0.9.0): regenerate OpenAPI type, zod, and example bindings'
+            git fetch origin feat/connect-hub-0.9.0-merge-lab
+            git rebase origin/feat/connect-hub-0.9.0-merge-lab
+            git push origin HEAD:refs/heads/feat/connect-hub-0.9.0-merge-lab
+          fi

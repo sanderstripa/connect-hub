@@ -79,6 +79,7 @@ export const PALETTE_KEYWORDS: Record<string, string[]> = {
   '/groups': ['groups', 'tags', 'batch'],
   '/tunnels': ['tunnels', 'wattunnel', 'forwarding', 'reverse'],
   '/nodes': ['nodes', 'servers', 'cluster', 'remote nodes'],
+  '/node-routing': ['node routing', 'node rules', 'central routing', 'push routing'],
   '/hosts': ['hosts', 'sni', 'domains'],
   '/clean-ip': ['clean ip', 'scanner', 'cloudflare', 'cdn', 'isp'],
   '/dns-tunnel': ['dns tunnel', 'dnstt', 'stormdns', 'whitedns', 'shutdown', 'resolver'],
@@ -469,6 +470,13 @@ export default function CommandPalette() {
         subtitle: t('pages.settings.subBalancers.menu'),
         keywords: ['balancers', 'sub balancers', 'balancer nodes'],
         icon: <ApartmentOutlined aria-hidden />,
+      },
+      {
+        path: '/settings#subscription-chains',
+        title: `${t('menu.settings')} · ${t('pages.settings.chainProxies.menu')}`,
+        subtitle: t('pages.settings.chainProxies.menu'),
+        keywords: ['chain', 'chains', 'socks', 'http proxy', 'dialer-proxy', 'upstream proxy'],
+        icon: <SwapOutlined aria-hidden />,
       },
       {
         path: '/xray#basic',

@@ -10,7 +10,8 @@ def api(path,payload=None,token=None,json_body=False):
     if json_body:body=json.dumps(payload).encode();headers['Content-Type']='application/json'
     with client.open(urllib.request.Request(credentials['url']+path,data=body,headers=headers),timeout=15) as response:return json.load(response)
 def login():
-    token=api('csrf-token')['obj'];assert api('login',{'username':credentials['username'],'password':credentials['password']},token)['success'];return token
+    token=api('csrf-token')['obj'];assert api('login',{'username':credentials['username'],'password':credentials['password']},token)['success']
+    return api('csrf-token')['obj']
 class Target(http.server.BaseHTTPRequestHandler):
     def do_GET(self):self.send_response(200);self.end_headers();self.wfile.write(b'connect-hub-real-xray')
     def log_message(self,*args):pass

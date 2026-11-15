@@ -1,3 +1,20 @@
+Connect Hub 0.9.0 — Upstream integrations and compatibility
+
+In-place upgrade from 0.8.9. The existing Windows installer, native Sudoku, WatTunnel, Clean IP, DNS tunnels, REALITY Watch, Xray configuration, subscriptions, clients, access keys and deployment methods remain supported.
+
+Changes:
+- Integrated newer 3x-ui functionality alongside Connect Hub-specific capabilities.
+- Added Chain Proxy / Chain Selector and VK TURN bindings; retained pre-existing client/node data contracts.
+- Maintained both batched and legacy per-metric dashboard history APIs.
+- Preserved the existing AmneziaWG forwarded-port storage format and restored per-peer forwarding compatibility.
+- Preserved translations in 14 locales while adding missing source keys.
+- Reconciled Telegram menus, client usage, subscription export, and HTML escaping.
+- Added regression coverage for existing features and changes.
+
+Upgrade: Back up the database, configuration files, private keys and certificates. Update the existing installation in place, without uninstalling or deleting data. Rollback requires restoring v0.8.9 together with its matching pre-upgrade database backup; later schemas may not be readable by an older binary.
+
+Previous release details preserved below.
+
 Connect Hub 0.8.9 — 11 Integrated Upstream Feature Families
 
 All enhancements are additive to v0.8.8. Existing panel data, Windows desktop client, bundled native Sudoku, WatTunnel, DNS tunnels, Clean IP, REALITY Watch, logs, connections, credentials, subscriptions, themes, and deployment methods are preserved.

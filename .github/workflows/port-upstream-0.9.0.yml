@@ -1,0 +1,99 @@
+name: Connect Hub 0.9.0 upstream integration audit
+on:
+  push:
+    branches: [feat/connect-hub-0.9.0-upstream-2026-11]
+    paths: ['.github/workflows/port-upstream-0.9.0.yml']
+permissions:
+  contents: write
+concurrency:
+  group: upstream-0.9.0-import
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply upstream patches one at a time; never overwrite local features on conflict
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          test -z "$(git status --porcelain)" || { echo 'Dirty checkout!'; exit 1; }
+          work="$(mktemp -d)"
+          trap 'rm -rf "$work"' EXIT
+          report="$work/report.md"
+          upstream='https://github.com/MHSanaei/3x-ui'
+          printf '# Connect Hub 0.9.0 — upstream patch import results\n\nThis report is an integration attempt, **not proof of release readiness**. Patch conflicts are rolled back rather than overwritten.\n\n| Source | Status | Details |\n|---|---|---|\n' > "$report"
+          applied=0
+          present=0
+          blocked=0
+          apply_one() {
+            type="$1"
+            id="$2"
+            if [ "$type" = commit ]; then
+              url="$upstream/commit/$id.diff"
+            else
+              url="$upstream/pull/$id.diff"
+            fi
+            file="$work/$type-$id.diff"
+            echo "::group::$type $id"
+            if ! curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 15 --max-time 120 "$url" -o "$file"; then
+              printf '| [%s %s](%s) | BLOCKED | Download failure |\n' "$type" "$id" "$url" >> "$report"
+              blocked=$((blocked+1))
+              echo "::endgroup::"
+              return 0
+            fi
+            if ! grep -q '^diff --git ' "$file"; then
+              printf '| [%s %s](%s) | BLOCKED | Invalid diff |\n' "$type" "$id" "$url" >> "$report"
+              blocked=$((blocked+1))
+              echo "::endgroup::"
+              return 0
+            fi
+            if git apply --reverse --check "$file" >/dev/null 2>&1; then
+              printf '| [%s %s](%s) | PRESENT | Reverse patch matches |\n' "$type" "$id" "$url" >> "$report"
+              present=$((present+1))
+              echo "::endgroup::"
+              return 0
+            fi
+            method='direct'
+            if git apply --check "$file" >/dev/null 2>&1; then
+              if ! git apply --index --whitespace=nowarn "$file"; then method=conflict; fi
+            else
+              method='three-way'
+              if ! git apply --3way --index --whitespace=nowarn "$file"; then method=conflict; fi
+            fi
+            if [ "$method" = conflict ]; then
+              git reset --hard HEAD
+              git clean -fd
+              printf '| [%s %s](%s) | BLOCKED | Manual integration required |\n' "$type" "$id" "$url" >> "$report"
+              blocked=$((blocked+1))
+              echo "::endgroup::"
+              return 0
+            fi
+            if git diff --cached --quiet; then
+              printf '| [%s %s](%s) | PRESENT | No staged changes |\n' "$type" "$id" "$url" >> "$report"
+              present=$((present+1))
+            else
+              git commit --no-verify -m "chore(0.9.0): port upstream $type $id"
+              printf '| [%s %s](%s) | IMPORTED, UNTESTED | %s |\n' "$type" "$id" "$url" "$method" >> "$report"
+              applied=$((applied+1))
+            fi
+            echo "::endgroup::"
+          }
+          # Main branch commits 12–13 Nov 2026, oldest first.
+          commits='192dc93c164fb212a54c315bca49b268d827c4dd a748f799c709fd878858cb46e1ede4ba8155909a bf2d0ada8b854830e98cdc1d9fe60657092a1fdd bfe826c18fba788bac83b33ae22f01f870079a1a 1d5a14bb62cbdda0c5c489603da0f3bfad86242b 0abbe1a4af06c41e483aa9830529492c66d93a18 35921b95a2175bebfeb6f8f6951f89879d8d2348 8cccc1c9bf051a871d8b758f4061f181e476e526 efe768521d45c5a26d284b6c75a512b2e257efac 7da8fd23beecadc789a71b512a82ff94ee60c596 8438981ef124a8bf2151327fc09807422f02940d 7367ff75cd5ca8aa2ae12c363d3705e5b22584be 243b5c9da78884066fa8d50bbace36803dd46baa 3a28d130a7424715230e905f0db3bff86302cf35 21aa66262911a3a8e0492c263a81a00d406078f5 166d5633cc3f95a45bb99cf59ebff8706b6ce153 51f7ba47f78d6c48d637dceb9b1bb7febe474cbe 2fab6c3d5032f214220dd9a2e09e356eadbf415a 5297fd3c8495d80fab97ae511553fa545c69e913'
+          for sha in $commits; do apply_one commit "$sha"; done
+          # Unmerged experimental PRs from Nov 9–14.
+          for number in 7109 7120 7134 7133 7139 7136 7132 7111; do apply_one pr "$number"; done
+          printf '\n## Intake totals\n\n- Applied, pending tests: **%s**\n- Already present by reverse patch check: **%s**\n- Blocked and not imported: **%s**\n\nIssues [#7137](https://github.com/MHSanaei/3x-ui/issues/7137), [#7140](https://github.com/MHSanaei/3x-ui/issues/7140), and [#7119](https://github.com/MHSanaei/3x-ui/issues/7119) do not supply working code and are not implemented by this importer.\n\n**Do not publish 0.9.0 until all blocked features have been integrated, code reviewed, and Go/frontend/installer/migration/security/rollback/end-to-end tests pass.**\n' "$applied" "$present" "$blocked" >> "$report"
+          mkdir -p docs
+          cp "$report" docs/0.9.0-upstream-import-report.md
+          git add docs/0.9.0-upstream-import-report.md
+          git commit --no-verify -m 'docs(0.9.0): list applied and blocked upstream changes'
+          git push origin HEAD:refs/heads/feat/connect-hub-0.9.0-upstream-2026-11
+          echo "Imported=$applied Present=$present Blocked=$blocked"
+          if [ "$blocked" -gt 0 ]; then echo "::warning::0.9.0 integration incomplete"; fi

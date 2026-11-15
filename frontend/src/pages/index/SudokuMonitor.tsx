@@ -103,7 +103,7 @@ export default function SudokuMonitor() {
         <p>
           {t('pages.index.sudokuInstalled')}: {state?.version || t('pages.index.xrayStatusUnknown')}
         </p>
-        <Spin spinning={loading}>
+        <Spin spinning={loading} aria-live="off">
           {error ? (
             <Alert type="error" showIcon title={t('pages.index.sudokuReleaseError')} />
           ) : !loading && releases.length === 0 ? (

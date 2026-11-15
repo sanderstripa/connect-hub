@@ -522,6 +522,7 @@ func (a *SUBController) subs(c *gin.Context) {
 	scheme, host, hostWithPort, _ := a.subService.ResolveRequest(c)
 	subReq := a.subService.ForRequest(host)
 	subReq.subscriptionBody = true
+	subReq.omitServerDescription = !IsHappClient(userAgent) && !IsIncyClient(userAgent)
 	subs, _, _, traffic, err := subReq.getSubs(subId)
 	if err != nil || subs == nil {
 		writeSubError(c, err)
@@ -756,6 +757,9 @@ func (a *SUBController) enforceHwid(c *gin.Context) bool {
 func applyHwidHeaders(c *gin.Context, result service.HwidGateResult) {
 	if result.Active {
 		c.Header("X-Hwid-Active", "true")
+	}
+	if result.Blocked {
+		c.Header("X-Hwid-Blocked", "true")
 	}
 	if result.NotSupported {
 		c.Header("X-Hwid-Not-Supported", "true")

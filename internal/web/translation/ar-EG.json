@@ -10,6 +10,7 @@
   "create": "إنشاء",
   "add": "إضافة",
   "remove": "إزالة",
+  "removeItem": "إزالة {item}",
   "update": "تحديث",
   "copy": "نسخ",
   "copied": "اتنسخ",
@@ -39,6 +40,7 @@
   "indefinite": "غير محدد",
   "unlimited": "غير محدود",
   "none": "لا شيء",
+  "empty": "فارغ",
   "qrCode": "كود QR",
   "info": "معلومات أكتر",
   "edit": "تحرير",
@@ -46,6 +48,7 @@
   "reset": "إعادة تعيين",
   "noData": "لا توجد بيانات.",
   "copySuccess": "اتنسخ بنجاح",
+  "copyFail": "فشل النسخ",
   "sure": "متأكد؟",
   "encryption": "تشفير",
   "transmission": "نقل",
@@ -128,7 +131,8 @@
     "subFormats": "Sub Formats",
     "connections": "Connections",
     "tunnels": "الأنفاق",
-    "assistant": "AI Assistant"
+    "assistant": "AI Assistant",
+    "nodeRouting": "Node Routing"
   },
   "pages": {
     "logs": {
@@ -380,6 +384,11 @@
       "xrayStatus": "Xray",
       "stopXray": "إيقاف",
       "restartXray": "إعادة تشغيل",
+      "startXray": "تشغيل",
+      "stopXrayDisabledHint": "Xray غير قيد التشغيل",
+      "stopXrayConfirmTitle": "إيقاف Xray؟",
+      "stopXrayConfirmContent": "سيؤدي إيقاف Xray إلى قطع جميع اتصالات البروكسي فورًا. هل تريد المتابعة؟",
+      "stopXrayConfirmOk": "إيقاف Xray",
       "xraySwitch": "النسخة",
       "xrayUpdates": "تحديثات Xray",
       "xraySwitchClickDesk": "اختار بحذر، النسخ القديمة ممكن ما تتوافقش مع الإعدادات الحالية.",
@@ -469,7 +478,7 @@
       "geodataConfirmTitle": "حفظ إعدادات geodata؟",
       "geodataConfirmContent": "سيتم تحديث قالب إعدادات Xray وإعادة تشغيل Xray.",
       "geodataInvalidUrl": "كل ملف يحتاج إلى رابط HTTPS.",
-      "geodataInvalidFile": "يجب أن يكون اسم الملف اسماً بسيطاً مثل geosite_custom.dat (بدون مسارات).",
+      "geodataInvalidFile": "يجب أن يكون اسم الملف اسماً بسيطاً بامتداد ‎.dat مثل geosite_custom.dat (بدون مسارات).",
       "geodataInvalidCron": "يجب أن يتكون cron من 5 حقول، مثل 0 4 * * *",
       "geodataEmpty": "لا توجد ملفات مهيأة. في قواعد التوجيه يُشار إلى الملفات بالشكل ext:geosite_custom.dat:category.",
       "dontRefresh": "التثبيت شغال، متعملش Refresh للصفحة",
@@ -555,7 +564,9 @@
         "pickInbound": "اختر inbound",
         "matchAny": "أي",
         "destPlaceholder": "تلقائي (listen:port للفرع)",
-        "needsTls": "تصبح الـ Fallbacks متاحة بعد اختيار TLS أو Reality في تبويب الأمان (فقط VLESS/Trojan عبر RAW)."
+        "needsTls": "تصبح الـ Fallbacks متاحة بعد اختيار TLS أو Reality في تبويب الأمان (فقط VLESS/Trojan عبر RAW).",
+        "decryptionConflict": "لا يمكن استخدام fallbacks مع فك تشفير VLESS النشط على الخادم. احذف قواعد fallback واحفظها قبل تفعيل فك التشفير، أو عطّل فك التشفير.",
+        "saveFailed": "تعذر تحميل قواعد fallback أو حفظها. بقيت المسودة مفتوحة؛ أعد المحاولة بعد مراجعة الخطأ."
       },
       "protocol": "بروتوكول",
       "port": "المنفذ",
@@ -676,6 +687,8 @@
       "importInbound": "استيراد إدخال",
       "periodicTrafficResetTitle": "إعادة تعيين حركة المرور",
       "periodicTrafficResetDay": "يوم إعادة التعيين الشهري",
+      "preserveClientTraffic": "الاحتفاظ باستهلاك العملاء",
+      "preserveClientTrafficHelp": "تصفّر إعادة التعيين المجدولة عدّادات هذا الوارد فقط. يحتفظ العملاء بجداول إعادة التعيين الخاصة بهم.",
       "periodicTrafficReset": {
         "never": "أبداً",
         "daily": "يومياً",
@@ -713,7 +726,9 @@
         "invalidClientField": "العميل {client}: الحقل {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "شهادة TLS رقم {index}: {reason}",
-        "moreIssues": "{message}  (+{count} أخرى)"
+        "moreIssues": "{message}  (+{count} أخرى)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "moveUp": "أعلى",
@@ -983,6 +998,14 @@
           "clientId": "Client ID",
           "clientSecret": "Client Secret",
           "refreshToken": "Refresh Token",
+          "accessKeyId": "معرّف مفتاح الوصول",
+          "secretAccessKey": "مفتاح الوصول السري",
+          "sessionToken": "رمز الجلسة",
+          "s3Endpoint": "نقطة النهاية",
+          "s3Region": "المنطقة",
+          "s3Bucket": "الحاوية (Bucket)",
+          "s3PathStyle": "عنونة بنمط المسار",
+          "s3PathStyleDesc": "مفعّل: اسم الحاوية بيتحط في مسار الرابط. مقفول: بيتحط في اسم المضيف، وده محتاج endpoint باسم DNS.",
           "secrets": "الأسرار",
           "secretsDesc": "قيم يقرؤها القالب باسم {secret0} و{secret1} …",
           "template": "قالب التخزين",
@@ -1008,7 +1031,7 @@
         "autoSystemDnsToGateway": "DNS النظام إلى البوابة",
         "autoSystemDnsToGatewayTooltip": "على لينكس بس: بيوجّه systemd-resolved لبوابة TUN عشان استعلامات النظام تعدّي من Xray. محتاج بوابة، والـTUN مش هيشتغل لو ده فشل.",
         "autoSystemWfpBlockLeak": "منع التسريب (WFP)",
-        "autoSystemWfpBlockLeakTooltip": "على ويندوز بس، مع Auto system routes: ‏dns بيخلّي DNS جوّه الـTUN (محتاج سيرفرات DNS)، وmisconfigtun بيمنع نسخة IP مفيش مسار بيوديها للـTUN.",
+        "autoSystemWfpBlockLeakTooltip": "على ويندوز بس، مع Auto system routes: ‏all بيمنع كل حاجة برّه الـTUN، و‏allexceptlan زيّه بس بيسيب الشبكة المحلية شغّالة؛ ‏dns بيخلّي DNS (البورتات 53 و853 وخدمة DNS Client) جوّه الـTUN؛ ‏windnsclient بيغطي الخدمة دي بس؛ ‏tcp و‏udp و‏icmp بيمنعوا بروتوكول كامل؛ اكتب tcp/PORT أو udp/PORT أو PORT لوحده أو نطاق LOW-HIGH لبورتات معيّنة؛ وCIDR في الأول (1.1.1.0/24:53 أو [::/0]:all) بيقصر القيمة على العناوين دي؛ وmisconfigtun بيمنع نسخة IP مفيش مسار بيوديها للـTUN. أي قيمة بتغطي بورت 53 محتاجة سيرفرات DNS.",
         "maxVersion": "الحد الأقصى للإصدار",
         "headerName": "اسم الترويسة",
         "headerValue": "قيمة الترويسة",
@@ -1043,7 +1066,11 @@
         "finderNone": "لم ينجح أي هدف. جرّب نطاقًا أوسع.",
         "finderReport": "التقرير",
         "finderCommandError": "تعذّر إنشاء الأمر",
-        "finderExpired": "انتهت صلاحية هذا الأمر. أنشئ أمرًا جديدًا."
+        "finderExpired": "انتهت صلاحية هذا الأمر. أنشئ أمرًا جديدًا.",
+        "chainNone": "اتصال مباشر",
+        "chainSelectorSuffix": "منتقي",
+        "chain": "سلسلة العميل",
+        "chainHelp": "اجعل العميل يتصل بهذا الـ inbound عبر بروكسي SOCKS/HTTP أعلى. يُطبَّق على اشتراكي JSON وMihomo."
       },
       "info": {
         "mode": "الوضع",
@@ -1092,8 +1119,19 @@
           "failed": "تعذّر حفظ الاحتياطيات",
           "switchFailed": "تعذّر التبديل: فشل الهدف في الفحص أو في اختبار REALITY الحقيقي",
           "switched": "تم التبديل إلى {target}"
-        }
-      }
+        },
+        "saveFailed": "Unable to save REALITY monitoring settings"
+      },
+      "changeIdInvalid": "The new ID is unavailable ({reason}).",
+      "changeIdUnchanged": "The ID is unchanged.",
+      "changeIdRoutingRefs": "{count} routing rule(s) point at the current ID and will be updated.",
+      "changeIdNodeConflict": "The hosting node already has an inbound with this name.",
+      "changeIdValid": "The new ID is available.",
+      "changeIdTitle": "Change inbound ID — {tag}",
+      "changeIdApply": "Apply",
+      "changeIdDesc": "Changing the inbound ID updates every routing rule and node reference that points at the current ID. The check below runs before anything is saved.",
+      "changeIdLabel": "New inbound ID (tag)",
+      "changeId": "Change ID"
     },
     "clients": {
       "columns": "الأعمدة",
@@ -1164,7 +1202,13 @@
       "deleteHwid": "إزالة الجهاز",
       "deleteHwidConfirm": "إزالة هذا الجهاز؟ سيحتاج إلى إعادة التسجيل عند جلب الاشتراك التالي.",
       "hwidDeleted": "تمت إزالة الجهاز.",
-      "clearHwidsConfirm": "إزالة جميع الأجهزة المسجلة؟ سيحتاج كل جهاز إلى إعادة التسجيل عند جلب الاشتراك التالي.",
+      "blockHwid": "حظر",
+      "unblockHwid": "إلغاء الحظر",
+      "hwidBlocked": "محظور",
+      "blockHwidConfirm": "حظر هذا الجهاز من جلب هذا الاشتراك؟",
+      "unblockHwidConfirm": "السماح لهذا الجهاز بجلب هذا الاشتراك مرة أخرى؟",
+      "hwidBlockHint": "يسري حظر الأجهزة على هذا الاشتراك حتى لو كان حد HWID هو 0. مسح القائمة لا يلغي الحظر.",
+      "clearHwidsConfirm": "إزالة كل الأجهزة غير المحظورة؟ ستُسجّل مجددًا عند جلب الاشتراك التالي. ستظل الأجهزة المحظورة محظورة.",
       "limitIpFail2banMissing": "Fail2ban غير مثبّت، لذا لا يمكن تطبيق حد عناوين IP. ثبّت Fail2ban من قائمة x-ui النصية لتفعيل هذا الخيار.",
       "limitIpFail2banWindows": "Fail2ban غير متوفّر على نظام Windows، لذا لا يمكن تطبيق حد عناوين IP.",
       "limitIpDisabled": "ميزة حد عناوين IP معطّلة على هذا الخادم.",
@@ -1174,6 +1218,7 @@
       "subIdDesc": "يُستخدم أيضًا كرمز دعوة لهذا العميل في بوت تيليجرام: من يرسله إلى البوت يُربط بهذا العميل. اجعله طويلًا وعشوائيًا — فالمعرّف القصير أو السهل التخمين قد يستولي عليه شخص آخر.",
       "online": "متصل",
       "email": "البريد",
+      "emailReservedName": "لا يمكن أن يكون اسم العميل «.» أو «..» فقط",
       "emailInvalidChars": "لا يمكن أن يحتوي البريد الإلكتروني على مسافات أو '/' أو '\\' أو أحرف تحكم",
       "subIdInvalidChars": "لا يمكن أن يحتوي معرّف الاشتراك على مسافات أو '/' أو '\\' أو أحرف تحكم",
       "group": "المجموعة",
@@ -1537,7 +1582,7 @@
       "tlsPin": "تثبيت الشهادة (SHA-256)",
       "tlsSkip": "تخطّي التحقق",
       "tlsMtls": "TLS متبادل (شهادة العميل)",
-      "mtlsFormHint": "يصادق هذا النود اللوحة باستخدام شهادة عميل. انسخ CA الخاص بهذه اللوحة من قسم mTLS النود إلى النود، واضبط CA الموثوق به، ثم أعد تشغيله.",
+      "mtlsFormHint": "يصادق هذا النود اللوحة باستخدام شهادة عميل. انسخ CA الخاص بهذه اللوحة من قسم mTLS النود إلى النود، واضبط CA الموثوق به، ثم أعد تشغيله. لا يزال تحديث لوحة هذا النود من هنا يتطلب رمز API بنطاق node-admin.",
       "mtls": {
         "title": "mTLS النود",
         "intro": "يضيف TLS المتبادل عامل شهادة العميل فوق رمز API في الاتصالات بين النودات. وهو اختياري: اتركه فارغًا للاكتفاء بالمصادقة عبر الرمز.",
@@ -1791,6 +1836,7 @@
         "applyTo": "تطبيق على",
         "addNoise": "+ ضوضاء",
         "concurrency": "التزامن",
+        "concurrencyHint": "عدد الـstreams في كل اتصال. xray-core 26.11.9 والأحدث بيرفع أي قيمة من 0 لـ128 إلى 128؛ النسخ الأقدم بتستخدم الرقم زي ما هو (0 يعني 8). القيمة ‎-1‏ بتقفل الـmux على TCP.",
         "xudpConcurrency": "تزامن xudp",
         "xudpUdp443": "xudp UDP 443"
       },
@@ -1989,6 +2035,71 @@
           "httpMethod": "أسلوب HTTP",
           "httpMethodDesc": "الأسلوب المستخدم في طلبات probe.",
           "note": "تحمل موزّعات leastPing/leastLoad دائمًا burstObservatory. يخصّص هذا المفتاح معاملات probe — أوقفه لاستخدام الإعدادات الافتراضية المدمجة. تُطبَّق التغييرات بعد إعادة تشغيل اللوحة."
+        }
+      },
+      "chainProxies": {
+        "menu": "سلاسل البروكسي",
+        "title": "بروكسي متسلسل",
+        "add": "إضافة بروكسي متسلسل",
+        "desc": "بروكسيات SOCKS و HTTP الأعلى التي يتصل بها عميل المشترك قبل الوصول إلى هذا الـ inbound. يُسند لكل inbound بروكسي واحد أو منتقي واحد؛ اشتراكا JSON وMihomo يحملان هذه القفزة، أما الروابط الخام ومخرجات Clash القديمة فتستبعد هذه الـ inbounds.",
+        "remark": "الوصف",
+        "remarkPlaceholder": "entry-de-fra",
+        "type": "البروتوكول",
+        "typeSocks": "SOCKS",
+        "typeHttp": "HTTP",
+        "server": "الخادم",
+        "port": "المنفذ",
+        "username": "اسم المستخدم",
+        "usernamePlaceholder": "اتركه فارغًا لبروكسي مفتوح",
+        "password": "كلمة المرور",
+        "tls": "بروكسي HTTPS",
+        "tlsHelp": "الاتصال بالبروكسي عبر TLS. مخرج SOCKS في xray لا يدعم TLS، لذا هذا للـ HTTP فقط.",
+        "auth": "المصادقة",
+        "authPassword": "اسم المستخدم + كلمة المرور",
+        "authNone": "بدون",
+        "endpoint": "العنوان",
+        "enabled": "مُمكّن",
+        "empty": "لا توجد بروكسيات متسلسلة بعد",
+        "deleteConfirm": "حذف هذا البروكسي؟ الـ inbounds التي تستخدمه ستتصل مباشرة.",
+        "errRemarkRequired": "الوصف مطلوب (256 حرفًا كحد أقصى)",
+        "errServerRequired": "الخادم مطلوب",
+        "errServerInvalid": "يجب أن يكون الخادم اسم مضيف أو IP بدون مسافات",
+        "errPortRequired": "يجب أن يكون المنفذ بين 1 و65535",
+        "tabProxies": "البروكسيات",
+        "toasts": {
+          "list": "تعذر تحميل البروكسيات",
+          "create": "تعذر إنشاء البروكسي",
+          "update": "تعذر تحديث البروكسي",
+          "delete": "تعذر حذف البروكسي",
+          "invalidId": "معرّف البروكسي غير صالح"
+        }
+      },
+      "chainSelectors": {
+        "title": "منتقي السلاسل",
+        "add": "إضافة منتقي سلاسل",
+        "desc": "عدة بروكسيات متسلسلة مجمّعة ليختار العميل قفزة واحدة حسب الاستراتيجية. يأخذ الـ inbound منتقيًا بدل بروكسي واحد؛ مخرجات JSON تمر عبر موازن والمخرج Mihomo يحصل على مجموعة مطابقة.",
+        "remark": "الوصف",
+        "remarkPlaceholder": "entries-fastest",
+        "strategy": "الاستراتيجية",
+        "strategyHelp": "leastPing وleastLoad تختبر كل قفزة؛ random وroundRobin تتناوب. يحاكيهما Mihomo عبر url-test وload-balance.",
+        "strategyLeastLoad": "أقل حمل",
+        "strategyLeastPing": "أقل بينغ",
+        "strategyRandom": "عشوائي",
+        "strategyRoundRobin": "بالتناوب",
+        "proxies": "بروكسيات السلسلة",
+        "proxiesCount": "{count} بروكسيات",
+        "enabled": "مُمكّن",
+        "empty": "لا توجد منتقيات بعد",
+        "deleteConfirm": "حذف هذا المنتقي؟ الـ inbounds التي تستخدمه ستتصل مباشرة.",
+        "errRemarkRequired": "الوصف مطلوب (256 حرفًا كحد أقصى)",
+        "errProxiesRequired": "اختر بروكسيًا واحدًا على الأقل",
+        "tabSelectors": "المنتقيات",
+        "toasts": {
+          "list": "تعذر تحميل المنتقيات",
+          "create": "تعذر إنشاء المنتقي",
+          "update": "تعذر تحديث المنتقي",
+          "delete": "تعذر حذف المنتقي",
+          "invalidId": "معرّف المنتقي غير صالح"
         }
       },
       "subCalendarExpireInclusive": "Month-end subscription expiry display",
@@ -2242,7 +2353,16 @@
       "wechatReportTime": "جدول التقارير",
       "wechatReportTimeDesc": "استخدم تعبير cron أو إعدادًا مثل @daily.",
       "wechatEvents": "تنبيهات الأحداث",
-      "wechatEventsDesc": "اختر الأحداث التي ترسل إشعارات واضبط حدود التنبيه."
+      "wechatEventsDesc": "اختر الأحداث التي ترسل إشعارات واضبط حدود التنبيه.",
+      "inboundListOrder": "Inbound list order",
+      "inboundListOrderDesc": "Default order of the inbound list in the panel. Applies to local inbounds and to inbounds adopted from all nodes.",
+      "inboundListOrderOptionId": "ID",
+      "inboundListOrderOptionRemark": "Remark",
+      "inboundListOrderOptionPort": "Port",
+      "inboundListOrderOptionProtocol": "Protocol",
+      "inboundListOrderOptionSubSortIndex": "Subscription order",
+      "nodeRoutingControl": "Node routing control",
+      "nodeRoutingControlDesc": "Let this panel control the routing of connected nodes. When enabled, the Node Routing page can push a shared routing policy to each node."
     },
     "xray": {
       "save": "احفظ",
@@ -2587,7 +2707,14 @@
         "subnetCidr": "بادئة الشبكة الفرعية (CIDR)",
         "allowedIPs": "عناوين IP المسموح بها",
         "endpoint": "النهاية",
-        "domainStrategy": "استراتيجية الدومين"
+        "domainStrategy": "استراتيجية الدومين",
+        "vkTurnEnabled": "Tunnel through VK",
+        "vkTurnHint": "A compatible VK TURN client sends WireGuard traffic through VK relays to this server's SRTP proxy. The proxy forwards it to this WireGuard inbound. Allow the proxy UDP port through your firewall.",
+        "vkTurnCallLink": "VK call link",
+        "vkTurnCallLinkHint": "The client obtains and refreshes TURN credentials using this link. VK sign-in is needed only if anonymous access is unavailable.",
+        "vkTurnPort": "VK proxy UDP port",
+        "vkTurnInvalidLink": "Enter a VK call link, such as https://vk.ru/call/join/...",
+        "vkTurnProfile": "VK TURN profile"
       },
       "amneziawg": {
         "privateKey": "المفتاح الخاص",
@@ -2847,7 +2974,7 @@
         "allowInsecure": "تخطّي التحقق من شهادة TLS (allowInsecure / skip-cert-verify).",
         "vlessRoute": "قيمة مسار VLESS واحدة (0-65535) تُدمَج في UUID، مثل 443. اتركه فارغاً لعدم وجود أي منها.",
         "mihomoX25519": "Mihomo فقط: مصافحة REALITY باستخدام X25519 العادي بدون ML-KEM (support-x25519mlkem768: false). للخوادم التي تعمل بإصدار Xray-core أقدم من 26.9.8 ولا تتطلب ML-KEM.",
-        "remark": "تسمية بسيطة لهذا المضيف. تظهر كاسم للإعداد فقط عندما لا يكون للوارد ملاحظة خاصة به."
+        "remark": "تسمية بسيطة لهذا المضيف. أدخل {{HOST}} في قالب الملاحظة لتضمينها في أسماء التكوينات."
       },
       "remarkVars": {
         "title": "متغيرات القالب",
@@ -2961,6 +3088,36 @@
       "unavailable": "العقدة غير متاحة",
       "latencyLoss": "RTT / الفقد",
       "unsupportedPlatform": "يمكن لهذه المنصة إدارة الأنفاق البعيدة. اختر عقدة مدعومة لتشغيل WatTunnel."
+    },
+    "nodeRouting": {
+      "policySaved": "Routing policy saved",
+      "cleared": "Routing policy cleared on {name}.",
+      "applied": "Routing policy applied to {name}.",
+      "applyFailed": "Apply failed on {name}: {reason}",
+      "noNodes": "No online, enabled nodes to apply to.",
+      "appliedAll": "Routing policy applied to {count} node(s).",
+      "appliedMixed": "Routing policy applied to {ok} node(s), {failed} failed.",
+      "node": "Node",
+      "status": "Status",
+      "egress": "Egress",
+      "direct": "direct",
+      "policy": "Master policy",
+      "policyActive": "active",
+      "none": "none",
+      "actions": "Actions",
+      "apply": "Apply",
+      "clear": "Clear",
+      "title": "Node routing control",
+      "control": "Control",
+      "policyTitle": "Shared routing policy",
+      "controlDisabled": "Node routing control is disabled. Enable it to push routing policies to nodes.",
+      "policyDesc": "JSON array of Xray routing rules (the same shape as the routing rules on the Routing page). When applied, a node runs these rules ahead of its own rules; the node's internal stats rule is always kept first.",
+      "policyInvalid": "The policy must be a JSON array of routing rule objects.",
+      "savePolicy": "Save policy",
+      "clearPolicy": "Clear policy",
+      "ruleCount": "{count} rule(s)",
+      "nodesTitle": "Nodes",
+      "applyAll": "Apply to all online nodes"
     }
   },
   "tgbot": {
@@ -3404,5 +3561,6 @@
       "trafficRemaining": "حركة البيانات المتبقية في 3x-ui",
       "trafficQuotaUnset": "لم يتم إعداد الحصة"
     }
-  }
+  },
+  "import": "Import"
 }

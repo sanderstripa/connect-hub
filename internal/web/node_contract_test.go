@@ -388,6 +388,17 @@ func TestMasterNodeContract(t *testing.T) {
 						t.Fatal("node still has the inbound")
 					}
 				}},
+				{"PushRoutingRules stores the policy on the node", []string{"PushRoutingRules"}, func() error {
+					return master.PushRoutingRules(ctx, `[{"type":"field","network":"tcp","outboundTag":"direct"}]`)
+				}, func(t *testing.T) {
+					rules, err := (&service.SettingService{}).GetMasterRoutingRules()
+					if err != nil {
+						t.Fatalf("read master routing rules: %v", err)
+					}
+					if want := `[{"type":"field","network":"tcp","outboundTag":"direct"}]`; rules != want {
+						t.Fatalf("node policy = %q, want %q", rules, want)
+					}
+				}},
 			}
 			covered := map[string]bool{}
 			for _, c := range cells {
@@ -422,6 +433,7 @@ var remoteMethodsOutsideContract = map[string]string{
 	"AdoptedInboundAliases": "local alias bookkeeping",
 	"AdvancePushedInbound":  "local fingerprint bookkeeping",
 	"ForgetPushedInbound":   "local fingerprint bookkeeping",
+	"ForgetInbound":         "local bookkeeping for an inbound the node no longer has",
 	"UpdatePanel":           "replaces the node binary; node-sync is denied it on purpose (#6201)",
 }
 

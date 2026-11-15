@@ -67,7 +67,7 @@ export interface Section {
 
 // /inbounds/update replaces the whole row, so it takes the same payload as /add.
 const inboundBody =
-  '{\n  "enable": true,\n  "remark": "VLESS-443",\n  "listen": "",\n  "port": 443,\n  "protocol": "vless",\n  "expiryTime": 0,\n  "total": 0,\n  "settings": {\n    "clients": [{ "id": "...", "email": "user1" }],\n    "decryption": "none",\n    "fallbacks": []\n  },\n  "streamSettings": {\n    "network": "tcp",\n    "security": "reality",\n    "realitySettings": { "show": false, "dest": "..." }\n  },\n  "sniffing": {\n    "enabled": true,\n    "destOverride": ["http", "tls"]\n  }\n}';
+  '{\n  "enable": true,\n  "remark": "VLESS-443",\n  "listen": "",\n  "port": 443,\n  "protocol": "vless",\n  "expiryTime": 0,\n  "total": 0,\n  "settings": {\n    "clients": [{ "id": "...", "email": "user1" }],\n    "decryption": "none"\n  },\n  "streamSettings": {\n    "network": "tcp",\n    "security": "reality",\n    "realitySettings": { "show": false, "dest": "..." }\n  },\n  "sniffing": {\n    "enabled": true,\n    "destOverride": ["http", "tls"]\n  }\n}';
 
 const outboundSubscriptionBodyParams: EndpointParam[] = [
   {
@@ -181,6 +181,94 @@ const subBalancerBodyParams: EndpointParam[] = [
     in: 'body (form)',
     type: 'boolean',
     desc: 'Whether the balancer is emitted. Default true on create; unchanged when omitted on update.',
+    optional: true,
+  },
+];
+
+const chainProxyBodyParams: EndpointParam[] = [
+  {
+    name: 'remark',
+    in: 'body (form)',
+    type: 'string',
+    desc: 'Display label and the hop proxy name in the subscriber config (required, max 256).',
+  },
+  {
+    name: 'type',
+    in: 'body (form)',
+    type: 'string',
+    desc: 'Hop protocol: "socks" or "http". Default "socks".',
+    optional: true,
+    defaultValue: 'socks',
+  },
+  {
+    name: 'server',
+    in: 'body (form)',
+    type: 'string',
+    desc: 'Host or IP of the upstream proxy (required). A pasted URL is reduced to its host: scheme, credentials, path and port are dropped, and IPv6 brackets are stripped.',
+  },
+  {
+    name: 'port',
+    in: 'body (form)',
+    type: 'integer',
+    desc: 'Port of the upstream proxy, 1-65535 (required).',
+  },
+  {
+    name: 'username',
+    in: 'body (form)',
+    type: 'string',
+    desc: 'SOCKS5 / HTTP basic-auth username. Omit both credentials for an open proxy.',
+    optional: true,
+  },
+  {
+    name: 'password',
+    in: 'body (form)',
+    type: 'string',
+    desc: 'SOCKS5 / HTTP basic-auth password.',
+    optional: true,
+  },
+  {
+    name: 'tls',
+    in: 'body (form)',
+    type: 'boolean',
+    desc: 'Dial the proxy over TLS (an HTTPS proxy). http only: xray has no TLS for a socks outbound, so it is rejected for type "socks".',
+    optional: true,
+    defaultValue: false,
+  },
+  {
+    name: 'enabled',
+    in: 'body (form)',
+    type: 'boolean',
+    desc: 'Whether the hop may be used. Default true on create; unchanged when omitted on update.',
+    optional: true,
+  },
+];
+
+const chainSelectorBodyParams: EndpointParam[] = [
+  {
+    name: 'remark',
+    in: 'body (form)',
+    type: 'string',
+    desc: 'Display label, also the mihomo proxy-group name (required, max 256).',
+  },
+  {
+    name: 'strategy',
+    in: 'body (form)',
+    type: 'string',
+    desc: 'Hop selection strategy: "leastLoad", "leastPing", "roundRobin" or "random". Default "random".',
+    optional: true,
+    defaultValue: 'random',
+  },
+  {
+    name: 'proxyIds',
+    in: 'body (form)',
+    type: 'integer[]',
+    desc: 'Repeated form keys selecting the member chain proxies (required, at least one). Duplicates and unknown ids are rejected.',
+  },
+  {
+    name: 'enabled',
+    in: 'body (form)',
+    type: 'boolean',
+    desc: 'Whether the selector is emitted. Default true on create; unchanged when omitted on update.',
     optional: true,
   },
 ];
@@ -571,7 +659,7 @@ export const sections: readonly Section[] = [
         method: 'POST',
         path: '/panel/api/inbounds/add',
         summary:
-          'Create a new inbound. Send the full inbound payload (protocol, port, settings, streamSettings, sniffing, remark, expiryTime, total, enable). settings, streamSettings, and sniffing may be sent as nested JSON objects (preferred) or as JSON-encoded strings (legacy).',
+          'Create a new inbound. Send the full inbound payload (protocol, port, settings, streamSettings, sniffing, remark, expiryTime, total, enable). settings, streamSettings, and sniffing may be sent as nested JSON objects (preferred) or as JSON-encoded strings (legacy). VLESS empty fallback arrays are normalized away; nonempty fallbacks cannot be combined with active server decryption.',
         body: inboundBody,
         errorResponse: '{\n  "success": false,\n  "msg": "Port 443 is already in use"\n}',
       },
@@ -594,9 +682,26 @@ export const sections: readonly Section[] = [
         method: 'POST',
         path: '/panel/api/inbounds/update/:id',
         summary:
-          'Replace an inbound’s configuration. Body shape mirrors /add, but the inbound keeps its stored client list and enable flag: settings.clients and enable in the body are ignored. Manage clients through the /panel/api/clients endpoints and toggle the inbound with /setEnable.',
+          'Replace an inbound’s configuration. Body shape mirrors /add, but the inbound keeps its stored client list and enable flag: settings.clients and enable in the body are ignored. Manage clients through the /panel/api/clients endpoints and toggle the inbound with /setEnable. Remove effective fallback rules before enabling VLESS server decryption.',
         params: [{ name: 'id', in: 'path', type: 'number', desc: 'Inbound ID.' }],
         body: inboundBody,
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/inbounds/checkTag',
+        summary:
+          'Pre-flight check for changing an inbound’s ID (tag): reports whether the target is usable and what a rename would touch. Writes nothing.',
+        body: '{\n  "inboundId": 1,\n  "newTag": "n1-in-443-tcp"\n}',
+        response:
+          '{\n  "success": true,\n  "obj": {\n    "unchanged": false,\n    "valid": true,\n    "reason": "",\n    "routingRefs": 2,\n    "nodeTagConflict": false\n  }\n}',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/inbounds/changeTag/:id',
+        summary:
+          'Safely rename an inbound’s ID (tag). Rewrites routing rules and loopback outbounds that point at the old tag, re-pushes the node when the inbound is node-hosted, and flags an xray restart when routing changed.',
+        params: [{ name: 'id', in: 'path', type: 'number', desc: 'Inbound ID.' }],
+        body: '{\n  "newTag": "n1-in-443-tcp"\n}',
       },
       {
         method: 'POST',
@@ -639,7 +744,7 @@ export const sections: readonly Section[] = [
         method: 'POST',
         path: '/panel/api/inbounds/import',
         summary:
-          'Bulk-import an inbound from a JSON blob (e.g. one exported via the UI). The body uses form encoding with a single "data" field.',
+          'Bulk-import an inbound from a JSON blob (e.g. one exported via the UI). The body uses form encoding with a single "data" field. VLESS fallback validation is identical to /add.',
         params: [
           {
             name: 'data',
@@ -684,7 +789,7 @@ export const sections: readonly Section[] = [
         method: 'POST',
         path: '/panel/api/inbounds/:id/fallbacks',
         summary:
-          'Replace the entire fallback list for a master inbound. Body is JSON. Triggers an Xray restart.',
+          'Replace the entire fallback list for a master inbound. Body is JSON. Nonempty lists require TCP with TLS/REALITY and no active VLESS server decryption. An empty list can remove rules even from an incompatible inbound. Triggers an Xray restart.',
         params: [
           { name: 'id', in: 'path', type: 'number', desc: 'Master inbound ID.' },
           {
@@ -744,7 +849,7 @@ export const sections: readonly Section[] = [
             name: 'bucket',
             in: 'path',
             type: 'number',
-            desc: 'Bucket size in seconds. Allowed: 2, 30, 60, 120, 180, 300.',
+            desc: 'Bucket size in seconds. Allowed: 2, 5, 30, 60, 180, 360, 720, 1440, 2880, 10080.',
           },
         ],
       },
@@ -752,23 +857,37 @@ export const sections: readonly Section[] = [
         method: 'GET',
         path: '/panel/api/server/history/:metric/:bucket',
         summary:
-          'Aggregated time-series for one metric. Returns an array of {t, v} samples covering the last ~6 hours.',
+          'Aggregated time-series for one system metric. Returns up to 60 {t, v} samples; supported bucket sizes cover windows from 2 minutes up to 7 days.',
         params: [
           {
             name: 'metric',
             in: 'path',
             type: 'string',
-            desc: 'cpu | mem | netUp | netDown | online | load1 | load5 | load15.',
+            desc: 'cpu | mem | swap | netUp | netDown | pktUp | pktDown | diskRead | diskWrite | diskUsage | tcpCount | udpCount | online | load1 | load5 | load15.',
           },
           {
             name: 'bucket',
             in: 'path',
             type: 'number',
-            desc: 'Bucket size in seconds. Allowed: 2, 30, 60, 120, 180, 300.',
+            desc: 'Bucket size in seconds. Allowed: 2, 5, 30, 60, 180, 360, 720, 1440, 2880, 10080.',
           },
         ],
         response:
           '{\n  "success": true,\n  "obj": [\n    { "t": 1700000000, "v": 12.5 },\n    { "t": 1700000002, "v": 13.1 }\n  ]\n}',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/server/overviewHistory/:bucket',
+        summary:
+          'Aggregated history for all overview charts in one response. Returns up to 60 samples per metric for the selected 2-minute to 12-hour window.',
+        params: [
+          {
+            name: 'bucket',
+            in: 'path',
+            type: 'number',
+            desc: 'Bucket size in seconds. Allowed: 2, 5, 30, 60, 180, 360, 720.',
+          },
+        ],
       },
       {
         method: 'GET',
@@ -780,7 +899,7 @@ export const sections: readonly Section[] = [
         method: 'GET',
         path: '/panel/api/server/xrayMetricsHistory/:metric/:bucket',
         summary:
-          'Time-series history for one Xray runtime metric over the last ~6 hours. Same {t, v} shape as /history/:metric/:bucket.',
+          'Aggregated history for one Xray runtime metric. Returns up to 60 {t, v} samples for bucket windows up to 7 days.',
         params: [
           {
             name: 'metric',
@@ -792,7 +911,7 @@ export const sections: readonly Section[] = [
             name: 'bucket',
             in: 'path',
             type: 'number',
-            desc: 'Bucket size in seconds. Allowed: 2, 30, 60, 120, 180, 300.',
+            desc: 'Bucket size in seconds. Allowed: 2, 5, 30, 60, 180, 360, 720, 1440, 2880, 10080.',
           },
         ],
       },
@@ -818,7 +937,7 @@ export const sections: readonly Section[] = [
             name: 'bucket',
             in: 'path',
             type: 'number',
-            desc: 'Bucket size in seconds. Allowed: 2, 30, 60, 120, 180, 300.',
+            desc: 'Bucket size in seconds. Allowed: 2, 5, 30, 60, 180, 360, 720, 1440, 2880, 10080.',
           },
         ],
       },
@@ -1435,6 +1554,19 @@ export const sections: readonly Section[] = [
       },
       {
         method: 'GET',
+        path: '/panel/api/clients/get',
+        summary:
+          'Fetch one client by email, including the inbound IDs and external config IDs it is attached to.',
+        description:
+          'Query-parameter alias for the path endpoint. Use email=. or email=.. to manage legacy reserved names without URL dot-segment normalization.',
+        params: [
+          { name: 'email', in: 'query', type: 'string', desc: 'Client email (unique identifier).' },
+        ],
+        response:
+          '{\n  "success": true,\n  "obj": {\n    "client": { "id": 1, "email": "alice@example.com", ... },\n    "inboundIds": [3, 5],\n    "externalLinks": [\n      { "id": 11, "kind": "link", "value": "vless://...", "remark": "DE", "enable": true, "expiryTime": 0 },\n      { "id": 12, "kind": "subscription", "value": "https://provider.example/sub/abc", "remark": "Provider", "enable": false, "expiryTime": 1767225600000, "namePrefix": "[zjh] ", "lastFetchAt": 1767220000000, "lastFetchError": "" }\n    ]\n  }\n}',
+      },
+      {
+        method: 'GET',
         path: '/panel/api/clients/get/subId/:subId',
         summary: 'Fetch clients by subscription ID.',
         description:
@@ -1547,13 +1679,31 @@ export const sections: readonly Section[] = [
         method: 'POST',
         path: '/panel/api/clients/update/:email',
         summary:
-          'Update an existing client by email. Changes propagate to every attached inbound. Body is the JSON client payload — supply the full set of fields you want to keep (the server replaces the row, it does not patch).',
+          'Update an existing client by email. Changes propagate to every attached inbound. Body is the JSON client payload: omitted fields keep their current values, and an explicit zero, empty or null value clears a field, except as noted below.',
         description:
-          'The inbounds are applied concurrently and independently: one that fails no longer stops the others. Every inbound error names the inbound it came from (`inbound 7: <message>`), and several failures are reported together, one per line. So a `success:false` response can still have applied the edit to the remaining inbounds. The client record is written after the inbounds, so a failure there is reported without an `inbound <id>:` prefix and leaves the inbound edits in place.',
+          'An omitted `flow` leaves every attached inbound on its own flow. Send `"reverse": null` to remove the reverse tag. Credentials (`id`, `password`, `auth`, `secret`, `subId`) and WireGuard/AmneziaWG `allowedIPs` are never cleared: an empty value keeps the stored one. The inbounds are applied concurrently and independently: one that fails no longer stops the others. Every inbound error names the inbound it came from (`inbound 7: <message>`), and several failures are reported together, one per line. So a `success:false` response can still have applied the edit to the remaining inbounds. The client record is written after the inbounds, so a failure there is reported without an `inbound <id>:` prefix and leaves the inbound edits in place.',
         params: [
           {
             name: 'email',
             in: 'path',
+            type: 'string',
+            desc: 'Current client email (unique identifier).',
+          },
+        ],
+        body: '{\n  "email": "alice@example.com",\n  "totalGB": 107374182400,\n  "expiryTime": 1767225600000,\n  "limitHwid": 2,\n  "tgId": 123456789,\n  "enable": true\n}',
+        response: '{\n  "success": true,\n  "msg": "Client updated"\n}',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/clients/update',
+        summary:
+          'Update an existing client by email. Changes propagate to every attached inbound. Body is the JSON client payload: omitted fields keep their current values, and an explicit zero, empty or null value clears a field, except as noted below.',
+        description:
+          'Query-parameter alias for the path endpoint. Use email=. or email=.. to manage legacy reserved names without URL dot-segment normalization. An omitted `flow` leaves every attached inbound on its own flow. Send `"reverse": null` to remove the reverse tag. Credentials (`id`, `password`, `auth`, `secret`, `subId`) and WireGuard/AmneziaWG `allowedIPs` are never cleared: an empty value keeps the stored one. The inbounds are applied concurrently and independently: one that fails no longer stops the others. Every inbound error names the inbound it came from (`inbound 7: <message>`), and several failures are reported together, one per line. So a `success:false` response can still have applied the edit to the remaining inbounds. The client record is written after the inbounds, so a failure there is reported without an `inbound <id>:` prefix and leaves the inbound edits in place.',
+        params: [
+          {
+            name: 'email',
+            in: 'query',
             type: 'string',
             desc: 'Current client email (unique identifier).',
           },
@@ -1570,6 +1720,24 @@ export const sections: readonly Section[] = [
           'The inbounds are applied concurrently and independently: one that fails no longer stops the others. Every inbound error names the inbound it came from (`inbound 7: <message>`), and several failures are reported together, one per line. So a `success:false` response can still have removed the client from the remaining inbounds; the client record is kept in that case, so re-running the call retries exactly the leftovers. The record and traffic rows are dropped after the inbounds, so a failure there is reported without an `inbound <id>:` prefix and leaves the client already removed from every inbound.',
         params: [
           { name: 'email', in: 'path', type: 'string', desc: 'Client email (unique identifier).' },
+          {
+            name: 'keepTraffic',
+            in: 'query',
+            type: 'integer',
+            desc: 'Pass 1 to retain the xray_client_traffic row after deletion.',
+          },
+        ],
+        response: '{\n  "success": true,\n  "msg": "Client deleted"\n}',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/clients/del',
+        summary:
+          'Delete a client by email. Removes it from every attached inbound and drops its traffic record unless keepTraffic=1 is passed.',
+        description:
+          'Query-parameter alias for the path endpoint. Use email=. or email=.. to manage legacy reserved names without URL dot-segment normalization. The inbounds are applied concurrently and independently: one that fails no longer stops the others. Every inbound error names the inbound it came from (`inbound 7: <message>`), and several failures are reported together, one per line. So a `success:false` response can still have removed the client from the remaining inbounds; the client record is kept in that case, so re-running the call retries exactly the leftovers. The record and traffic rows are dropped after the inbounds, so a failure there is reported without an `inbound <id>:` prefix and leaves the client already removed from every inbound.',
+        params: [
+          { name: 'email', in: 'query', type: 'string', desc: 'Client email (unique identifier).' },
           {
             name: 'keepTraffic',
             in: 'query',
@@ -1781,7 +1949,7 @@ export const sections: readonly Section[] = [
         method: 'POST',
         path: '/panel/api/clients/bulkResetTraffic',
         summary:
-          'Zero up/down counters for many clients in one call. Loops the single-reset path so each client is re-enabled across its attached inbounds and pushed to Xray/remote nodes. Returns the count of successfully reset clients.',
+          'Zero up/down counters for many clients in one call. Loops the single-reset path so each client its quota had disabled is re-enabled across its attached inbounds and pushed to Xray/remote nodes; a client disabled by hand stays disabled. Returns the count of successfully reset clients.',
         body: '{\n  "emails": ["alice", "bob"]\n}',
         response: '{\n  "success": true,\n  "obj": {\n    "affected": 2\n  }\n}',
       },
@@ -1846,7 +2014,7 @@ export const sections: readonly Section[] = [
         method: 'POST',
         path: '/panel/api/clients/resetTraffic/:email',
         summary:
-          'Zero out a single client’s up/down counters. Re-enables the client across every attached inbound and pushes the change to Xray (or the remote node) so depleted users can connect again immediately.',
+          'Zero out a single client’s up/down counters. Re-enables a client its quota had disabled across every attached inbound and pushes the change to Xray (or the remote node) so depleted users can connect again immediately; a client disabled by hand stays disabled.',
         params: [{ name: 'email', in: 'path', type: 'string', desc: 'Client email.' }],
       },
       {
@@ -1874,27 +2042,45 @@ export const sections: readonly Section[] = [
         method: 'POST',
         path: '/panel/api/clients/hwids/:email',
         summary:
-          'List registered HWID devices for a client with a short fingerprint. Full hashes are not exposed.',
+          'List registered HWID devices for a client with a short fingerprint and a blocked flag. Bans are scoped to the subscription ID shared by the client. Full hashes are not exposed.',
         params: [{ name: 'email', in: 'path', type: 'string', desc: 'Client email.' }],
         response:
-          '{\n  "success": true,\n  "obj": [\n    {\n      "id": 1,\n      "firstSeen": 1735000000000,\n      "lastSeen": 1735100000000,\n      "userAgent": "Happ/1.0",\n      "deviceOs": "android",\n      "osVersion": "15",\n      "deviceModel": "Pixel 9",\n      "fingerprint": "6ad17c93e821"\n    }\n  ]\n}',
+          '{\n  "success": true,\n  "obj": [\n    {\n      "id": 1,\n      "blocked": false,\n      "firstSeen": 1735000000000,\n      "lastSeen": 1735100000000,\n      "userAgent": "Happ/1.0",\n      "deviceOs": "android",\n      "osVersion": "15",\n      "deviceModel": "Pixel 9",\n      "fingerprint": "6ad17c93e821"\n    }\n  ]\n}',
       },
       {
         method: 'DELETE',
         path: '/panel/api/clients/hwids/:email',
         summary:
-          'Clear all registered HWID devices for a client so new devices can register again.',
+          'Clear unblocked HWID registrations for a client so devices can register again. Blocked devices and their bans are preserved.',
         params: [{ name: 'email', in: 'path', type: 'string', desc: 'Client email.' }],
       },
       {
         method: 'DELETE',
         path: '/panel/api/clients/hwids/:email/:id',
         summary:
-          'Remove a single registered HWID device by its id, freeing one slot under the HWID limit.',
+          'Remove a single unblocked HWID device by its id, freeing one slot under the HWID limit. A blocked device must be unblocked before it can be removed.',
         params: [
           { name: 'email', in: 'path', type: 'string', desc: 'Client email.' },
           { name: 'id', in: 'path', type: 'number', desc: 'Device id, from the list endpoint.' },
         ],
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/clients/hwids/:email/:id/block',
+        summary:
+          'Block or unblock one device for the client subscription. Send an explicit boolean blocked value. A ban denies subscription bodies for that HWID even with limitHwid=0, does not consume a device slot, and survives clearing devices or changing the limit. It does not revoke copied credentials or identify requests with a different or missing HWID.',
+        params: [
+          { name: 'email', in: 'path', type: 'string', desc: 'Client email.' },
+          { name: 'id', in: 'path', type: 'number', desc: 'Device id, from the list endpoint.' },
+          {
+            name: 'blocked',
+            in: 'body (json)',
+            type: 'boolean',
+            desc: 'true to block the device, false to unblock it.',
+          },
+        ],
+        body: '{\n  "blocked": true\n}',
+        response: '{\n  "success": true,\n  "msg": "Updated successfully."\n}',
       },
       {
         method: 'POST',
@@ -2141,9 +2327,25 @@ export const sections: readonly Section[] = [
             name: 'bucket',
             in: 'path',
             type: 'number',
-            desc: 'Bucket size in seconds. Allowed: 2, 30, 60, 120, 180, 300.',
+            desc: 'Bucket size in seconds. Allowed: 2, 5, 30, 60, 180, 360, 720, 1440, 2880, 10080.',
           },
         ],
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/nodes/routing/apply',
+        summary:
+          'Push this panel’s shared node routing policy to the given nodes (Node Routing page). Each node stores the policy and re-applies its Xray so the rules take effect. Omit rules to use the stored policy; clear=true wipes the policy on the targets. Returns a per-node result list.',
+        body: '{\n  "nodeIds": [1, 2],\n  "rules": "[{ \\"type\\": \\"field\\", \\"network\\": \\"tcp\\", \\"port\\": 443, \\"outboundTag\\": \\"direct\\" }]",\n  "clear": false\n}',
+        response:
+          '{\n  "success": true,\n  "obj": [\n    { "nodeId": 1, "name": "de-1", "applied": true },\n    { "nodeId": 2, "name": "fr-1", "applied": false, "error": "node unreachable" }\n  ]\n}',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/nodes/routing/control',
+        summary:
+          'Master-only node endpoint: store (or clear with an empty payload) the routing policy a master panel pushed to this node, then re-apply Xray. Refused for panel users without a master push.',
+        body: '{\n  "rules": "[{ \\"type\\": \\"field\\", \\"outboundTag\\": \\"direct\\" }]"\n}',
       },
     ],
   },
@@ -3264,6 +3466,106 @@ export const sections: readonly Section[] = [
           'Delete a balancer by id (POST alias of DELETE for clients that cannot send DELETE).',
         params: [{ name: 'id', in: 'path', type: 'integer', desc: 'Balancer id.' }],
         responseSchema: 'SubBalancer',
+      },
+    ],
+  },
+
+  {
+    id: 'chain-proxies',
+    title: 'Chain Proxies',
+    description:
+      "Upstream SOCKS/HTTP proxies a subscriber's client dials before reaching this panel's inbound (a client-side proxy chain, not a panel outbound). The JSON subscription emits each hop as an outbound and points the endpoint at it through streamSettings.sockopt.dialerProxy; the Mihomo subscription emits it as a proxy and sets the endpoint's dialer-proxy. Raw links and the legacy Clash output cannot express a hop, so inbounds assigned a chain are omitted from them.",
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/chain-proxies',
+        summary: 'List all chain proxies by id.',
+        responseSchema: 'ChainProxy',
+        responseSchemaArray: true,
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/chain-proxies',
+        summary: 'Create a chain proxy.',
+        params: chainProxyBodyParams,
+        responseSchema: 'ChainProxy',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/chain-proxies/:id',
+        summary:
+          'Update a chain proxy by id. Accepts the same form fields as create (full-row update); omitting enabled keeps its current value.',
+        params: [
+          { name: 'id', in: 'path', type: 'integer', desc: 'Chain proxy id.' },
+          ...chainProxyBodyParams,
+        ],
+        responseSchema: 'ChainProxy',
+      },
+      {
+        method: 'DELETE',
+        path: '/panel/api/chain-proxies/:id',
+        summary:
+          'Delete a chain proxy by id. Every selector drops it from its members, and an inbound assigned it directly reverts to a direct connection.',
+        params: [{ name: 'id', in: 'path', type: 'integer', desc: 'Chain proxy id.' }],
+        responseSchema: 'ChainProxy',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/chain-proxies/:id/del',
+        summary:
+          'Delete a chain proxy by id (POST alias of DELETE for clients that cannot send DELETE).',
+        params: [{ name: 'id', in: 'path', type: 'integer', desc: 'Chain proxy id.' }],
+        responseSchema: 'ChainProxy',
+      },
+    ],
+  },
+
+  {
+    id: 'chain-selectors',
+    title: 'Chain Selectors',
+    description:
+      'Groups of chain proxies so a client picks its entry hop by strategy. An inbound names either one chain proxy or one selector. A selector with several usable hops emits one endpoint copy per hop plus a routing balancer in the JSON subscription, and one mihomo proxy group (url-test for leastPing, load-balance otherwise).',
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/chain-selectors',
+        summary: 'List all chain selectors by id.',
+        responseSchema: 'ChainSelector',
+        responseSchemaArray: true,
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/chain-selectors',
+        summary: 'Create a chain selector.',
+        params: chainSelectorBodyParams,
+        responseSchema: 'ChainSelector',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/chain-selectors/:id',
+        summary:
+          'Update a chain selector by id. Accepts the same form fields as create (full-row update); omitting enabled keeps its current value.',
+        params: [
+          { name: 'id', in: 'path', type: 'integer', desc: 'Chain selector id.' },
+          ...chainSelectorBodyParams,
+        ],
+        responseSchema: 'ChainSelector',
+      },
+      {
+        method: 'DELETE',
+        path: '/panel/api/chain-selectors/:id',
+        summary:
+          'Delete a chain selector by id. Every inbound assigned it reverts to a direct connection.',
+        params: [{ name: 'id', in: 'path', type: 'integer', desc: 'Chain selector id.' }],
+        responseSchema: 'ChainSelector',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/chain-selectors/:id/del',
+        summary:
+          'Delete a chain selector by id (POST alias of DELETE for clients that cannot send DELETE).',
+        params: [{ name: 'id', in: 'path', type: 'integer', desc: 'Chain selector id.' }],
+        responseSchema: 'ChainSelector',
       },
     ],
   },

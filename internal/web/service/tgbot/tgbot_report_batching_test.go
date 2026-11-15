@@ -292,9 +292,8 @@ func TestServerUsageInfoShowsUnavailableMetrics(t *testing.T) {
 	bundle := i18n.NewBundle(language.English)
 	_ = bundle.AddMessages(language.English, &i18n.Message{ID: "tgbot.messages.serverUpTime", Other: "Uptime: {{.UpTime}} {{.Unit}}\n"}, &i18n.Message{ID: "tgbot.days", Other: "days"})
 	_ = bundle.AddMessages(language.English, &i18n.Message{ID: "tgbot.messages.traffic", Other: "Traffic: {{.Total}}\n"}, &i18n.Message{ID: "pages.settings.networkTrafficUnavailable", Other: "NETWORK UNAVAILABLE"})
-	oldLocale := locale.LocalizerBot
-	locale.LocalizerBot = i18n.NewLocalizer(bundle, "en")
-	t.Cleanup(func() { locale.LocalizerBot = oldLocale })
+	oldLocale := locale.SwapBotLocalizer(i18n.NewLocalizer(bundle, "en"))
+	t.Cleanup(func() { locale.SwapBotLocalizer(oldLocale) })
 	statusCache.mutex.Lock()
 	oldStatus, oldTime := statusCache.data, statusCache.timestamp
 	statusCache.mutex.Unlock()

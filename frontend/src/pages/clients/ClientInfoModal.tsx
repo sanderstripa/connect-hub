@@ -1,7 +1,7 @@
 import InfinityIcon from '@/components/ui/InfinityIcon';
 import DetailSurface from '@/components/layout/DetailSurface';
 import { CLIENT_GROUPS_UI_ENABLED } from '@/lib/client-groups-ui';
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Divider, Modal, Popover, Tag, Tooltip, message } from 'antd';
 import {
@@ -25,6 +25,7 @@ import ClientHwidListModal from '@/components/clients/ClientHwidList';
 import ConfigBlock from '@/components/clients/ConfigBlock';
 import {
   buildWireguardClientConfig,
+  buildWireguardVkTurnLink,
   findWireguardInbounds,
   isWireguardClient,
 } from './wireguardConfig';
@@ -132,9 +133,11 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
     hwidsLoading,
     hwidsClearing,
     deletingHwidId,
+    blockingHwidId,
     loadHwids,
     clearHwids,
     deleteHwid,
+    setHwidBlocked,
     resetHwids,
   } = useClientHwids(client?.email);
   const [hwidsModalOpen, setHwidsModalOpen] = useState(false);
@@ -207,6 +210,7 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
           inbound: ib,
           endpoint: tunnelEndpointLabel(ep),
           text: buildWireguardClientConfig(client, ib, host, publicHost, address, ep),
+          vkLink: buildWireguardVkTurnLink(client, ib, host, publicHost, address, ep),
         }));
       })
       .filter((c) => !!c.text);
@@ -804,7 +808,7 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
             {wgConfigs.length > 0 && client && (
               <>
                 <Divider>{t('pages.clients.wireguardConfig')}</Divider>
-                {wgConfigs.map(({ inbound, endpoint, text }) => {
+                {wgConfigs.map(({ inbound, endpoint, text, vkLink }) => {
                   const meta = formatTunnelConfigMeta(
                     inbound,
                     client.email,
@@ -812,14 +816,24 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
                     endpoint,
                   );
                   return (
-                    <ConfigBlock
-                      key={`wg-${inbound.id}-${endpoint}`}
-                      label={meta.label || t('pages.clients.config')}
-                      text={text}
-                      fileName={meta.fileName}
-                      qrRemark={meta.qrRemark}
-                      tagColor="cyan"
-                    />
+                    <Fragment key={`wg-${inbound.id}-${endpoint}`}>
+                      <ConfigBlock
+                        label={meta.label || t('pages.clients.config')}
+                        text={text}
+                        fileName={meta.fileName}
+                        qrRemark={meta.qrRemark}
+                        tagColor="cyan"
+                      />
+                      {vkLink && (
+                        <ConfigBlock
+                          label={t('pages.xray.wireguard.vkTurnProfile')}
+                          text={vkLink}
+                          fileName={meta.fileName.replace(/\.conf$/, '-vk.txt')}
+                          qrRemark={meta.qrRemark}
+                          tagColor="blue"
+                        />
+                      )}
+                    </Fragment>
                   );
                 })}
               </>
@@ -917,10 +931,12 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
         loading={hwidsLoading}
         clearing={hwidsClearing}
         deletingId={deletingHwidId}
+        blockingId={blockingHwidId}
         formatDate={dateLabel}
         onRefresh={loadHwids}
         onClearAll={clearHwids}
         onDelete={deleteHwid}
+        onSetBlocked={setHwidBlocked}
         onClose={() => setHwidsModalOpen(false)}
       />
     </>

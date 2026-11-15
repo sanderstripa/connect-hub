@@ -31,6 +31,7 @@ export type DBInboundInit = Partial<{
   expiryTime: number;
   trafficReset: string;
   trafficResetDay: number;
+  preserveClientTraffic: boolean;
   lastTrafficResetTime: number;
   listen: string;
   port: number;
@@ -46,6 +47,8 @@ export type DBInboundInit = Partial<{
   subSortIndex: number;
   excludeFromSub: boolean;
   disableFlow: boolean;
+  chainProxyId: number;
+  chainSelectorId: number;
   originNodeGuid: string;
   fallbackParent: FallbackParentRef | null;
 }>;
@@ -80,6 +83,7 @@ export class DBInbound {
   expiryTime: number;
   trafficReset: string;
   trafficResetDay: number;
+  preserveClientTraffic: boolean;
   lastTrafficResetTime: number;
 
   listen: string;
@@ -96,6 +100,8 @@ export class DBInbound {
   subSortIndex: number;
   excludeFromSub: boolean;
   disableFlow: boolean;
+  chainProxyId: number;
+  chainSelectorId: number;
   originNodeGuid: string;
   fallbackParent: FallbackParentRef | null;
 
@@ -112,6 +118,7 @@ export class DBInbound {
     this.expiryTime = 0;
     this.trafficReset = 'never';
     this.trafficResetDay = 1;
+    this.preserveClientTraffic = false;
     this.lastTrafficResetTime = 0;
 
     this.listen = '';
@@ -128,6 +135,8 @@ export class DBInbound {
     this.subSortIndex = 1;
     this.excludeFromSub = false;
     this.disableFlow = false;
+    this.chainProxyId = 0;
+    this.chainSelectorId = 0;
     this.originNodeGuid = '';
     this.fallbackParent = null;
     if (data == null) {

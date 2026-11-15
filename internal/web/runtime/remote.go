@@ -22,6 +22,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/crypto/nodetoken"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
+	"github.com/mhsanaei/3x-ui/v3/internal/util/json_util"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/netsafe"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/wirecodec"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/entity"
@@ -97,6 +98,8 @@ type Remote struct {
 	capsSeen          bool
 	supportsAWGKernel bool
 	supportsAWGPing   bool
+	// Parsed capability names negotiated from the node response header.
+	nodeCaps []string
 
 	// Per-node client honoring the TLS verify mode, built once and reused; a
 	// node config change drops the cached Remote so the next one rebuilds it.
@@ -137,10 +140,19 @@ func (r *Remote) nodeSupportsZstd() bool {
 // recordCaps learns the node's capabilities from a response header so later
 // pushes can use the negotiated envelope.
 func (r *Remote) recordCaps(h http.Header) {
-	caps := strings.Split(h.Get(wirecodec.CapsHeader), ",")
+	raw := strings.TrimSpace(h.Get(wirecodec.CapsHeader))
+	caps := []string{}
+	if raw != "" {
+		for _, token := range strings.Split(raw, ",") {
+			if token = strings.TrimSpace(token); token != "" {
+				caps = append(caps, token)
+			}
+		}
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.capsSeen = true
+	r.nodeCaps = caps
 	r.supportsAWGPing = slices.Contains(caps, wirecodec.CapAWGPing)
 	r.supportsAWGKernel = slices.Contains(caps, wirecodec.CapAmneziaWGKernel)
 	if slices.Contains(caps, wirecodec.CapZstd) {
@@ -172,19 +184,44 @@ func (r *Remote) requireAmneziaWGKernel(ctx context.Context, ib *model.Inbound) 
 	if err := json.Unmarshal([]byte(ib.Settings), &settings); err != nil || settings.Server == nil || !settings.Server.KernelMode {
 		return nil
 	}
-	r.mu.RLock()
-	seen := r.capsSeen
-	r.mu.RUnlock()
-	if !seen {
-		if err := r.refreshRemoteIDs(ctx); err != nil {
-			return err
-		}
+	supported, err := r.nodeSupports(ctx, wirecodec.CapAmneziaWGKernel)
+	if err != nil {
+		return err
 	}
-	r.mu.RLock()
-	supported := r.supportsAWGKernel
-	r.mu.RUnlock()
 	if !supported {
 		return fmt.Errorf("node %s does not support AmneziaWG kernel mode; upgrade its panel or switch the inbound to the embedded datapath", r.node.Name)
+	}
+	return nil
+}
+
+func (r *Remote) nodeSupports(ctx context.Context, capability string) (bool, error) {
+	r.mu.RLock()
+	caps := r.nodeCaps
+	r.mu.RUnlock()
+	if caps == nil {
+		if err := r.refreshRemoteIDs(ctx); err != nil {
+			return false, err
+		}
+		r.mu.RLock()
+		caps = r.nodeCaps
+		r.mu.RUnlock()
+	}
+	return slices.Contains(caps, capability), nil
+}
+
+func (r *Remote) checkInboundCapabilities(ctx context.Context, ib *model.Inbound) error {
+	if err := r.requireAmneziaWGKernel(ctx, ib); err != nil {
+		return err
+	}
+	if !ib.PreservesClientTraffic() || ib.TrafficReset == "" || ib.TrafficReset == "never" {
+		return nil
+	}
+	supported, err := r.nodeSupports(ctx, wirecodec.CapPreserveClientTraffic)
+	if err != nil {
+		return err
+	}
+	if !supported {
+		return fmt.Errorf("node %s does not support inbound-only scheduled traffic resets; upgrade its panel before enabling this option", r.node.Name)
 	}
 	return nil
 }
@@ -343,6 +380,7 @@ func (r *Remote) do(ctx context.Context, method, path string, body any) (*envelo
 		return nil, fmt.Errorf("decode envelope: %w", err)
 	}
 	if !env.Success {
+		env.Msg = truncateNodeMessage(env.Msg)
 		return &env, &remoteAPIError{msg: env.Msg}
 	}
 	return &env, nil
@@ -438,8 +476,8 @@ func (r *Remote) ListInboundOptions(ctx context.Context) ([]RemoteInboundOption,
 	if err != nil {
 		return nil, err
 	}
-	var list []RemoteInboundOption
-	if err := json.Unmarshal(env.Obj, &list); err != nil {
+	list, err := json_util.DecodeCappedList[RemoteInboundOption](env.Obj, maxNodeInbounds)
+	if err != nil {
 		return nil, fmt.Errorf("decode inbound list: %w", err)
 	}
 	return list, nil
@@ -450,11 +488,11 @@ func (r *Remote) refreshRemoteIDs(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	var list []struct {
+	list, err := json_util.DecodeCappedList[struct {
 		Id  int    `json:"id"`
 		Tag string `json:"tag"`
-	}
-	if err := json.Unmarshal(env.Obj, &list); err != nil {
+	}](env.Obj, maxNodeInbounds)
+	if err != nil {
 		return fmt.Errorf("decode inbound list: %w", err)
 	}
 	next := make(map[string]int, len(list))
@@ -483,7 +521,7 @@ func (r *Remote) refreshRemoteIDs(ctx context.Context) error {
 }
 
 func (r *Remote) AddInbound(ctx context.Context, ib *model.Inbound) error {
-	if err := r.requireAmneziaWGKernel(ctx, ib); err != nil {
+	if err := r.checkInboundCapabilities(ctx, ib); err != nil {
 		return err
 	}
 	payload := wireInbound(ib, r.node.Id)
@@ -513,7 +551,7 @@ func (r *Remote) DelInbound(ctx context.Context, ib *model.Inbound) error {
 	if _, err := r.do(ctx, http.MethodPost, "panel/api/inbounds/del/"+strconv.Itoa(id), nil); err != nil {
 		return err
 	}
-	r.cacheDel(ib.Tag)
+	r.ForgetInbound(ib.Tag)
 	return nil
 }
 
@@ -522,7 +560,7 @@ func (r *Remote) UpdateInbound(ctx context.Context, oldIb, newIb *model.Inbound)
 	if err != nil {
 		return r.AddInbound(ctx, newIb)
 	}
-	if err := r.requireAmneziaWGKernel(ctx, newIb); err != nil {
+	if err := r.checkInboundCapabilities(ctx, newIb); err != nil {
 		return err
 	}
 	payload := wireInbound(newIb, r.node.Id)
@@ -544,6 +582,16 @@ func (r *Remote) SetInboundSubSortIndex(ctx context.Context, ib *model.Inbound, 
 	}
 	payload := url.Values{"subSortIndex": []string{strconv.Itoa(index)}}
 	_, err = r.do(ctx, http.MethodPost, "panel/api/inbounds/"+strconv.Itoa(id)+"/subSortIndex", payload)
+	return err
+}
+
+// PushRoutingRules applies the master's node routing policy on the node: rules
+// is a JSON array of Xray routing rules, or "" to clear the policy. The node
+// stores it and re-applies its Xray, so the change survives node restarts.
+func (r *Remote) PushRoutingRules(ctx context.Context, rules string) error {
+	_, err := r.do(ctx, http.MethodPost, "panel/api/nodes/routing/control", map[string]any{
+		"rules": rules,
+	})
 	return err
 }
 
@@ -594,6 +642,23 @@ func (r *Remote) ForgetPushedInbound(tag string) {
 	delete(r.pushedFP, bare)
 	delete(r.pushedFP, prefix+bare)
 	r.mu.Unlock()
+}
+
+// ForgetInbound drops everything kept under an inbound the node no longer has, in either
+// tag form: a node rotating tags would otherwise grow these maps without bound.
+func (r *Remote) ForgetInbound(tag string) {
+	prefix := nodeInboundTagPrefix(r.node.Id)
+	bare := strings.TrimPrefix(tag, prefix)
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, t := range []string{bare, prefix + bare} {
+		if alias, ok := r.adoptedAliases[t]; ok {
+			delete(r.remoteIDByTag, alias)
+			delete(r.adoptedAliases, t)
+		}
+		delete(r.remoteIDByTag, t)
+		delete(r.pushedFP, t)
+	}
 }
 
 // AdoptInboundAlias records a deployed alias without mutating either panel.
@@ -771,11 +836,9 @@ func (r *Remote) GetDescendants(ctx context.Context) ([]model.NodeSummary, error
 	if err != nil {
 		return nil, err
 	}
-	var out []model.NodeSummary
-	if len(env.Obj) > 0 {
-		if err := json.Unmarshal(env.Obj, &out); err != nil {
-			return nil, fmt.Errorf("decode descendants: %w", err)
-		}
+	out, err := json_util.DecodeCappedList[model.NodeSummary](env.Obj, maxNodeDescendants)
+	if err != nil {
+		return nil, fmt.Errorf("decode descendants: %w", err)
 	}
 	return out, nil
 }
@@ -834,11 +897,9 @@ func (r *Remote) FetchHostGroups(ctx context.Context) ([]*entity.HostGroup, erro
 	if err != nil {
 		return nil, err
 	}
-	var groups []*entity.HostGroup
-	if len(env.Obj) > 0 {
-		if err := json.Unmarshal(env.Obj, &groups); err != nil {
-			return nil, fmt.Errorf("decode host groups: %w", err)
-		}
+	groups, err := json_util.DecodeCappedList[*entity.HostGroup](env.Obj, maxNodeHostGroups)
+	if err != nil {
+		return nil, fmt.Errorf("decode host groups: %w", err)
 	}
 	return groups, nil
 }
@@ -850,7 +911,7 @@ func (r *Remote) FetchTrafficSnapshot(ctx context.Context) (*TrafficSnapshot, er
 	if err != nil {
 		return nil, err
 	}
-	if err := json.Unmarshal(envList.Obj, &snap.Inbounds); err != nil {
+	if snap.Inbounds, err = json_util.DecodeCappedList[*model.Inbound](envList.Obj, maxNodeInbounds); err != nil {
 		return nil, fmt.Errorf("decode inbound list: %w", err)
 	}
 
@@ -858,14 +919,14 @@ func (r *Remote) FetchTrafficSnapshot(ctx context.Context) (*TrafficSnapshot, er
 	// node is an old build without the per-GUID endpoint (#4983).
 	envTree, err := r.do(ctx, http.MethodPost, "panel/api/clients/onlinesByGuid", nil)
 	if err == nil && len(envTree.Obj) > 0 {
-		_ = json.Unmarshal(envTree.Obj, &snap.OnlineTree)
+		_ = decodeCappedValues(envTree.Obj, &snap.OnlineTree, maxNodeMapValues)
 	}
 	if len(snap.OnlineTree) == 0 {
 		envOnlines, err := r.do(ctx, http.MethodPost, "panel/api/clients/onlines", nil)
 		if err != nil {
 			logger.Warning("remote", r.node.Name, "onlines fetch failed:", err)
 		} else if len(envOnlines.Obj) > 0 {
-			_ = json.Unmarshal(envOnlines.Obj, &snap.OnlineEmails)
+			_ = decodeCappedValues(envOnlines.Obj, &snap.OnlineEmails, maxNodeMapValues)
 		}
 	}
 
@@ -873,14 +934,14 @@ func (r *Remote) FetchTrafficSnapshot(ctx context.Context) (*TrafficSnapshot, er
 	if err != nil {
 		logger.Warning("remote", r.node.Name, "lastOnline fetch failed:", err)
 	} else if len(envLastOnline.Obj) > 0 {
-		_ = json.Unmarshal(envLastOnline.Obj, &snap.LastOnlineMap)
+		_ = decodeCappedValues(envLastOnline.Obj, &snap.LastOnlineMap, maxNodeMapValues)
 	}
 
 	envActiveInbounds, err := r.do(ctx, http.MethodPost, "panel/api/clients/activeInbounds", nil)
 	if err != nil {
 		logger.Debugf("remote %s active inbounds fetch failed: %v", r.node.Name, err)
 	} else if len(envActiveInbounds.Obj) > 0 {
-		_ = json.Unmarshal(envActiveInbounds.Obj, &snap.ActiveInboundTree)
+		_ = decodeCappedValues(envActiveInbounds.Obj, &snap.ActiveInboundTree, maxNodeMapValues)
 	}
 
 	return snap, nil
@@ -934,6 +995,7 @@ func wireInbound(ib *model.Inbound, remoteNodeID int) url.Values {
 	if ib.TrafficResetDay > 0 {
 		v.Set("trafficResetDay", strconv.Itoa(ib.TrafficResetDay))
 	}
+	v.Set("preserveClientTraffic", strconv.FormatBool(ib.PreservesClientTraffic()))
 	return v
 }
 
@@ -1010,11 +1072,9 @@ func (r *Remote) FetchAllClientIps(ctx context.Context) ([]model.InboundClientIp
 	if err != nil {
 		return nil, err
 	}
-	var ips []model.InboundClientIps
-	if len(env.Obj) > 0 {
-		if err := json.Unmarshal(env.Obj, &ips); err != nil {
-			return nil, fmt.Errorf("decode client ips: %w", err)
-		}
+	ips, err := json_util.DecodeCappedList[model.InboundClientIps](env.Obj, maxNodeClientIPs)
+	if err != nil {
+		return nil, fmt.Errorf("decode client ips: %w", err)
 	}
 	return ips, nil
 }
@@ -1035,7 +1095,7 @@ func (r *Remote) FetchClientIpsByGuid(ctx context.Context) (map[string]map[strin
 	}
 	out := map[string]map[string][]model.ClientIpEntry{}
 	if len(env.Obj) > 0 {
-		if err := json.Unmarshal(env.Obj, &out); err != nil {
+		if err := decodeCappedValues(env.Obj, &out, maxNodeMapValues); err != nil {
 			return nil, fmt.Errorf("decode client ips by guid: %w", err)
 		}
 	}

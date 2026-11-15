@@ -10,6 +10,7 @@
   "create": "Oluştur",
   "add": "Ekle",
   "remove": "Kaldır",
+  "removeItem": "{item} öğesini kaldır",
   "update": "Güncelle",
   "copy": "Kopyala",
   "copied": "Kopyalandı",
@@ -39,6 +40,7 @@
   "indefinite": "Belirsiz",
   "unlimited": "Sınırsız",
   "none": "Yok",
+  "empty": "Boş",
   "qrCode": "QR Kod",
   "info": "Daha Fazla Bilgi",
   "edit": "Düzenle",
@@ -46,6 +48,7 @@
   "reset": "Sıfırla",
   "noData": "Veri yok.",
   "copySuccess": "Başarıyla kopyalandı",
+  "copyFail": "Kopyalama başarısız",
   "sure": "Emin misiniz?",
   "encryption": "Şifreleme",
   "transmission": "İletim",
@@ -128,7 +131,8 @@
     "subFormats": "Abonelik Formatları",
     "connections": "Connections",
     "tunnels": "Tüneller",
-    "assistant": "AI Assistant"
+    "assistant": "AI Assistant",
+    "nodeRouting": "Node Routing"
   },
   "pages": {
     "logs": {
@@ -380,6 +384,11 @@
       "xrayStatus": "Xray",
       "stopXray": "Durdur",
       "restartXray": "Yeniden Başlat",
+      "startXray": "Başlat",
+      "stopXrayDisabledHint": "Xray çalışmıyor",
+      "stopXrayConfirmTitle": "Xray durdurulsun mu?",
+      "stopXrayConfirmContent": "Xray'i durdurmak tüm proxy bağlantılarını anında keser. Devam etmek istediğinizden emin misiniz?",
+      "stopXrayConfirmOk": "Xray'i durdur",
       "xraySwitch": "Sürüm",
       "xrayUpdates": "Xray Güncellemeleri",
       "xraySwitchClickDesk": "Dikkatli seçin, eski sürümler mevcut yapılandırmalarla uyumlu olmayabilir.",
@@ -469,7 +478,7 @@
       "geodataConfirmTitle": "Geodata ayarları kaydedilsin mi?",
       "geodataConfirmContent": "Xray yapılandırma şablonu güncellenecek ve Xray yeniden başlatılacak.",
       "geodataInvalidUrl": "Her dosya için bir HTTPS URL gerekir.",
-      "geodataInvalidFile": "Dosya adı yalnızca dosya adı olmalıdır, örn. geosite_custom.dat (yol içermemeli).",
+      "geodataInvalidFile": "Dosya adı yalnızca .dat uzantılı bir dosya adı olmalıdır, örn. geosite_custom.dat (yol içermemeli).",
       "geodataInvalidCron": "Cron 5 alandan oluşmalıdır, örn. 0 4 * * *",
       "geodataEmpty": "Yapılandırılmış dosya yok. Yönlendirme kurallarında dosyalar ext:geosite_custom.dat:category olarak kullanılır.",
       "dontRefresh": "Kurulum devam ediyor, lütfen bu sayfayı yenilemeyin",
@@ -555,7 +564,9 @@
         "pickInbound": "Bir Gelen Bağlantı Seç",
         "matchAny": "herhangi",
         "destPlaceholder": "otomatik (child listen:port)",
-        "needsTls": "Geri düşüşler (fallback), Güvenlik sekmesinde TLS veya Reality seçildiğinde kullanılabilir olur (yalnızca RAW üzerinde VLESS/Trojan)."
+        "needsTls": "Geri düşüşler (fallback), Güvenlik sekmesinde TLS veya Reality seçildiğinde kullanılabilir olur (yalnızca RAW üzerinde VLESS/Trojan).",
+        "decryptionConflict": "Fallback, etkin sunucu tarafı VLESS şifre çözme ile kullanılamaz. Şifre çözmeyi etkinleştirmeden önce fallback kurallarını silip kaydedin veya şifre çözmeyi kapatın.",
+        "saveFailed": "Fallback kuralları yüklenemedi veya kaydedilemedi. Taslak açık kaldı; hatayı kontrol edip tekrar deneyin."
       },
       "protocol": "Protokol",
       "port": "Port",
@@ -676,6 +687,8 @@
       "importInbound": "Gelen Bağlantı İçe Aktar",
       "periodicTrafficResetTitle": "Trafik Sıfırlama",
       "periodicTrafficResetDay": "Aylık sıfırlama günü",
+      "preserveClientTraffic": "İstemci kullanımını koru",
+      "preserveClientTrafficHelp": "Zamanlanmış sıfırlama yalnızca bu gelen bağlantının sayaçlarını temizler. İstemciler kendi sıfırlama takvimlerini izler.",
       "periodicTrafficReset": {
         "never": "Asla",
         "daily": "Günlük",
@@ -713,7 +726,9 @@
         "invalidClientField": "Kullanıcı {client}: {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "TLS sertifikası {index}: {reason}",
-        "moreIssues": "{message}  (+{count} tane daha)"
+        "moreIssues": "{message}  (+{count} tane daha)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "moveUp": "Yukarı Taşı",
@@ -983,6 +998,14 @@
           "clientId": "Client ID",
           "clientSecret": "Client Secret",
           "refreshToken": "Refresh Token",
+          "accessKeyId": "Erişim anahtarı kimliği",
+          "secretAccessKey": "Gizli erişim anahtarı",
+          "sessionToken": "Oturum belirteci",
+          "s3Endpoint": "Uç nokta",
+          "s3Region": "Bölge",
+          "s3Bucket": "Bucket",
+          "s3PathStyle": "Yol tarzı adresleme",
+          "s3PathStyleDesc": "Açık: bucket URL yoluna yazılır. Kapalı: ana bilgisayar adına yazılır, bu da DNS uç noktası gerektirir.",
           "secrets": "Gizli değerler",
           "secretsDesc": "Şablonun {secret0}, {secret1}, … olarak okuduğu değerler",
           "template": "Depolama şablonu",
@@ -1008,7 +1031,7 @@
         "autoSystemDnsToGateway": "Sistem DNS'ini ağ geçidine yönlendir",
         "autoSystemDnsToGatewayTooltip": "Yalnızca Linux: sistem sorguları Xray üzerinden gitsin diye systemd-resolved'ı TUN ağ geçidine yönlendirir. Ağ geçidi gerekir ve bu başarısız olursa TUN başlamaz.",
         "autoSystemWfpBlockLeak": "Sızıntıları engelle (WFP)",
-        "autoSystemWfpBlockLeakTooltip": "Yalnızca Windows, Auto system routes ile: dns, DNS'i TUN içinde tutar (DNS sunucuları gerekir); misconfigtun, hiçbir rotanın TUN'a göndermediği IP sürümünü engeller.",
+        "autoSystemWfpBlockLeakTooltip": "Yalnızca Windows, Auto system routes ile: all, TUN dışındaki her şeyi engeller; allexceptlan aynısını yapar ama yerel ağı erişilebilir bırakır; dns, DNS'i (53 ve 853 portları ile DNS İstemcisi hizmeti) TUN içinde tutar; windnsclient yalnızca o hizmeti kapsar; tcp, udp ve icmp protokolün tamamını engeller; belirli portlar için tcp/PORT, udp/PORT, yalnızca PORT veya ALT-ÜST aralığı yazın; başa eklenen bir CIDR (1.1.1.0/24:53, [::/0]:all) değeri o adreslerle sınırlar; misconfigtun, hiçbir rotanın TUN'a göndermediği IP sürümünü engeller. 53 numaralı portu kapsayan her değer için DNS sunucuları gerekir.",
         "maxVersion": "Maksimum sürüm",
         "headerName": "Başlık adı",
         "headerValue": "Başlık değeri",
@@ -1043,7 +1066,11 @@
         "finderNone": "Hiçbir hedef geçmedi. Daha geniş bir kapsam deneyin.",
         "finderReport": "Rapor",
         "finderCommandError": "Komut oluşturulamadı",
-        "finderExpired": "Bu komutun süresi doldu. Yeni bir tane oluşturun."
+        "finderExpired": "Bu komutun süresi doldu. Yeni bir tane oluşturun.",
+        "chainNone": "Doğrudan bağlantı",
+        "chainSelectorSuffix": "seçici",
+        "chain": "İstemci zinciri",
+        "chainHelp": "İstemci bu inbound'a üst bir SOCKS/HTTP proxy üzerinden bağlansın. JSON ve Mihomo abonelikleri için geçerlidir."
       },
       "info": {
         "mode": "Mod",
@@ -1092,8 +1119,19 @@
           "failed": "Yedekler kaydedilemedi",
           "switchFailed": "Geçilemedi: hedef denetimi veya gerçek REALITY testini geçemedi",
           "switched": "{target} hedefine geçildi"
-        }
-      }
+        },
+        "saveFailed": "Unable to save REALITY monitoring settings"
+      },
+      "changeIdInvalid": "The new ID is unavailable ({reason}).",
+      "changeIdUnchanged": "The ID is unchanged.",
+      "changeIdRoutingRefs": "{count} routing rule(s) point at the current ID and will be updated.",
+      "changeIdNodeConflict": "The hosting node already has an inbound with this name.",
+      "changeIdValid": "The new ID is available.",
+      "changeIdTitle": "Change inbound ID — {tag}",
+      "changeIdApply": "Apply",
+      "changeIdDesc": "Changing the inbound ID updates every routing rule and node reference that points at the current ID. The check below runs before anything is saved.",
+      "changeIdLabel": "New inbound ID (tag)",
+      "changeId": "Change ID"
     },
     "clients": {
       "columns": "Sütunlar",
@@ -1164,7 +1202,13 @@
       "deleteHwid": "Cihazı kaldır",
       "deleteHwidConfirm": "Bu cihaz kaldırılsın mı? Bir sonraki abonelik alımında yeniden kaydolması gerekecek.",
       "hwidDeleted": "Cihaz kaldırıldı.",
-      "clearHwidsConfirm": "Kayıtlı tüm cihazlar kaldırılsın mı? Her cihazın bir sonraki abonelik alımında yeniden kaydolması gerekecek.",
+      "blockHwid": "Engelle",
+      "unblockHwid": "Engeli kaldır",
+      "hwidBlocked": "Engellendi",
+      "blockHwidConfirm": "Bu cihazın bu aboneliği alması engellensin mi?",
+      "unblockHwidConfirm": "Bu cihazın bu aboneliği tekrar almasına izin verilsin mi?",
+      "hwidBlockHint": "Cihaz engelleri, HWID sınırı 0 olsa bile bu abonelik için geçerlidir. Listeyi temizlemek engelleri kaldırmaz.",
+      "clearHwidsConfirm": "Engellenmemiş tüm cihazlar kaldırılsın mı? Sonraki abonelik alımında yeniden kaydolurlar. Engellenen cihazlar engelli kalır.",
       "limitIpFail2banMissing": "Fail2ban yüklü değil, bu nedenle IP sınırı uygulanamaz. Bu seçeneği etkinleştirmek için x-ui bash menüsünden Fail2ban'ı yükleyin.",
       "limitIpFail2banWindows": "Fail2ban Windows'ta kullanılamadığından IP sınırı uygulanamaz.",
       "limitIpDisabled": "IP sınırı özelliği bu sunucuda devre dışı.",
@@ -1174,6 +1218,7 @@
       "subIdDesc": "Bu istemcinin Telegram botu davet kodu olarak da kullanılır: bunu bota gönderen kişi bu istemciye bağlanır. Uzun ve rastgele tutun — kısa veya tahmin edilebilir bir kimlik başkası tarafından sahiplenilebilir.",
       "online": "Çevrimiçi",
       "email": "E-posta",
+      "emailReservedName": "İstemci adı yalnızca \".\" veya \"..\" olamaz",
       "emailInvalidChars": "E-posta boşluk, '/', '\\' veya kontrol karakterleri içeremez",
       "subIdInvalidChars": "Abonelik kimliği boşluk, '/', '\\' veya kontrol karakterleri içeremez",
       "group": "Grup",
@@ -1537,7 +1582,7 @@
       "tlsPin": "Sertifikayı Sabitle (SHA-256)",
       "tlsSkip": "Doğrulamayı Atla",
       "tlsMtls": "Karşılıklı TLS (istemci sertifikası)",
-      "mtlsFormHint": "Bu düğüm, paneli bir istemci sertifikasıyla doğrular. Düğüm mTLS bölümünden bu panelin CA’sını düğüme kopyalayın, güvenilen CA’sını ayarlayın ve ardından düğümü yeniden başlatın.",
+      "mtlsFormHint": "Bu düğüm, paneli bir istemci sertifikasıyla doğrular. Düğüm mTLS bölümünden bu panelin CA’sını düğüme kopyalayın, güvenilen CA’sını ayarlayın ve ardından düğümü yeniden başlatın. Bu düğümün panelini buradan güncellemek için yine de node-admin kapsamlı bir API belirteci gerekir.",
       "mtls": {
         "title": "Düğüm mTLS",
         "intro": "Karşılıklı TLS, düğümler arası çağrılarda API belirtecinin yanına bir istemci sertifikası faktörü ekler. İsteğe bağlıdır: yalnızca belirteçle kimlik doğrulamayı sürdürmek için boş bırakın.",
@@ -1791,6 +1836,7 @@
         "applyTo": "Şuna Uygula",
         "addNoise": "+ Gürültü",
         "concurrency": "Eşzamanlılık",
+        "concurrencyHint": "Bağlantı başına akış sayısı. xray-core 26.11.9 ve sonrası 0 ile 128 arasındaki her değeri 128'e yükseltir; daha eski çekirdekler sayıyı yazıldığı gibi kullanır (0, 8 demektir). -1 TCP mux'u kapatır.",
         "xudpConcurrency": "xudp eşzamanlılık",
         "xudpUdp443": "UDP 443"
       },
@@ -1989,6 +2035,71 @@
           "httpMethod": "HTTP yöntemi",
           "httpMethodDesc": "Probe isteklerinde kullanılan HTTP yöntemi.",
           "note": "leastPing/leastLoad dengeleyicileri her zaman bir burstObservatory taşır. Bu anahtar probe parametrelerini özelleştirir — yerleşik varsayılanları kullanmak için kapatın. Değişiklikler panel yeniden başlatıldıktan sonra uygulanır."
+        }
+      },
+      "chainProxies": {
+        "menu": "Zincir proxy'leri",
+        "title": "Zincir proxy",
+        "add": "Zincir proxy ekle",
+        "desc": "Abonenin istemcisinin bu panelin inbound'una ulaşmadan önce bağlandığı üst SOCKS ve HTTP proxy'leri. Her inbound'a tek bir proxy ya da tek bir seçici atanır; JSON ve Mihomo abonelikleri bu atlamayı taşır, ham bağlantılar ve eski Clash çıktısı bu inbound'ları atlar.",
+        "remark": "Açıklama",
+        "remarkPlaceholder": "entry-de-fra",
+        "type": "Protokol",
+        "typeSocks": "SOCKS",
+        "typeHttp": "HTTP",
+        "server": "Sunucu",
+        "port": "Port",
+        "username": "Kullanıcı adı",
+        "usernamePlaceholder": "Açık proxy için boş bırakın",
+        "password": "Parola",
+        "tls": "HTTPS proxy",
+        "tlsHelp": "Proxy'ye TLS ile bağlan. xray'in SOCKS outbound'unda TLS yok, bu yüzden yalnızca HTTP için geçerlidir.",
+        "auth": "Kimlik doğrulama",
+        "authPassword": "Kullanıcı adı + parola",
+        "authNone": "Yok",
+        "endpoint": "Uç nokta",
+        "enabled": "Etkin",
+        "empty": "Henüz zincir proxy yok",
+        "deleteConfirm": "Bu proxy silinsin mi? Onu kullanan inbound'lar doğrudan bağlanır.",
+        "errRemarkRequired": "Açıklama gerekli (en fazla 256 karakter)",
+        "errServerRequired": "Sunucu gerekli",
+        "errServerInvalid": "Sunucu boşluksuz bir ana bilgisayar veya IP olmalı",
+        "errPortRequired": "Port 1 ile 65535 arasında olmalı",
+        "tabProxies": "Proxy'ler",
+        "toasts": {
+          "list": "Proxy'ler yüklenemedi",
+          "create": "Proxy oluşturulamadı",
+          "update": "Proxy güncellenemedi",
+          "delete": "Proxy silinemedi",
+          "invalidId": "Geçersiz proxy kimliği"
+        }
+      },
+      "chainSelectors": {
+        "title": "Zincir seçici",
+        "add": "Zincir seçici ekle",
+        "desc": "İstemcinin stratejiye göre bir atlama seçmesi için gruplanmış birkaç zincir proxy. Inbound tek proxy yerine bir seçici alır; JSON çıktısı bir dengeleyici üzerinden yönlenir ve Mihomo eşleşen bir grup alır.",
+        "remark": "Açıklama",
+        "remarkPlaceholder": "entries-fastest",
+        "strategy": "Strateji",
+        "strategyHelp": "leastPing ve leastLoad her atlamayı yoklar; random ve roundRobin sırayla döner. Mihomo bunları url-test ve load-balance ile yaklaşık taklit eder.",
+        "strategyLeastLoad": "En az yük",
+        "strategyLeastPing": "En az ping",
+        "strategyRandom": "Rastgele",
+        "strategyRoundRobin": "Sıralı",
+        "proxies": "Zincir proxy'leri",
+        "proxiesCount": "{count} proxy",
+        "enabled": "Etkin",
+        "empty": "Henüz zincir seçici yok",
+        "deleteConfirm": "Bu seçici silinsin mi? Onu kullanan inbound'lar doğrudan bağlanır.",
+        "errRemarkRequired": "Açıklama gerekli (en fazla 256 karakter)",
+        "errProxiesRequired": "En az bir proxy seçin",
+        "tabSelectors": "Seçiciler",
+        "toasts": {
+          "list": "Seçiciler yüklenemedi",
+          "create": "Seçici oluşturulamadı",
+          "update": "Seçici güncellenemedi",
+          "delete": "Seçici silinemedi",
+          "invalidId": "Geçersiz seçici kimliği"
         }
       },
       "subCalendarExpireInclusive": "Month-end subscription expiry display",
@@ -2242,7 +2353,16 @@
       "wechatReportTime": "Rapor zamanlaması",
       "wechatReportTimeDesc": "Cron ifadesi veya @daily gibi bir ön ayar kullanın.",
       "wechatEvents": "Olay uyarıları",
-      "wechatEventsDesc": "Bildirim gönderecek olayları seçin ve uyarı eşiklerini ayarlayın."
+      "wechatEventsDesc": "Bildirim gönderecek olayları seçin ve uyarı eşiklerini ayarlayın.",
+      "inboundListOrder": "Inbound list order",
+      "inboundListOrderDesc": "Default order of the inbound list in the panel. Applies to local inbounds and to inbounds adopted from all nodes.",
+      "inboundListOrderOptionId": "ID",
+      "inboundListOrderOptionRemark": "Remark",
+      "inboundListOrderOptionPort": "Port",
+      "inboundListOrderOptionProtocol": "Protocol",
+      "inboundListOrderOptionSubSortIndex": "Subscription order",
+      "nodeRoutingControl": "Node routing control",
+      "nodeRoutingControlDesc": "Let this panel control the routing of connected nodes. When enabled, the Node Routing page can push a shared routing policy to each node."
     },
     "xray": {
       "save": "Kaydet",
@@ -2587,7 +2707,14 @@
         "subnetCidr": "Alt Ağ CIDR",
         "allowedIPs": "İzin Verilen IP'ler",
         "endpoint": "Uç Nokta",
-        "domainStrategy": "Alan Adı Stratejisi"
+        "domainStrategy": "Alan Adı Stratejisi",
+        "vkTurnEnabled": "Tunnel through VK",
+        "vkTurnHint": "A compatible VK TURN client sends WireGuard traffic through VK relays to this server's SRTP proxy. The proxy forwards it to this WireGuard inbound. Allow the proxy UDP port through your firewall.",
+        "vkTurnCallLink": "VK call link",
+        "vkTurnCallLinkHint": "The client obtains and refreshes TURN credentials using this link. VK sign-in is needed only if anonymous access is unavailable.",
+        "vkTurnPort": "VK proxy UDP port",
+        "vkTurnInvalidLink": "Enter a VK call link, such as https://vk.ru/call/join/...",
+        "vkTurnProfile": "VK TURN profile"
       },
       "amneziawg": {
         "privateKey": "Özel Anahtar",
@@ -2847,7 +2974,7 @@
         "allowInsecure": "TLS sertifika doğrulamasını atla (allowInsecure / skip-cert-verify).",
         "vlessRoute": "UUID'ye gömülen tek bir VLESS rota değeri (0-65535), örn. 443. Hiçbiri için boş bırakın.",
         "mihomoX25519": "Yalnızca Mihomo: ML-KEM olmadan düz X25519 ile REALITY el sıkışması kullanır (support-x25519mlkem768: false). ML-KEM gerektirmeyen, 26.9.8'den eski Xray-core sunucuları için.",
-        "remark": "Bu host için düz bir etiket. Yalnızca gelen bağlantının kendi açıklaması yoksa yapılandırma adı olarak gösterilir."
+        "remark": "Bu ana bilgisayar için düz bir etiket. Yapılandırma adlarına eklemek için Açıklama Şablonuna {{HOST}} ekleyin."
       },
       "remarkVars": {
         "title": "Şablon Değişkenleri",
@@ -2961,6 +3088,36 @@
       "unavailable": "Düğüm kullanılamıyor",
       "latencyLoss": "RTT / Kayıp",
       "unsupportedPlatform": "Bu platform uzak tünelleri yönetebilir. WatTunnel çalıştırmak için desteklenen bir düğüm seçin."
+    },
+    "nodeRouting": {
+      "policySaved": "Routing policy saved",
+      "cleared": "Routing policy cleared on {name}.",
+      "applied": "Routing policy applied to {name}.",
+      "applyFailed": "Apply failed on {name}: {reason}",
+      "noNodes": "No online, enabled nodes to apply to.",
+      "appliedAll": "Routing policy applied to {count} node(s).",
+      "appliedMixed": "Routing policy applied to {ok} node(s), {failed} failed.",
+      "node": "Node",
+      "status": "Status",
+      "egress": "Egress",
+      "direct": "direct",
+      "policy": "Master policy",
+      "policyActive": "active",
+      "none": "none",
+      "actions": "Actions",
+      "apply": "Apply",
+      "clear": "Clear",
+      "title": "Node routing control",
+      "control": "Control",
+      "policyTitle": "Shared routing policy",
+      "controlDisabled": "Node routing control is disabled. Enable it to push routing policies to nodes.",
+      "policyDesc": "JSON array of Xray routing rules (the same shape as the routing rules on the Routing page). When applied, a node runs these rules ahead of its own rules; the node's internal stats rule is always kept first.",
+      "policyInvalid": "The policy must be a JSON array of routing rule objects.",
+      "savePolicy": "Save policy",
+      "clearPolicy": "Clear policy",
+      "ruleCount": "{count} rule(s)",
+      "nodesTitle": "Nodes",
+      "applyAll": "Apply to all online nodes"
     }
   },
   "tgbot": {
@@ -3404,5 +3561,6 @@
       "trafficRemaining": "3x-ui kalan trafik",
       "trafficQuotaUnset": "Kota yapılandırılmamış"
     }
-  }
+  },
+  "import": "Import"
 }

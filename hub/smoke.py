@@ -58,6 +58,8 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  p=launch()
  try:
   csrf=request('csrf-token')['obj'];res=request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf);assert res['success'],res
+  # Login rotates the session and CSRF token; use the authenticated token.
+  csrf=request('csrf-token')['obj']
   assert any(c.name=='connect-hub' for c in jar) and all(c.name!='3x-ui' for c in jar)
   passed('random initial credentials, CSRF login and independent session-cookie name')
   assert request('panel/api/server/status')['success'];passed('authenticated status API')
@@ -128,7 +130,7 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  env.update(CONNECT_HUB_SUDOKU='1',CONNECT_HUB_SUDOKU_BINARY=str(server_sudoku),CONNECT_HUB_SUDOKU_SHA256=hashlib.sha256(server_sudoku.read_bytes()).hexdigest())
  p=launch();sudoku_client=None;fixture=None
  try:
-  jar.clear();csrf=request('csrf-token')['obj'];assert request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf)['success']
+  jar.clear();csrf=request('csrf-token')['obj'];assert request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf)['success'];csrf=request('csrf-token')['obj']
   state=request('panel/hub/api/status')['obj']
   if test_core:
    assert state['connectCore']['enabled'] and state['connectCore']['status']=='stopped',state
@@ -173,7 +175,7 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
   suite=runpy.run_path(str(root/'hub/sudoku-inbounds-smoke.py'))['run']
   a,b,laptop,laptop_cfg,tablet_cfg,phone_cfg,check=suite(request,csrf,sudoku,td,fixture.server_port,passed)
   runpy.run_path(str(root/'hub/native-sudoku-smoke.py'))['run'](request,csrf,sudoku,td,passed,(a,b,laptop,laptop_cfg,tablet_cfg,phone_cfg,check))
-  stop(p);p=launch();jar.clear();csrf=request('csrf-token')['obj'];assert request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf)['success']
+  stop(p);p=launch();jar.clear();csrf=request('csrf-token')['obj'];assert request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf)['success'];csrf=request('csrf-token')['obj']
   # HTTP is available before the background engine startup finishes.
   for _ in range(80):
    restored=request('panel/hub/api/sudoku/inbounds')['obj']
@@ -201,7 +203,7 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  install(updated,update=True);assert initial==(data/'initial-access.txt').read_bytes();assert list((prefix/'backups').glob('*/data/connect-hub.db'));passed('update preserves credentials and retains complete database backup')
  p=launch()
  try:
-  jar.clear();csrf=request('csrf-token')['obj'];assert request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf)['success'];passed('login after updated release activation')
+  jar.clear();csrf=request('csrf-token')['obj'];assert request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf)['success'];csrf=request('csrf-token')['obj'];passed('login after updated release activation')
  finally:stop(p)
  for s in existing:s.close()
 report['result']='passed';(root/'dist/smoke-report.json').write_text(json.dumps(report,indent=2))

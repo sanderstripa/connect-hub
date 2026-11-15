@@ -87,6 +87,10 @@ export const SCHEMAS: Record<string, unknown> = {
       "happLinkEnable": {
         "type": "boolean"
       },
+      "inboundListOrder": {
+        "example": "id",
+        "type": "string"
+      },
       "ipLimitAllowlist": {
         "type": "string"
       },
@@ -175,6 +179,12 @@ export const SCHEMAS: Record<string, unknown> = {
         "maximum": 100,
         "minimum": 1,
         "type": "integer"
+      },
+      "nodeRoutingControl": {
+        "type": "boolean"
+      },
+      "nodeRoutingRules": {
+        "type": "string"
       },
       "outboundDownThreshold": {
         "maximum": 100,
@@ -687,6 +697,7 @@ export const SCHEMAS: Record<string, unknown> = {
       "externalTrafficInformEnable",
       "externalTrafficInformURI",
       "happLinkEnable",
+      "inboundListOrder",
       "ipLimitAllowlist",
       "ldapAutoCreate",
       "ldapAutoDelete",
@@ -712,6 +723,8 @@ export const SCHEMAS: Record<string, unknown> = {
       "networkTrafficInterface",
       "networkTrafficMode",
       "nodeDownThreshold",
+      "nodeRoutingControl",
+      "nodeRoutingRules",
       "outboundDownThreshold",
       "pageSize",
       "panelOutbound",
@@ -953,6 +966,10 @@ export const SCHEMAS: Record<string, unknown> = {
       "hasWechatWebhookURL": {
         "type": "boolean"
       },
+      "inboundListOrder": {
+        "example": "id",
+        "type": "string"
+      },
       "ipLimitAllowlist": {
         "type": "string"
       },
@@ -1041,6 +1058,12 @@ export const SCHEMAS: Record<string, unknown> = {
         "maximum": 100,
         "minimum": 1,
         "type": "integer"
+      },
+      "nodeRoutingControl": {
+        "type": "boolean"
+      },
+      "nodeRoutingRules": {
+        "type": "string"
       },
       "outboundDownThreshold": {
         "maximum": 100,
@@ -1563,6 +1586,7 @@ export const SCHEMAS: Record<string, unknown> = {
       "hasWarpSecret",
       "hasWechatToken",
       "hasWechatWebhookURL",
+      "inboundListOrder",
       "ipLimitAllowlist",
       "ldapAutoCreate",
       "ldapAutoDelete",
@@ -1588,6 +1612,8 @@ export const SCHEMAS: Record<string, unknown> = {
       "networkTrafficInterface",
       "networkTrafficMode",
       "nodeDownThreshold",
+      "nodeRoutingControl",
+      "nodeRoutingRules",
       "outboundDownThreshold",
       "pageSize",
       "panelOutbound",
@@ -1927,6 +1953,140 @@ export const SCHEMAS: Record<string, unknown> = {
     "required": [
       "carrier",
       "port"
+    ],
+    "type": "object"
+  },
+  "ChainProxy": {
+    "description": "ChainProxy is one upstream SOCKS/HTTP proxy a subscriber's client dials\nbefore this panel's inbound — a client-side chain entry, not a panel outbound.\nIts credentials travel into the subscriber's config, so no panel secret lives here.",
+    "properties": {
+      "createdAt": {
+        "example": 1710000000000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "enabled": {
+        "example": true,
+        "type": "boolean"
+      },
+      "id": {
+        "example": 1,
+        "type": "integer"
+      },
+      "password": {
+        "example": "secret",
+        "type": "string"
+      },
+      "port": {
+        "example": 1080,
+        "maximum": 65535,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "remark": {
+        "example": "entry-de-fra",
+        "maxLength": 256,
+        "type": "string"
+      },
+      "server": {
+        "example": "proxy.example.com",
+        "maxLength": 253,
+        "type": "string"
+      },
+      "tls": {
+        "description": "TLS marks an HTTPS proxy (http type only) — xray's http outbound reaches it\nover TLS; the socks outbound has no TLS support.",
+        "example": false,
+        "type": "boolean"
+      },
+      "type": {
+        "enum": [
+          "socks",
+          "http"
+        ],
+        "example": "socks",
+        "type": "string"
+      },
+      "updatedAt": {
+        "example": 1710000000000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "username": {
+        "description": "Username/Password are optional SOCKS5/HTTP basic-auth credentials; both\nempty means the hop proxy accepts anonymous connections.",
+        "example": "operator",
+        "type": "string"
+      }
+    },
+    "required": [
+      "createdAt",
+      "enabled",
+      "id",
+      "password",
+      "port",
+      "remark",
+      "server",
+      "tls",
+      "type",
+      "updatedAt",
+      "username"
+    ],
+    "type": "object"
+  },
+  "ChainSelector": {
+    "description": "ChainSelector groups chain proxies so a client picks between several entry\nhops by strategy; an inbound names either one hop or one selector, never both.",
+    "properties": {
+      "createdAt": {
+        "example": 1710000000000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "enabled": {
+        "description": "No gorm default:true — a bool default makes an explicit false at insert\ncollapse back to the column default (zero value is skipped).",
+        "example": true,
+        "type": "boolean"
+      },
+      "id": {
+        "example": 1,
+        "type": "integer"
+      },
+      "proxyIds": {
+        "example": [
+          1,
+          2
+        ],
+        "items": {
+          "type": "integer"
+        },
+        "type": "array"
+      },
+      "remark": {
+        "example": "entries-fastest",
+        "maxLength": 256,
+        "type": "string"
+      },
+      "strategy": {
+        "enum": [
+          "leastLoad",
+          "leastPing",
+          "random",
+          "roundRobin"
+        ],
+        "example": "leastPing",
+        "type": "string"
+      },
+      "updatedAt": {
+        "example": 1710000000000,
+        "format": "int64",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "createdAt",
+      "enabled",
+      "id",
+      "proxyIds",
+      "remark",
+      "strategy",
+      "updatedAt"
     ],
     "type": "object"
   },
@@ -4108,6 +4268,15 @@ export const SCHEMAS: Record<string, unknown> = {
   "Inbound": {
     "description": "Inbound represents an Xray inbound configuration with traffic statistics and settings.",
     "properties": {
+      "chainProxyId": {
+        "description": "ChainProxyId/ChainSelectorId name the client-side chain this inbound's\nsubscribers hop through; 0 means direct. At most one may be set.",
+        "example": 0,
+        "type": "integer"
+      },
+      "chainSelectorId": {
+        "example": 0,
+        "type": "integer"
+      },
       "clientStats": {
         "description": "Client traffic statistics",
         "items": {
@@ -4175,6 +4344,11 @@ export const SCHEMAS: Record<string, unknown> = {
         "maximum": 65535,
         "minimum": 0,
         "type": "integer"
+      },
+      "preserveClientTraffic": {
+        "description": "Older snapshots omit this field.\nKeep client usage during scheduled inbound resets",
+        "nullable": true,
+        "type": "boolean"
       },
       "protocol": {
         "enum": [
@@ -4255,6 +4429,8 @@ export const SCHEMAS: Record<string, unknown> = {
       }
     },
     "required": [
+      "chainProxyId",
+      "chainSelectorId",
       "clientStats",
       "disableFlow",
       "down",
@@ -4427,6 +4603,14 @@ export const SCHEMAS: Record<string, unknown> = {
       },
       "wgPublicKey": {
         "type": "string"
+      },
+      "wgVkTurn": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Settings"
+          }
+        ],
+        "nullable": true
       }
     },
     "required": [
@@ -5437,6 +5621,33 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "NodeRoutingApplyResult": {
+    "description": "NodeRoutingApplyResult is one node's outcome in a bulk routing apply; a\nfailed node never blocks the rest, each row carries its own error.",
+    "properties": {
+      "applied": {
+        "example": true,
+        "type": "boolean"
+      },
+      "error": {
+        "type": "string"
+      },
+      "name": {
+        "example": "edge-1",
+        "type": "string"
+      },
+      "nodeId": {
+        "example": 1,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "applied",
+      "error",
+      "name",
+      "nodeId"
+    ],
+    "type": "object"
+  },
   "NodeView": {
     "description": "NodeView is the browser/API read contract for nodes. Credentials are\nwrite-only: responses expose only whether a node has a token configured.",
     "properties": {
@@ -5530,6 +5741,9 @@ export const SCHEMAS: Record<string, unknown> = {
       "latencyMs": {
         "example": 42,
         "type": "integer"
+      },
+      "masterRoutingRules": {
+        "type": "string"
       },
       "memPct": {
         "example": 45.2,
@@ -5641,6 +5855,7 @@ export const SCHEMAS: Record<string, unknown> = {
       "lastError",
       "lastHeartbeat",
       "latencyMs",
+      "masterRoutingRules",
       "memPct",
       "name",
       "netDown",
@@ -6545,6 +6760,25 @@ export const SCHEMAS: Record<string, unknown> = {
       "id",
       "key",
       "value"
+    ],
+    "type": "object"
+  },
+  "Settings": {
+    "properties": {
+      "callLink": {
+        "type": "string"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "port": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "callLink",
+      "enabled",
+      "port"
     ],
     "type": "object"
   },

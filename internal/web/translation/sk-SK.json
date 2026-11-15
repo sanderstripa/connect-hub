@@ -10,6 +10,7 @@
   "create": "Vytvoriť",
   "add": "Pridať",
   "remove": "Odstrániť",
+  "removeItem": "Odstrániť {item}",
   "update": "Aktualizovať",
   "copy": "Kopírovať",
   "copied": "Skopírované",
@@ -39,6 +40,7 @@
   "indefinite": "Bez časového obmedzenia",
   "unlimited": "Bez obmedzenia",
   "none": "Žiadne",
+  "empty": "Prázdne",
   "qrCode": "QR kód",
   "info": "Ďalšie informácie",
   "edit": "Upraviť",
@@ -46,6 +48,7 @@
   "reset": "Vynulovať",
   "noData": "Zatiaľ tu nič nie je",
   "copySuccess": "Úspešne skopírované",
+  "copyFail": "Kopírovanie zlyhalo",
   "sure": "Áno",
   "encryption": "Šifrovanie",
   "transmission": "Prenos",
@@ -128,7 +131,8 @@
     "network": "Sieť",
     "connections": "Connections",
     "tunnels": "Tunely",
-    "assistant": "AI Assistant"
+    "assistant": "AI Assistant",
+    "nodeRouting": "Node Routing"
   },
   "pages": {
     "logs": {
@@ -377,6 +381,11 @@
       "xrayStatus": "Xray",
       "stopXray": "Zastaviť",
       "restartXray": "Reštartovať",
+      "startXray": "Spustiť",
+      "stopXrayDisabledHint": "Xray nebeží",
+      "stopXrayConfirmTitle": "Zastaviť Xray?",
+      "stopXrayConfirmContent": "Zastavenie Xray okamžite preruší všetky proxy spojenia. Naozaj chcete pokračovať?",
+      "stopXrayConfirmOk": "Zastaviť Xray",
       "xraySwitch": "Verzia",
       "xrayUpdates": "Aktualizácie Xray",
       "xraySwitchClickDesk": "Verziu vyberajte opatrne. Staršie verzie nemusia podporovať aktuálnu konfiguráciu.",
@@ -466,7 +475,7 @@
       "geodataConfirmTitle": "Uložiť nastavenia geodát?",
       "geodataConfirmContent": "Zmení sa šablóna konfigurácie Xray a Xray sa reštartuje.",
       "geodataInvalidUrl": "Pre každý súbor zadajte odkaz HTTPS.",
-      "geodataInvalidFile": "Použite samotný názov súboru, napr. geosite_custom.dat, bez cesty.",
+      "geodataInvalidFile": "Použite samotný názov súboru .dat, napr. geosite_custom.dat, bez cesty.",
       "geodataInvalidCron": "Výraz cron musí mať 5 polí, napr. 0 4 * * *",
       "geodataEmpty": "Nie sú nastavené žiadne súbory. V pravidlách smerovania na ne odkazujte ako ext:geosite_custom.dat:category.",
       "dontRefresh": "Prebieha inštalácia. Neobnovujte stránku.",
@@ -555,7 +564,9 @@
         "pickInbound": "Vyberte vstup",
         "matchAny": "ľubovoľné",
         "destPlaceholder": "automaticky (adresa:port vnoreného vstupu)",
-        "needsTls": "Náhradné ciele sú dostupné po výbere TLS alebo Reality na karte Bezpečnosť (iba VLESS/Trojan cez RAW)."
+        "needsTls": "Náhradné ciele sú dostupné po výbere TLS alebo Reality na karte Bezpečnosť (iba VLESS/Trojan cez RAW).",
+        "decryptionConflict": "Fallback nemožno použiť s aktívnym serverovým dešifrovaním VLESS. Pred jeho zapnutím odstráňte a uložte pravidlá fallback alebo vypnite dešifrovanie.",
+        "saveFailed": "Pravidlá fallback sa nepodarilo načítať alebo uložiť. Koncept zostáva otvorený; skontrolujte chybu a skúste to znova."
       },
       "protocol": "Protokol",
       "port": "Port",
@@ -677,6 +688,8 @@
       "importInbound": "Importovať vstup",
       "periodicTrafficResetTitle": "Nulovanie spotreby",
       "periodicTrafficResetDay": "Deň mesačného nulovania",
+      "preserveClientTraffic": "Zachovať spotrebu klientov",
+      "preserveClientTrafficHelp": "Plánované nulovanie vynuluje iba počítadlá tohto vstupu. Klienti sa naďalej riadia vlastným plánom nulovania.",
       "periodicTrafficReset": {
         "never": "Nikdy",
         "daily": "Denne",
@@ -714,7 +727,9 @@
         "invalidClientField": "Klient {client}: {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "Certifikát TLS {index}: {reason}",
-        "moreIssues": "{message}  (ďalšie: +{count})"
+        "moreIssues": "{message}  (ďalšie: +{count})",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "autoFill": "Vyplniť automaticky",
@@ -982,6 +997,14 @@
           "clientId": "ID klienta",
           "clientSecret": "Tajný kľúč klienta",
           "refreshToken": "Obnovovací token",
+          "accessKeyId": "ID prístupového kľúča",
+          "secretAccessKey": "Tajný prístupový kľúč",
+          "sessionToken": "Token relácie",
+          "s3Endpoint": "Endpoint",
+          "s3Region": "Región",
+          "s3Bucket": "Bucket",
+          "s3PathStyle": "Adresovanie cez cestu",
+          "s3PathStyleDesc": "Zapnuté: bucket je v ceste URL. Vypnuté: v názve hostiteľa, čo vyžaduje DNS endpoint.",
           "secrets": "Tajné hodnoty",
           "secretsDesc": "Hodnoty, ktoré šablóna číta ako {secret0}, {secret1}, …",
           "template": "Šablóna úložiska",
@@ -1007,7 +1030,7 @@
         "autoSystemDnsToGateway": "Systémové DNS cez bránu",
         "autoSystemDnsToGatewayTooltip": "Iba pre Linux: nasmerovať systemd-resolved na bránu TUN, aby systémové DNS dotazy prechádzali cez Xray. Vyžaduje bránu. Ak nastavenie zlyhá, TUN sa nespustí.",
         "autoSystemWfpBlockLeak": "Blokovať úniky (WFP)",
-        "autoSystemWfpBlockLeakTooltip": "Iba pre Windows s automatickými systémovými trasami: dns ponechá DNS v TUN (vyžaduje DNS servery), misconfigtun zablokuje verziu IP, pre ktorú nevedie žiadna trasa do TUN.",
+        "autoSystemWfpBlockLeakTooltip": "Iba pre Windows s automatickými systémovými trasami: all zablokuje všetko mimo TUN, allexceptlan tiež, ale ponechá dostupnú lokálnu sieť; dns ponechá DNS (porty 53 a 853 a službu DNS Client) v TUN; windnsclient pokrýva iba túto službu; tcp, udp a icmp blokujú celý protokol; pre konkrétne porty zadajte tcp/PORT, udp/PORT, samotný PORT alebo rozsah OD-DO; CIDR na začiatku (1.1.1.0/24:53, [::/0]:all) obmedzí hodnotu na tieto adresy; misconfigtun zablokuje verziu IP, pre ktorú nevedie žiadna trasa do TUN. Každá hodnota pokrývajúca port 53 vyžaduje DNS servery.",
         "maxVersion": "Maximálna verzia",
         "headerName": "Názov hlavičky",
         "headerValue": "Hodnota hlavičky",
@@ -1044,7 +1067,11 @@
         "finderNone": "Žiadny cieľ neprešiel. Skúste širší rozsah.",
         "finderReport": "Správa",
         "finderCommandError": "Príkaz sa nepodarilo vytvoriť",
-        "finderExpired": "Platnosť príkazu vypršala. Vytvorte nový."
+        "finderExpired": "Platnosť príkazu vypršala. Vytvorte nový.",
+        "chainNone": "Priame pripojenie",
+        "chainSelectorSuffix": "selektor",
+        "chain": "Reťazec klienta",
+        "chainHelp": "Klient sa pripojí k tomuto inboundu cez nadradenú SOCKS/HTTP proxy. Platí pre odbery JSON a Mihomo."
       },
       "info": {
         "mode": "Režim",
@@ -1092,8 +1119,19 @@
           "failed": "Záložné sa nepodarilo uložiť",
           "switchFailed": "Prepnutie zlyhalo: cieľ neprešiel kontrolou alebo skutočným testom REALITY",
           "switched": "Prepnuté na {target}"
-        }
-      }
+        },
+        "saveFailed": "Unable to save REALITY monitoring settings"
+      },
+      "changeIdInvalid": "The new ID is unavailable ({reason}).",
+      "changeIdUnchanged": "The ID is unchanged.",
+      "changeIdRoutingRefs": "{count} routing rule(s) point at the current ID and will be updated.",
+      "changeIdNodeConflict": "The hosting node already has an inbound with this name.",
+      "changeIdValid": "The new ID is available.",
+      "changeIdTitle": "Change inbound ID — {tag}",
+      "changeIdApply": "Apply",
+      "changeIdDesc": "Changing the inbound ID updates every routing rule and node reference that points at the current ID. The check below runs before anything is saved.",
+      "changeIdLabel": "New inbound ID (tag)",
+      "changeId": "Change ID"
     },
     "clients": {
       "columns": "Stĺpce",
@@ -1164,7 +1202,13 @@
       "deleteHwid": "Odstrániť zariadenie",
       "deleteHwidConfirm": "Odstrániť toto zariadenie? Pri ďalšom načítaní odberu sa bude musieť znova zaregistrovať.",
       "hwidDeleted": "Zariadenie bolo odstránené.",
-      "clearHwidsConfirm": "Odstrániť všetky registrované zariadenia? Pri ďalšom načítaní odberu sa bude každé zariadenie musieť znova zaregistrovať.",
+      "blockHwid": "Zablokovať",
+      "unblockHwid": "Odblokovať",
+      "hwidBlocked": "Zablokované",
+      "blockHwidConfirm": "Zablokovať tomuto zariadeniu získanie tohto odberu?",
+      "unblockHwidConfirm": "Znova povoliť tomuto zariadeniu získanie tohto odberu?",
+      "hwidBlockHint": "Blokovanie zariadení platí pre tento odber aj pri limite HWID 0. Vymazanie zoznamu blokovanie zachová.",
+      "clearHwidsConfirm": "Odstrániť všetky neblokované zariadenia? Pri ďalšom načítaní odberu sa znova zaregistrujú. Blokované zariadenia zostanú blokované.",
       "limitIpFail2banMissing": "Fail2ban nie je nainštalovaný, preto nemožno vynútiť limit IP adries. Na zapnutie tejto možnosti nainštalujte Fail2ban z ponuky príkazu x-ui.",
       "limitIpFail2banWindows": "Fail2ban nie je vo Windows dostupný, preto nemožno vynútiť limit IP adries.",
       "limitIpDisabled": "Funkcia limitu IP adries je na tomto serveri vypnutá.",
@@ -1174,6 +1218,7 @@
       "subIdDesc": "Slúži aj ako pozývací kód klienta do Telegram bota. Kto ho pošle botovi, priradí sa k tomuto klientovi. Použite dlhé náhodné ID. Krátke alebo odhadnuteľné ID si môže privlastniť niekto iný.",
       "online": "Online",
       "email": "Názov klienta",
+      "emailReservedName": "Názov klienta nesmie byť presne \".\" ani \"..\"",
       "emailInvalidChars": "Názov klienta nesmie obsahovať medzery, '/', '\\' ani riadiace znaky",
       "subIdInvalidChars": "ID odberu nesmie obsahovať medzery, '/', '\\' ani riadiace znaky",
       "group": "Skupina",
@@ -1511,7 +1556,7 @@
         "allowInsecure": "Vynechať overenie certifikátu TLS (allowInsecure / skip-cert-verify).",
         "vlessRoute": "Jedna hodnota trasy VLESS (0-65535) vložená do UUID, napr. 443. Prázdne pole znamená žiadnu trasu.",
         "mihomoX25519": "Len pre Mihomo: použiť obyčajný REALITY hello s X25519 bez ML-KEM (support-x25519mlkem768: false). Pre servery s Xray-core starším ako 26.9.8, ktoré ML-KEM nevyžadujú.",
-        "remark": "Bežný názov tejto adresy servera. Ako názov konfigurácie sa zobrazí iba vtedy, ak samotný vstup nemá vlastný názov."
+        "remark": "Bežný názov tejto adresy servera. Vložte {{HOST}} do šablóny poznámky, aby sa zahrnul do názvov konfigurácií."
       },
       "remarkVars": {
         "title": "Premenné šablóny",
@@ -1666,7 +1711,7 @@
       "tlsPin": "Pevný odtlačok certifikátu (SHA-256)",
       "tlsSkip": "Vynechať overenie",
       "tlsMtls": "Vzájomné TLS (klientsky certifikát)",
-      "mtlsFormHint": "Tento server overuje panel klientskym certifikátom. Skopírujte certifikačnú autoritu tohto panelu z časti mTLS serverov na vzdialený server, nastavte jeho dôveryhodnú nadradenú autoritu a potom ho reštartujte.",
+      "mtlsFormHint": "Tento server overuje panel klientskym certifikátom. Skopírujte certifikačnú autoritu tohto panelu z časti mTLS serverov na vzdialený server, nastavte jeho dôveryhodnú nadradenú autoritu a potom ho reštartujte. Aktualizácia panelu tohto servera odtiaľto stále vyžaduje API token s rozsahom node-admin.",
       "mtls": {
         "title": "mTLS serverov",
         "intro": "Vzájomné TLS pridáva k tokenu API aj overenie klientskym certifikátom pri komunikácii medzi servermi. Je voliteľné. Prázdne nastavenie ponechá overenie iba tokenom.",
@@ -1924,6 +1969,7 @@
         "applyTo": "Použiť na",
         "addNoise": "+ Šum",
         "concurrency": "Počet súbežných prenosov",
+        "concurrencyHint": "Počet streamov na jedno spojenie. xray-core 26.11.9 a novšie zvýšia každú hodnotu od 0 do 128 na 128; staršie jadrá použijú číslo tak, ako je zadané (0 znamená 8). -1 vypne TCP mux.",
         "xudpConcurrency": "Súbežné prenosy xudp",
         "xudpUdp443": "xudp UDP 443"
       },
@@ -2118,6 +2164,71 @@
           "httpMethod": "Metóda HTTP",
           "httpMethodDesc": "Metóda požiadaviek pri meraní.",
           "note": "Vyvažovanie leastPing/leastLoad vždy obsahuje burst observatory. Tento prepínač umožní vlastné parametre merania. Vypnutý použije vstavané hodnoty. Zmeny sa použijú po reštarte panelu."
+        }
+      },
+      "chainProxies": {
+        "menu": "Reťazce proxy",
+        "title": "Proxy v reťazci",
+        "add": "Pridať proxy do reťazca",
+        "desc": "Nadradené SOCKS a HTTP proxy, cez ktoré sa klient odberateľa pripája pred dosiahnutím tohto inboundu. Každý inbound dostane jeden proxy alebo jeden selektor; odbery JSON a Mihomo prenášajú tento skok, kým surové odkazy a starší výstup Clash tieto inboundy vynechávajú.",
+        "remark": "Poznámka",
+        "remarkPlaceholder": "entry-de-fra",
+        "type": "Protokol",
+        "typeSocks": "SOCKS",
+        "typeHttp": "HTTP",
+        "server": "Server",
+        "port": "Port",
+        "username": "Používateľské meno",
+        "usernamePlaceholder": "Nechajte prázdne pre otvorenú proxy",
+        "password": "Heslo",
+        "tls": "HTTPS proxy",
+        "tlsHelp": "Pripájať sa k proxy cez TLS. SOCKS outbound v xray nepodporuje TLS, preto je to len pre HTTP.",
+        "auth": "Overovanie",
+        "authPassword": "Používateľské meno + heslo",
+        "authNone": "Žiadne",
+        "endpoint": "Koncový bod",
+        "enabled": "Povolené",
+        "empty": "Zatiaľ žiadne reťazové proxy",
+        "deleteConfirm": "Odstrániť toto proxy? Inboundy, ktoré ho používajú, sa pripoja priamo.",
+        "errRemarkRequired": "Poznámka je povinná (max. 256 znakov)",
+        "errServerRequired": "Server je povinný",
+        "errServerInvalid": "Server musí byť hostiteľ alebo IP bez medzier",
+        "errPortRequired": "Port musí byť v rozsahu 1 až 65535",
+        "tabProxies": "Proxy",
+        "toasts": {
+          "list": "Proxy sa nepodarilo načítať",
+          "create": "Proxy sa nepodarilo vytvoriť",
+          "update": "Proxy sa nepodarilo aktualizovať",
+          "delete": "Proxy sa nepodarilo odstrániť",
+          "invalidId": "Neplatné id proxy"
+        }
+      },
+      "chainSelectors": {
+        "title": "Selektor reťazcov",
+        "add": "Pridať selektor reťazcov",
+        "desc": "Niekoľko reťazových proxy zoskupených tak, aby si klient vybral jeden skok podľa stratégie. Inbound použije selektor namiesto jedného proxy; výstup JSON smeruje cez vyvažovač a Mihomo dostane zodpovedajúcu skupinu.",
+        "remark": "Poznámka",
+        "remarkPlaceholder": "entries-fastest",
+        "strategy": "Stratégia",
+        "strategyHelp": "leastPing a leastLoad testujú každý skok; random a roundRobin sa striedajú. Mihomo ich aproximuje cez url-test a load-balance.",
+        "strategyLeastLoad": "Najmenšie zaťaženie",
+        "strategyLeastPing": "Najnižší ping",
+        "strategyRandom": "Náhodne",
+        "strategyRoundRobin": "Postupne",
+        "proxies": "Reťazové proxy",
+        "proxiesCount": "{count} proxy",
+        "enabled": "Povolené",
+        "empty": "Zatiaľ žiadne selektory",
+        "deleteConfirm": "Odstrániť tento selektor? Inboundy, ktoré ho používajú, sa pripoja priamo.",
+        "errRemarkRequired": "Poznámka je povinná (max. 256 znakov)",
+        "errProxiesRequired": "Vyberte aspoň jedno proxy",
+        "tabSelectors": "Selektory",
+        "toasts": {
+          "list": "Selektory sa nepodarilo načítať",
+          "create": "Selektor sa nepodarilo vytvoriť",
+          "update": "Selektor sa nepodarilo aktualizovať",
+          "delete": "Selektor sa nepodarilo odstrániť",
+          "invalidId": "Neplatné id selektora"
         }
       },
       "subCalendarExpireInclusive": "Zobrazenie konca mesačnej platnosti v odbere",
@@ -2371,7 +2482,16 @@
       "wechatReportTime": "Plán prehľadov",
       "wechatReportTimeDesc": "Použite výraz cron alebo predvoľbu ako @daily.",
       "wechatEvents": "Upozornenia na udalosti",
-      "wechatEventsDesc": "Vyberte udalosti pre oznámenia a nastavte prahy upozornení."
+      "wechatEventsDesc": "Vyberte udalosti pre oznámenia a nastavte prahy upozornení.",
+      "inboundListOrder": "Inbound list order",
+      "inboundListOrderDesc": "Default order of the inbound list in the panel. Applies to local inbounds and to inbounds adopted from all nodes.",
+      "inboundListOrderOptionId": "ID",
+      "inboundListOrderOptionRemark": "Remark",
+      "inboundListOrderOptionPort": "Port",
+      "inboundListOrderOptionProtocol": "Protocol",
+      "inboundListOrderOptionSubSortIndex": "Subscription order",
+      "nodeRoutingControl": "Node routing control",
+      "nodeRoutingControlDesc": "Let this panel control the routing of connected nodes. When enabled, the Node Routing page can push a shared routing policy to each node."
     },
     "xray": {
       "save": "Uložiť",
@@ -2716,7 +2836,14 @@
         "subnetCidr": "Podsieť CIDR",
         "allowedIPs": "Povolené IP adresy",
         "endpoint": "Koncový bod",
-        "domainStrategy": "Spôsob prekladu domén"
+        "domainStrategy": "Spôsob prekladu domén",
+        "vkTurnEnabled": "Tunnel through VK",
+        "vkTurnHint": "A compatible VK TURN client sends WireGuard traffic through VK relays to this server's SRTP proxy. The proxy forwards it to this WireGuard inbound. Allow the proxy UDP port through your firewall.",
+        "vkTurnCallLink": "VK call link",
+        "vkTurnCallLinkHint": "The client obtains and refreshes TURN credentials using this link. VK sign-in is needed only if anonymous access is unavailable.",
+        "vkTurnPort": "VK proxy UDP port",
+        "vkTurnInvalidLink": "Enter a VK call link, such as https://vk.ru/call/join/...",
+        "vkTurnProfile": "VK TURN profile"
       },
       "amneziawg": {
         "privateKey": "Súkromný kľúč",
@@ -2961,6 +3088,36 @@
       "unavailable": "Uzol nedostupný",
       "latencyLoss": "RTT / Straty",
       "unsupportedPlatform": "Táto platforma môže spravovať vzdialené tunely. Na spustenie WatTunnel vyberte podporovaný uzol."
+    },
+    "nodeRouting": {
+      "policySaved": "Routing policy saved",
+      "cleared": "Routing policy cleared on {name}.",
+      "applied": "Routing policy applied to {name}.",
+      "applyFailed": "Apply failed on {name}: {reason}",
+      "noNodes": "No online, enabled nodes to apply to.",
+      "appliedAll": "Routing policy applied to {count} node(s).",
+      "appliedMixed": "Routing policy applied to {ok} node(s), {failed} failed.",
+      "node": "Node",
+      "status": "Status",
+      "egress": "Egress",
+      "direct": "direct",
+      "policy": "Master policy",
+      "policyActive": "active",
+      "none": "none",
+      "actions": "Actions",
+      "apply": "Apply",
+      "clear": "Clear",
+      "title": "Node routing control",
+      "control": "Control",
+      "policyTitle": "Shared routing policy",
+      "controlDisabled": "Node routing control is disabled. Enable it to push routing policies to nodes.",
+      "policyDesc": "JSON array of Xray routing rules (the same shape as the routing rules on the Routing page). When applied, a node runs these rules ahead of its own rules; the node's internal stats rule is always kept first.",
+      "policyInvalid": "The policy must be a JSON array of routing rule objects.",
+      "savePolicy": "Save policy",
+      "clearPolicy": "Clear policy",
+      "ruleCount": "{count} rule(s)",
+      "nodesTitle": "Nodes",
+      "applyAll": "Apply to all online nodes"
     }
   },
   "tgbot": {
@@ -3404,5 +3561,6 @@
       "trafficRemaining": "Zostávajúci prenos 3x-ui",
       "trafficQuotaUnset": "Limit nie je nastavený"
     }
-  }
+  },
+  "import": "Import"
 }

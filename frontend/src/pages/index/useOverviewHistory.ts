@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { HttpUtil, TimeFormatter } from '@/utils';
+import { HttpUtil } from '@/utils';
 import type { Status } from '@/models/status';
 
-const OVERVIEW_WINDOW = 72;
-const SEED_BUCKET_SECONDS = 2;
+// The server stores raw samples in compact rollup tiers. The selected bucket
+// returns at most 60 points, so even a 12-hour view stays small in the browser.
+const OVERVIEW_WINDOW = 60;
+const MIN_REFRESH_INTERVAL_MS = 10_000;
 
 const SERIES_KEYS = [
   'cpu',
@@ -32,6 +34,8 @@ interface HistoryPoint {
 interface HistoryWindow {
   series: Record<OverviewSeriesKey, number[]>;
   times: number[];
+  scope: string;
+  bucketSeconds: number;
 }
 
 function emptySeries(): Record<OverviewSeriesKey, number[]> {
@@ -41,10 +45,16 @@ function emptySeries(): Record<OverviewSeriesKey, number[]> {
   >;
 }
 
-function emptyWindow(): HistoryWindow {
-  return { series: emptySeries(), times: [] };
+function emptyWindow(scope = '', bucketSeconds = 0): HistoryWindow {
+  return { series: emptySeries(), times: [], scope, bucketSeconds };
 }
 
+function tailWindow<T>(values: T[]): T[] {
+  return values.slice(-OVERVIEW_WINDOW);
+}
+
+// Keep the original Connect Hub live status history. An unavailable metric is
+// not a real sample of zero and must not erase earlier valid observations.
 function sampleOf(status: Status): Record<OverviewSeriesKey, number> {
   return {
     cpu: status.cpu.percent,
@@ -58,8 +68,86 @@ function sampleOf(status: Status): Record<OverviewSeriesKey, number> {
   };
 }
 
-function tailWindow<T>(values: T[]): T[] {
-  return values.slice(-OVERVIEW_WINDOW);
+// Older Connect Hub installations expose a per-metric history API, while the
+// new dashboard uses one batched endpoint. Preserve both wire contracts.
+function mergeLegacyHistory(
+  previous: HistoryWindow,
+  responses: Map<OverviewSeriesKey, HistoryPoint[]>,
+  scope: string,
+  bucketSeconds: number,
+): HistoryWindow {
+  const oldTimes = Array.from(new Set(
+    Array.from(responses.values()).flatMap((points) => points.map((point) => point.t)),
+  )).filter(Number.isFinite).sort((a, b) => a - b);
+  const sameWindow = previous.bucketSeconds === bucketSeconds;
+  const result = emptyWindow(scope, bucketSeconds);
+  result.times = tailWindow([
+    ...oldTimes,
+    ...(sameWindow ? previous.times : []),
+  ]);
+  for (const key of SERIES_KEYS) {
+    const scoped = key === 'cpu' || key === 'swap';
+    const live = sameWindow && !(scoped && previous.scope !== scope)
+      ? previous.series[key] : [];
+    const archived = responses.get(key) ?? [];
+    result.series[key] = tailWindow([
+      ...archived.slice().sort((a, b) => a.t - b.t).map((point) => point.v),
+      ...live,
+    ]);
+  }
+  return result;
+}
+
+function formatTimeAxis(times: number[]): string[] {
+  if (times.length === 0) return [];
+  const first = new Date(times[0] * 1000);
+  const last = new Date(times[times.length - 1] * 1000);
+  const crossesDay =
+    first.getFullYear() !== last.getFullYear() ||
+    first.getMonth() !== last.getMonth() ||
+    first.getDate() !== last.getDate();
+
+  return times.map((timestamp) => {
+    const d = new Date(timestamp * 1000);
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    if (!crossesDay) return `${hh}:${mm}`;
+    const MM = String(d.getMonth() + 1).padStart(2, '0');
+    const DD = String(d.getDate()).padStart(2, '0');
+    return `${MM}/${DD} ${hh}:${mm}`;
+  });
+}
+
+function mergeHistory(
+  previous: HistoryWindow,
+  responses: Map<OverviewSeriesKey, HistoryPoint[]>,
+  scope: string,
+  bucketSeconds: number,
+): HistoryWindow {
+  const times = Array.from(
+    new Set(Array.from(responses.values()).flatMap((points) => points.map((p) => p.t))),
+  )
+    .filter(Number.isFinite)
+    .sort((a, b) => a - b)
+    .slice(-OVERVIEW_WINDOW);
+  if (times.length === 0) return emptyWindow(scope, bucketSeconds);
+
+  const merged = emptyWindow(scope, bucketSeconds);
+  merged.times = times;
+  for (const key of SERIES_KEYS) {
+    const points = responses.get(key);
+    if (!points) {
+      merged.series[key] = previous.series[key];
+      continue;
+    }
+    const byTime = new Map(points.map((point) => [point.t, point.v]));
+    // CPU and swap are scoped to the container when the panel runs there. A
+    // missing scoped series should stay empty instead of borrowing host data.
+    const scoped = key === 'cpu' || key === 'swap';
+    merged.series[key] =
+      scoped && points.length === 0 ? [] : times.map((time) => byTime.get(time) ?? 0);
+  }
+  return merged;
 }
 
 export function mean(values: number[]): number {
@@ -75,103 +163,138 @@ export function peak(values: number[]): number {
   return max;
 }
 
-/* the seed bucket must be in the backend's allowedHistoryBuckets whitelist;
-   2s is the smallest and matches the status poll cadence */
-export function useOverviewHistory(status: Status, hasData: boolean): OverviewHistory {
-  const [trend, setTrend] = useState<HistoryWindow>(emptyWindow);
+export function useOverviewHistory(
+  status: Status,
+  hasData: boolean,
+  bucketSeconds = 2,
+): OverviewHistory {
+  const [trend, setTrend] = useState<HistoryWindow>(() =>
+    emptyWindow(status.resourceScope, bucketSeconds),
+  );
 
-  const seededUnscoped = useRef(false);
-  const seedState = useRef<{ scope: string; complete: boolean } | null>(null);
-
-  useEffect(() => {
-    // The placeholder has no resource scope. Wait for the first real status,
-    // then seed each scope once even if polling temporarily loses data.
-    if (
-      !hasData ||
-      (seedState.current?.scope === status.resourceScope && seedState.current.complete)
-    ) {
-      return;
-    }
-    seedState.current = { scope: status.resourceScope, complete: false };
-    let cancelled = false;
-    const seedUnscoped = !seededUnscoped.current;
-    const keys = seedUnscoped ? SERIES_KEYS : (['cpu', 'swap'] as const);
-
-    const seed = async () => {
-      const responses = new Map<OverviewSeriesKey, HistoryPoint[]>();
-      await Promise.all(
-        keys.map(async (key) => {
-          const msg = await HttpUtil.get<HistoryPoint[]>(
-            `/panel/api/server/history/${key}/${SEED_BUCKET_SECONDS}`,
-            undefined,
-            { silent: true },
-          );
-          if (msg?.success && Array.isArray(msg.obj)) responses.set(key, msg.obj);
-        }),
-      );
-      if (cancelled || responses.size === 0) return;
-      seedState.current = { scope: status.resourceScope, complete: true };
-      seededUnscoped.current = true;
-
-      let axis: HistoryPoint[] = [];
-      for (const points of responses.values()) {
-        if (points.length > axis.length) axis = points;
+  // Some callers construct a fresh Status wrapper on every render. Object
+  // identity and the wall clock must not be used as sample guards: both
+  // manufacture duplicate datapoints during unrelated UI re-renders.
+  // Sample when metrics, availability, scope or range actually change.
+  const currentSample = sampleOf(status);
+  const sampleSignature = [
+    bucketSeconds,
+    status.resourceScope,
+    ...SERIES_KEYS.map((key) =>
+      (status.metricAvailable(key) ? '1:' : '0:') + currentSample[key],
+    ),
+  ].join('|');
+  const [sampledSignature, setSampledSignature] = useState('');
+  if (hasData && sampleSignature !== sampledSignature) {
+    setSampledSignature(sampleSignature);
+    setTrend((previous) => {
+      const rangeChanged = previous.bucketSeconds !== bucketSeconds;
+      const next = rangeChanged
+        ? emptyWindow(status.resourceScope, bucketSeconds)
+        : {
+            ...previous,
+            times: [...previous.times],
+            series: Object.fromEntries(
+              SERIES_KEYS.map((key) => [key, [...previous.series[key]]]),
+            ) as Record<OverviewSeriesKey, number[]>,
+            scope: status.resourceScope,
+          };
+      if (previous.scope !== status.resourceScope) {
+        next.series.cpu = [];
+        next.series.swap = [];
       }
-      axis = tailWindow(axis);
-      if (axis.length === 0) return;
-
-      const seedTimes = axis.map((p) => Number(p.t) || 0);
-      const seedSeries = emptySeries();
+      next.times = tailWindow(next.times.concat(Math.floor(Date.now() / 1000)));
       for (const key of SERIES_KEYS) {
-        const byTs = new Map<number, number>();
-        for (const p of responses.get(key) ?? []) byTs.set(Number(p.t) || 0, Number(p.v) || 0);
-        seedSeries[key] =
-          status.resourceScope && (key === 'cpu' || key === 'swap')
-            ? seedTimes.flatMap((ts) => (byTs.has(ts) ? [byTs.get(ts)!] : []))
-            : seedTimes.map((ts) => byTs.get(ts) ?? 0);
-      }
-
-      setTrend((prev) => {
-        const merged = emptyWindow();
-        merged.times = seedUnscoped ? tailWindow(seedTimes.concat(prev.times)) : prev.times;
-        for (const key of SERIES_KEYS) {
-          merged.series[key] =
-            seedUnscoped || key === 'cpu' || key === 'swap'
-              ? tailWindow(seedSeries[key].concat(prev.series[key]))
-              : prev.series[key];
+        if (status.metricAvailable(key)) {
+          next.series[key] = tailWindow(next.series[key].concat(currentSample[key]));
         }
-        return merged;
-      });
-    };
-
-    seed().catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [hasData, status.resourceScope]);
-
-  // Each polled status is appended during render; an effect would show the
-  // chart one sample behind the numbers beside it.
-  const [sampledStatus, setSampledStatus] = useState<Status | null>(null);
-  if (hasData && status !== sampledStatus) {
-    setSampledStatus(status);
-    setTrend((prev) => {
-      const scopeChanged = sampledStatus && sampledStatus.resourceScope !== status.resourceScope;
-      const point = sampleOf(status);
-      const next = emptyWindow();
-      next.times = tailWindow(prev.times.concat(Math.floor(Date.now() / 1000)));
-      for (const key of SERIES_KEYS) {
-        const scoped = key === 'cpu' || key === 'swap';
-        const previous = scoped && scopeChanged ? [] : prev.series[key];
-        next.series[key] = status.metricAvailable(key)
-          ? tailWindow(previous.concat(point[key]))
-          : previous;
       }
       return next;
     });
   }
 
-  const labels = useMemo(() => trend.times.map(TimeFormatter.formatClock), [trend.times]);
+  useEffect(() => {
+    if (!hasData) return undefined;
+    let cancelled = false;
+    let timeout: number | undefined;
+    let seededFallback = false;
+
+    const refresh = async () => {
+      const responses = new Map<OverviewSeriesKey, HistoryPoint[]>();
+      try {
+        const msg = await HttpUtil.get<Record<OverviewSeriesKey, HistoryPoint[]>>(
+          `/panel/api/server/overviewHistory/${bucketSeconds}`,
+          undefined,
+          { silent: true },
+        );
+        if (!cancelled && msg?.success && msg.obj) {
+          for (const key of SERIES_KEYS) {
+            const points = msg.obj[key];
+            if (!Array.isArray(points)) continue;
+            responses.set(
+              key,
+              points
+                .map((point) => ({ t: Number(point.t), v: Number(point.v) }))
+                .filter((point) => Number.isFinite(point.t) && Number.isFinite(point.v)),
+            );
+          }
+        }
+      } catch {
+        // Keep the last successful window when a history request fails.
+      }
+      if (cancelled) return;
+      const batchHasData =
+        responses.size === SERIES_KEYS.length &&
+        Array.from(responses.values()).some((points) => points.length > 0);
+      if (batchHasData) {
+        setTrend((previous) =>
+          mergeHistory(previous, responses, status.resourceScope, bucketSeconds),
+        );
+      } else if (!seededFallback) {
+        // The old endpoint is only queried when the newer batch API is absent.
+        // This also preserves the existing live values from Connect Hub.
+        const archived = new Map<OverviewSeriesKey, HistoryPoint[]>();
+        await Promise.all(
+          SERIES_KEYS.map(async (key) => {
+            try {
+              const response = await HttpUtil.get<HistoryPoint[]>(
+                `/panel/api/server/history/${key}/${bucketSeconds}`,
+                undefined,
+                { silent: true },
+              );
+              if (!response?.success || !Array.isArray(response.obj)) return;
+              const points = response.obj
+                .map((point) => ({ t: Number(point.t), v: Number(point.v) }))
+                .filter((point) => Number.isFinite(point.t) && Number.isFinite(point.v));
+              if (points.length > 0) archived.set(key, points);
+            } catch {
+              // An unavailable legacy endpoint must not clear live status samples.
+            }
+          }),
+        );
+        if (cancelled) return;
+        if (archived.size > 0) {
+          seededFallback = true;
+          setTrend((previous) =>
+            mergeLegacyHistory(previous, archived, status.resourceScope, bucketSeconds),
+          );
+        }
+      }
+      const refreshInterval = Math.max(
+        MIN_REFRESH_INTERVAL_MS,
+        Math.min(60_000, bucketSeconds * 1000),
+      );
+      timeout = window.setTimeout(refresh, refreshInterval);
+    };
+
+    void refresh();
+    return () => {
+      cancelled = true;
+      if (timeout !== undefined) window.clearTimeout(timeout);
+    };
+  }, [hasData, status.resourceScope, bucketSeconds]);
+
+  const labels = useMemo(() => formatTimeAxis(trend.times), [trend.times]);
 
   return useMemo(() => ({ series: trend.series, labels }), [trend.series, labels]);
 }

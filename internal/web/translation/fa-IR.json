@@ -10,6 +10,7 @@
   "create": "ایجاد",
   "add": "افزودن",
   "remove": "حذف",
+  "removeItem": "حذف {item}",
   "update": "به‌روزرسانی",
   "copy": "کپی",
   "copied": "کپی شد",
@@ -39,6 +40,7 @@
   "indefinite": "نامحدود",
   "unlimited": "نامحدود",
   "none": "هیچ",
+  "empty": "خالی",
   "qrCode": "QRکد",
   "info": "اطلاعات بیشتر",
   "edit": "ویرایش",
@@ -46,6 +48,7 @@
   "reset": "بازنشانی",
   "noData": "داده‌ای وجود ندارد.",
   "copySuccess": "باموفقیت کپی‌شد",
+  "copyFail": "کپی ناموفق بود",
   "sure": "مطمئن",
   "encryption": "رمزگذاری",
   "transmission": "راه‌اتصال",
@@ -128,7 +131,8 @@
     "subFormats": "Sub Formats",
     "connections": "Connections",
     "tunnels": "تونل‌ها",
-    "assistant": "AI Assistant"
+    "assistant": "AI Assistant",
+    "nodeRouting": "Node Routing"
   },
   "pages": {
     "logs": {
@@ -380,6 +384,11 @@
       "xrayStatus": "Xray",
       "stopXray": "توقف",
       "restartXray": "راه‌اندازی مجدد",
+      "startXray": "شروع",
+      "stopXrayDisabledHint": "Xray در حال اجرا نیست",
+      "stopXrayConfirmTitle": "Xray متوقف شود؟",
+      "stopXrayConfirmContent": "توقف Xray بلافاصله همه اتصالات پراکسی را قطع می‌کند. آیا مطمئن هستید؟",
+      "stopXrayConfirmOk": "توقف Xray",
       "xraySwitch": "‌نسخه",
       "xrayUpdates": "به‌روزرسانی‌های Xray",
       "xraySwitchClickDesk": "لطفا بادقت انتخاب کنید. درصورت انتخاب نسخه قدیمی‌تر، امکان ناهماهنگی با پیکربندی فعلی وجود دارد",
@@ -469,7 +478,7 @@
       "geodataConfirmTitle": "تنظیمات geodata ذخیره شود؟",
       "geodataConfirmContent": "قالب پیکربندی Xray به‌روزرسانی و Xray ری‌استارت می‌شود.",
       "geodataInvalidUrl": "هر فایل به یک آدرس HTTPS نیاز دارد.",
-      "geodataInvalidFile": "نام فایل باید ساده باشد، مانند geosite_custom.dat (بدون مسیر).",
+      "geodataInvalidFile": "نام فایل باید یک نام ساده با پسوند ‎.dat باشد، مانند geosite_custom.dat (بدون مسیر).",
       "geodataInvalidCron": "Cron باید ۵ بخش داشته باشد، مثل 0 4 * * *",
       "geodataEmpty": "فایلی پیکربندی نشده است. در قوانین مسیریابی فایل‌ها به صورت ext:geosite_custom.dat:category استفاده می‌شوند.",
       "dontRefresh": "در حال نصب، لطفا صفحه را رفرش نکنید",
@@ -555,7 +564,9 @@
         "pickInbound": "یک اینباند انتخاب کنید",
         "matchAny": "همه",
         "destPlaceholder": "خودکار (listen:port فرزند)",
-        "needsTls": "فال‌بک‌ها پس از انتخاب TLS یا Reality در برگه‌ی امنیت در دسترس می‌شوند (فقط VLESS/Trojan روی RAW)."
+        "needsTls": "فال‌بک‌ها پس از انتخاب TLS یا Reality در برگه‌ی امنیت در دسترس می‌شوند (فقط VLESS/Trojan روی RAW).",
+        "decryptionConflict": "Fallback با decryption فعال VLESS سازگار نیست. پیش از فعال‌کردن decryption، قوانین fallback را حذف و ذخیره کنید یا decryption را غیرفعال کنید.",
+        "saveFailed": "بارگیری یا ذخیره قوانین fallback انجام نشد. تغییرات فرم حفظ شده‌اند؛ پس از بررسی خطا دوباره تلاش کنید."
       },
       "protocol": "پروتکل",
       "port": "پورت",
@@ -676,6 +687,8 @@
       "importInbound": "افزودن یک ورودی",
       "periodicTrafficResetTitle": "بازنشانی ترافیک",
       "periodicTrafficResetDay": "روز بازنشانی ماهانه",
+      "preserveClientTraffic": "حفظ مصرف کاربران",
+      "preserveClientTrafficHelp": "بازنشانی زمان‌بندی‌شده فقط شمارنده‌های این ورودی را صفر می‌کند. چرخهٔ بازنشانی هر کاربر حفظ می‌شود.",
       "periodicTrafficReset": {
         "never": "هرگز",
         "daily": "روزانه",
@@ -713,7 +726,9 @@
         "invalidClientField": "کلاینت {client}: فیلد {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "گواهی TLS شماره {index}: {reason}",
-        "moreIssues": "{message}  (+{count} مورد دیگر)"
+        "moreIssues": "{message}  (+{count} مورد دیگر)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "moveUp": "بالا",
@@ -983,6 +998,14 @@
           "clientId": "Client ID",
           "clientSecret": "Client Secret",
           "refreshToken": "Refresh Token",
+          "accessKeyId": "شناسه کلید دسترسی",
+          "secretAccessKey": "کلید دسترسی محرمانه",
+          "sessionToken": "توکن نشست",
+          "s3Endpoint": "نقطه پایانی (Endpoint)",
+          "s3Region": "منطقه (Region)",
+          "s3Bucket": "باکت (Bucket)",
+          "s3PathStyle": "آدرس‌دهی مسیرمحور",
+          "s3PathStyleDesc": "روشن: نام باکت در مسیر URL قرار می‌گیرد. خاموش: در نام میزبان، که به یک endpoint دامنه‌ای نیاز دارد.",
           "secrets": "مقادیر محرمانه",
           "secretsDesc": "مقادیری که قالب با {secret0}، {secret1}، … می‌خواند",
           "template": "قالب ذخیره‌سازی",
@@ -1008,7 +1031,7 @@
         "autoSystemDnsToGateway": "DNS سیستم به گیت‌وی",
         "autoSystemDnsToGatewayTooltip": "فقط لینوکس: systemd-resolved را به گیت‌وی TUN می‌برد تا کوئری‌های سیستم از Xray عبور کنند. به گیت‌وی نیاز دارد و اگر این کار شکست بخورد TUN اجرا نمی‌شود.",
         "autoSystemWfpBlockLeak": "جلوگیری از نشت (WFP)",
-        "autoSystemWfpBlockLeakTooltip": "فقط ویندوز، همراه با مسیریابی خودکار سیستم: dns ترافیک DNS را داخل TUN نگه می‌دارد (به سرور DNS نیاز دارد) و misconfigtun نسخه‌ای از IP را که هیچ مسیری به TUN نمی‌فرستد مسدود می‌کند.",
+        "autoSystemWfpBlockLeakTooltip": "فقط ویندوز، همراه با مسیریابی خودکار سیستم: all همه‌چیز را بیرون از TUN مسدود می‌کند و allexceptlan همین کار را می‌کند ولی شبکهٔ محلی در دسترس می‌ماند؛ dns ترافیک DNS (پورت‌های ۵۳ و ۸۵۳ و سرویس DNS Client) را داخل TUN نگه می‌دارد؛ windnsclient فقط همان سرویس را پوشش می‌دهد؛ tcp، udp و icmp کل یک پروتکل را مسدود می‌کنند؛ برای پورت‌های مشخص tcp/PORT، udp/PORT، خودِ PORT یا بازهٔ LOW-HIGH بنویسید؛ یک CIDR در ابتدا (1.1.1.0/24:53 یا [::/0]:all) مقدار را به همان آدرس‌ها محدود می‌کند؛ misconfigtun نسخه‌ای از IP را که هیچ مسیری به TUN نمی‌فرستد مسدود می‌کند. هر مقداری که پورت ۵۳ را پوشش دهد به سرور DNS نیاز دارد.",
         "maxVersion": "حداکثر نسخه",
         "headerName": "نام هدر",
         "headerValue": "مقدار هدر",
@@ -1043,7 +1066,11 @@
         "finderNone": "هیچ هدفی رد نشد. محدوده‌ی بزرگ‌تری را امتحان کن.",
         "finderReport": "گزارش",
         "finderCommandError": "ساخت دستور ممکن نشد",
-        "finderExpired": "این دستور منقضی شده. یک دستور جدید بساز."
+        "finderExpired": "این دستور منقضی شده. یک دستور جدید بساز.",
+        "chainNone": "اتصال مستقیم",
+        "chainSelectorSuffix": "انتخابگر",
+        "chain": "زنجیره کلاینت",
+        "chainHelp": "کلاینت با یک پروکسی بالادستی SOCKS/HTTP به این شنونده وصل شود. برای اشتراک JSON و Mihomo اعمال می‌شود."
       },
       "info": {
         "mode": "حالت",
@@ -1092,8 +1119,19 @@
           "failed": "ذخیرهٔ یدک‌ها ممکن نشد",
           "switchFailed": "تعویض ممکن نشد: تارگت بررسی یا تست واقعی REALITY را رد نکرد",
           "switched": "به {target} تعویض شد"
-        }
-      }
+        },
+        "saveFailed": "Unable to save REALITY monitoring settings"
+      },
+      "changeIdInvalid": "The new ID is unavailable ({reason}).",
+      "changeIdUnchanged": "The ID is unchanged.",
+      "changeIdRoutingRefs": "{count} routing rule(s) point at the current ID and will be updated.",
+      "changeIdNodeConflict": "The hosting node already has an inbound with this name.",
+      "changeIdValid": "The new ID is available.",
+      "changeIdTitle": "Change inbound ID — {tag}",
+      "changeIdApply": "Apply",
+      "changeIdDesc": "Changing the inbound ID updates every routing rule and node reference that points at the current ID. The check below runs before anything is saved.",
+      "changeIdLabel": "New inbound ID (tag)",
+      "changeId": "Change ID"
     },
     "clients": {
       "columns": "ستون‌ها",
@@ -1164,7 +1202,13 @@
       "deleteHwid": "حذف دستگاه",
       "deleteHwidConfirm": "این دستگاه حذف شود؟ در دریافت بعدی اشتراک باید دوباره ثبت‌نام شود.",
       "hwidDeleted": "دستگاه حذف شد.",
-      "clearHwidsConfirm": "همه دستگاه‌های ثبت‌شده حذف شوند؟ هر دستگاه در دریافت بعدی اشتراک باید دوباره ثبت‌نام شود.",
+      "blockHwid": "مسدود کردن",
+      "unblockHwid": "رفع مسدودی",
+      "hwidBlocked": "مسدود شده",
+      "blockHwidConfirm": "دریافت این اشتراک برای این دستگاه مسدود شود؟",
+      "unblockHwidConfirm": "دریافت این اشتراک دوباره برای این دستگاه مجاز شود؟",
+      "hwidBlockHint": "مسدودی دستگاه برای این اشتراک حتی با محدودیت HWID برابر ۰ اعمال می‌شود. پاک کردن فهرست مسدودی‌ها را حفظ می‌کند.",
+      "clearHwidsConfirm": "همه دستگاه‌های مسدودنشده حذف شوند؟ در دریافت بعدی اشتراک دوباره ثبت می‌شوند. دستگاه‌های مسدودشده مسدود می‌مانند.",
       "limitIpFail2banMissing": "Fail2ban نصب نشده است، بنابراین محدودیت IP اعمال نمی‌شود. برای فعال‌سازی این گزینه، Fail2ban را از منوی بش x-ui نصب کنید.",
       "limitIpFail2banWindows": "Fail2ban روی ویندوز در دسترس نیست، بنابراین محدودیت IP قابل اعمال نیست.",
       "limitIpDisabled": "قابلیت محدودیت IP روی این سرور غیرفعال است.",
@@ -1174,6 +1218,7 @@
       "subIdDesc": "این شناسه، کد دعوت این کاربر در ربات تلگرام هم هست: هر کسی آن را به ربات بفرستد به این کاربر متصل می‌شود. آن را طولانی و تصادفی نگه دارید؛ شناسهٔ کوتاه یا قابل حدس ممکن است توسط شخص دیگری تصاحب شود.",
       "online": "آنلاین",
       "email": "ایمیل",
+      "emailReservedName": "نام کاربر نمی‌تواند فقط «.» یا «..» باشد",
       "emailInvalidChars": "ایمیل نمی‌تواند شامل فاصله، '/'، '\\' یا کاراکترهای کنترلی باشد",
       "subIdInvalidChars": "شناسه‌ی اشتراک نمی‌تواند شامل فاصله، '/'، '\\' یا کاراکترهای کنترلی باشد",
       "group": "گروه",
@@ -1537,7 +1582,7 @@
       "tlsPin": "Pin گواهی (SHA-256)",
       "tlsSkip": "رد کردن اعتبارسنجی",
       "tlsMtls": "TLS متقابل (گواهی کلاینت)",
-      "mtlsFormHint": "این نود با یک گواهی کلاینت، پنل را احراز هویت می‌کند. CA این پنل را از بخش mTLS نود به نود کپی کنید، CA مورد اعتماد آن را تنظیم کنید و سپس آن را راه‌اندازی مجدد کنید.",
+      "mtlsFormHint": "این نود با یک گواهی کلاینت، پنل را احراز هویت می‌کند. CA این پنل را از بخش mTLS نود به نود کپی کنید، CA مورد اعتماد آن را تنظیم کنید و سپس آن را راه‌اندازی مجدد کنید. به‌روزرسانی پنل این نود از اینجا همچنان به یک توکن API با دامنهٔ node-admin نیاز دارد.",
       "mtls": {
         "title": "mTLS نود",
         "intro": "TLS متقابل علاوه بر توکن API، یک عامل گواهی کلاینت برای ارتباط بین نودها اضافه می‌کند. اختیاری است: برای استفاده فقط از احراز هویت با توکن، آن را خالی بگذارید.",
@@ -1795,6 +1840,7 @@
         "applyTo": "اعمال بر",
         "addNoise": "+ نویز",
         "concurrency": "هم‌زمانی",
+        "concurrencyHint": "تعداد استریم در هر اتصال. xray-core 26.11.9 و جدیدتر هر مقدار بین ۰ تا ۱۲۸ را به ۱۲۸ می‌رساند؛ هسته‌های قدیمی‌تر همان عدد را به کار می‌برند (۰ یعنی ۸). مقدار ‎-1‏ ماکس TCP را خاموش می‌کند.",
         "xudpConcurrency": "هم‌زمانی xudp",
         "xudpUdp443": "xudp UDP 443"
       },
@@ -1989,6 +2035,71 @@
           "httpMethod": "متد HTTP",
           "httpMethodDesc": "متد استفاده‌شده برای درخواست‌های probe.",
           "note": "موزان‌کننده‌های leastPing/leastLoad همیشه burstObservatory دارند. این کلید پارامترهای probe آن را سفارشی می‌کند — آن را خاموش کنید تا از پیش‌فرض‌های داخلی استفاده شود. تغییرات پس از راه‌اندازی مجدد پنل اعمال می‌شوند."
+        }
+      },
+      "chainProxies": {
+        "menu": "زنجیره پروکسی‌ها",
+        "title": "پروکسی زنجیره‌ای",
+        "add": "افزودن پروکسی زنجیره",
+        "desc": "پروکسی‌های بالادستی SOCKS و HTTP که کلاینت مشترک پیش از رسیدن به این شنونده از آن‌ها عبور می‌کند. به هر شنونده یک پروکسی یا یک انتخابگر تخصیص می‌یابد؛ اشتراک JSON و Mihomo این پرش را می‌آورند، اما لینک‌های خام و Clash قدیمی این شنونده‌ها را حذف می‌کنند.",
+        "remark": "توضیح",
+        "remarkPlaceholder": "entry-de-fra",
+        "type": "پروتکل",
+        "typeSocks": "SOCKS",
+        "typeHttp": "HTTP",
+        "server": "سرور",
+        "port": "پورت",
+        "username": "نام کاربری",
+        "usernamePlaceholder": "برای پروکسی باز خالی بگذارید",
+        "password": "رمز عبور",
+        "tls": "پروکسی HTTPS",
+        "tlsHelp": "اتصال به پروکسی با TLS. خروجی SOCKS در xray از TLS پشتیبانی نمی‌کند، پس فقط برای HTTP است.",
+        "auth": "احراز هویت",
+        "authPassword": "نام کاربری + رمز عبور",
+        "authNone": "هیچ",
+        "endpoint": "نشانی",
+        "enabled": "فعال",
+        "empty": "هنوز پروکسی زنجیره‌ای نیست",
+        "deleteConfirm": "این پروکسی حذف شود؟ شنونده‌هایی که آن را دارند مستقیم وصل می‌شوند.",
+        "errRemarkRequired": "توضیح لازم است (حداکثر ۲۵۶ نویسه)",
+        "errServerRequired": "سرور لازم است",
+        "errServerInvalid": "سرور باید میزبان یا IP بدون فاصله باشد",
+        "errPortRequired": "پورت باید بین ۱ و ۶۵۵۳۵ باشد",
+        "tabProxies": "پروکسی‌ها",
+        "toasts": {
+          "list": "بارگذاری پروکسی‌ها ناموفق بود",
+          "create": "ساخت پروکسی ناموفق بود",
+          "update": "به‌روزرسانی پروکسی ناموفق بود",
+          "delete": "حذف پروکسی ناموفق بود",
+          "invalidId": "شناسه پروکسی نامعتبر است"
+        }
+      },
+      "chainSelectors": {
+        "title": "انتخابگر زنجیره",
+        "add": "افزودن انتخابگر زنجیره",
+        "desc": "چند پروکسی زنجیره‌ای که گروه‌بندی شده‌اند تا کلاینت یک پرش را بر اساس راهبرد انتخاب کند. شنونده به‌جای یک پروکسی یک انتخابگر می‌گیرد؛ خروجی JSON از طریق متعادل‌کننده مسیر می‌گیرد و Mihomo یک گروه منطبق می‌گیرد.",
+        "remark": "توضیح",
+        "remarkPlaceholder": "entries-fastest",
+        "strategy": "راهبرد",
+        "strategyHelp": "leastPing و leastLoad هر پرش را می‌سنجند؛ random و roundRobin نوبتی کار می‌کنند. Mihomo آن‌ها را با url-test و load-balance تقریب می‌زند.",
+        "strategyLeastLoad": "کمترین بار",
+        "strategyLeastPing": "کمترین پینگ",
+        "strategyRandom": "تصادفی",
+        "strategyRoundRobin": "نوبتی",
+        "proxies": "پروکسی‌های زنجیره",
+        "proxiesCount": "{count} پروکسی",
+        "enabled": "فعال",
+        "empty": "هنوز انتخابگری نیست",
+        "deleteConfirm": "این انتخابگر حذف شود؟ شنونده‌هایی که آن را دارند مستقیم وصل می‌شوند.",
+        "errRemarkRequired": "توضیح لازم است (حداکثر ۲۵۶ نویسه)",
+        "errProxiesRequired": "حداقل یک پروکسی انتخاب کنید",
+        "tabSelectors": "انتخابگرها",
+        "toasts": {
+          "list": "بارگذاری انتخابگرها ناموفق بود",
+          "create": "ساخت انتخابگر ناموفق بود",
+          "update": "به‌روزرسانی انتخابگر ناموفق بود",
+          "delete": "حذف انتخابگر ناموفق بود",
+          "invalidId": "شناسه انتخابگر نامعتبر است"
         }
       },
       "subCalendarExpireInclusive": "Month-end subscription expiry display",
@@ -2242,7 +2353,16 @@
       "wechatReportTime": "زمان‌بندی گزارش",
       "wechatReportTimeDesc": "از عبارت cron یا پیش‌تنظیمی مانند @daily استفاده کنید.",
       "wechatEvents": "هشدارهای رویداد",
-      "wechatEventsDesc": "رویدادهای ارسال اعلان و آستانه هشدار را انتخاب کنید."
+      "wechatEventsDesc": "رویدادهای ارسال اعلان و آستانه هشدار را انتخاب کنید.",
+      "inboundListOrder": "Inbound list order",
+      "inboundListOrderDesc": "Default order of the inbound list in the panel. Applies to local inbounds and to inbounds adopted from all nodes.",
+      "inboundListOrderOptionId": "ID",
+      "inboundListOrderOptionRemark": "Remark",
+      "inboundListOrderOptionPort": "Port",
+      "inboundListOrderOptionProtocol": "Protocol",
+      "inboundListOrderOptionSubSortIndex": "Subscription order",
+      "nodeRoutingControl": "Node routing control",
+      "nodeRoutingControlDesc": "Let this panel control the routing of connected nodes. When enabled, the Node Routing page can push a shared routing policy to each node."
     },
     "xray": {
       "save": "ذخیره",
@@ -2587,7 +2707,14 @@
         "subnetCidr": "پیشوند زیرشبکه (CIDR)",
         "allowedIPs": "آی‌پی‌های مجاز",
         "endpoint": "نقطه پایانی",
-        "domainStrategy": "استراتژی حل دامنه"
+        "domainStrategy": "استراتژی حل دامنه",
+        "vkTurnEnabled": "Tunnel through VK",
+        "vkTurnHint": "A compatible VK TURN client sends WireGuard traffic through VK relays to this server's SRTP proxy. The proxy forwards it to this WireGuard inbound. Allow the proxy UDP port through your firewall.",
+        "vkTurnCallLink": "VK call link",
+        "vkTurnCallLinkHint": "The client obtains and refreshes TURN credentials using this link. VK sign-in is needed only if anonymous access is unavailable.",
+        "vkTurnPort": "VK proxy UDP port",
+        "vkTurnInvalidLink": "Enter a VK call link, such as https://vk.ru/call/join/...",
+        "vkTurnProfile": "VK TURN profile"
       },
       "amneziawg": {
         "privateKey": "کلید خصوصی",
@@ -2847,7 +2974,7 @@
         "allowInsecure": "رد کردن بررسی گواهی TLS (allowInsecure / skip-cert-verify).",
         "vlessRoute": "یک مقدار مسیر VLESS (0 تا 65535) که در UUID جاسازی می‌شود، مثلاً 443. برای هیچ‌کدام خالی بگذارید.",
         "mihomoX25519": "فقط Mihomo: دست‌دهی REALITY با X25519 ساده و بدون ML-KEM (support-x25519mlkem768: false). برای سرورهایی با Xray-core قدیمی‌تر از 26.9.8 که به ML-KEM نیاز ندارند.",
-        "remark": "یک برچسب ساده برای این میزبان. تنها زمانی به‌عنوان نام کانفیگ نمایش داده می‌شود که اینباند نام مخصوص خود را نداشته باشد."
+        "remark": "یک برچسب ساده برای این میزبان. برای درج آن در نام کانفیگ‌ها از {{HOST}} در قالب نام (Remark Template) استفاده کنید."
       },
       "remarkVars": {
         "title": "متغیرهای قالب",
@@ -2961,6 +3088,36 @@
       "unavailable": "نود در دسترس نیست",
       "latencyLoss": "RTT / اتلاف",
       "unsupportedPlatform": "این پلتفرم می‌تواند تونل‌های راه دور را مدیریت کند. برای اجرای WatTunnel یک نود پشتیبانی‌شده انتخاب کنید."
+    },
+    "nodeRouting": {
+      "policySaved": "Routing policy saved",
+      "cleared": "Routing policy cleared on {name}.",
+      "applied": "Routing policy applied to {name}.",
+      "applyFailed": "Apply failed on {name}: {reason}",
+      "noNodes": "No online, enabled nodes to apply to.",
+      "appliedAll": "Routing policy applied to {count} node(s).",
+      "appliedMixed": "Routing policy applied to {ok} node(s), {failed} failed.",
+      "node": "Node",
+      "status": "Status",
+      "egress": "Egress",
+      "direct": "direct",
+      "policy": "Master policy",
+      "policyActive": "active",
+      "none": "none",
+      "actions": "Actions",
+      "apply": "Apply",
+      "clear": "Clear",
+      "title": "Node routing control",
+      "control": "Control",
+      "policyTitle": "Shared routing policy",
+      "controlDisabled": "Node routing control is disabled. Enable it to push routing policies to nodes.",
+      "policyDesc": "JSON array of Xray routing rules (the same shape as the routing rules on the Routing page). When applied, a node runs these rules ahead of its own rules; the node's internal stats rule is always kept first.",
+      "policyInvalid": "The policy must be a JSON array of routing rule objects.",
+      "savePolicy": "Save policy",
+      "clearPolicy": "Clear policy",
+      "ruleCount": "{count} rule(s)",
+      "nodesTitle": "Nodes",
+      "applyAll": "Apply to all online nodes"
     }
   },
   "tgbot": {
@@ -3404,5 +3561,6 @@
       "trafficRemaining": "ترافیک باقی‌مانده 3x-ui",
       "trafficQuotaUnset": "سهمیه تنظیم نشده است"
     }
-  }
+  },
+  "import": "Import"
 }

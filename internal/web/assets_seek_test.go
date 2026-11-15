@@ -17,7 +17,7 @@ func TestEmbeddedFontsAndRangeRequests(t *testing.T) {
 		checked++
 		expected, err := distFS.ReadFile("dist/assets/" + entry.Name())
 		if err != nil { t.Fatal(err) }
-		handler := http.FileServer(http.FS(&wrapDistFS{FS: distFS}))
+		handler := http.FileServer(http.FS(&wrapDistFS{dist: distFS}))
 		for _, partial := range []bool{false, true} {
 			req := httptest.NewRequest("GET", "/"+entry.Name(), nil)
 			if partial { req.Header.Set("Range", "bytes=0-3") }
@@ -29,7 +29,7 @@ func TestEmbeddedFontsAndRangeRequests(t *testing.T) {
 				t.Fatalf("font %s partial=%v: HTTP %d, length %d", entry.Name(), partial, response.Code, response.Body.Len())
 			}
 		}
-		file, err := (&wrapDistFS{FS: distFS}).Open(entry.Name())
+		file, err := (&wrapDistFS{dist: distFS}).Open(entry.Name())
 		if err != nil { t.Fatal(err) }
 		if _, ok := file.(io.Seeker); !ok { t.Fatal("embedded font lost seeking") }
 		file.Close()

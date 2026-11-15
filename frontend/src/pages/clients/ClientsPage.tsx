@@ -1365,6 +1365,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
         <Inner className="content-shell" style={showingDetail ? { display: 'none' } : undefined}>
           <Content id={embedded ? undefined : 'content-layout'} className="content-area">
             <Spin
+              aria-live="off"
               spinning={!fetched || !hostsFetched || !scopeReady}
               delay={200}
               description={t('loading')}
@@ -1800,7 +1801,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                           />
                         </div>
                       ) : (
-                        <Spin spinning={transitioning}>
+                        <Spin aria-live="off" spinning={transitioning}>
                           <div className="client-cards">
                             {filteredClients.length > 0 && (
                               <div className="card-bulk-bar">

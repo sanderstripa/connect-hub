@@ -10,6 +10,7 @@
   "create": "Buat",
   "add": "Tambah",
   "remove": "Hapus",
+  "removeItem": "Hapus {item}",
   "update": "Perbarui",
   "copy": "Salin",
   "copied": "Tersalin",
@@ -39,6 +40,7 @@
   "indefinite": "Tak Terbatas",
   "unlimited": "Tanpa Batas",
   "none": "Tidak ada",
+  "empty": "Kosong",
   "qrCode": "Kode QR",
   "info": "Informasi Lebih Lanjut",
   "edit": "Edit",
@@ -46,6 +48,7 @@
   "reset": "Reset",
   "noData": "Tidak ada data.",
   "copySuccess": "Berhasil Disalin",
+  "copyFail": "Gagal Menyalin",
   "sure": "Yakin",
   "encryption": "Enkripsi",
   "transmission": "Transmisi",
@@ -128,7 +131,8 @@
     "subFormats": "Sub Formats",
     "connections": "Connections",
     "tunnels": "Terowongan",
-    "assistant": "AI Assistant"
+    "assistant": "AI Assistant",
+    "nodeRouting": "Node Routing"
   },
   "pages": {
     "logs": {
@@ -380,6 +384,11 @@
       "xrayStatus": "Xray",
       "stopXray": "Hentikan",
       "restartXray": "Mulai ulang",
+      "startXray": "Mulai",
+      "stopXrayDisabledHint": "Xray tidak berjalan",
+      "stopXrayConfirmTitle": "Hentikan Xray?",
+      "stopXrayConfirmContent": "Menghentikan Xray akan langsung memutus semua koneksi proxy. Yakin ingin melanjutkan?",
+      "stopXrayConfirmOk": "Hentikan Xray",
       "xraySwitch": "Versi",
       "xrayUpdates": "Pembaruan Xray",
       "xraySwitchClickDesk": "Pilih dengan hati-hati, karena versi yang lebih lama mungkin tidak kompatibel dengan konfigurasi saat ini.",
@@ -469,7 +478,7 @@
       "geodataConfirmTitle": "Simpan pengaturan geodata?",
       "geodataConfirmContent": "Templat konfigurasi Xray akan diperbarui dan Xray akan dimulai ulang.",
       "geodataInvalidUrl": "Setiap berkas memerlukan URL HTTPS.",
-      "geodataInvalidFile": "Nama berkas harus berupa nama sederhana, mis. geosite_custom.dat (tanpa path).",
+      "geodataInvalidFile": "Nama berkas harus berupa nama .dat sederhana, mis. geosite_custom.dat (tanpa path).",
       "geodataInvalidCron": "Cron harus terdiri dari 5 bagian, mis. 0 4 * * *",
       "geodataEmpty": "Belum ada berkas yang dikonfigurasi. Pada aturan routing, rujuk berkas sebagai ext:geosite_custom.dat:category.",
       "dontRefresh": "Instalasi sedang berlangsung, harap jangan menyegarkan halaman ini",
@@ -555,7 +564,9 @@
         "pickInbound": "Pilih inbound",
         "matchAny": "apa pun",
         "destPlaceholder": "otomatis (listen:port child)",
-        "needsTls": "Fallback tersedia setelah memilih TLS atau Reality di tab Keamanan (hanya VLESS/Trojan melalui RAW)."
+        "needsTls": "Fallback tersedia setelah memilih TLS atau Reality di tab Keamanan (hanya VLESS/Trojan melalui RAW).",
+        "decryptionConflict": "Fallback tidak dapat digunakan dengan dekripsi VLESS server yang aktif. Hapus dan simpan aturan fallback sebelum mengaktifkan dekripsi, atau nonaktifkan dekripsi.",
+        "saveFailed": "Aturan fallback gagal dimuat atau disimpan. Draf tetap terbuka; periksa kesalahan lalu coba lagi."
       },
       "protocol": "Protokol",
       "port": "Port",
@@ -676,6 +687,8 @@
       "importInbound": "Impor Masuk",
       "periodicTrafficResetTitle": "Reset Trafik Berkala",
       "periodicTrafficResetDay": "Hari reset bulanan",
+      "preserveClientTraffic": "Pertahankan penggunaan klien",
+      "preserveClientTrafficHelp": "Reset terjadwal hanya mengosongkan penghitung inbound ini. Klien tetap mengikuti jadwal reset masing-masing.",
       "periodicTrafficReset": {
         "never": "Tidak Pernah",
         "daily": "Harian",
@@ -713,7 +726,9 @@
         "invalidClientField": "Klien {client}: kolom {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "Sertifikat TLS {index}: {reason}",
-        "moreIssues": "{message}  (+{count} lainnya)"
+        "moreIssues": "{message}  (+{count} lainnya)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "moveUp": "Naik",
@@ -983,6 +998,14 @@
           "clientId": "Client ID",
           "clientSecret": "Client Secret",
           "refreshToken": "Refresh Token",
+          "accessKeyId": "ID kunci akses",
+          "secretAccessKey": "Kunci akses rahasia",
+          "sessionToken": "Token sesi",
+          "s3Endpoint": "Endpoint",
+          "s3Region": "Region",
+          "s3Bucket": "Bucket",
+          "s3PathStyle": "Pengalamatan gaya path",
+          "s3PathStyleDesc": "Aktif: bucket ditaruh di path URL. Nonaktif: di nama host, yang membutuhkan endpoint DNS.",
           "secrets": "Rahasia",
           "secretsDesc": "Nilai yang dibaca template sebagai {secret0}, {secret1}, …",
           "template": "Template penyimpanan",
@@ -1008,7 +1031,7 @@
         "autoSystemDnsToGateway": "DNS sistem ke gateway",
         "autoSystemDnsToGatewayTooltip": "Khusus Linux: mengarahkan systemd-resolved ke gateway TUN agar lookup sistem lewat Xray. Butuh gateway, dan TUN tidak berjalan jika ini gagal.",
         "autoSystemWfpBlockLeak": "Blokir kebocoran (WFP)",
-        "autoSystemWfpBlockLeakTooltip": "Khusus Windows, bersama Auto system routes: dns menjaga DNS tetap di dalam TUN (butuh server DNS), misconfigtun memblokir versi IP yang tidak dikirim rute mana pun ke TUN.",
+        "autoSystemWfpBlockLeakTooltip": "Khusus Windows, bersama Auto system routes: all memblokir semuanya di luar TUN, allexceptlan sama tetapi jaringan lokal tetap bisa dijangkau; dns menjaga DNS (port 53 dan 853 serta layanan DNS Client) tetap di dalam TUN; windnsclient hanya mencakup layanan itu; tcp, udp, dan icmp memblokir seluruh protokol; ketik tcp/PORT, udp/PORT, PORT saja, atau rentang LOW-HIGH untuk port tertentu; CIDR di depan (1.1.1.0/24:53, [::/0]:all) membatasi nilai ke alamat tersebut; misconfigtun memblokir versi IP yang tidak dikirim rute mana pun ke TUN. Nilai apa pun yang mencakup port 53 butuh server DNS.",
         "maxVersion": "Versi maksimum",
         "headerName": "Nama header",
         "headerValue": "Nilai header",
@@ -1043,7 +1066,11 @@
         "finderNone": "Tidak ada target yang lolos. Coba cakupan yang lebih luas.",
         "finderReport": "Laporan",
         "finderCommandError": "Tidak dapat membuat perintah",
-        "finderExpired": "Perintah ini sudah kedaluwarsa. Buat yang baru."
+        "finderExpired": "Perintah ini sudah kedaluwarsa. Buat yang baru.",
+        "chainNone": "Koneksi langsung",
+        "chainSelectorSuffix": "pemilih",
+        "chain": "Rantai klien",
+        "chainHelp": "Buat klien mendial inbound ini melalui proxy SOCKS/HTTP hulu. Berlaku untuk langganan JSON dan Mihomo."
       },
       "info": {
         "mode": "Mode",
@@ -1092,8 +1119,19 @@
           "failed": "Tidak bisa menyimpan cadangan",
           "switchFailed": "Tidak bisa mengganti: target gagal pemeriksaan atau tes REALITY nyata",
           "switched": "Diganti ke {target}"
-        }
-      }
+        },
+        "saveFailed": "Unable to save REALITY monitoring settings"
+      },
+      "changeIdInvalid": "The new ID is unavailable ({reason}).",
+      "changeIdUnchanged": "The ID is unchanged.",
+      "changeIdRoutingRefs": "{count} routing rule(s) point at the current ID and will be updated.",
+      "changeIdNodeConflict": "The hosting node already has an inbound with this name.",
+      "changeIdValid": "The new ID is available.",
+      "changeIdTitle": "Change inbound ID — {tag}",
+      "changeIdApply": "Apply",
+      "changeIdDesc": "Changing the inbound ID updates every routing rule and node reference that points at the current ID. The check below runs before anything is saved.",
+      "changeIdLabel": "New inbound ID (tag)",
+      "changeId": "Change ID"
     },
     "clients": {
       "columns": "Kolom",
@@ -1164,7 +1202,13 @@
       "deleteHwid": "Hapus perangkat",
       "deleteHwidConfirm": "Hapus perangkat ini? Perangkat perlu mendaftar ulang pada pengambilan langganan berikutnya.",
       "hwidDeleted": "Perangkat dihapus.",
-      "clearHwidsConfirm": "Hapus semua perangkat terdaftar? Setiap perangkat perlu mendaftar ulang pada pengambilan langganan berikutnya.",
+      "blockHwid": "Blokir",
+      "unblockHwid": "Buka blokir",
+      "hwidBlocked": "Diblokir",
+      "blockHwidConfirm": "Blokir perangkat ini agar tidak dapat mengambil langganan ini?",
+      "unblockHwidConfirm": "Izinkan perangkat ini mengambil langganan ini lagi?",
+      "hwidBlockHint": "Pemblokiran perangkat berlaku untuk langganan ini meskipun batas HWID 0. Menghapus daftar tidak membuka blokir.",
+      "clearHwidsConfirm": "Hapus semua perangkat yang tidak diblokir? Perangkat akan mendaftar ulang saat mengambil langganan berikutnya. Perangkat yang diblokir tetap diblokir.",
       "limitIpFail2banMissing": "Fail2ban tidak terpasang, sehingga batas IP tidak dapat diterapkan. Pasang Fail2ban dari menu bash x-ui untuk mengaktifkan opsi ini.",
       "limitIpFail2banWindows": "Fail2ban tidak tersedia di Windows, sehingga batas IP tidak dapat diterapkan.",
       "limitIpDisabled": "Fitur batas IP dinonaktifkan di server ini.",
@@ -1174,6 +1218,7 @@
       "subIdDesc": "Juga berfungsi sebagai kode undangan bot Telegram untuk klien ini: siapa pun yang mengirimkannya ke bot akan ditautkan ke klien ini. Buat panjang dan acak — ID yang pendek atau mudah ditebak bisa diklaim orang lain.",
       "online": "Online",
       "email": "Email",
+      "emailReservedName": "Nama klien tidak boleh hanya \".\" atau \"..\"",
       "emailInvalidChars": "Email tidak boleh mengandung spasi, '/', '\\', atau karakter kontrol",
       "subIdInvalidChars": "ID langganan tidak boleh mengandung spasi, '/', '\\', atau karakter kontrol",
       "group": "Grup",
@@ -1537,7 +1582,7 @@
       "tlsPin": "Pin sertifikat (SHA-256)",
       "tlsSkip": "Lewati verifikasi",
       "tlsMtls": "TLS mutual (sertifikat klien)",
-      "mtlsFormHint": "Node ini mengautentikasi panel dengan sertifikat klien. Salin CA panel ini dari bagian mTLS Node ke node, atur CA tepercayanya, lalu mulai ulang.",
+      "mtlsFormHint": "Node ini mengautentikasi panel dengan sertifikat klien. Salin CA panel ini dari bagian mTLS Node ke node, atur CA tepercayanya, lalu mulai ulang. Memperbarui panel node ini dari sini tetap memerlukan token API dengan cakupan node-admin.",
       "mtls": {
         "title": "mTLS Node",
         "intro": "TLS mutual menambahkan faktor sertifikat klien di atas token API untuk panggilan antar-node. Bersifat opsional: biarkan kosong untuk tetap menggunakan autentikasi token saja.",
@@ -1791,6 +1836,7 @@
         "applyTo": "Terapkan ke",
         "addNoise": "+ Noise",
         "concurrency": "Konkurensi",
+        "concurrencyHint": "Jumlah stream per koneksi. xray-core 26.11.9 dan yang lebih baru menaikkan nilai 0 sampai 128 menjadi 128; core yang lebih lama memakai angka apa adanya (0 berarti 8). -1 mematikan mux TCP.",
         "xudpConcurrency": "Konkurensi xudp",
         "xudpUdp443": "xudp UDP 443"
       },
@@ -1989,6 +2035,71 @@
           "httpMethod": "Metode HTTP",
           "httpMethodDesc": "Metode yang dipakai untuk permintaan probe.",
           "note": "Penyeimbang leastPing/leastLoad selalu membawa burstObservatory. Sakelar ini menyesuaikan parameter probe-nya — matikan untuk memakai bawaan default. Perubahan berlaku setelah panel dimulai ulang."
+        }
+      },
+      "chainProxies": {
+        "menu": "Rantai proxy",
+        "title": "Proxy rantai",
+        "add": "Tambah proxy rantai",
+        "desc": "Proxy SOCKS dan HTTP hulu yang didial oleh klien pelanggan sebelum mencapai inbound panel ini. Setiap inbound diberi satu proxy atau satu pemilih; langganan JSON dan Mihomo membawa lompatan ini, sedangkan tautan mentah dan keluaran Clash lama melewati inbound tersebut.",
+        "remark": "Keterangan",
+        "remarkPlaceholder": "entry-de-fra",
+        "type": "Protokol",
+        "typeSocks": "SOCKS",
+        "typeHttp": "HTTP",
+        "server": "Server",
+        "port": "Port",
+        "username": "Nama pengguna",
+        "usernamePlaceholder": "Biarkan kosong untuk proxy terbuka",
+        "password": "Kata sandi",
+        "tls": "Proxy HTTPS",
+        "tlsHelp": "Dial proxy lewat TLS. Outbound SOCKS xray tidak mendukung TLS, jadi ini hanya untuk HTTP.",
+        "auth": "Autentikasi",
+        "authPassword": "Nama pengguna + kata sandi",
+        "authNone": "Tidak ada",
+        "endpoint": "Titik akhir",
+        "enabled": "Aktif",
+        "empty": "Belum ada proxy rantai",
+        "deleteConfirm": "Hapus proxy ini? Inbound yang memakainya akan terhubung langsung.",
+        "errRemarkRequired": "Keterangan wajib (maks. 256 karakter)",
+        "errServerRequired": "Server wajib diisi",
+        "errServerInvalid": "Server harus berupa host atau IP tanpa spasi",
+        "errPortRequired": "Port harus antara 1 dan 65535",
+        "tabProxies": "Proxy",
+        "toasts": {
+          "list": "Gagal memuat proxy",
+          "create": "Gagal membuat proxy",
+          "update": "Gagal memperbarui proxy",
+          "delete": "Gagal menghapus proxy",
+          "invalidId": "Id proxy tidak valid"
+        }
+      },
+      "chainSelectors": {
+        "title": "Pemilih rantai",
+        "add": "Tambah pemilih rantai",
+        "desc": "Beberapa proxy rantai yang dikelompokkan agar klien memilih satu lompatan sesuai strategi. Inbound memakai pemilih alih-alih satu proxy; keluaran JSON dirutekan lewat penyeimbang dan Mihomo mendapat grup yang setara.",
+        "remark": "Keterangan",
+        "remarkPlaceholder": "entries-fastest",
+        "strategy": "Strategi",
+        "strategyHelp": "leastPing dan leastLoad menguji setiap lompatan; random dan roundRobin bergiliran. Mihomo mendekatinya dengan url-test dan load-balance.",
+        "strategyLeastLoad": "Beban terendah",
+        "strategyLeastPing": "Ping terendah",
+        "strategyRandom": "Acak",
+        "strategyRoundRobin": "Bergiliran",
+        "proxies": "Proxy rantai",
+        "proxiesCount": "{count} proxy",
+        "enabled": "Aktif",
+        "empty": "Belum ada pemilih rantai",
+        "deleteConfirm": "Hapus pemilih ini? Inbound yang memakainya akan terhubung langsung.",
+        "errRemarkRequired": "Keterangan wajib (maks. 256 karakter)",
+        "errProxiesRequired": "Pilih setidaknya satu proxy",
+        "tabSelectors": "Pemilih",
+        "toasts": {
+          "list": "Gagal memuat pemilih",
+          "create": "Gagal membuat pemilih",
+          "update": "Gagal memperbarui pemilih",
+          "delete": "Gagal menghapus pemilih",
+          "invalidId": "Id pemilih tidak valid"
         }
       },
       "subCalendarExpireInclusive": "Month-end subscription expiry display",
@@ -2242,7 +2353,16 @@
       "wechatReportTime": "Jadwal laporan",
       "wechatReportTimeDesc": "Gunakan ekspresi cron atau preset seperti @daily.",
       "wechatEvents": "Peringatan peristiwa",
-      "wechatEventsDesc": "Pilih peristiwa yang mengirim notifikasi dan atur ambang peringatan."
+      "wechatEventsDesc": "Pilih peristiwa yang mengirim notifikasi dan atur ambang peringatan.",
+      "inboundListOrder": "Inbound list order",
+      "inboundListOrderDesc": "Default order of the inbound list in the panel. Applies to local inbounds and to inbounds adopted from all nodes.",
+      "inboundListOrderOptionId": "ID",
+      "inboundListOrderOptionRemark": "Remark",
+      "inboundListOrderOptionPort": "Port",
+      "inboundListOrderOptionProtocol": "Protocol",
+      "inboundListOrderOptionSubSortIndex": "Subscription order",
+      "nodeRoutingControl": "Node routing control",
+      "nodeRoutingControlDesc": "Let this panel control the routing of connected nodes. When enabled, the Node Routing page can push a shared routing policy to each node."
     },
     "xray": {
       "save": "Simpan",
@@ -2587,7 +2707,14 @@
         "subnetCidr": "CIDR Subnet",
         "allowedIPs": "IP yang Diizinkan",
         "endpoint": "Titik Akhir",
-        "domainStrategy": "Strategi Domain"
+        "domainStrategy": "Strategi Domain",
+        "vkTurnEnabled": "Tunnel through VK",
+        "vkTurnHint": "A compatible VK TURN client sends WireGuard traffic through VK relays to this server's SRTP proxy. The proxy forwards it to this WireGuard inbound. Allow the proxy UDP port through your firewall.",
+        "vkTurnCallLink": "VK call link",
+        "vkTurnCallLinkHint": "The client obtains and refreshes TURN credentials using this link. VK sign-in is needed only if anonymous access is unavailable.",
+        "vkTurnPort": "VK proxy UDP port",
+        "vkTurnInvalidLink": "Enter a VK call link, such as https://vk.ru/call/join/...",
+        "vkTurnProfile": "VK TURN profile"
       },
       "amneziawg": {
         "privateKey": "Kunci Privat",
@@ -2847,7 +2974,7 @@
         "allowInsecure": "Lewati verifikasi sertifikat TLS (allowInsecure / skip-cert-verify).",
         "vlessRoute": "Satu nilai rute VLESS (0-65535) yang disisipkan ke UUID, mis. 443. Biarkan kosong jika tidak ada.",
         "mihomoX25519": "Hanya Mihomo: gunakan handshake REALITY dengan X25519 biasa tanpa ML-KEM (support-x25519mlkem768: false). Untuk server dengan Xray-core lebih lama dari 26.9.8 yang tidak mewajibkan ML-KEM.",
-        "remark": "Label sederhana untuk host ini. Ditampilkan sebagai nama konfigurasi hanya ketika inbound tidak memiliki catatan tersendiri."
+        "remark": "Label sederhana untuk host ini. Masukkan {{HOST}} di Templat Remark untuk menyertakannya dalam nama konfigurasi."
       },
       "remarkVars": {
         "title": "Variabel Templat",
@@ -2961,6 +3088,36 @@
       "unavailable": "Node tidak tersedia",
       "latencyLoss": "RTT / Kehilangan",
       "unsupportedPlatform": "Platform ini dapat mengelola tunnel jarak jauh. Pilih node yang didukung untuk menjalankan WatTunnel."
+    },
+    "nodeRouting": {
+      "policySaved": "Routing policy saved",
+      "cleared": "Routing policy cleared on {name}.",
+      "applied": "Routing policy applied to {name}.",
+      "applyFailed": "Apply failed on {name}: {reason}",
+      "noNodes": "No online, enabled nodes to apply to.",
+      "appliedAll": "Routing policy applied to {count} node(s).",
+      "appliedMixed": "Routing policy applied to {ok} node(s), {failed} failed.",
+      "node": "Node",
+      "status": "Status",
+      "egress": "Egress",
+      "direct": "direct",
+      "policy": "Master policy",
+      "policyActive": "active",
+      "none": "none",
+      "actions": "Actions",
+      "apply": "Apply",
+      "clear": "Clear",
+      "title": "Node routing control",
+      "control": "Control",
+      "policyTitle": "Shared routing policy",
+      "controlDisabled": "Node routing control is disabled. Enable it to push routing policies to nodes.",
+      "policyDesc": "JSON array of Xray routing rules (the same shape as the routing rules on the Routing page). When applied, a node runs these rules ahead of its own rules; the node's internal stats rule is always kept first.",
+      "policyInvalid": "The policy must be a JSON array of routing rule objects.",
+      "savePolicy": "Save policy",
+      "clearPolicy": "Clear policy",
+      "ruleCount": "{count} rule(s)",
+      "nodesTitle": "Nodes",
+      "applyAll": "Apply to all online nodes"
     }
   },
   "tgbot": {
@@ -3404,5 +3561,6 @@
       "trafficRemaining": "Sisa trafik 3x-ui",
       "trafficQuotaUnset": "Kuota belum dikonfigurasi"
     }
-  }
+  },
+  "import": "Import"
 }

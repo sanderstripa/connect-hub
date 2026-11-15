@@ -4,10 +4,11 @@ import { screen, act, render, cleanup, fireEvent, waitFor } from '@testing-libra
 import InboundFormModal from '@/pages/inbounds/form/InboundFormModal';
 import { DBInbound } from '@/models/dbinbound';
 import { ThemeProvider } from '@/hooks/useTheme';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { HttpUtil, Msg } from '@/utils';
-import { Protocols } from '@/schemas/primitives';
 import {
   renderWithProviders,
+  makeTestQueryClient,
   fieldLabels,
   listSelectOptions,
   chooseSelectOption,
@@ -42,18 +43,16 @@ function renderModal() {
 
 // The protocol dropdown is virtualized, so jsdom renders only its first options; step
 // the active option by keyboard from the current protocol in the options' own order.
+// Connect Hub deliberately uses native selects for stable keyboard and screen
+// reader behavior; select by visible value rather than a virtual AntD menu.
 function chooseVirtualizedProtocol(optionText: string) {
-  const input = document.getElementById('protocol') as HTMLElement;
-  const select = input.closest('.ant-select') as HTMLElement;
-  const current = (select.textContent ?? '').trim();
-  const order = Object.values(Protocols) as string[];
-  const steps = order.indexOf(optionText) - order.indexOf(current);
-  if (order.indexOf(optionText) < 0 || order.indexOf(current) < 0 || steps < 0) {
-    throw new Error(`cannot step from '${current}' to '${optionText}'`);
+  const input = document.getElementById('protocol');
+  if (!(input instanceof HTMLSelectElement)) {
+    throw new Error('Protocol native selector not found');
   }
-  fireEvent.mouseDown(select.querySelector('.ant-select-selector') ?? select);
-  for (let i = 0; i < steps; i++) fireEvent.keyDown(input, { key: 'ArrowDown', keyCode: 40 });
-  fireEvent.keyDown(input, { key: 'Enter', keyCode: 13 });
+  const option = Array.from(input.options).find((o) => o.textContent?.trim() === optionText);
+  if (!option) throw new Error(`Protocol option '${optionText}' unavailable`);
+  fireEvent.change(input, { target: { value: option.value } });
 }
 
 function primaryButton(): HTMLElement {
@@ -241,8 +240,12 @@ describe('InboundFormModal', () => {
       });
     };
     const strategyItem = (title: string) =>
-      document.querySelector(`.ant-select-content[title="${title}"]`);
+      Array.from(document.querySelectorAll('select option')).find(
+        (option) => option.textContent?.trim() === title && (option as HTMLOptionElement).selected,
+      );
+    const queryClient = makeTestQueryClient();
     const modal = (nodes: never[], fetched: boolean) => (
+      <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <InboundFormModal
           open
@@ -255,6 +258,7 @@ describe('InboundFormModal', () => {
           onSaved={() => {}}
         />
       </ThemeProvider>
+      </QueryClientProvider>
     );
 
     // Baseline: nodes already loaded, so the node option is offered and selected.
@@ -325,6 +329,9 @@ describe('InboundFormModal', () => {
     post.mockClear();
     renderCloneLikeEdit(cloneLikeVlessInbound('example.com:443'));
 
+    // The new Chain Proxy section and fallback loader are asynchronous.
+    // Wait for initial form effects before submitting the unchanged inbound.
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
     fireEvent.click(primaryButton());
 
     await waitFor(() => {
@@ -347,12 +354,11 @@ describe('InboundFormModal', () => {
       (el) =>
         el.querySelector('.ant-form-item-label label')?.textContent?.trim() === 'Transmission',
     );
-    const select = transmission?.querySelector('.ant-select') as HTMLElement;
-    fireEvent.mouseDown(select.querySelector('.ant-select-selector') ?? select);
-    const option = Array.from(document.querySelectorAll('.ant-select-item-option')).find(
-      (o) => (o.getAttribute('title') ?? o.textContent ?? '').trim() === 'XDRIVE',
-    ) as HTMLElement;
-    fireEvent.click(option);
+    const select = transmission?.querySelector('select') as HTMLSelectElement | null;
+    if (!select) throw new Error('Native transmission select missing');
+    const option = Array.from(select.options).find((o) => o.textContent?.trim() === 'XDRIVE');
+    if (!option) throw new Error('XDRIVE transport option missing');
+    fireEvent.change(select, { target: { value: option.value } });
     for (const [label, value] of [
       ['Remote folder', 'xray-tunnel'],
       ['Client ID', 'id.apps.googleusercontent.com'],
@@ -627,6 +633,7 @@ describe('InboundFormModal', () => {
     });
     renderCloneLikeEdit(legacy);
 
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
     fireEvent.click(primaryButton());
 
     await waitFor(() => expect(post).toHaveBeenCalled());

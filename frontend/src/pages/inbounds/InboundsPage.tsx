@@ -57,9 +57,11 @@ const AttachClientsModal = lazy(() => import('./clients/AttachClientsModal'));
 const AttachExistingClientsModal = lazy(() => import('./clients/AttachExistingClientsModal'));
 const DetachClientsModal = lazy(() => import('./clients/DetachClientsModal'));
 const AddClientsToGroupModal = lazy(() => import('./clients/AddClientsToGroupModal'));
+const ChangeInboundIdModal = lazy(() => import('./ChangeInboundIdModal'));
 
 type RowAction =
   | 'edit'
+  | 'changeId'
   | 'showInfo'
   | 'export'
   | 'subs'
@@ -184,6 +186,9 @@ export default function InboundsPage({ embedded = false, workspace = false }: { 
   const [cloneOpen, setCloneOpen] = useState(false);
   const [cloneSource, setCloneSource] = useState<DBInbound | null>(null);
 
+  const [changeIdOpen, setChangeIdOpen] = useState(false);
+  const [changeIdTarget, setChangeIdTarget] = useState<DBInbound | null>(null);
+
   const [textOpen, setTextOpen] = useState(false);
   const [textTitle, setTextTitle] = useState('');
   const [textContent, setTextContent] = useState('');
@@ -300,6 +305,7 @@ export default function InboundsPage({ embedded = false, workspace = false }: { 
       if (!dbInbound?.listen?.startsWith?.('@')) return dbInbound;
       for (const candidate of dbInbounds) {
         if (candidate.id === dbInbound.id) continue;
+        if ((candidate.nodeId ?? 0) !== (dbInbound.nodeId ?? 0)) continue;
         if (!['trojan', 'vless'].includes(candidate.protocol)) continue;
         const candStream = coerceInboundJsonField(candidate.streamSettings) as { network?: string };
         if (candStream.network !== 'tcp') continue;
@@ -636,6 +642,7 @@ export default function InboundsPage({ embedded = false, workspace = false }: { 
       // and then operate on the rehydrated record.
       const hydratingKeys: RowAction[] = [
         'edit',
+        'changeId',
         'showInfo',
         'export',
         'subs',
@@ -652,6 +659,10 @@ export default function InboundsPage({ embedded = false, workspace = false }: { 
       switch (key) {
         case 'edit':
           openEdit(target);
+          break;
+        case 'changeId':
+          setChangeIdTarget(target);
+          setChangeIdOpen(true);
           break;
         case 'showInfo':
           setInfoDbInbound(checkFallback(target));
@@ -725,6 +736,7 @@ export default function InboundsPage({ embedded = false, workspace = false }: { 
         <Inner className="content-shell">
           <Content id={embedded ? undefined : 'content-layout'} className="content-area">
             <Spin
+              aria-live="off"
               spinning={!fetched || !hostsFetched}
               delay={200}
               description={t('loading')}
@@ -888,6 +900,14 @@ export default function InboundsPage({ embedded = false, workspace = false }: { 
             dbInbound={cloneSource}
             nodes={nodesList || []}
             portsInUse={clonePortsInUse}
+          />
+        </LazyMount>
+        <LazyMount when={changeIdOpen}>
+          <ChangeInboundIdModal
+            open={changeIdOpen}
+            onClose={() => setChangeIdOpen(false)}
+            onSaved={refresh}
+            dbInbound={changeIdTarget}
           />
         </LazyMount>
 

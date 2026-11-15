@@ -206,7 +206,8 @@ type portConflictDetail struct {
 	Listen    string
 	Port      int
 	// Relay marks Port as an automatic loopback relay port, not a configured one.
-	Relay bool
+	Relay  bool
+	VKTurn bool
 	// ForwardedBy is the peer whose port forward holds Port, when that is the
 	// reason for the conflict.
 	ForwardedBy string
@@ -234,6 +235,9 @@ func (d *portConflictDetail) String() string {
 	port := fmt.Sprintf("port %d", d.Port)
 	if d.Relay {
 		port = fmt.Sprintf("relay port %d", d.Port)
+	}
+	if d.VKTurn {
+		port = fmt.Sprintf("VK TURN port %d", d.Port)
 	}
 	if d.ForwardedBy != "" {
 		return fmt.Sprintf("%s (%s) already forwarded on inbound %s on %s by its client %s",
@@ -429,7 +433,7 @@ func checkPortConflictWithoutTunnels(db *gorm.DB, inbound *model.Inbound, ignore
 			Transports: shared,
 		}, nil
 	}
-	return nil, nil
+	return checkVKTurnPortConflict(db, inbound, ignoreId, newBits)
 }
 
 // amneziawgForwardedPortOwner names the AmneziaWG row on the same host whose peer
@@ -575,7 +579,19 @@ func checkAmneziawgnetSocksReverseConflict(db *gorm.DB, id int) (*portConflictDe
 			Transports: transportTCP,
 		}, nil
 	}
-	return nil, nil
+	return relayPortForwardOwner(db, relayPort, id)
+}
+
+// relayPortForwardOwner asks the same of the forward listeners, which no port column
+// shows: bound on every interface, one would be dialled in Xray's place by id's relay.
+func relayPortForwardOwner(db *gorm.DB, relayPort, id int) (*portConflictDetail, error) {
+	owner, err := amneziawgForwardedPortOwner(db, &model.Inbound{Port: relayPort}, id)
+	if err != nil || owner == nil {
+		return nil, err
+	}
+	owner.Relay = true
+	owner.Transports = transportTCP
+	return owner, nil
 }
 
 func checkTuicSocksConflict(db *gorm.DB, inbound *model.Inbound, ignoreId int, newBits transportBits) (*portConflictDetail, error) {
@@ -665,7 +681,7 @@ func checkTuicSocksReverseConflict(db *gorm.DB, id int) (*portConflictDetail, er
 			Transports: transportTCP,
 		}, nil
 	}
-	return nil, nil
+	return relayPortForwardOwner(db, relayPort, id)
 }
 
 func sameNode(a, b *int) bool {

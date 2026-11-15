@@ -93,6 +93,7 @@ var monitorScopeAllow = map[string]struct{}{
 	"/server/status":                              {},
 	"/server/cpuHistory/:bucket":                  {},
 	"/server/history/:metric/:bucket":             {},
+	"/server/overviewHistory/:bucket":             {},
 	"/server/xrayMetricsState":                    {},
 	"/server/xrayMetricsHistory/:metric/:bucket":  {},
 	"/server/xrayObservatory":                     {},
@@ -115,8 +116,10 @@ var nodeSyncScopeAllow = map[string]map[string]struct{}{
 	"/inbounds/:id/subSortIndex":   {http.MethodPost: {}},
 	"/clients/add":                 {http.MethodPost: {}},
 	"/clients/del/:email":          {http.MethodPost: {}},
+	"/clients/del":                 {http.MethodPost: {}},
 	"/clients/:email/detach":       {http.MethodPost: {}},
 	"/clients/update/:email":       {http.MethodPost: {}},
+	"/clients/update":              {http.MethodPost: {}},
 	"/server/restartXrayService":   {http.MethodPost: {}},
 	"/server/getWebCertFiles":      {http.MethodGet: {}},
 	"/server/descendants":          {http.MethodGet: {}},
@@ -132,6 +135,7 @@ var nodeSyncScopeAllow = map[string]map[string]struct{}{
 	"/server/clientIps":            {http.MethodGet: {}, http.MethodPost: {}},
 	"/clients/clientIpsByGuid":     {http.MethodPost: {}},
 	"/hosts/list":                  {http.MethodGet: {}},
+	"/nodes/routing/control":       {http.MethodPost: {}},
 }
 
 var nodeAdminScopeAllow = map[string]map[string]struct{}{
@@ -256,6 +260,10 @@ func (a *APIController) initRouter(g *gin.RouterGroup, router http.Handler) {
 
 	// Subscription balancers — client-side balancers for the JSON sub output
 	NewSubBalancerController(api)
+
+	// Upstream SOCKS/HTTP proxy chains and selectors are panel API features.
+	// Register under the existing admin/API-token and CSRF middleware.
+	NewChainProxyController(api)
 
 	// REALITY watch — spare targets and automatic replacement per REALITY inbound
 	NewRealityWatchController(api.Group("/realityWatch"))

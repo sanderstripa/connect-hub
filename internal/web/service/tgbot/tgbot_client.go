@@ -3,7 +3,6 @@ package tgbot
 import (
 	"errors"
 	"fmt"
-	"html"
 	"net/url"
 	"slices"
 	"strconv"
@@ -69,9 +68,9 @@ func (t *Tgbot) BuildClientDraftMessage(draft *clientDraft) string {
 	}
 
 	return t.I18nBot("tgbot.messages.clientDraftTitle") + t.I18nBot("tgbot.messages.clientDraftDetails",
-		"Email=="+html.EscapeString(draft.email), "Attached=="+html.EscapeString(attached),
+		"Email=="+draft.email, "Attached=="+attached,
 		"Traffic=="+traffic, "Expiry=="+expiry, "LimitIP=="+ipLimit,
-		"TgID=="+html.EscapeString(tgID), "Comment=="+html.EscapeString(comment))
+		"TgID=="+tgID, "Comment=="+comment)
 }
 
 // describeAttachedInbounds returns a short "remark1, remark2" list for the given
@@ -224,6 +223,11 @@ func (t *Tgbot) clientSubLinks(email, subURL string) ([]string, error) {
 	if err != nil || client == nil {
 		return nil, errors.New("client not found")
 	}
+	// A client stored without a subId has no subscription to look up; build
+	// its own links by email, as the panel's client page does.
+	if strings.TrimSpace(client.SubID) == "" {
+		return t.inboundService.GetAllClientLinks(u.Hostname(), email)
+	}
 	return t.inboundService.GetSubLinks(u.Hostname(), client.SubID)
 }
 
@@ -306,9 +310,9 @@ func (t *Tgbot) clientInfoMsg(
 	}
 
 	output := ""
-	output += t.I18nBot("tgbot.messages.email", "Email=="+html.EscapeString(traffic.Email))
+	output += t.I18nBot("tgbot.messages.email", "Email=="+traffic.Email)
 	if attachIds, err := t.clientService.GetInboundIdsForEmail(nil, traffic.Email); err == nil && len(attachIds) > 0 {
-		output += t.I18nBot("tgbot.messages.attachedInbounds", "Inbounds=="+html.EscapeString(t.describeAttachedInbounds(attachIds)))
+		output += t.I18nBot("tgbot.messages.attachedInbounds", "Inbounds=="+t.describeAttachedInbounds(attachIds))
 	}
 	if printEnabled {
 		output += t.I18nBot("tgbot.messages.enabled", "Enable=="+enabled)
@@ -357,7 +361,7 @@ func (t *Tgbot) clientOwnedByTgUser(tgUserID int64, email string) bool {
 }
 
 // getClientUsage retrieves and sends client usage information to the chat.
-func (t *Tgbot) getClientUsage(chatId int64, tgUserID int64, email ...string) {
+func (t *Tgbot) getClientUsage(chatId int64, tgUserID int64, delivery screenDelivery, email ...string) {
 	traffics, err := t.inboundService.GetClientTrafficTgBot(tgUserID)
 	if err != nil {
 		logger.Warning(err)
@@ -374,7 +378,7 @@ func (t *Tgbot) getClientUsage(chatId int64, tgUserID int64, email ...string) {
 	// A client sees only its own card, and never the admin keyboard: every button
 	// on it (reset traffic, limits, IP limit, enable/disable) acts on an account.
 	if t.levelOf(tgUserID) != levelAdmin {
-		t.screenClientHome(chatId, tgUserID)
+		t.screenClientHome(chatId, tgUserID, delivery)
 		return
 	}
 
@@ -407,7 +411,7 @@ func (t *Tgbot) getClientUsage(chatId int64, tgUserID int64, email ...string) {
 	} else if len(traffics) > 0 {
 		rows = t.clientCardRows(chatId, traffics[0].Email)
 	}
-	t.renderScreen(chatId, t.newScreen("client", output, rows...))
+	t.renderScreen(chatId, t.newScreen("client", output, rows...), delivery)
 }
 
 // Client and plan editors share universal field pickers. Credentials are

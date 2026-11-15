@@ -42,6 +42,7 @@ export const AllSettingSchema = z.object({
   externalTrafficInformEnable: z.boolean(),
   externalTrafficInformURI: z.string(),
   happLinkEnable: z.boolean(),
+  inboundListOrder: z.string(),
   ipLimitAllowlist: z.string(),
   ldapAutoCreate: z.boolean(),
   ldapAutoDelete: z.boolean(),
@@ -67,6 +68,8 @@ export const AllSettingSchema = z.object({
   networkTrafficInterface: z.string(),
   networkTrafficMode: z.enum(['legacy', 'auto', 'manual']),
   nodeDownThreshold: z.number().int().min(1).max(100),
+  nodeRoutingControl: z.boolean(),
+  nodeRoutingRules: z.string(),
   outboundDownThreshold: z.number().int().min(1).max(100),
   pageSize: z.number().int().min(0).max(1000),
   panelOutbound: z.string(),
@@ -250,6 +253,7 @@ export const AllSettingViewSchema = z.object({
   hasWarpSecret: z.boolean(),
   hasWechatToken: z.boolean(),
   hasWechatWebhookURL: z.boolean(),
+  inboundListOrder: z.string(),
   ipLimitAllowlist: z.string(),
   ldapAutoCreate: z.boolean(),
   ldapAutoDelete: z.boolean(),
@@ -275,6 +279,8 @@ export const AllSettingViewSchema = z.object({
   networkTrafficInterface: z.string(),
   networkTrafficMode: z.enum(['legacy', 'auto', 'manual']),
   nodeDownThreshold: z.number().int().min(1).max(100),
+  nodeRoutingControl: z.boolean(),
+  nodeRoutingRules: z.string(),
   outboundDownThreshold: z.number().int().min(1).max(100),
   pageSize: z.number().int().min(0).max(1000),
   panelOutbound: z.string(),
@@ -482,6 +488,32 @@ export const CarrierEndpointSchema = z.object({
   port: z.number().int(),
 });
 export type CarrierEndpoint = z.infer<typeof CarrierEndpointSchema>;
+
+export const ChainProxySchema = z.object({
+  createdAt: z.number().int(),
+  enabled: z.boolean(),
+  id: z.number().int(),
+  password: z.string(),
+  port: z.number().int().min(1).max(65535),
+  remark: z.string().max(256),
+  server: z.string().max(253),
+  tls: z.boolean(),
+  type: z.enum(['socks', 'http']),
+  updatedAt: z.number().int(),
+  username: z.string(),
+});
+export type ChainProxy = z.infer<typeof ChainProxySchema>;
+
+export const ChainSelectorSchema = z.object({
+  createdAt: z.number().int(),
+  enabled: z.boolean(),
+  id: z.number().int(),
+  proxyIds: z.array(z.number().int()),
+  remark: z.string().max(256),
+  strategy: z.enum(['leastLoad', 'leastPing', 'random', 'roundRobin']),
+  updatedAt: z.number().int(),
+});
+export type ChainSelector = z.infer<typeof ChainSelectorSchema>;
 
 export const CleanIpCdnSchema = z.object({
   groups: z.array(z.lazy(() => CleanIpRangeGroupSchema)),
@@ -1000,6 +1032,8 @@ export const HwidSlotStatusSchema = z.object({
 export type HwidSlotStatus = z.infer<typeof HwidSlotStatusSchema>;
 
 export const InboundSchema = z.object({
+  chainProxyId: z.number().int(),
+  chainSelectorId: z.number().int(),
   clientStats: z.array(z.lazy(() => ClientTrafficSchema)),
   disableFlow: z.boolean(),
   down: z.number().int(),
@@ -1013,6 +1047,7 @@ export const InboundSchema = z.object({
   nodeId: z.number().int().nullable().optional(),
   originNodeGuid: z.string().optional(),
   port: z.number().int().min(0).max(65535),
+  preserveClientTraffic: z.boolean().nullable().optional(),
   protocol: z.enum(['vmess', 'vless', 'trojan', 'shadowsocks', 'wireguard', 'hysteria', 'http', 'mixed', 'tunnel', 'tun', 'mtproto', 'sudoku', 'amneziawg', 'tuic', 'masque']),
   remark: z.string(),
   settings: z.unknown(),
@@ -1071,6 +1106,7 @@ export const InboundOptionSchema = z.object({
   wgDns: z.string().optional(),
   wgMtu: z.number().int().optional(),
   wgPublicKey: z.string().optional(),
+  wgVkTurn: z.lazy(() => SettingsSchema).nullable().optional(),
 });
 export type InboundOption = z.infer<typeof InboundOptionSchema>;
 
@@ -1313,6 +1349,14 @@ export const NodeMutationRequestSchema = z.object({
 });
 export type NodeMutationRequest = z.infer<typeof NodeMutationRequestSchema>;
 
+export const NodeRoutingApplyResultSchema = z.object({
+  applied: z.boolean(),
+  error: z.string(),
+  name: z.string(),
+  nodeId: z.number().int(),
+});
+export type NodeRoutingApplyResult = z.infer<typeof NodeRoutingApplyResultSchema>;
+
 export const NodeViewSchema = z.object({
   activeCount: z.number().int(),
   address: z.string(),
@@ -1335,6 +1379,7 @@ export const NodeViewSchema = z.object({
   lastError: z.string(),
   lastHeartbeat: z.number().int(),
   latencyMs: z.number().int(),
+  masterRoutingRules: z.string(),
   memPct: z.number(),
   name: z.string(),
   netDown: z.number().int(),
@@ -1584,6 +1629,13 @@ export const SettingSchema = z.object({
   value: z.string(),
 });
 export type Setting = z.infer<typeof SettingSchema>;
+
+export const SettingsSchema = z.object({
+  callLink: z.string(),
+  enabled: z.boolean(),
+  port: z.number().int(),
+});
+export type Settings = z.infer<typeof SettingsSchema>;
 
 export const SpecSchema = z.object({
   config: z.lazy(() => ConfigSchema),

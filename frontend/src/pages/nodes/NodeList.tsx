@@ -132,7 +132,14 @@ function StatusLabel({ status, xrayState }: HealthProps) {
       </span>
     );
   }
-  return <span>{t(`pages.nodes.statusValues.${status || 'unknown'}`)}</span>;
+  // A sub-node's status is free text from its parent node: show it as unknown, not as a key.
+  return (
+    <span>
+      {t(`pages.nodes.statusValues.${status || 'unknown'}`, {
+        defaultValue: t('pages.nodes.statusValues.unknown'),
+      })}
+    </span>
+  );
 }
 
 function formatPct(p?: number, available = true): string {
@@ -211,7 +218,7 @@ export default function NodeList({
   // parent it is reached through (#4983).
   const nameByGuid = useMemo(() => {
     const m = new Map<string, string>();
-    for (const n of nodes) if (n.guid) m.set(n.guid, n.name || n.guid);
+    for (const n of nodes) if (n.guid && !n.transitive) m.set(n.guid, n.name || n.guid);
     return m;
   }, [nodes]);
 

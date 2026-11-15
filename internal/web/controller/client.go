@@ -53,6 +53,7 @@ func NewClientController(g *gin.RouterGroup) *ClientController {
 func (a *ClientController) initRouter(g *gin.RouterGroup) {
 	g.GET("/list", a.list)
 	g.GET("/list/paged", a.listPaged)
+	g.GET("/get", a.get)
 	g.GET("/get/:email", a.get)
 	g.GET("/get/subId/:subId", a.getBySubId)
 	g.GET("/get/tgId/:tgId", a.getByTgId)
@@ -65,7 +66,9 @@ func (a *ClientController) initRouter(g *gin.RouterGroup) {
 
 	g.POST("/add", a.create)
 	g.POST("/renewalPreview", a.renewalPreview)
+	g.POST("/update", a.update)
 	g.POST("/update/:email", a.update)
+	g.POST("/del", a.delete)
 	g.POST("/del/:email", a.delete)
 	g.POST("/:email/attach", a.attach)
 	g.POST("/:email/detach", a.detach)
@@ -90,6 +93,7 @@ func (a *ClientController) initRouter(g *gin.RouterGroup) {
 	g.POST("/hwids/:email", a.getHwids)
 	g.DELETE("/hwids/:email", a.clearHwids)
 	g.DELETE("/hwids/:email/:id", a.deleteHwid)
+	g.POST("/hwids/:email/:id/block", a.setHwidBlocked)
 	g.POST("/onlines", a.onlines)
 	g.POST("/onlinesByGuid", a.onlinesByGuid)
 	g.POST("/clientIpsByGuid", a.clientIpsByGuid)
@@ -161,8 +165,24 @@ func (a *ClientController) buildClientPayload(rec *model.ClientRecord) (gin.H, e
 	}, nil
 }
 
-func (a *ClientController) get(c *gin.Context) {
+// Query aliases keep legacy dot-segment names addressable without changing path clients.
+func clientEmailParam(c *gin.Context) (string, bool) {
 	email := c.Param("email")
+	if email == "" {
+		email = c.Query("email")
+	}
+	if email == "" {
+		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), errors.New("client email is required"))
+		return "", false
+	}
+	return email, true
+}
+
+func (a *ClientController) get(c *gin.Context) {
+	email, ok := clientEmailParam(c)
+	if !ok {
+		return
+	}
 	rec, err := a.clientService.GetRecordByEmail(nil, email)
 	if err != nil {
 		jsonMsg(c, I18nWeb(c, "pages.inbounds.toasts.obtain"), err)
@@ -246,17 +266,17 @@ func (a *ClientController) create(c *gin.Context) {
 }
 
 func (a *ClientController) update(c *gin.Context) {
-	email := c.Param("email")
-	var req struct {
-		model.Client
-		LimitHwid int `json:"limitHwid"`
+	email, ok := clientEmailParam(c)
+	if !ok {
+		return
 	}
-	if err := c.ShouldBindJSON(&req); err != nil {
+	body, err := c.GetRawData()
+	if err != nil {
 		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
 		return
 	}
 	inboundFilter := parseInboundIdsQuery(c.Query("inboundIds"))
-	needRestart, err := a.clientService.UpdateByEmail(&a.inboundService, email, req.Client, req.LimitHwid, inboundFilter...)
+	needRestart, err := a.clientService.UpdateByEmailJSON(&a.inboundService, email, body, inboundFilter...)
 	// Flagged before the error check: a partly-applied edit leaves the change
 	// committed on the inbounds that succeeded, and those still need the restart.
 	if needRestart {
@@ -275,7 +295,10 @@ func (a *ClientController) update(c *gin.Context) {
 }
 
 func (a *ClientController) delete(c *gin.Context) {
-	email := c.Param("email")
+	email, ok := clientEmailParam(c)
+	if !ok {
+		return
+	}
 	keepTraffic := c.Query("keepTraffic") == "1"
 	needRestart, err := a.clientService.DeleteByEmail(&a.inboundService, email, keepTraffic)
 	// Flagged before the error check: a partly-applied delete already removed
@@ -645,6 +668,23 @@ func (a *ClientController) deleteHwid(c *gin.Context) {
 		return
 	}
 	jsonMsg(c, I18nWeb(c, "pages.clients.hwidDeleted"), nil)
+}
+
+func (a *ClientController) setHwidBlocked(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), errors.New("invalid device id"))
+		return
+	}
+	var body struct {
+		Blocked *bool `json:"blocked" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
+		return
+	}
+	err = a.clientService.SetClientHwidBlocked(c.Param("email"), id, *body.Blocked)
+	jsonMsg(c, I18nWeb(c, "pages.inbounds.toasts.updateSuccess"), err)
 }
 
 func (a *ClientController) onlines(c *gin.Context) {

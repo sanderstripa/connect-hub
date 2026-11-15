@@ -29,6 +29,7 @@ export interface AllSetting {
   externalTrafficInformEnable: boolean;
   externalTrafficInformURI: string;
   happLinkEnable: boolean;
+  inboundListOrder: string;
   ipLimitAllowlist: string;
   ldapAutoCreate: boolean;
   ldapAutoDelete: boolean;
@@ -54,6 +55,8 @@ export interface AllSetting {
   networkTrafficInterface: string;
   networkTrafficMode: string;
   nodeDownThreshold: number;
+  nodeRoutingControl: boolean;
+  nodeRoutingRules: string;
   outboundDownThreshold: number;
   pageSize: number;
   panelOutbound: string;
@@ -236,6 +239,7 @@ export interface AllSettingView {
   hasWarpSecret: boolean;
   hasWechatToken: boolean;
   hasWechatWebhookURL: boolean;
+  inboundListOrder: string;
   ipLimitAllowlist: string;
   ldapAutoCreate: boolean;
   ldapAutoDelete: boolean;
@@ -261,6 +265,8 @@ export interface AllSettingView {
   networkTrafficInterface: string;
   networkTrafficMode: string;
   nodeDownThreshold: number;
+  nodeRoutingControl: boolean;
+  nodeRoutingRules: string;
   outboundDownThreshold: number;
   pageSize: number;
   panelOutbound: string;
@@ -460,6 +466,30 @@ export interface Capabilities {
 export interface CarrierEndpoint {
   carrier: string;
   port: number;
+}
+
+export interface ChainProxy {
+  createdAt: number;
+  enabled: boolean;
+  id: number;
+  password: string;
+  port: number;
+  remark: string;
+  server: string;
+  tls: boolean;
+  type: string;
+  updatedAt: number;
+  username: string;
+}
+
+export interface ChainSelector {
+  createdAt: number;
+  enabled: boolean;
+  id: number;
+  proxyIds: number[];
+  remark: string;
+  strategy: string;
+  updatedAt: number;
 }
 
 export interface CleanIpCdn {
@@ -938,6 +968,8 @@ export interface HwidSlotStatus {
 }
 
 export interface Inbound {
+  chainProxyId: number;
+  chainSelectorId: number;
   clientStats: ClientTraffic[];
   disableFlow: boolean;
   down: number;
@@ -951,6 +983,7 @@ export interface Inbound {
   nodeId?: number | null;
   originNodeGuid?: string;
   port: number;
+  preserveClientTraffic?: boolean | null;
   protocol: Protocol;
   remark: string;
   settings: unknown;
@@ -1006,6 +1039,7 @@ export interface InboundOption {
   wgDns?: string;
   wgMtu?: number;
   wgPublicKey?: string;
+  wgVkTurn?: Settings | null;
 }
 
 export interface InboundTrafficSummary {
@@ -1227,6 +1261,13 @@ export interface NodeMutationRequest {
   tlsVerifyMode: string;
 }
 
+export interface NodeRoutingApplyResult {
+  applied: boolean;
+  error: string;
+  name: string;
+  nodeId: number;
+}
+
 export interface NodeView {
   activeCount: number;
   address: string;
@@ -1249,6 +1290,7 @@ export interface NodeView {
   lastError: string;
   lastHeartbeat: number;
   latencyMs: number;
+  masterRoutingRules: string;
   memPct: number;
   name: string;
   netDown: number;
@@ -1478,6 +1520,12 @@ export interface Setting {
   id: number;
   key: string;
   value: string;
+}
+
+export interface Settings {
+  callLink: string;
+  enabled: boolean;
+  port: number;
 }
 
 export interface Spec {

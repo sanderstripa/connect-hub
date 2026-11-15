@@ -10,6 +10,7 @@
   "create": "Criar",
   "add": "Adicionar",
   "remove": "Remover",
+  "removeItem": "Remover {item}",
   "update": "Atualizar",
   "copy": "Copiar",
   "copied": "Copiado",
@@ -39,6 +40,7 @@
   "indefinite": "Indeterminado",
   "unlimited": "Ilimitado",
   "none": "Nenhum",
+  "empty": "Vazio",
   "qrCode": "Código QR",
   "info": "Mais Informações",
   "edit": "Editar",
@@ -46,6 +48,7 @@
   "reset": "Redefinir",
   "noData": "Sem dados.",
   "copySuccess": "Copiado com Sucesso",
+  "copyFail": "Falha ao Copiar",
   "sure": "Certo",
   "encryption": "Criptografia",
   "transmission": "Transmissão",
@@ -128,7 +131,8 @@
     "subFormats": "Sub Formats",
     "connections": "Connections",
     "tunnels": "Túneis",
-    "assistant": "AI Assistant"
+    "assistant": "AI Assistant",
+    "nodeRouting": "Node Routing"
   },
   "pages": {
     "logs": {
@@ -380,6 +384,11 @@
       "xrayStatus": "Xray",
       "stopXray": "Parar",
       "restartXray": "Reiniciar",
+      "startXray": "Iniciar",
+      "stopXrayDisabledHint": "O Xray não está em execução",
+      "stopXrayConfirmTitle": "Parar o Xray?",
+      "stopXrayConfirmContent": "Parar o Xray interromperá imediatamente todas as conexões de proxy. Tem certeza de que deseja continuar?",
+      "stopXrayConfirmOk": "Parar o Xray",
       "xraySwitch": "Versão",
       "xrayUpdates": "Atualizações do Xray",
       "xraySwitchClickDesk": "Escolha com cuidado, pois versões mais antigas podem não ser compatíveis com as configurações atuais.",
@@ -469,7 +478,7 @@
       "geodataConfirmTitle": "Salvar configurações de geodata?",
       "geodataConfirmContent": "O modelo de configuração do Xray será atualizado e o Xray será reiniciado.",
       "geodataInvalidUrl": "Cada arquivo precisa de uma URL HTTPS.",
-      "geodataInvalidFile": "O nome do arquivo deve ser simples, ex.: geosite_custom.dat (sem caminhos).",
+      "geodataInvalidFile": "O nome do arquivo deve ser um nome .dat simples, ex.: geosite_custom.dat (sem caminhos).",
       "geodataInvalidCron": "O cron deve ter 5 campos, ex.: 0 4 * * *",
       "geodataEmpty": "Nenhum arquivo configurado. Nas regras de roteamento, referencie como ext:geosite_custom.dat:category.",
       "dontRefresh": "Instalação em andamento, por favor não atualize a página",
@@ -555,7 +564,9 @@
         "pickInbound": "Escolha um inbound",
         "matchAny": "qualquer",
         "destPlaceholder": "automático (listen:porta do filho)",
-        "needsTls": "Os fallbacks ficam disponíveis após selecionar TLS ou Reality na aba Segurança (apenas VLESS/Trojan sobre RAW)."
+        "needsTls": "Os fallbacks ficam disponíveis após selecionar TLS ou Reality na aba Segurança (apenas VLESS/Trojan sobre RAW).",
+        "decryptionConflict": "Fallbacks não são compatíveis com a descriptografia VLESS ativa no servidor. Remova e salve as regras antes de ativá-la ou desative a descriptografia.",
+        "saveFailed": "Não foi possível carregar ou salvar as regras de fallback. O rascunho continua aberto; verifique o erro e tente novamente."
       },
       "protocol": "Protocolo",
       "port": "Porta",
@@ -676,6 +687,8 @@
       "importInbound": "Importar um Inbound",
       "periodicTrafficResetTitle": "Reset de Tráfego",
       "periodicTrafficResetDay": "Dia da redefinição mensal",
+      "preserveClientTraffic": "Manter o consumo dos clientes",
+      "preserveClientTrafficHelp": "A redefinição agendada zera apenas os contadores desta entrada. Os clientes seguem seus próprios ciclos de redefinição.",
       "periodicTrafficReset": {
         "never": "Nunca",
         "daily": "Diariamente",
@@ -713,7 +726,9 @@
         "invalidClientField": "Cliente {client}: campo {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "Certificado TLS {index}: {reason}",
-        "moreIssues": "{message}  (+{count} mais)"
+        "moreIssues": "{message}  (+{count} mais)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "echSockopt": "Sockopt ECH",
@@ -983,6 +998,14 @@
           "clientId": "Client ID",
           "clientSecret": "Client Secret",
           "refreshToken": "Refresh Token",
+          "accessKeyId": "ID da chave de acesso",
+          "secretAccessKey": "Chave de acesso secreta",
+          "sessionToken": "Token de sessão",
+          "s3Endpoint": "Endpoint",
+          "s3Region": "Região",
+          "s3Bucket": "Bucket",
+          "s3PathStyle": "Endereçamento por caminho",
+          "s3PathStyleDesc": "Ligado: o bucket vai no caminho da URL. Desligado: no nome do host, o que exige um endpoint DNS.",
           "secrets": "Segredos",
           "secretsDesc": "Valores que o template lê como {secret0}, {secret1}, …",
           "template": "Template de armazenamento",
@@ -1008,7 +1031,7 @@
         "autoSystemDnsToGateway": "DNS do sistema para o gateway",
         "autoSystemDnsToGatewayTooltip": "Somente Linux: aponta o systemd-resolved para o gateway do TUN para que as consultas do sistema passem pelo Xray. Precisa de um gateway, e o TUN não inicia se isso falhar.",
         "autoSystemWfpBlockLeak": "Bloquear vazamentos (WFP)",
-        "autoSystemWfpBlockLeakTooltip": "Somente Windows, com Auto system routes: dns mantém o DNS dentro do TUN (precisa de servidores DNS) e misconfigtun bloqueia uma versão de IP que nenhuma rota envia ao TUN.",
+        "autoSystemWfpBlockLeakTooltip": "Somente Windows, com Auto system routes: all bloqueia tudo fora do TUN e allexceptlan faz o mesmo, mas mantém a rede local acessível; dns mantém o DNS (portas 53 e 853 e o serviço Cliente DNS) dentro do TUN; windnsclient cobre só esse serviço; tcp, udp e icmp bloqueiam um protocolo inteiro; digite tcp/PORTA, udp/PORTA, só a PORTA ou um intervalo MIN-MAX para portas específicas; um CIDR na frente (1.1.1.0/24:53, [::/0]:all) limita o valor a esses endereços; misconfigtun bloqueia uma versão de IP que nenhuma rota envia ao TUN. Qualquer valor que cubra a porta 53 precisa de servidores DNS.",
         "maxVersion": "Versão máxima",
         "headerName": "Nome do cabeçalho",
         "headerValue": "Valor do cabeçalho",
@@ -1043,7 +1066,11 @@
         "finderNone": "Nenhum destino passou. Tente um escopo maior.",
         "finderReport": "Relatório",
         "finderCommandError": "Não foi possível criar o comando",
-        "finderExpired": "Este comando expirou. Crie um novo."
+        "finderExpired": "Este comando expirou. Crie um novo.",
+        "chainNone": "Conexão direta",
+        "chainSelectorSuffix": "seletor",
+        "chain": "Cadeia do cliente",
+        "chainHelp": "Faça o cliente conectar a este inbound através de um proxy SOCKS/HTTP superior. Aplica-se às assinaturas JSON e Mihomo."
       },
       "info": {
         "mode": "Modo",
@@ -1092,8 +1119,19 @@
           "failed": "Não foi possível salvar as reservas",
           "switchFailed": "Não foi possível trocar: o destino falhou na verificação ou no teste REALITY real",
           "switched": "Trocado para {target}"
-        }
-      }
+        },
+        "saveFailed": "Unable to save REALITY monitoring settings"
+      },
+      "changeIdInvalid": "The new ID is unavailable ({reason}).",
+      "changeIdUnchanged": "The ID is unchanged.",
+      "changeIdRoutingRefs": "{count} routing rule(s) point at the current ID and will be updated.",
+      "changeIdNodeConflict": "The hosting node already has an inbound with this name.",
+      "changeIdValid": "The new ID is available.",
+      "changeIdTitle": "Change inbound ID — {tag}",
+      "changeIdApply": "Apply",
+      "changeIdDesc": "Changing the inbound ID updates every routing rule and node reference that points at the current ID. The check below runs before anything is saved.",
+      "changeIdLabel": "New inbound ID (tag)",
+      "changeId": "Change ID"
     },
     "clients": {
       "columns": "Colunas",
@@ -1164,7 +1202,13 @@
       "deleteHwid": "Remover dispositivo",
       "deleteHwidConfirm": "Remover este dispositivo? Ele precisará se registrar novamente na próxima busca da assinatura.",
       "hwidDeleted": "Dispositivo removido.",
-      "clearHwidsConfirm": "Remover todos os dispositivos registrados? Cada dispositivo precisará se registrar novamente na próxima busca da assinatura.",
+      "blockHwid": "Bloquear",
+      "unblockHwid": "Desbloquear",
+      "hwidBlocked": "Bloqueado",
+      "blockHwidConfirm": "Impedir este dispositivo de obter esta assinatura?",
+      "unblockHwidConfirm": "Permitir que este dispositivo obtenha esta assinatura novamente?",
+      "hwidBlockHint": "O bloqueio de dispositivos vale para esta assinatura mesmo com limite HWID 0. Limpar a lista mantém os bloqueios.",
+      "clearHwidsConfirm": "Remover todos os dispositivos não bloqueados? Eles se registrarão novamente na próxima busca da assinatura. Dispositivos bloqueados continuarão bloqueados.",
       "limitIpFail2banMissing": "O Fail2ban não está instalado, portanto o limite de IP não pode ser aplicado. Instale o Fail2ban pelo menu bash do x-ui para ativar esta opção.",
       "limitIpFail2banWindows": "O Fail2ban não está disponível no Windows, portanto o limite de IP não pode ser aplicado.",
       "limitIpDisabled": "O recurso de limite de IP está desativado neste servidor.",
@@ -1174,6 +1218,7 @@
       "subIdDesc": "Também funciona como código de convite deste cliente no bot do Telegram: quem enviá-lo ao bot fica vinculado a este cliente. Mantenha-o longo e aleatório — um ID curto ou fácil de adivinhar pode ser reivindicado por outra pessoa.",
       "online": "Online",
       "email": "Email",
+      "emailReservedName": "O nome do cliente não pode ser exatamente \".\" ou \"..\"",
       "emailInvalidChars": "O e-mail não pode conter espaços, '/', '\\' ou caracteres de controle",
       "subIdInvalidChars": "O ID de assinatura não pode conter espaços, '/', '\\' ou caracteres de controle",
       "group": "Grupo",
@@ -1537,7 +1582,7 @@
       "tlsPin": "Fixar certificado (SHA-256)",
       "tlsSkip": "Ignorar verificação",
       "tlsMtls": "TLS mútuo (certificado de cliente)",
-      "mtlsFormHint": "Este nó autentica o painel com um certificado de cliente. Copie o CA deste painel na seção mTLS do nó para o nó, defina o CA confiável dele e reinicie-o.",
+      "mtlsFormHint": "Este nó autentica o painel com um certificado de cliente. Copie o CA deste painel na seção mTLS do nó para o nó, defina o CA confiável dele e reinicie-o. Atualizar o painel deste nó a partir daqui ainda exige um token de API com o escopo node-admin.",
       "mtls": {
         "title": "mTLS do nó",
         "intro": "O TLS mútuo adiciona um fator de certificado de cliente além do token de API nas chamadas entre nós. É opcional: deixe vazio para manter apenas a autenticação por token.",
@@ -1791,6 +1836,7 @@
         "applyTo": "Aplicar a",
         "addNoise": "+ Ruído",
         "concurrency": "Concorrência",
+        "concurrencyHint": "Fluxos por conexão. O xray-core 26.11.9 e posteriores elevam para 128 qualquer valor de 0 a 128; núcleos mais antigos usam o número como está (0 significa 8). -1 desativa o mux TCP.",
         "xudpConcurrency": "Concorrência xudp",
         "xudpUdp443": "xudp UDP 443"
       },
@@ -1989,6 +2035,71 @@
           "httpMethod": "Método HTTP",
           "httpMethodDesc": "Método usado nas requisições de probe.",
           "note": "Balanceadores leastPing/leastLoad sempre carregam um burstObservatory. Esta opção personaliza seus parâmetros de probe — desligue-a para usar os padrões integrados. As alterações se aplicam após reiniciar o painel."
+        }
+      },
+      "chainProxies": {
+        "menu": "Cadeias de proxy",
+        "title": "Proxy de cadeia",
+        "add": "Adicionar proxy de cadeia",
+        "desc": "Proxies SOCKS e HTTP superiores pelos quais o cliente do assinante conecta antes de chegar a este inbound. Cada inbound recebe um proxy ou um seletor; as assinaturas JSON e Mihomo carregam o salto, enquanto links brutos e a saída Clash legada omitem esses inbounds.",
+        "remark": "Comentário",
+        "remarkPlaceholder": "entry-de-fra",
+        "type": "Protocolo",
+        "typeSocks": "SOCKS",
+        "typeHttp": "HTTP",
+        "server": "Servidor",
+        "port": "Porta",
+        "username": "Usuário",
+        "usernamePlaceholder": "Deixe vazio para um proxy aberto",
+        "password": "Senha",
+        "tls": "Proxy HTTPS",
+        "tlsHelp": "Conectar ao proxy via TLS. O outbound SOCKS do xray não tem TLS, então isso vale só para HTTP.",
+        "auth": "Autenticação",
+        "authPassword": "Usuário + senha",
+        "authNone": "Nenhuma",
+        "endpoint": "Endpoint",
+        "enabled": "Ativado",
+        "empty": "Ainda não há proxies de cadeia",
+        "deleteConfirm": "Excluir este proxy? Os inbounds atribuídos vão conectar diretamente.",
+        "errRemarkRequired": "Um comentário é obrigatório (máx. 256 caracteres)",
+        "errServerRequired": "Um servidor é obrigatório",
+        "errServerInvalid": "O servidor deve ser um host ou IP sem espaços",
+        "errPortRequired": "A porta deve estar entre 1 e 65535",
+        "tabProxies": "Proxies",
+        "toasts": {
+          "list": "Falha ao carregar os proxies",
+          "create": "Falha ao criar o proxy",
+          "update": "Falha ao atualizar o proxy",
+          "delete": "Falha ao excluir o proxy",
+          "invalidId": "Id de proxy inválido"
+        }
+      },
+      "chainSelectors": {
+        "title": "Seletor de cadeias",
+        "add": "Adicionar seletor de cadeias",
+        "desc": "Vários proxies de cadeia agrupados para o cliente escolher um salto por estratégia. O inbound recebe um seletor em vez de um proxy; a saída JSON roteia por um balanceador e o Mihomo ganha um grupo equivalente.",
+        "remark": "Comentário",
+        "remarkPlaceholder": "entries-fastest",
+        "strategy": "Estratégia",
+        "strategyHelp": "leastPing e leastLoad testam cada salto; random e roundRobin alternam. O Mihomo os aproxima com url-test e load-balance.",
+        "strategyLeastLoad": "Menor carga",
+        "strategyLeastPing": "Menor ping",
+        "strategyRandom": "Aleatório",
+        "strategyRoundRobin": "Round robin",
+        "proxies": "Proxies de cadeia",
+        "proxiesCount": "{count} proxies",
+        "enabled": "Ativado",
+        "empty": "Ainda não há seletores",
+        "deleteConfirm": "Excluir este seletor? Os inbounds atribuídos vão conectar diretamente.",
+        "errRemarkRequired": "Um comentário é obrigatório (máx. 256 caracteres)",
+        "errProxiesRequired": "Selecione pelo menos um proxy",
+        "tabSelectors": "Seletores",
+        "toasts": {
+          "list": "Falha ao carregar os seletores",
+          "create": "Falha ao criar o seletor",
+          "update": "Falha ao atualizar o seletor",
+          "delete": "Falha ao excluir o seletor",
+          "invalidId": "Id de seletor inválido"
         }
       },
       "subCalendarExpireInclusive": "Month-end subscription expiry display",
@@ -2242,7 +2353,16 @@
       "wechatReportTime": "Agendamento do relatório",
       "wechatReportTimeDesc": "Use uma expressão cron ou uma opção como @daily.",
       "wechatEvents": "Alertas de eventos",
-      "wechatEventsDesc": "Escolha os eventos que enviam notificações e os limites de alerta."
+      "wechatEventsDesc": "Escolha os eventos que enviam notificações e os limites de alerta.",
+      "inboundListOrder": "Inbound list order",
+      "inboundListOrderDesc": "Default order of the inbound list in the panel. Applies to local inbounds and to inbounds adopted from all nodes.",
+      "inboundListOrderOptionId": "ID",
+      "inboundListOrderOptionRemark": "Remark",
+      "inboundListOrderOptionPort": "Port",
+      "inboundListOrderOptionProtocol": "Protocol",
+      "inboundListOrderOptionSubSortIndex": "Subscription order",
+      "nodeRoutingControl": "Node routing control",
+      "nodeRoutingControlDesc": "Let this panel control the routing of connected nodes. When enabled, the Node Routing page can push a shared routing policy to each node."
     },
     "xray": {
       "importRules": "Importar regras",
@@ -2587,7 +2707,14 @@
         "subnetCidr": "CIDR da Sub-rede",
         "allowedIPs": "IPs Permitidos",
         "endpoint": "Ponto Final",
-        "domainStrategy": "Estratégia de Domínio"
+        "domainStrategy": "Estratégia de Domínio",
+        "vkTurnEnabled": "Tunnel through VK",
+        "vkTurnHint": "A compatible VK TURN client sends WireGuard traffic through VK relays to this server's SRTP proxy. The proxy forwards it to this WireGuard inbound. Allow the proxy UDP port through your firewall.",
+        "vkTurnCallLink": "VK call link",
+        "vkTurnCallLinkHint": "The client obtains and refreshes TURN credentials using this link. VK sign-in is needed only if anonymous access is unavailable.",
+        "vkTurnPort": "VK proxy UDP port",
+        "vkTurnInvalidLink": "Enter a VK call link, such as https://vk.ru/call/join/...",
+        "vkTurnProfile": "VK TURN profile"
       },
       "amneziawg": {
         "privateKey": "Chave Privada",
@@ -2847,7 +2974,7 @@
         "allowInsecure": "Ignorar a verificação do certificado TLS (allowInsecure / skip-cert-verify).",
         "vlessRoute": "Um único valor de rota VLESS (0-65535) embutido no UUID, ex.: 443. Deixe em branco para nenhum.",
         "mihomoX25519": "Somente Mihomo: usa um handshake REALITY com X25519 simples, sem ML-KEM (support-x25519mlkem768: false). Para servidores com Xray-core anterior à 26.9.8, que não exigem ML-KEM.",
-        "remark": "Um rótulo simples para este host. Mostrado como nome da configuração apenas quando a entrada não tem observação própria."
+        "remark": "Um rótulo simples para este host. Insira {{HOST}} no modelo de observação para incluí-lo nos nomes de configuração."
       },
       "remarkVars": {
         "title": "Variáveis de Modelo",
@@ -2961,6 +3088,36 @@
       "unavailable": "Nó indisponível",
       "latencyLoss": "RTT / Perda",
       "unsupportedPlatform": "Esta plataforma pode gerenciar túneis remotos. Selecione um nó compatível para executar o WatTunnel."
+    },
+    "nodeRouting": {
+      "policySaved": "Routing policy saved",
+      "cleared": "Routing policy cleared on {name}.",
+      "applied": "Routing policy applied to {name}.",
+      "applyFailed": "Apply failed on {name}: {reason}",
+      "noNodes": "No online, enabled nodes to apply to.",
+      "appliedAll": "Routing policy applied to {count} node(s).",
+      "appliedMixed": "Routing policy applied to {ok} node(s), {failed} failed.",
+      "node": "Node",
+      "status": "Status",
+      "egress": "Egress",
+      "direct": "direct",
+      "policy": "Master policy",
+      "policyActive": "active",
+      "none": "none",
+      "actions": "Actions",
+      "apply": "Apply",
+      "clear": "Clear",
+      "title": "Node routing control",
+      "control": "Control",
+      "policyTitle": "Shared routing policy",
+      "controlDisabled": "Node routing control is disabled. Enable it to push routing policies to nodes.",
+      "policyDesc": "JSON array of Xray routing rules (the same shape as the routing rules on the Routing page). When applied, a node runs these rules ahead of its own rules; the node's internal stats rule is always kept first.",
+      "policyInvalid": "The policy must be a JSON array of routing rule objects.",
+      "savePolicy": "Save policy",
+      "clearPolicy": "Clear policy",
+      "ruleCount": "{count} rule(s)",
+      "nodesTitle": "Nodes",
+      "applyAll": "Apply to all online nodes"
     }
   },
   "tgbot": {
@@ -3404,5 +3561,6 @@
       "trafficRemaining": "Tráfego restante do 3x-ui",
       "trafficQuotaUnset": "Cota não configurada"
     }
-  }
+  },
+  "import": "Import"
 }

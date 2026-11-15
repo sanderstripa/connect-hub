@@ -1,4 +1,5 @@
 import { Select } from 'antd';
+import { selectTagRender } from '@/components/form';
 import { useTranslation } from 'react-i18next';
 
 import { useHostsQuery } from '@/api/queries/useHostsQuery';
@@ -22,6 +23,7 @@ export default function HostGroupSelect({ value, onChange, ariaLabel }: HostGrou
   return (
     <Select
       mode="multiple"
+      tagRender={selectTagRender}
       allowClear
       loading={loading}
       value={value}

@@ -10,6 +10,7 @@
   "create": "作成",
   "add": "追加",
   "remove": "削除",
+  "removeItem": "{item} を削除",
   "update": "更新",
   "copy": "コピー",
   "copied": "コピー済み",
@@ -39,6 +40,7 @@
   "indefinite": "無期限",
   "unlimited": "無制限",
   "none": "なし",
+  "empty": "空欄",
   "qrCode": "QRコード",
   "info": "詳細情報",
   "edit": "編集",
@@ -46,6 +48,7 @@
   "reset": "リセット",
   "noData": "データなし。",
   "copySuccess": "コピー成功",
+  "copyFail": "コピー失敗",
   "sure": "確定",
   "encryption": "暗号化",
   "transmission": "伝送",
@@ -128,7 +131,8 @@
     "subFormats": "Sub Formats",
     "connections": "Connections",
     "tunnels": "トンネル",
-    "assistant": "AI Assistant"
+    "assistant": "AI Assistant",
+    "nodeRouting": "Node Routing"
   },
   "pages": {
     "logs": {
@@ -380,6 +384,11 @@
       "xrayStatus": "Xray",
       "stopXray": "停止",
       "restartXray": "再起動",
+      "startXray": "開始",
+      "stopXrayDisabledHint": "Xray は実行されていません",
+      "stopXrayConfirmTitle": "Xray を停止しますか?",
+      "stopXrayConfirmContent": "Xray を停止すると、すべてのプロキシ接続が直ちに切断されます。続行しますか?",
+      "stopXrayConfirmOk": "Xray を停止",
       "xraySwitch": "バージョン",
       "xrayUpdates": "Xrayの更新",
       "xraySwitchClickDesk": "慎重に選択してください。古いバージョンは現在の設定と互換性がない可能性があります。",
@@ -469,7 +478,7 @@
       "geodataConfirmTitle": "geodata 設定を保存しますか？",
       "geodataConfirmContent": "Xray 設定テンプレートを更新し、Xray を再起動します。",
       "geodataInvalidUrl": "各ファイルには HTTPS URL が必要です。",
-      "geodataInvalidFile": "ファイル名はパスを含まない単純な名前にしてください（例: geosite_custom.dat）。",
+      "geodataInvalidFile": "ファイル名はパスを含まない単純な .dat 名にしてください（例: geosite_custom.dat）。",
       "geodataInvalidCron": "Cron は 5 フィールド必要です（例: 0 4 * * *）",
       "geodataEmpty": "ファイルが設定されていません。ルーティングルールでは ext:geosite_custom.dat:category の形式で参照します。",
       "dontRefresh": "インストール中、このページをリロードしないでください",
@@ -555,7 +564,9 @@
         "pickInbound": "インバウンドを選択",
         "matchAny": "任意",
         "destPlaceholder": "自動（子の listen:port）",
-        "needsTls": "フォールバックは、セキュリティタブで TLS または Reality を選択すると設定できます（RAW 上の VLESS/Trojan のみ）。"
+        "needsTls": "フォールバックは、セキュリティタブで TLS または Reality を選択すると設定できます（RAW 上の VLESS/Trojan のみ）。",
+        "decryptionConflict": "VLESS のサーバー復号が有効な場合、フォールバックは使用できません。復号を有効にする前にフォールバックルールを削除して保存するか、復号を無効にしてください。",
+        "saveFailed": "フォールバックルールを読み込みまたは保存できませんでした。下書きは開いたままです。エラーを確認して再試行してください。"
       },
       "protocol": "プロトコル",
       "port": "ポート",
@@ -676,6 +687,8 @@
       "importInbound": "インバウンドルールをインポート",
       "periodicTrafficResetTitle": "トラフィックリセット",
       "periodicTrafficResetDay": "毎月のリセット日",
+      "preserveClientTraffic": "クライアントの使用量を保持",
+      "preserveClientTrafficHelp": "定期リセットではこのインバウンドのカウンターだけがリセットされます。クライアントは各自の周期でリセットされます。",
       "periodicTrafficReset": {
         "never": "なし",
         "daily": "毎日",
@@ -713,7 +726,9 @@
         "invalidClientField": "クライアント {client}: フィールド {field} — {reason}",
         "invalidField": "{field} — {reason}",
         "invalidCertificate": "TLS 証明書 {index}: {reason}",
-        "moreIssues": "{message}  (他 {count} 件)"
+        "moreIssues": "{message}  (他 {count} 件)",
+        "changeIdSuccess": "Inbound ID changed",
+        "changeIdFailed": "Inbound ID change failed: {reason}"
       },
       "form": {
         "echSockopt": "ECH Sockopt",
@@ -983,6 +998,14 @@
           "clientId": "クライアント ID",
           "clientSecret": "クライアントシークレット",
           "refreshToken": "リフレッシュトークン",
+          "accessKeyId": "アクセスキー ID",
+          "secretAccessKey": "シークレットアクセスキー",
+          "sessionToken": "セッショントークン",
+          "s3Endpoint": "エンドポイント",
+          "s3Region": "リージョン",
+          "s3Bucket": "バケット",
+          "s3PathStyle": "パス形式のアドレス指定",
+          "s3PathStyleDesc": "オン：バケットを URL のパスに入れます。オフ：ホスト名に入れます（DNS 名のエンドポイントが必要）。",
           "secrets": "シークレット",
           "secretsDesc": "テンプレートで {secret0}、{secret1}、… として参照される値",
           "template": "ストレージテンプレート",
@@ -1008,7 +1031,7 @@
         "autoSystemDnsToGateway": "システム DNS をゲートウェイへ",
         "autoSystemDnsToGatewayTooltip": "Linux のみ：systemd-resolved を TUN のゲートウェイに向け、システムの名前解決を Xray 経由にします。ゲートウェイが必要で、失敗すると TUN は起動しません。",
         "autoSystemWfpBlockLeak": "リーク遮断 (WFP)",
-        "autoSystemWfpBlockLeakTooltip": "Windows のみ（自動システムルートと併用）：dns は DNS を TUN 内に留め（DNS サーバーが必要）、misconfigtun は TUN へのルートがない IP バージョンを遮断します。",
+        "autoSystemWfpBlockLeakTooltip": "Windows のみ（自動システムルートと併用）：all は TUN の外をすべて遮断し、allexceptlan は同様ですがローカルネットワークには到達できます。dns は DNS（ポート 53・853 と DNS Client サービス）を TUN 内に留めます。windnsclient はそのサービスのみを対象にします。tcp・udp・icmp はプロトコル全体を遮断します。特定のポートは tcp/ポート、udp/ポート、ポート番号のみ、または 下限-上限 の範囲で入力します。先頭に CIDR（1.1.1.0/24:53、[::/0]:all）を付けると、そのアドレスだけに限定されます。misconfigtun は TUN へのルートがない IP バージョンを遮断します。ポート 53 を含む値には DNS サーバーが必要です。",
         "maxVersion": "最大バージョン",
         "headerName": "ヘッダー名",
         "headerValue": "ヘッダー値",
@@ -1043,7 +1066,11 @@
         "finderNone": "通過したターゲットはありません。範囲を広げてください。",
         "finderReport": "レポート",
         "finderCommandError": "コマンドを作成できませんでした",
-        "finderExpired": "このコマンドは期限切れです。新しく作成してください。"
+        "finderExpired": "このコマンドは期限切れです。新しく作成してください。",
+        "chainNone": "直接接続",
+        "chainSelectorSuffix": "セレクター",
+        "chain": "クライアントチェーン",
+        "chainHelp": "クライアントが上流の SOCKS / HTTP プロキシ経由でこの inbound に接続します。JSON と Mihomo の購読に適用されます。"
       },
       "info": {
         "mode": "モード",
@@ -1092,8 +1119,19 @@
           "failed": "予備を保存できませんでした",
           "switchFailed": "切り替えできません：ターゲットが確認または実際の REALITY テストに失敗しました",
           "switched": "{target} に切り替えました"
-        }
-      }
+        },
+        "saveFailed": "Unable to save REALITY monitoring settings"
+      },
+      "changeIdInvalid": "The new ID is unavailable ({reason}).",
+      "changeIdUnchanged": "The ID is unchanged.",
+      "changeIdRoutingRefs": "{count} routing rule(s) point at the current ID and will be updated.",
+      "changeIdNodeConflict": "The hosting node already has an inbound with this name.",
+      "changeIdValid": "The new ID is available.",
+      "changeIdTitle": "Change inbound ID — {tag}",
+      "changeIdApply": "Apply",
+      "changeIdDesc": "Changing the inbound ID updates every routing rule and node reference that points at the current ID. The check below runs before anything is saved.",
+      "changeIdLabel": "New inbound ID (tag)",
+      "changeId": "Change ID"
     },
     "clients": {
       "columns": "列",
@@ -1164,7 +1202,13 @@
       "deleteHwid": "デバイスを削除",
       "deleteHwidConfirm": "このデバイスを削除しますか?次回のサブスクリプション取得時に再登録が必要になります。",
       "hwidDeleted": "デバイスを削除しました。",
-      "clearHwidsConfirm": "登録済みのすべてのデバイスを削除しますか?各デバイスは次回のサブスクリプション取得時に再登録が必要になります。",
+      "blockHwid": "ブロック",
+      "unblockHwid": "ブロック解除",
+      "hwidBlocked": "ブロック済み",
+      "blockHwidConfirm": "このデバイスによるこのサブスクリプションの取得をブロックしますか？",
+      "unblockHwidConfirm": "このデバイスによるこのサブスクリプションの取得を再び許可しますか？",
+      "hwidBlockHint": "HWID 制限が 0 でも、このサブスクリプションのデバイスブロックは有効です。リストを消去してもブロックは解除されません。",
+      "clearHwidsConfirm": "ブロックされていないデバイスをすべて削除しますか？次回のサブスクリプション取得時に再登録されます。ブロック済みデバイスはそのままです。",
       "limitIpFail2banMissing": "Fail2ban がインストールされていないため、IP 制限を適用できません。このオプションを有効にするには、x-ui の bash メニューから Fail2ban をインストールしてください。",
       "limitIpFail2banWindows": "Windows では Fail2ban を利用できないため、IP 制限を適用できません。",
       "limitIpDisabled": "このサーバーでは IP 制限機能が無効になっています。",
@@ -1174,6 +1218,7 @@
       "subIdDesc": "このクライアントの Telegram ボット招待コードとしても使われます。ボットに送信した人がこのクライアントに紐付けられます。長くランダムな値にしてください。短い、または推測しやすい ID は他人に取得されるおそれがあります。",
       "online": "オンライン",
       "email": "メール",
+      "emailReservedName": "クライアント名を「.」または「..」だけにすることはできません",
       "emailInvalidChars": "メールアドレスにスペース、'/'、'\\'、または制御文字を含めることはできません",
       "subIdInvalidChars": "サブスクリプションIDにスペース、'/'、'\\'、または制御文字を含めることはできません",
       "group": "グループ",
@@ -1537,7 +1582,7 @@
       "tlsPin": "証明書をピン留め（SHA-256）",
       "tlsSkip": "検証をスキップ",
       "tlsMtls": "相互 TLS（クライアント証明書）",
-      "mtlsFormHint": "このノードはクライアント証明書でパネルを認証します。「ノード mTLS」セクションからこのパネルの CA をノードにコピーし、信頼する CA を設定してから再起動してください。",
+      "mtlsFormHint": "このノードはクライアント証明書でパネルを認証します。「ノード mTLS」セクションからこのパネルの CA をノードにコピーし、信頼する CA を設定してから再起動してください。 ここからこのノードのパネルを更新するには、node-admin スコープの API トークンが引き続き必要です。",
       "mtls": {
         "title": "ノード mTLS",
         "intro": "相互 TLS は、ノード間通信で API トークンに加えてクライアント証明書による認証を追加します。任意です。空のままにするとトークンのみの認証になります。",
@@ -1791,6 +1836,7 @@
         "applyTo": "適用先",
         "addNoise": "+ ノイズ",
         "concurrency": "並行数",
+        "concurrencyHint": "1 接続あたりのストリーム数。xray-core 26.11.9 以降は 0〜128 の値をすべて 128 に引き上げます。それより古いコアは指定した数値をそのまま使います（0 は 8）。-1 で TCP mux を無効にします。",
         "xudpConcurrency": "xudp 並行数",
         "xudpUdp443": "xudp UDP 443"
       },
@@ -1989,6 +2035,71 @@
           "httpMethod": "HTTP メソッド",
           "httpMethodDesc": "プローブ要求に使う HTTP メソッド。",
           "note": "leastPing/leastLoad バランサーは常に burstObservatory を持ちます。このスイッチはプローブパラメータをカスタマイズします — オフにすると組み込みのデフォルトを使います。変更はパネルの再起動後に反映されます。"
+        }
+      },
+      "chainProxies": {
+        "menu": "チェーンプロキシ",
+        "title": "チェーンプロキシ",
+        "add": "チェーンプロキシを追加",
+        "desc": "購読者のクライアントがこのパネルの inbound に到達する前に経由する上流の SOCKS / HTTP プロキシです。各 inbound には 1 つのプロキシまたは 1 つのセレクターを割り当てます。JSON と Mihomo の購読はこのホップを含み、生リンクと旧 Clash 出力は該当 inbound を除外します。",
+        "remark": "備考",
+        "remarkPlaceholder": "entry-de-fra",
+        "type": "プロトコル",
+        "typeSocks": "SOCKS",
+        "typeHttp": "HTTP",
+        "server": "サーバー",
+        "port": "ポート",
+        "username": "ユーザー名",
+        "usernamePlaceholder": "オープンプロキシなら空欄",
+        "password": "パスワード",
+        "tls": "HTTPS プロキシ",
+        "tlsHelp": "TLS でプロキシに接続します。xray の SOCKS outbound は TLS 非対応のため HTTP 専用です。",
+        "auth": "認証",
+        "authPassword": "ユーザー名 + パスワード",
+        "authNone": "なし",
+        "endpoint": "エンドポイント",
+        "enabled": "有効",
+        "empty": "チェーンプロキシはまだありません",
+        "deleteConfirm": "このプロキシを削除しますか？割り当てられた inbound は直接接続になります。",
+        "errRemarkRequired": "備考が必要です（最大 256 文字）",
+        "errServerRequired": "サーバーが必要です",
+        "errServerInvalid": "サーバーは空白を含まないホスト名または IP である必要があります",
+        "errPortRequired": "ポートは 1〜65535 の範囲で指定してください",
+        "tabProxies": "プロキシ",
+        "toasts": {
+          "list": "チェーンプロキシを読み込めませんでした",
+          "create": "チェーンプロキシを作成できませんでした",
+          "update": "チェーンプロキシを更新できませんでした",
+          "delete": "チェーンプロキシを削除できませんでした",
+          "invalidId": "チェーンプロキシ ID が不正です"
+        }
+      },
+      "chainSelectors": {
+        "title": "チェーンセレクター",
+        "add": "チェーンセレクターを追加",
+        "desc": "複数のチェーンプロキシをまとめ、クライアントが戦略に従って 1 つのホップを選べるようにします。inbound は単一プロキシの代わりにセレクターを指定します。JSON 出力はバランサー経由でルーティングし、Mihomo には対応するグループが入ります。",
+        "remark": "備考",
+        "remarkPlaceholder": "entries-fastest",
+        "strategy": "戦略",
+        "strategyHelp": "leastPing と leastLoad は各ホップを計測し、random と roundRobin は順番に切り替えます。Mihomo は url-test と load-balance で近似します。",
+        "strategyLeastLoad": "最小負荷",
+        "strategyLeastPing": "最小レイテンシ",
+        "strategyRandom": "ランダム",
+        "strategyRoundRobin": "ラウンドロビン",
+        "proxies": "チェーンプロキシ",
+        "proxiesCount": "{count} 個のプロキシ",
+        "enabled": "有効",
+        "empty": "チェーンセレクターはまだありません",
+        "deleteConfirm": "このセレクターを削除しますか？割り当てられた inbound は直接接続になります。",
+        "errRemarkRequired": "備考が必要です（最大 256 文字）",
+        "errProxiesRequired": "チェーンプロキシを 1 つ以上選択してください",
+        "tabSelectors": "セレクター",
+        "toasts": {
+          "list": "チェーンセレクターを読み込めませんでした",
+          "create": "チェーンセレクターを作成できませんでした",
+          "update": "チェーンセレクターを更新できませんでした",
+          "delete": "チェーンセレクターを削除できませんでした",
+          "invalidId": "チェーンセレクター ID が不正です"
         }
       },
       "subCalendarExpireInclusive": "Month-end subscription expiry display",
@@ -2242,7 +2353,16 @@
       "wechatReportTime": "レポートのスケジュール",
       "wechatReportTimeDesc": "Cron 式または @daily などのプリセットを使用します。",
       "wechatEvents": "イベントアラート",
-      "wechatEventsDesc": "WeChat 通知を送信するイベントとアラートのしきい値を選択します。"
+      "wechatEventsDesc": "WeChat 通知を送信するイベントとアラートのしきい値を選択します。",
+      "inboundListOrder": "Inbound list order",
+      "inboundListOrderDesc": "Default order of the inbound list in the panel. Applies to local inbounds and to inbounds adopted from all nodes.",
+      "inboundListOrderOptionId": "ID",
+      "inboundListOrderOptionRemark": "Remark",
+      "inboundListOrderOptionPort": "Port",
+      "inboundListOrderOptionProtocol": "Protocol",
+      "inboundListOrderOptionSubSortIndex": "Subscription order",
+      "nodeRoutingControl": "Node routing control",
+      "nodeRoutingControlDesc": "Let this panel control the routing of connected nodes. When enabled, the Node Routing page can push a shared routing policy to each node."
     },
     "xray": {
       "importRules": "ルールをインポート",
@@ -2587,7 +2707,14 @@
         "subnetCidr": "サブネットCIDR",
         "allowedIPs": "許可されたIP",
         "endpoint": "エンドポイント",
-        "domainStrategy": "ドメイン戦略"
+        "domainStrategy": "ドメイン戦略",
+        "vkTurnEnabled": "Tunnel through VK",
+        "vkTurnHint": "A compatible VK TURN client sends WireGuard traffic through VK relays to this server's SRTP proxy. The proxy forwards it to this WireGuard inbound. Allow the proxy UDP port through your firewall.",
+        "vkTurnCallLink": "VK call link",
+        "vkTurnCallLinkHint": "The client obtains and refreshes TURN credentials using this link. VK sign-in is needed only if anonymous access is unavailable.",
+        "vkTurnPort": "VK proxy UDP port",
+        "vkTurnInvalidLink": "Enter a VK call link, such as https://vk.ru/call/join/...",
+        "vkTurnProfile": "VK TURN profile"
       },
       "amneziawg": {
         "privateKey": "秘密鍵",
@@ -2847,7 +2974,7 @@
         "allowInsecure": "TLS 証明書の検証をスキップします（allowInsecure / skip-cert-verify）。",
         "vlessRoute": "UUID に埋め込まれる単一の VLESS ルート値（0〜65535）。例: 443。なしの場合は空欄にします。",
         "mihomoX25519": "Mihomo のみ: ML-KEM を使わず通常の X25519 で REALITY ハンドシェイクを行います (support-x25519mlkem768: false)。ML-KEM を必要としない Xray-core 26.9.8 未満のサーバー向けです。",
-        "remark": "このホストのプレーンなラベル。インバウンド自身に備考がない場合にのみ設定名として表示されます。"
+        "remark": "このホストのプレーンなラベル。設定名に含めるには、備考テンプレートに {{HOST}} を挿入します。"
       },
       "remarkVars": {
         "title": "テンプレート変数",
@@ -2961,6 +3088,36 @@
       "unavailable": "ノードに接続できません",
       "latencyLoss": "RTT / 損失率",
       "unsupportedPlatform": "このプラットフォームではリモートトンネルを管理できます。WatTunnelを実行するには対応ノードを選択してください。"
+    },
+    "nodeRouting": {
+      "policySaved": "Routing policy saved",
+      "cleared": "Routing policy cleared on {name}.",
+      "applied": "Routing policy applied to {name}.",
+      "applyFailed": "Apply failed on {name}: {reason}",
+      "noNodes": "No online, enabled nodes to apply to.",
+      "appliedAll": "Routing policy applied to {count} node(s).",
+      "appliedMixed": "Routing policy applied to {ok} node(s), {failed} failed.",
+      "node": "Node",
+      "status": "Status",
+      "egress": "Egress",
+      "direct": "direct",
+      "policy": "Master policy",
+      "policyActive": "active",
+      "none": "none",
+      "actions": "Actions",
+      "apply": "Apply",
+      "clear": "Clear",
+      "title": "Node routing control",
+      "control": "Control",
+      "policyTitle": "Shared routing policy",
+      "controlDisabled": "Node routing control is disabled. Enable it to push routing policies to nodes.",
+      "policyDesc": "JSON array of Xray routing rules (the same shape as the routing rules on the Routing page). When applied, a node runs these rules ahead of its own rules; the node's internal stats rule is always kept first.",
+      "policyInvalid": "The policy must be a JSON array of routing rule objects.",
+      "savePolicy": "Save policy",
+      "clearPolicy": "Clear policy",
+      "ruleCount": "{count} rule(s)",
+      "nodesTitle": "Nodes",
+      "applyAll": "Apply to all online nodes"
     }
   },
   "tgbot": {
@@ -3404,5 +3561,6 @@
       "trafficRemaining": "3x-ui 残りの通信量",
       "trafficQuotaUnset": "上限未設定"
     }
-  }
+  },
+  "import": "Import"
 }

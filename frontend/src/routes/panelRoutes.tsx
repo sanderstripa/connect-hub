@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router';
 import type { ComponentType } from 'react';
 import {
   ApiOutlined,
+  ApartmentOutlined,
   ClusterOutlined,
   CloudServerOutlined,
   DashboardOutlined,
@@ -29,6 +30,7 @@ const LegacyClients = () => <LegacyConnections keys />;
 const GroupsPage = lazy(() => import('@/pages/groups/GroupsPage'));
 const TunnelsPage = lazy(() => import('@/pages/tunnels/TunnelsPage'));
 const NodesPage = lazy(() => import('@/pages/nodes/NodesPage'));
+const NodeRoutingPage = lazy(() => import('@/pages/node-routing/NodeRoutingPage'));
 const HostsPage = lazy(() => import('@/pages/hosts/HostsPage'));
 const CleanIpPage = lazy(() => import('@/pages/clean-ip/CleanIpPage'));
 const DnsTunnelPage = lazy(() => import('@/pages/dns-tunnel/DnsTunnelPage'));
@@ -57,6 +59,12 @@ export const PANEL_ROUTES: PanelRoute[] = [
   { path: '/groups', titleKey: 'menu.groups', icon: TeamOutlined, component: GroupsPage },
   { path: '/tunnels', titleKey: 'menu.tunnels', icon: SwapOutlined, component: TunnelsPage },
   { path: '/nodes', titleKey: 'menu.nodes', icon: ClusterOutlined, component: NodesPage },
+  {
+    path: '/node-routing',
+    titleKey: 'menu.nodeRouting',
+    icon: ApartmentOutlined,
+    component: NodeRoutingPage,
+  },
   { path: '/hosts', titleKey: 'menu.hosts', icon: GlobalOutlined, component: HostsPage },
   {
     path: '/clean-ip',

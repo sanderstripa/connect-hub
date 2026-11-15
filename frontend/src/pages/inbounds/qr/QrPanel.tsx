@@ -204,7 +204,7 @@ function SudokuQrPanel(props: QrPanelProps) {
   }
   return <div>
     <Segmented block value={variant} onChange={setVariant} options={[{label: 'Sudoku', value: 'standard'}, {label: 'YAML · Shadowrocket', value: 'shadowrocket'}]} style={{ marginBottom: 16 }} />
-    {variant === 'standard' ? <QrPanelContent {...props} /> : <Spin spinning={loading}>
+    {variant === 'standard' ? <QrPanelContent {...props} /> : <Spin spinning={loading} aria-live="off">
       <Alert type="info" showIcon title={t('connections.shadowrocketHint')} style={{ marginBottom: 16 }} />
       {profile ? <>
         <QrPanelContent {...props} value={profile.url} remark={(props.remark || 'Sudoku') + ' · Shadowrocket'} />
