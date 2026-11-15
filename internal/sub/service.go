@@ -99,6 +99,18 @@ type SubService struct {
 	clientGroupIDsByName    map[string]int
 	hostGroupsByClientGroup map[int]map[string]struct{}
 	clientGroupIndexLoaded  bool
+	// Per-request typed inbound caches and proxy-chain plans. They are independent
+	// of Connect Hub's own socket fronts, hosts and link-rendering cache.
+	tuicByInbound            map[int]*tuicLinkInstance
+	amneziaWGServerByInbound map[int]*amneziawg.ServerSettings
+	chainPlans               map[chainPlanKey]*chainPlan
+}
+
+// TUIC link generation should decode each inbound once, not once per peer.
+// Match the upstream wire model while retaining Connect Hub's own caching.
+type tuicLinkInstance struct {
+	tuic.Instance
+	byEmail map[string]*tuic.TuicClientSettings
 }
 
 // NewSubService creates a new subscription service with the given configuration.
