@@ -652,7 +652,7 @@ func seedForwardedPortsClient(t *testing.T, email, forwardedPorts string) (*mode
 		Enable:         true,
 		PublicKey:      "QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE=",
 		AllowedIPs:     []string{"10.8.1.2/32"},
-		ForwardedPorts: model.ForwardedPortsPtr(forwardedPorts),
+		ForwardedPorts: forwardedPorts,
 	}
 	ib := mkInbound(t, 51830, model.AmneziaWG, clientsSettings(t, []model.Client{seeded}))
 	if err := svc.SyncInbound(nil, ib.Id, []model.Client{seeded}); err != nil {
@@ -677,7 +677,7 @@ func TestUpdateCanWithdrawForwardedPorts(t *testing.T) {
 		Email:          "fp@x",
 		Enable:         true,
 		AllowedIPs:     []string{"10.8.1.2/32"},
-		ForwardedPorts: model.ForwardedPortsPtr(""),
+		ForwardedPorts: "",
 	}
 	if _, err := svc.Update(inboundSvc, recId, updated, 0); err != nil {
 		t.Fatalf("Update: %v", err)
@@ -737,7 +737,7 @@ func TestUpdateKeepsTheRecordsForwardedPortsCurrent(t *testing.T) {
 		Email:          "fp@x",
 		Enable:         true,
 		AllowedIPs:     []string{"10.8.1.2/32"},
-		ForwardedPorts: model.ForwardedPortsPtr("8022"),
+		ForwardedPorts: "8022",
 	}
 	if _, err := svc.Update(inboundSvc, recId, updated, 0); err != nil {
 		t.Fatalf("Update: %v", err)
