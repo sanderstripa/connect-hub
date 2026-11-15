@@ -177,7 +177,7 @@ func (t *Tgbot) screenClientLinks(chatID int64, email string) {
 		),
 	}
 	// The client card is admin-only; a client's own usage is already above.
-	if own == nil {
+	if checkAdmin(chatID) {
 		rows = append(rows, tu.InlineKeyboardRow(
 			t.btn("tgbot.buttons.clientCard", t.encodeQuery("client_get_usage "+email))))
 	}
