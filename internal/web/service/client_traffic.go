@@ -258,7 +258,7 @@ func (s *ClientService) ResetAllTraffics() (bool, error) {
 			}
 			// Snapshot total group usage before the global reset deletes the
 			// per-client counters; previously accumulated usage must survive.
-			if err := adjustGroupBaselinesForRemovedTraffic(tx, nil); err != nil {
+			if err := adjustAllGroupBaselinesForRemovedTraffic(tx); err != nil {
 				return err
 			}
 			if err := recordClosedWindowsAllTx(tx, trafficWindowReset); err != nil {
