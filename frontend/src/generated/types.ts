@@ -468,6 +468,30 @@ export interface CarrierEndpoint {
   port: number;
 }
 
+export interface ChainProxy {
+  createdAt: number;
+  enabled: boolean;
+  id: number;
+  password: string;
+  port: number;
+  remark: string;
+  server: string;
+  tls: boolean;
+  type: string;
+  updatedAt: number;
+  username: string;
+}
+
+export interface ChainSelector {
+  createdAt: number;
+  enabled: boolean;
+  id: number;
+  proxyIds: number[];
+  remark: string;
+  strategy: string;
+  updatedAt: number;
+}
+
 export interface CleanIpCdn {
   groups: CleanIpRangeGroup[];
   id: string;

@@ -1956,6 +1956,140 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "ChainProxy": {
+    "description": "ChainProxy is one upstream SOCKS/HTTP proxy a subscriber's client dials\nbefore this panel's inbound — a client-side chain entry, not a panel outbound.\nIts credentials travel into the subscriber's config, so no panel secret lives here.",
+    "properties": {
+      "createdAt": {
+        "example": 1710000000000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "enabled": {
+        "example": true,
+        "type": "boolean"
+      },
+      "id": {
+        "example": 1,
+        "type": "integer"
+      },
+      "password": {
+        "example": "secret",
+        "type": "string"
+      },
+      "port": {
+        "example": 1080,
+        "maximum": 65535,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "remark": {
+        "example": "entry-de-fra",
+        "maxLength": 256,
+        "type": "string"
+      },
+      "server": {
+        "example": "proxy.example.com",
+        "maxLength": 253,
+        "type": "string"
+      },
+      "tls": {
+        "description": "TLS marks an HTTPS proxy (http type only) — xray's http outbound reaches it\nover TLS; the socks outbound has no TLS support.",
+        "example": false,
+        "type": "boolean"
+      },
+      "type": {
+        "enum": [
+          "socks",
+          "http"
+        ],
+        "example": "socks",
+        "type": "string"
+      },
+      "updatedAt": {
+        "example": 1710000000000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "username": {
+        "description": "Username/Password are optional SOCKS5/HTTP basic-auth credentials; both\nempty means the hop proxy accepts anonymous connections.",
+        "example": "operator",
+        "type": "string"
+      }
+    },
+    "required": [
+      "createdAt",
+      "enabled",
+      "id",
+      "password",
+      "port",
+      "remark",
+      "server",
+      "tls",
+      "type",
+      "updatedAt",
+      "username"
+    ],
+    "type": "object"
+  },
+  "ChainSelector": {
+    "description": "ChainSelector groups chain proxies so a client picks between several entry\nhops by strategy; an inbound names either one hop or one selector, never both.",
+    "properties": {
+      "createdAt": {
+        "example": 1710000000000,
+        "format": "int64",
+        "type": "integer"
+      },
+      "enabled": {
+        "description": "No gorm default:true — a bool default makes an explicit false at insert\ncollapse back to the column default (zero value is skipped).",
+        "example": true,
+        "type": "boolean"
+      },
+      "id": {
+        "example": 1,
+        "type": "integer"
+      },
+      "proxyIds": {
+        "example": [
+          1,
+          2
+        ],
+        "items": {
+          "type": "integer"
+        },
+        "type": "array"
+      },
+      "remark": {
+        "example": "entries-fastest",
+        "maxLength": 256,
+        "type": "string"
+      },
+      "strategy": {
+        "enum": [
+          "leastLoad",
+          "leastPing",
+          "random",
+          "roundRobin"
+        ],
+        "example": "leastPing",
+        "type": "string"
+      },
+      "updatedAt": {
+        "example": 1710000000000,
+        "format": "int64",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "createdAt",
+      "enabled",
+      "id",
+      "proxyIds",
+      "remark",
+      "strategy",
+      "updatedAt"
+    ],
+    "type": "object"
+  },
   "CleanIpCdn": {
     "properties": {
       "groups": {

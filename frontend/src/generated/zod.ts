@@ -489,6 +489,32 @@ export const CarrierEndpointSchema = z.object({
 });
 export type CarrierEndpoint = z.infer<typeof CarrierEndpointSchema>;
 
+export const ChainProxySchema = z.object({
+  createdAt: z.number().int(),
+  enabled: z.boolean(),
+  id: z.number().int(),
+  password: z.string(),
+  port: z.number().int().min(1).max(65535),
+  remark: z.string().max(256),
+  server: z.string().max(253),
+  tls: z.boolean(),
+  type: z.enum(['socks', 'http']),
+  updatedAt: z.number().int(),
+  username: z.string(),
+});
+export type ChainProxy = z.infer<typeof ChainProxySchema>;
+
+export const ChainSelectorSchema = z.object({
+  createdAt: z.number().int(),
+  enabled: z.boolean(),
+  id: z.number().int(),
+  proxyIds: z.array(z.number().int()),
+  remark: z.string().max(256),
+  strategy: z.enum(['leastLoad', 'leastPing', 'random', 'roundRobin']),
+  updatedAt: z.number().int(),
+});
+export type ChainSelector = z.infer<typeof ChainSelectorSchema>;
+
 export const CleanIpCdnSchema = z.object({
   groups: z.array(z.lazy(() => CleanIpRangeGroupSchema)),
   id: z.string(),

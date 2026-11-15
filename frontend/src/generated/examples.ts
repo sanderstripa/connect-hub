@@ -474,6 +474,31 @@ export const EXAMPLES: Record<string, unknown> = {
     "carrier": "tcp",
     "port": 4443
   },
+  "ChainProxy": {
+    "createdAt": 1710000000000,
+    "enabled": true,
+    "id": 1,
+    "password": "secret",
+    "port": 1080,
+    "remark": "entry-de-fra",
+    "server": "proxy.example.com",
+    "tls": false,
+    "type": "socks",
+    "updatedAt": 1710000000000,
+    "username": "operator"
+  },
+  "ChainSelector": {
+    "createdAt": 1710000000000,
+    "enabled": true,
+    "id": 1,
+    "proxyIds": [
+      1,
+      2
+    ],
+    "remark": "entries-fastest",
+    "strategy": "leastPing",
+    "updatedAt": 1710000000000
+  },
   "CleanIpCdn": {
     "groups": [
       {
