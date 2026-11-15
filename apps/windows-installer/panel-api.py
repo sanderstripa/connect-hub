@@ -29,6 +29,7 @@ class Panel:
         self.token = self.request('csrf-token')
         self.request('login', {'username': (auth or {}).get('username') or access['USERNAME'],
                                'password': (auth or {}).get('password') or access['PASSWORD']})
+        self.token = self.request('csrf-token')
 
     def request(self, route, payload=None):
         headers = {'X-CSRF-Token': self.token} if hasattr(self, 'token') else {}
