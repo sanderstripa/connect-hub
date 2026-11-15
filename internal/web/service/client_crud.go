@@ -733,6 +733,13 @@ func (s *ClientService) update(inboundSvc *InboundService, id int, updated model
 	if err != nil {
 		return false, err
 	}
+	// Direct internal calls historically omit forwardedPorts on metadata edits.
+	// Keep their value unless explicitly supplied. The JSON update API marks
+	// presence even for "", which intentionally closes every forwarded port.
+	forwardedPortsSpecified := updated.ForwardedPortsSpecified || updated.ForwardedPortsSpec() != ""
+	if !forwardedPortsSpecified {
+		updated.ForwardedPorts = existing.ForwardedPorts
+	}
 	if updated.AWGPing == nil {
 		updated.AWGPing = existing.AWGPing.Clone()
 	}
@@ -1059,9 +1066,9 @@ func (s *ClientService) update(inboundSvc *InboundService, id int, updated model
 		return needRestart, err
 	}
 
-	// The AmneziaWG forwards too: the record merge keeps a stored spec when the settings
-	// carry none, so a withdrawal is written here; nil (not sent) leaves it alone.
-	if updated.ForwardedPortsSpec() != "" {
+	// Update the persisted spec only for explicit changes; write an empty string
+	// when forwards are withdrawn so the record cannot resurrect old ports.
+	if forwardedPortsSpecified {
 		if err := database.GetDB().Model(&model.ClientRecord{}).
 			Where("id = ?", id).
 			UpdateColumn("wg_forwarded_ports", updated.ForwardedPortsSpec()).Error; err != nil {

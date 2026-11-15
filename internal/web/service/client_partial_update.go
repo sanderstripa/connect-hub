@@ -24,6 +24,9 @@ func (s *ClientService) UpdateByEmailJSON(inboundSvc *InboundService, email stri
 		return false, err
 	}
 	keys := clientPayloadKeys(body)
+	// A missing field preserves the old port-forward. An explicit empty value
+	// withdraws it; a Go string alone cannot distinguish these cases.
+	req.Client.ForwardedPortsSpecified = keys.has("forwardedPorts")
 	fillAbsentClientFields(rec, &req.Client, &req.LimitHwid, keys)
 	return s.update(inboundSvc, rec.Id, req.Client, req.LimitHwid, !keys.has("flow"), inboundFilter)
 }

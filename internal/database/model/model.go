@@ -988,6 +988,7 @@ type Client struct {
 	AWGPing             *AWGPingPolicy   `json:"awgPing,omitempty"`
 	KeepAlive           *KeepAliveValue  `json:"keepAlive,omitempty"`      // Numeric values or AmneziaWG ranges; 0 disables, omission preserves.
 	ForwardedPorts      string           `json:"forwardedPorts,omitempty"` // AmneziaWG per-client port-forwarding spec, e.g. "80,443,8000-8100"
+	ForwardedPortsSpecified bool `json:"-"` // True when an edit explicitly sends the field (including empty = remove forwards).
 	SudokuKey           string           `json:"sudokuKey,omitempty"`
 	Secret              string           `json:"secret,omitempty" example:"ee1234567890abcdef1234567890abcd7777772e636c6f7564666c6172652e636f6d"`
 	AdTag               string           `json:"adTag,omitempty" example:"0123456789abcdef0123456789abcdef"`

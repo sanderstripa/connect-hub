@@ -678,6 +678,7 @@ func TestUpdateCanWithdrawForwardedPorts(t *testing.T) {
 		Enable:         true,
 		AllowedIPs:     []string{"10.8.1.2/32"},
 		ForwardedPorts: "",
+		ForwardedPortsSpecified: true,
 	}
 	if _, err := svc.Update(inboundSvc, recId, updated, 0); err != nil {
 		t.Fatalf("Update: %v", err)
