@@ -1079,7 +1079,7 @@ func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool
 		t.renderScreen(chatId, t.resetAllConfirm())
 	case "client_traffic":
 		t.answerSilent(callbackQuery.ID)
-		t.getClientUsage(chatId, callbackQuery.From.ID)
+		t.getClientUsage(chatId, callbackQuery.From.ID, screenSendNew)
 	case "client_sub_links", "client_individual_links", "client_qr_links", "client_one_link":
 		// A client tapped its own link button: its identity already says which
 		// subscription, so it opens directly. A second one still needs a choice.
@@ -1308,8 +1308,6 @@ func isClientSelfCallback(data string) bool {
 	// "hide" carries no target; it only dismisses the current screen.
 	case "home", "hide", "client_traffic", "client_commands", "client_sub_links",
 		"client_individual_links", "client_qr_links", "client_one_link", cbClientGuide:
-		return true
-	case cbPageNext, cbPagePrev, cbPageNone:
 		return true
 	// Paging only turns the screen already tracked for the caller's own chat.
 	case cbPageNext, cbPagePrev, cbPageNone:
