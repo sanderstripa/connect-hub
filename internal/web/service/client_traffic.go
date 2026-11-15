@@ -104,14 +104,9 @@ func (s *ClientService) BulkResetTraffic(inboundSvc *InboundService, emails []st
 			if err := recordClosedWindowsTx(tx, cleanEmails, trafficWindowReset); err != nil {
 				return err
 			}
-			for _, batch := range chunkStrings(cleanEmails, sqlInChunk) {
-				res := tx.Model(xray.ClientTraffic{}).
-					Where("email IN ?", batch).
-					Updates(map[string]any{"enable": true, "up": 0, "down": 0})
-				if res.Error != nil {
-					return res.Error
-				}
-				affected += int(res.RowsAffected)
+			// Keep clients disabled by hand disabled while resetting only quota states.
+			if affected, err = zeroClientTraffics(tx, cleanEmails, keepOff); err != nil {
+				return err
 			}
 			if err := clearGlobalTraffic(tx, cleanEmails...); err != nil {
 				return err
@@ -216,12 +211,8 @@ func (s *ClientService) resetAllClientTrafficsLocked(id int) ([]string, []string
 			return err
 		}
 
-		result := tx.Model(xray.ClientTraffic{}).
-			Where("email IN ?", resetEmails).
-			Updates(map[string]any{"enable": true, "up": 0, "down": 0})
-
-		if result.Error != nil {
-			return result.Error
+		if _, qErr = zeroClientTraffics(tx, resetEmails, keepOff); qErr != nil {
+			return qErr
 		}
 
 		if err := clearGlobalTraffic(tx, resetEmails...); err != nil {
@@ -268,11 +259,12 @@ func (s *ClientService) ResetAllTraffics() (bool, error) {
 			if err := recordClosedWindowsAllTx(tx, trafficWindowReset); err != nil {
 				return err
 			}
-			res := tx.Model(&xray.ClientTraffic{}).
-				Where("1 = 1").
-				Updates(map[string]any{"enable": true, "up": 0, "down": 0})
-			if res.Error != nil {
-				return res.Error
+			keepOff, qErr := handDisabledEmails(tx, nil)
+			if qErr != nil {
+				return qErr
+			}
+			if affected, qErr = zeroClientTraffics(tx, nil, keepOff); qErr != nil {
+				return qErr
 			}
 			if err := tx.Where("1 = 1").Delete(&model.ClientGlobalTraffic{}).Error; err != nil {
 				return err
