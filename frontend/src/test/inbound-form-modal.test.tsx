@@ -241,7 +241,9 @@ describe('InboundFormModal', () => {
       });
     };
     const strategyItem = (title: string) =>
-      document.querySelector(`.ant-select-content[title="${title}"]`);
+      Array.from(document.querySelectorAll('select option')).find(
+        (option) => option.textContent?.trim() === title && (option as HTMLOptionElement).selected,
+      );
     const queryClient = makeTestQueryClient();
     const modal = (nodes: never[], fetched: boolean) => (
       <QueryClientProvider client={queryClient}>
