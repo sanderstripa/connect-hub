@@ -164,7 +164,11 @@ func (t *Tgbot) screenClientLinks(chatID int64, email string) {
 		return
 	}
 	body := t.clientHeader(email)
-	body += t.I18nBot("tgbot.messages.subURL", "URL=="+html.EscapeString(subURL))
+	if traffic := t.ownClientTraffic(chatID, email); traffic != nil {
+		// Client link pages include only their own traffic, not admin controls.
+		body += t.clientInfoMsg(traffic, false, false, false, false, true, false)
+	}
+	body += t.I18nBot("tgbot.messages.subURL", "URL=="+subURL)
 	if subJSON != "" {
 		body += t.I18nBot("tgbot.messages.jsonURL", "URL=="+subJSON)
 	}
@@ -200,7 +204,7 @@ func (t *Tgbot) screenIndividualLinks(chatID int64, email string) {
 	}
 	var body strings.Builder
 	body.WriteString(t.clientHeader(email))
-	body.WriteString(html.EscapeString(t.I18nBot("tgbot.buttons.individualLinks")) + "\n\n")
+	body.WriteString(t.I18nBot("tgbot.buttons.individualLinks") + "\n\n")
 	for _, link := range links {
 		body.WriteString("<code>" + html.EscapeString(link) + "</code>\n")
 	}

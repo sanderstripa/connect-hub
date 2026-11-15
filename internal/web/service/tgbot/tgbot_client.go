@@ -3,7 +3,6 @@ package tgbot
 import (
 	"errors"
 	"fmt"
-	"html"
 	"net/url"
 	"slices"
 	"strconv"
@@ -69,9 +68,9 @@ func (t *Tgbot) BuildClientDraftMessage(draft *clientDraft) string {
 	}
 
 	return t.I18nBot("tgbot.messages.clientDraftTitle") + t.I18nBot("tgbot.messages.clientDraftDetails",
-		"Email=="+html.EscapeString(draft.email), "Attached=="+html.EscapeString(attached),
+		"Email=="+draft.email, "Attached=="+attached,
 		"Traffic=="+traffic, "Expiry=="+expiry, "LimitIP=="+ipLimit,
-		"TgID=="+html.EscapeString(tgID), "Comment=="+html.EscapeString(comment))
+		"TgID=="+tgID, "Comment=="+comment)
 }
 
 // describeAttachedInbounds returns a short "remark1, remark2" list for the given
@@ -311,9 +310,9 @@ func (t *Tgbot) clientInfoMsg(
 	}
 
 	output := ""
-	output += t.I18nBot("tgbot.messages.email", "Email=="+html.EscapeString(traffic.Email))
+	output += t.I18nBot("tgbot.messages.email", "Email=="+traffic.Email)
 	if attachIds, err := t.clientService.GetInboundIdsForEmail(nil, traffic.Email); err == nil && len(attachIds) > 0 {
-		output += t.I18nBot("tgbot.messages.attachedInbounds", "Inbounds=="+html.EscapeString(t.describeAttachedInbounds(attachIds)))
+		output += t.I18nBot("tgbot.messages.attachedInbounds", "Inbounds=="+t.describeAttachedInbounds(attachIds))
 	}
 	if printEnabled {
 		output += t.I18nBot("tgbot.messages.enabled", "Enable=="+enabled)
