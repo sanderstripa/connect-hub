@@ -362,13 +362,19 @@ func settingsClientAbsoluteExpiries(settings string) map[string]int64 {
 }
 
 func jsonClientInt64(v any) (int64, bool) {
-	if number, ok := v.(json.Number); ok {
-		n, err := number.Int64()
+	// settingsClientEntry stores expiryTime as json.RawMessage to avoid
+	// decoding arbitrary nested settings. Previously only json.Number and
+	// float64 were accepted, so EVERY snapshot expiry lift silently failed.
+	switch value := v.(type) {
+	case json.RawMessage:
+		n, err := strconv.ParseInt(strings.TrimSpace(string(value)), 10, 64)
 		return n, err == nil
-	}
-	n, ok := v.(float64)
-	if !ok {
+	case json.Number:
+		n, err := value.Int64()
+		return n, err == nil
+	case float64:
+		return int64(value), value == float64(int64(value))
+	default:
 		return 0, false
 	}
-	return int64(n), true
 }

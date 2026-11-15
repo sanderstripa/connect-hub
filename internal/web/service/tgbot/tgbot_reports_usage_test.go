@@ -293,6 +293,9 @@ func TestUsageEmailArgumentDoesNotLeakAnotherClient(t *testing.T) {
 // Listing an account's clients used to load their whole inbound, settings and
 // all, several times per client, so the list cost its length times the inbound's.
 func TestClientUsageDoesNotLoadTheInboundPerClient(t *testing.T) {
+	// Real production localization renders the inbound labels rather than raw
+	// translation keys. Use the same bundle loaded for normal Telegram screens.
+	localizeWithRealBundle(t)
 	sent := recordingBotServer(t)
 	dbtest.InitDB(t, filepath.Join(t.TempDir(), "x-ui.db"))
 	db := database.GetDB()
