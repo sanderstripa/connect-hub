@@ -24,6 +24,7 @@ try:
   if json_body:headers['Content-Type']='application/json';body=json.dumps(payload).encode()
   with client.open(urllib.request.Request(base+path,data=body,headers=headers),timeout=15)as response:return json.load(response)
  csrf=request('csrf-token')['obj'];assert request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf)['success']
+ csrf=request('csrf-token')['obj']
  state=request('panel/hub/api/status')['obj'];assert state['sudoku']['enabled'] and not state['connectCore']['enabled']
  user=subprocess.check_output(['systemctl','show','connect-hub','-p','User','--value'],text=True).strip();assert user=='root'
  panel_port=urllib.parse.urlparse(base).port
