@@ -24,6 +24,7 @@ import {
 } from '@ant-design/icons';
 
 import { onNumber } from '@/utils/onNumber';
+import { selectTagRender } from '@/components/form';
 import { SettingListItem } from '@/components/ui';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { usePointerRowReorder } from '@/hooks/usePointerRowReorder';
@@ -443,6 +444,7 @@ export default function DnsTab({ templateSettings, setTemplateSettings }: DnsTab
                     }}
                   />
                   <Select
+                    tagRender={selectTagRender}
                     mode="tags"
                     value={row.values}
                     aria-label={t('pages.xray.dns.hostsValues')}
