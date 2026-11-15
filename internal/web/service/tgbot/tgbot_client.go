@@ -80,7 +80,6 @@ func (t *Tgbot) describeAttachedInbounds(ids []int) string {
 	if len(ids) == 0 {
 		return ""
 	}
-	remarks, _ := t.inboundService.GetInboundRemarks(ids)
 	parts := make([]string, 0, len(ids))
 	inbounds, _ := t.inboundService.GetInboundLabelsByIDs(ids)
 	byID := make(map[int]string, len(inbounds))
