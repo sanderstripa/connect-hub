@@ -92,7 +92,7 @@ collectFiles('internal', ['.go'], paths);
 const text = paths.map((p) => fs.readFileSync(p, 'utf8')).join('\n');
 // Same literal lookup pattern as i18n-dead-keys.test.ts
 const referenced = new Set(Array.from(text.matchAll(/\bt\(\s*(['"])([\w.-]+)\1\s*[,)]/g), (m) => m[2]));
-for (const match of text.matchAll(/titleKey:\\s*['"]([\\w.-]+)['"]/g)) {
+for (const match of text.matchAll(/titleKey:\s*['"]([\w.-]+)['"]/g)) {
   referenced.add(match[1]);
 }
 const enSources = readUpstream('en-US.json');
