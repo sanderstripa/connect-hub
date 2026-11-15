@@ -131,7 +131,8 @@
     "network": "Sieť",
     "connections": "Connections",
     "tunnels": "Tunely",
-    "assistant": "AI Assistant"
+    "assistant": "AI Assistant",
+    "nodeRouting": "Node Routing"
   },
   "pages": {
     "logs": {

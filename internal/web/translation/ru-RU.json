@@ -131,7 +131,8 @@
     "subFormats": "Форматы подписки",
     "connections": "Подключения",
     "tunnels": "Туннели",
-    "assistant": "ИИ-помощник"
+    "assistant": "ИИ-помощник",
+    "nodeRouting": "Node Routing"
   },
   "pages": {
     "logs": {

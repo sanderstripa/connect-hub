@@ -131,7 +131,8 @@
     "subFormats": "Abonelik Formatları",
     "connections": "Connections",
     "tunnels": "Tüneller",
-    "assistant": "AI Assistant"
+    "assistant": "AI Assistant",
+    "nodeRouting": "Node Routing"
   },
   "pages": {
     "logs": {
