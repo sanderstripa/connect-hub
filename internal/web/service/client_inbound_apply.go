@@ -896,7 +896,7 @@ func (s *ClientService) UpdateInboundClient(inboundSvc *InboundService, data *mo
 			return false, err
 		}
 	}
-	if err := validateAmneziaWGClientWrite(oldInbound, clients); err != nil {
+	if err := validateAmneziaWGClientWrite(oldInbound, clients, oldEmail); err != nil {
 		return false, err
 	}
 	if oldInbound.Protocol == model.AmneziaWG {
@@ -1583,6 +1583,7 @@ func (s *ClientService) renewalReenableFor(email string, setExpiry *int64, setTo
 }
 
 func (s *ClientService) ResetClientExpiryTimeByEmail(inboundSvc *InboundService, clientEmail string, expiry_time int64) (bool, error) {
+	reenable := s.renewalReenableFor(clientEmail, &expiry_time, nil)
 	oldExpiry := ""
 	if rec, err := s.GetRecordByEmail(nil, clientEmail); err == nil {
 		oldExpiry = fmt.Sprintf("%d", rec.ExpiryTime)
