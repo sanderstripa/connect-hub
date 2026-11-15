@@ -42,6 +42,8 @@ func run(root, outDir string) error {
 				"InboundFallback",
 				"Host",
 				"SubBalancer",
+				"ChainProxy",
+				"ChainSelector",
 				"ClientTrafficWindow",
 				"ClientChangeLog",
 			),
