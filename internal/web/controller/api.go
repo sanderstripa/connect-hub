@@ -261,6 +261,10 @@ func (a *APIController) initRouter(g *gin.RouterGroup, router http.Handler) {
 	// Subscription balancers — client-side balancers for the JSON sub output
 	NewSubBalancerController(api)
 
+	// Upstream SOCKS/HTTP proxy chains and selectors are panel API features.
+	// Register under the existing admin/API-token and CSRF middleware.
+	NewChainProxyController(api)
+
 	// REALITY watch — spare targets and automatic replacement per REALITY inbound
 	NewRealityWatchController(api.Group("/realityWatch"))
 

@@ -256,6 +256,11 @@ func (s *ClientService) ResetAllTraffics() (bool, error) {
 			if restore, qErr = quotaDisabledEmails(tx, nil); qErr != nil {
 				return qErr
 			}
+			// Snapshot total group usage before the global reset deletes the
+			// per-client counters; previously accumulated usage must survive.
+			if err := adjustGroupBaselinesForRemovedTraffic(tx, nil); err != nil {
+				return err
+			}
 			if err := recordClosedWindowsAllTx(tx, trafficWindowReset); err != nil {
 				return err
 			}

@@ -30,7 +30,7 @@ const (
 	CapPreserveClientTraffic = "preserve-client-traffic"
 	// NodeCaps is the full CapsHeader value this build advertises.
 	CapAWGPing = "awg-ping4"
-	NodeCaps   = CapZstd + "," + CapAmneziaWGKernel + "," + CapAWGPing
+	NodeCaps   = CapZstd + "," + CapAmneziaWGKernel + "," + CapAWGPing + "," + CapPreserveClientTraffic
 
 	// maxDecodeBytes bounds in-memory decompression to defuse a zstd bomb from
 	// an (authenticated) node-API caller.

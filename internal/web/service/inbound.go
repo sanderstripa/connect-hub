@@ -1366,6 +1366,9 @@ func (s *InboundService) normalizeMtprotoXrayPort(inbound *model.Inbound, oldSet
 func (s *InboundService) AddInbound(inbound *model.Inbound) (*model.Inbound, bool, error) {
 	defer InvalidateSubData()
 	inbound.Id = 0
+	if err := normalizeVlessFallbacks(inbound); err != nil {
+		return inbound, false, err
+	}
 	if err := sudoku.NormalizeSettings(inbound); err != nil {
 		return inbound, false, err
 	}
@@ -2149,6 +2152,15 @@ func (s *InboundService) UpdateInbound(inbound *model.Inbound) (*model.Inbound, 
 
 	oldInbound, err := s.GetInbound(inbound.Id)
 	if err != nil {
+		return inbound, false, err
+	}
+	// Remote nodes have no upstream chain rows; absent node fields must not
+	// erase a chain configured by the hub itself.
+	if s.FromNodeSync {
+		inbound.ChainProxyId = oldInbound.ChainProxyId
+		inbound.ChainSelectorId = oldInbound.ChainSelectorId
+	}
+	if err := normalizeVlessFallbacks(inbound); err != nil {
 		return inbound, false, err
 	}
 	if !s.FromNodeSync {

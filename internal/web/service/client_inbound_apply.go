@@ -882,10 +882,8 @@ func (s *ClientService) UpdateInboundClient(inboundSvc *InboundService, data *mo
 		if clients[0].KeepAlive == nil {
 			clients[0].KeepAlive = old.KeepAlive
 		}
-		// AWG partial edits (nil: the field was not sent) keep the stored spec; "" withdraws it.
-		if oldInbound.Protocol == model.AmneziaWG && clients[0].ForwardedPorts == "" {
-			clients[0].ForwardedPorts = old.ForwardedPorts
-		}
+		// The editable AWG spec uses a string, not an optional pointer.
+		// Empty here explicitly withdraws the previous port-forwarding rules.
 	}
 	for i, c := range clients {
 		previousEmail := c.Email
@@ -1606,12 +1604,17 @@ func (s *ClientService) ResetClientTrafficLimitByEmail(inboundSvc *InboundServic
 	if totalGB < 0 {
 		return false, common.NewError("totalGB must be >= 0")
 	}
+	limitBytes := int64(totalGB) * 1024 * 1024 * 1024
+	reenable := s.renewalReenableFor(clientEmail, nil, &limitBytes)
 	oldLimit := ""
 	if rec, err := s.GetRecordByEmail(nil, clientEmail); err == nil {
 		oldLimit = fmt.Sprintf("%d", rec.TotalGB)
 	}
 	needRestart, err := s.applyClientFieldByEmail(inboundSvc, clientEmail, func(c map[string]any) {
-		c["totalGB"] = totalGB * 1024 * 1024 * 1024
+		c["totalGB"] = limitBytes
+		if reenable {
+			c["enable"] = true
+		}
 	})
 	if err == nil {
 		logClientChange(clientEmail, "dataLimit", oldLimit, fmt.Sprintf("%d", int64(totalGB)*1024*1024*1024), clientChangeSourceTgbot)

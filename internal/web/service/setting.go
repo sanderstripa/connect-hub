@@ -1797,6 +1797,15 @@ func (s *SettingService) UpdateAllSetting(allSetting *entity.AllSetting, clears 
 	if err := s.preserveRedactedSecrets(allSetting, clears); err != nil {
 		return err
 	}
+	if allSetting.TwoFactorEnable {
+		// Only store an authenticator-compatible base32 secret when turning on
+		// two-factor authentication. The redacted form was restored above.
+		secret := totp.NormalizeSecret(allSetting.TwoFactorToken)
+		if !totp.ValidSecret(secret) {
+			return common.NewError("two-factor authentication requires a valid base32 secret")
+		}
+		allSetting.TwoFactorToken = secret
+	}
 	if err := validateWechatSettings(allSetting); err != nil {
 		return err
 	}

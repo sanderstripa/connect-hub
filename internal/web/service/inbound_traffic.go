@@ -745,20 +745,22 @@ func (s *InboundService) delClientStatsByEmails(tx *gorm.DB, emails []string, re
 func (s *InboundService) ResetClientTrafficByEmail(clientEmail string) error {
 	err := submitTrafficWrite(func() error {
 		return database.GetDB().Transaction(func(tx *gorm.DB) error {
+			// A global node usage contribution may be what disabled a client.
+			// Determine manual-vs-quota disable BEFORE clearing either counter.
+			keepOff, err := handDisabledEmails(tx, []string{clientEmail})
+			if err != nil {
+				return err
+			}
 			if err := adjustGroupBaselinesForRemovedTraffic(tx, []string{clientEmail}); err != nil {
 				return err
 			}
 			if err := recordClosedWindowsTx(tx, []string{clientEmail}, trafficWindowReset); err != nil {
 				return err
 			}
-			if err := clearGlobalTraffic(tx, clientEmail); err != nil {
-				return err
-			}
-			keepOff, err := handDisabledEmails(tx, []string{clientEmail})
-			if err != nil {
-				return err
-			}
 			if _, err := zeroClientTraffics(tx, []string{clientEmail}, keepOff); err != nil {
+				return err
+			}
+			if err := clearGlobalTraffic(tx, clientEmail); err != nil {
 				return err
 			}
 			return tx.Where("email = ?", clientEmail).Delete(&model.NodeClientTraffic{}).Error
