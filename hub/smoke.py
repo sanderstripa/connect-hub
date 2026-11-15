@@ -58,8 +58,8 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-ci-') as td:
  p=launch()
  try:
   csrf=request('csrf-token')['obj'];res=request('login',{'username':creds['USERNAME'],'password':creds['PASSWORD']},csrf);assert res['success'],res
-   # Login rotates the session and CSRF token; use the authenticated token.
-   csrf=request('csrf-token')['obj']
+  # Login rotates the session and CSRF token; use the authenticated token.
+  csrf=request('csrf-token')['obj']
   assert any(c.name=='connect-hub' for c in jar) and all(c.name!='3x-ui' for c in jar)
   passed('random initial credentials, CSRF login and independent session-cookie name')
   assert request('panel/api/server/status')['success'];passed('authenticated status API')
