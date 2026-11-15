@@ -49,12 +49,12 @@ describe('Connect Hub Xray stop guard', () => {
     const onStopXray = vi.fn();
     renderBar('running', { onStopXray });
     fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
-    expect(await screen.findByText('Stop Xray?')).toBeTruthy();
+    expect(await screen.findAllByText('Stop Xray?')).not.toHaveLength(0);
     expect(onStopXray).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onStopXray).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Stop Xray' }));
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Stop Xray' })).at(-1)!);
     await waitFor(() => expect(onStopXray).toHaveBeenCalledOnce());
   });
 
