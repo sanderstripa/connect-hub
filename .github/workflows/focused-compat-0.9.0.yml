@@ -1,0 +1,44 @@
+name: Connect Hub 0.9.0 — targeted compatibility regressions
+on:
+  push:
+    branches: [feat/connect-hub-0.9.0-merge-lab]
+    paths:
+      - .github/workflows/focused-compat-0.9.0.yml
+      - frontend/src/pages/index/**
+      - frontend/src/pages/inbounds/**
+      - frontend/src/test/**
+      - frontend/src/generated/**
+      - internal/web/translation/**
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: hub-0.9.0-focused
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --ignore-scripts
+        working-directory: frontend
+      - name: Run known vulnerable legacy and new feature tests
+        working-directory: frontend
+        run: |
+          npx vitest run \
+            src/test/container-history.test.tsx \
+            src/test/network-traffic-status.test.tsx \
+            src/test/index-load-average.test.tsx \
+            src/test/overview-stop-confirm.test.tsx \
+            src/test/inbound-form-modal.test.tsx \
+            src/test/navigation-contract.test.tsx \
+            src/test/i18n-dead-keys.test.ts \
+            src/test/openapi-request-bodies.test.ts \
+            src/test/openapi-runtime-contracts.test.ts \
+            --project components --project unit
