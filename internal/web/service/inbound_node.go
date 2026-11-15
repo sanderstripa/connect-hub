@@ -1308,7 +1308,9 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 				}
 			}
 		}
-		lifted, liftChanged := liftClientLifecycleInSettings(adoptedSettings, centralCSByEmail)
+		// Shared client traffic may be homed on a different node; statByEmail
+		// includes its authoritative row, unlike this node's centralCSByEmail.
+		lifted, liftChanged := liftClientLifecycleInSettings(adoptedSettings, statByEmail)
 		if liftChanged {
 			adoptedSettings = lifted
 			lifecycleLifted = true

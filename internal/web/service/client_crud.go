@@ -318,7 +318,7 @@ func (s *ClientService) Create(inboundSvc *InboundService, payload *ClientCreate
 		if err := inboundSvc.validateAWGPingTarget(inbound, clientForInbound.AWGPing, clientForInbound.Email); err != nil {
 			return false, err
 		}
-		if err := validateAmneziaWGClientWrite(inbound, []model.Client{clientForInbound}, clientForInbound.Email); err != nil {
+		if err := validateAmneziaWGClientWrite(inbound, []model.Client{clientForInbound}, existing.Email); err != nil {
 			return false, fmt.Errorf("inbound %d: %w", ibId, err)
 		}
 		settingsPayload, mErr := json.Marshal(map[string][]model.Client{"clients": {clientWithInboundFlow(clientForInbound, inbound)}})
