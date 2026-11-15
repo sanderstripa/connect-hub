@@ -173,13 +173,13 @@ export function useOverviewHistory(
   );
 
   // Some callers construct a fresh Status wrapper on every render. Object
-  // identity cannot be used as a render-phase sample guard: it causes loops.
-  // Preserve at most one sample per second, including changes in availability.
+  // identity and the wall clock must not be used as sample guards: both
+  // manufacture duplicate datapoints during unrelated UI re-renders.
+  // Sample when metrics, availability, scope or range actually change.
   const currentSample = sampleOf(status);
   const sampleSignature = [
     bucketSeconds,
     status.resourceScope,
-    Math.floor(Date.now() / 1000),
     ...SERIES_KEYS.map((key) =>
       (status.metricAvailable(key) ? '1:' : '0:') + currentSample[key],
     ),
