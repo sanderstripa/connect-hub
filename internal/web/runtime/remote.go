@@ -98,6 +98,8 @@ type Remote struct {
 	capsSeen          bool
 	supportsAWGKernel bool
 	supportsAWGPing   bool
+	// Parsed capability names negotiated from the node response header.
+	nodeCaps []string
 
 	// Per-node client honoring the TLS verify mode, built once and reused; a
 	// node config change drops the cached Remote so the next one rebuilds it.
@@ -138,10 +140,19 @@ func (r *Remote) nodeSupportsZstd() bool {
 // recordCaps learns the node's capabilities from a response header so later
 // pushes can use the negotiated envelope.
 func (r *Remote) recordCaps(h http.Header) {
-	caps := strings.Split(h.Get(wirecodec.CapsHeader), ",")
+	raw := strings.TrimSpace(h.Get(wirecodec.CapsHeader))
+	caps := []string{}
+	if raw != "" {
+		for _, token := range strings.Split(raw, ",") {
+			if token = strings.TrimSpace(token); token != "" {
+				caps = append(caps, token)
+			}
+		}
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.capsSeen = true
+	r.nodeCaps = caps
 	r.supportsAWGPing = slices.Contains(caps, wirecodec.CapAWGPing)
 	r.supportsAWGKernel = slices.Contains(caps, wirecodec.CapAmneziaWGKernel)
 	if slices.Contains(caps, wirecodec.CapZstd) {
