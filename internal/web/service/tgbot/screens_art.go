@@ -211,7 +211,6 @@ func rejectArtFileID(fileID string) {
 
 // resetScreenArt drops the cached file_ids; tests use it between mock servers.
 func resetScreenArt() {
-	artProbes.Wait()
 	screenArtMu.Lock()
 	artProbeEpoch.Add(1)
 	// A stale 15s GetMe/profile request must not prevent the replacement
