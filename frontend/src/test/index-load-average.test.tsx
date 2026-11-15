@@ -57,8 +57,8 @@ it('adds independently colored loads only to CPU and refreshes with the existing
   expect(
     cpu.getByRole('img', { name: 'Load Average (1m): Healthy' }).getAttribute('data-severity'),
   ).toBe('healthy');
-  await waitFor(() => expect(cpu.getByText('avg 51%').textContent).toBe('avg 51%'));
-  expect(cpu.getByText('peak 72%')).toBeTruthy();
+  await waitFor(() => expect(tile.querySelector('.ov-tile-foot > span')?.textContent?.replace(/\s+/g, '')).toBe('avg51%'));
+  expect(tile.querySelector('.ov-tile-foot > span:nth-child(2)')?.textContent?.replace(/\s+/g, '')).toBe('peak72%');
   expect(cpu.getByRole('img', { name: /CPU: 72%/ })).toBeTruthy();
   expect(container.querySelectorAll('.ov-vitals .ov-tile')).toHaveLength(4);
   expect(container.querySelectorAll('.ov-load')).toHaveLength(1);
@@ -73,7 +73,7 @@ it('adds independently colored loads only to CPU and refreshes with the existing
       .getByRole('img', { name: 'Load Average (1m): Above capacity' })
       .getAttribute('data-severity'),
   ).toBe('aboveCapacity');
-  expect(cpu.getByText('avg 58%')).toBeTruthy();
+  expect(tile.querySelector('.ov-tile-foot > span')?.textContent?.replace(/\s+/g, '')).toBe('avg58%');
   expect(cpu.getByRole('img', { name: /CPU: 80%/ })).toBeTruthy();
   expect(vi.mocked(HttpUtil.get).mock.calls).toHaveLength(requestCount);
 });
