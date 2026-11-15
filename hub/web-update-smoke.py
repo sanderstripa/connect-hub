@@ -30,6 +30,7 @@ def login():
         try:
             csrf=api('csrf-token')['obj']
             assert api('login',{'username':credentials['USERNAME'],'password':credentials['PASSWORD']})['success']
+            csrf=api('csrf-token')['obj']
             return
         except OSError:time.sleep(.25)
     raise AssertionError('Panel did not become ready')
