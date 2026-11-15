@@ -23,6 +23,7 @@ import (
 )
 
 var reportedRemoteTagConflict sync.Map
+var reportedForeignClientClaim sync.Map
 
 // nodeBulkPushThreshold caps how many per-client RPCs a single operation will
 // stream to a remote node. Above it, the panel marks the node dirty instead and
@@ -1906,4 +1907,46 @@ func (s *InboundService) FilterAndSortClientEmails(emails []string) ([]string, [
 	}
 
 	return validEmails, extraEmails, nil
+}
+
+
+// clientEmailsOwnedElsewhere reports emails that the hub already owns only on
+// a different node. Never adopt such a client's stale snapshot into this node:
+// a shared email's access and traffic must remain attached to its existing
+// owner. Local inbounds (node_id=NULL) and the requesting node count as valid
+// ownership and are intentionally excluded.
+func clientEmailsOwnedElsewhere(tx *gorm.DB, nodeID int, emails []string) (map[string]struct{}, error) {
+	foreign := make(map[string]struct{})
+	if len(emails) == 0 {
+		return foreign, nil
+	}
+	type claim struct {
+		Email string
+		NodeID *int `gorm:"column:node_id"`
+	}
+	var rows []claim
+	for _, batch := range chunkStrings(emails, sqlInChunk) {
+		var page []claim
+		if err := tx.Table("client_inbounds ci").
+			Select("c.email AS email, i.node_id AS node_id").
+			Joins("JOIN clients c ON c.id = ci.client_id").
+			Joins("JOIN inbounds i ON i.id = ci.inbound_id").
+			Where("c.email IN ?", batch).
+			Find(&page).Error; err != nil {
+			return nil, err
+		}
+		rows = append(rows, page...)
+	}
+	ownedHere := make(map[string]bool)
+	for _, row := range rows {
+		if row.NodeID == nil || *row.NodeID == nodeID {
+			ownedHere[row.Email] = true
+		} else {
+			foreign[row.Email] = struct{}{}
+		}
+	}
+	for email := range ownedHere {
+		delete(foreign, email)
+	}
+	return foreign, nil
 }
