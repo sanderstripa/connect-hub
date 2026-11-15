@@ -754,10 +754,11 @@ func (s *InboundService) ResetClientTrafficByEmail(clientEmail string) error {
 			if err := clearGlobalTraffic(tx, clientEmail); err != nil {
 				return err
 			}
-			if _, err := zeroClientTraffics(tx, []string{clientEmail}, keepOff); err != nil {
+			keepOff, err := handDisabledEmails(tx, []string{clientEmail})
+			if err != nil {
 				return err
 			}
-			if err := clearGlobalTraffic(tx, clientEmail); err != nil {
+			if _, err := zeroClientTraffics(tx, []string{clientEmail}, keepOff); err != nil {
 				return err
 			}
 			return tx.Where("email = ?", clientEmail).Delete(&model.NodeClientTraffic{}).Error
