@@ -172,9 +172,21 @@ export function useOverviewHistory(
     emptyWindow(status.resourceScope, bucketSeconds),
   );
 
-  const [sampledStatus, setSampledStatus] = useState<Status | null>(null);
-  if (hasData && status !== sampledStatus) {
-    setSampledStatus(status);
+  // Some callers construct a fresh Status wrapper on every render. Object
+  // identity cannot be used as a render-phase sample guard: it causes loops.
+  // Preserve at most one sample per second, including changes in availability.
+  const currentSample = sampleOf(status);
+  const sampleSignature = [
+    bucketSeconds,
+    status.resourceScope,
+    Math.floor(Date.now() / 1000),
+    ...SERIES_KEYS.map((key) =>
+      (status.metricAvailable(key) ? '1:' : '0:') + currentSample[key],
+    ),
+  ].join('|');
+  const [sampledSignature, setSampledSignature] = useState('');
+  if (hasData && sampleSignature !== sampledSignature) {
+    setSampledSignature(sampleSignature);
     setTrend((previous) => {
       const rangeChanged = previous.bucketSeconds !== bucketSeconds;
       const next = rangeChanged
@@ -192,10 +204,9 @@ export function useOverviewHistory(
         next.series.swap = [];
       }
       next.times = tailWindow(next.times.concat(Math.floor(Date.now() / 1000)));
-      const sample = sampleOf(status);
       for (const key of SERIES_KEYS) {
         if (status.metricAvailable(key)) {
-          next.series[key] = tailWindow(next.series[key].concat(sample[key]));
+          next.series[key] = tailWindow(next.series[key].concat(currentSample[key]));
         }
       }
       return next;
