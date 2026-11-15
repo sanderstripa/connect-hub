@@ -234,7 +234,7 @@ func (s *ClientService) Create(inboundSvc *InboundService, payload *ClientCreate
 	normalizeClientTrafficReset(&client)
 	// Nothing to withdraw on a new client, so a blank spec is no spec.
 	if client.ForwardedPortsSpec() == "" {
-		client.ForwardedPorts = nil
+		client.ForwardedPorts = ""
 	}
 	client.ClientHostRuleIds = model.NormalizeClientHostRuleIds(client.ClientHostRuleIds)
 	if len(payload.InboundIds) == 0 {
@@ -318,7 +318,7 @@ func (s *ClientService) Create(inboundSvc *InboundService, payload *ClientCreate
 		if err := inboundSvc.validateAWGPingTarget(inbound, clientForInbound.AWGPing, clientForInbound.Email); err != nil {
 			return false, err
 		}
-		if err := validateAmneziaWGClientWrite(inbound, []model.Client{clientForInbound}); err != nil {
+		if err := validateAmneziaWGClientWrite(inbound, []model.Client{clientForInbound}, clientForInbound.Email); err != nil {
 			return false, fmt.Errorf("inbound %d: %w", ibId, err)
 		}
 		settingsPayload, mErr := json.Marshal(map[string][]model.Client{"clients": {clientWithInboundFlow(clientForInbound, inbound)}})
@@ -358,7 +358,7 @@ func (s *ClientService) prepareClientAdd(client *model.Client, inbound *model.In
 		// Each tunnel allocates addresses from its own subnet.
 		perInbound.AllowedIPs = nil
 	}
-	if err := validateAmneziaWGClientWrite(inbound, []model.Client{perInbound}); err != nil {
+	if err := validateAmneziaWGClientWrite(inbound, []model.Client{perInbound}, ""); err != nil {
 		return nil, err
 	}
 	settings, err := json.Marshal(map[string][]model.Client{"clients": {clientWithInboundFlow(perInbound, inbound)}})
@@ -939,7 +939,7 @@ func (s *ClientService) update(inboundSvc *InboundService, id int, updated model
 		if err := inboundSvc.validateAWGPingTarget(inbound, clientForInbound.AWGPing, existing.Email); err != nil {
 			return false, err
 		}
-		if err := validateAmneziaWGClientWrite(inbound, []model.Client{clientForInbound}); err != nil {
+		if err := validateAmneziaWGClientWrite(inbound, []model.Client{clientForInbound}, clientForInbound.Email); err != nil {
 			return false, fmt.Errorf("inbound %d: %w", ibId, err)
 		}
 		settingsPayload, mErr := json.Marshal(map[string][]model.Client{"clients": {clientWithInboundFlow(clientForInbound, inbound)}})
@@ -1061,7 +1061,7 @@ func (s *ClientService) update(inboundSvc *InboundService, id int, updated model
 
 	// The AmneziaWG forwards too: the record merge keeps a stored spec when the settings
 	// carry none, so a withdrawal is written here; nil (not sent) leaves it alone.
-	if updated.ForwardedPorts != nil {
+	if updated.ForwardedPortsSpec() != "" {
 		if err := database.GetDB().Model(&model.ClientRecord{}).
 			Where("id = ?", id).
 			UpdateColumn("wg_forwarded_ports", updated.ForwardedPortsSpec()).Error; err != nil {
@@ -1350,7 +1350,7 @@ func (s *ClientService) Attach(inboundSvc *InboundService, id int, inboundIds []
 		copyClient := *clientWire
 		// A forward is a listener on the target inbound's host, set per inbound: carried over, it
 		// would let a node-reported client choose ports on this host.
-		copyClient.ForwardedPorts = nil
+		copyClient.ForwardedPorts = ""
 		if !addressesFitAmneziaWGInbound(copyClient.AllowedIPs, inbound) {
 			copyClient.AllowedIPs = nil
 		}
