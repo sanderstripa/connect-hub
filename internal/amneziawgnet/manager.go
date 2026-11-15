@@ -252,12 +252,17 @@ func (m *Manager) ensureLocked(d Desired) error {
 		return false
 	})
 	dev.tun.echoHandler = next.echo.handle
-	AttachTCPForwarder(dev.Stack, func(conn *gonet.TCPConn, dest netip.AddrPort) {
-		srcAddrPort, err := netip.ParseAddrPort(conn.RemoteAddr().String())
-		if err != nil {
-			conn.Close()
-			return
-		}
+	AttachTCPForwarder(dev.Stack,
+		func(src netip.Addr) (string, bool) {
+			// Reject unknown tunnel sources before the forwarder creates
+			// an endpoint or reserves a peer's TCP flow slot.
+			peer, ok := next.lookupPeer(src.Unmap())
+			if !ok {
+				return "", false
+			}
+			return peer.Email, true
+		},
+		func(conn *gonet.TCPConn, src, dest netip.AddrPort) {
 		// Reload for every connection: in-place reconfiguration swaps the peer
 		// index without reattaching handlers and may hold the lifecycle lock.
 		peer, ok := next.lookupPeer(src.Addr().Unmap())
