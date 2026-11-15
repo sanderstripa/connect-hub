@@ -848,14 +848,20 @@ func (s *InboundService) resetClientTrafficLocked(id int, clientEmail string) (b
 			cipher, _ = oldSettings["method"].(string)
 		}
 		clientMap := map[string]any{
-			"email":    entry.Email,
-			"id":       entry.ID,
-			"auth":     entry.Auth,
-			"security": entry.Security,
-			"flow":     entry.Flow,
-			"password": entry.Password,
-			"cipher":   cipher,
-			"reverse":  entry.Reverse,
+			"email":       entry.Email,
+			"id":          entry.ID,
+			"auth":        entry.Auth,
+			"security":    entry.Security,
+			"flow":        entry.Flow,
+			"password":    entry.Password,
+			"cipher":      cipher,
+			"reverse":     entry.Reverse,
+			// Peer credentials must survive runtime re-add on quota reset;
+			// KeepAliveValue is stored as a string, never a numeric JSON value.
+			"publicKey":   entry.PublicKey,
+			"preSharedKey": entry.PreSharedKey,
+			"allowedIPs":  entry.AllowedIPs,
+			"keepAlive":   entry.KeepAliveText(),
 		}
 		if inbound.NodeID != nil {
 			reenableNodeID = inbound.NodeID
@@ -922,14 +928,13 @@ func (s *InboundService) resetClientTrafficLocked(id int, clientEmail string) (b
 	}
 
 	if reenablePlan != nil {
-		rt, err := s.runtimeFor(&reenablePlan.inbound)
-		if err != nil {
+		// AmneziaWG, TUIC, MTProto and Sudoku are sidecars: AddUser on Xray
+		// is not their runtime update. Reuse the same post-commit dispatcher
+		// as the traffic renewal cycle, including its inbound reconciliation.
+		if s.applyTrafficMutationBatch(&trafficMutationBatch{
+			localPlans: []trafficLocalApplyPlan{*reenablePlan},
+		}) {
 			needRestart = true
-		} else if err := rt.AddUser(context.Background(), &reenablePlan.inbound, reenablePlan.client); err != nil {
-			logger.Debug("Error in enabling client on", rt.Name(), ":", err)
-			needRestart = true
-		} else {
-			logger.Debug("Client enabled on", rt.Name(), "due to reset traffic:", clientEmail)
 		}
 	}
 
