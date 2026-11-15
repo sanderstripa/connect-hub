@@ -7,7 +7,7 @@ COPY internal/web/translation /src/internal/web/translation
 ENV STORYBOOK_DISABLE_TELEMETRY=1
 RUN npm run build
 
-FROM golang:1.27.3-bookworm AS builder
+FROM golang:1.27.4-bookworm AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends python3 git && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 ARG CONNECT_HUB_REVISION
