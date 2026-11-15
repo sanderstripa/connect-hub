@@ -42,6 +42,11 @@ with tempfile.TemporaryDirectory(prefix='connect-hub-pg-test-') as raw:
             else:raise AssertionError('PostgreSQL panel HTTP listener did not start')
             login=urllib.parse.urlencode({'username':credentials['USERNAME'],'password':credentials['PASSWORD']}).encode()
             with client.open(urllib.request.Request(base+'login',data=login,headers={'X-CSRF-Token':token}),timeout=20) as response:assert json.load(response)['success']
+            # The session is deliberately cleared and reissued on login to
+            # prevent fixation; its anonymous CSRF token is invalid afterwards.
+            # Fetch the newly authenticated token before any panel mutation.
+            token=api('csrf-token')['obj']
+            assert isinstance(token,str) and token
             return api
         api=session();no_sqlite()
         created=api('panel/hub/api/sudoku/inbounds',{'name':'PostgreSQL preserved inbound','host':'127.0.0.1','port':18448,'aead':'chacha20-poly1305','table':'prefer_ascii'})
