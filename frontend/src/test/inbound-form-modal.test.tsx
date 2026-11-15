@@ -6,7 +6,6 @@ import { DBInbound } from '@/models/dbinbound';
 import { ThemeProvider } from '@/hooks/useTheme';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { HttpUtil, Msg } from '@/utils';
-import { Protocols } from '@/schemas/primitives';
 import {
   renderWithProviders,
   makeTestQueryClient,
@@ -330,6 +329,9 @@ describe('InboundFormModal', () => {
     post.mockClear();
     renderCloneLikeEdit(cloneLikeVlessInbound('example.com:443'));
 
+    // The new Chain Proxy section and fallback loader are asynchronous.
+    // Wait for initial form effects before submitting the unchanged inbound.
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
     fireEvent.click(primaryButton());
 
     await waitFor(() => {
@@ -631,6 +633,7 @@ describe('InboundFormModal', () => {
     });
     renderCloneLikeEdit(legacy);
 
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
     fireEvent.click(primaryButton());
 
     await waitFor(() => expect(post).toHaveBeenCalled());
