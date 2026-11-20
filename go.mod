@@ -18,7 +18,7 @@ require (
 	github.com/jackc/pgx/v5 v5.12.0
 	github.com/joho/godotenv v1.5.1
 	github.com/klauspost/compress v1.20.3
-	github.com/mattn/go-sqlite3 v1.14.52
+	github.com/mattn/go-sqlite3 v1.14.53
 	github.com/modelcontextprotocol/go-sdk v1.8.0
 	github.com/mymmrac/telego v1.12.1
 	github.com/nicksnyder/go-i18n/v2 v2.7.0
