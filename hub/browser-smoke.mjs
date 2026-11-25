@@ -65,8 +65,7 @@ try {
  await page.evaluate(()=>localStorage.setItem('sidebar-pinned','true'));
  for(const dark of [false,true]){
   await page.goto(cfg.url+'panel/settings#appearance');
-  const mode = dark ? 'dark' : 'light';
-  await page.locator('#theme-mode label').filter({ has: page.locator('input[value=' + mode + ']') }).click();
+  await page.getByText(dark ? /^(Dark|Тёмная)$/ : /^(Light|Светлая)$/, {exact:true}).click();
   await page.waitForFunction(d=>document.body.classList.contains('dark')===d,dark);
   for(const route of ['connections','groups','nodes','hosts','outbound','routing','settings','xray','api-docs']){
    await page.goto(cfg.url+'panel/'+route);await page.locator('.ant-sidebar').waitFor();await page.keyboard.press('Escape');await page.waitForTimeout(400);
