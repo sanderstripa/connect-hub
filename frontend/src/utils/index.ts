@@ -237,7 +237,7 @@ export class RandomUtil {
   }
 
   static randomUUID(): string {
-    if (window.location.protocol === 'https:') {
+    if (typeof window.crypto.randomUUID === 'function') {
       return window.crypto.randomUUID();
     }
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {

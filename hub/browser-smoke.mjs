@@ -62,13 +62,12 @@ try {
  await page.locator('#connection-inbounds .inbound-card-title').filter({hasText:'Unified Sudoku edited'}).first().waitFor();
  await page.screenshot({path:cfg.output+'/unified-inbounds-desktop.png',fullPage:true});
  await checkBrand(page,cfg.output,'inbounds');
- await page.locator('.ant-sidebar').hover();
- await page.locator('#theme-cycle').click();
- await page.keyboard.press('Escape'); // close the active palette before route measurements
- await checkBrand(page,cfg.output,'inbounds');
  await page.evaluate(()=>localStorage.setItem('sidebar-pinned','true'));
  for(const dark of [false,true]){
-  if(await page.evaluate(()=>document.body.classList.contains('dark'))!==dark){await page.locator('#theme-cycle').click();await page.keyboard.press('Escape');}
+  await page.goto(cfg.url+'panel/settings#appearance');
+  const mode = dark ? 'dark' : 'light';
+  await page.locator('#theme-mode label').filter({ has: page.locator('input[value=' + mode + ']') }).click();
+  await page.waitForFunction(d=>document.body.classList.contains('dark')===d,dark);
   for(const route of ['connections','groups','nodes','hosts','outbound','routing','settings','xray','api-docs']){
    await page.goto(cfg.url+'panel/'+route);await page.locator('.ant-sidebar').waitFor();await page.keyboard.press('Escape');await page.waitForTimeout(400);
    if(await page.locator('.sider-nav').getByText('Connect. Hub',{exact:true}).count())throw Error('Connect Hub menu must remain hidden');

@@ -6,6 +6,7 @@ import type { MenuProps } from 'antd';
 import {
   ApiOutlined,
   ApartmentOutlined,
+  BgColorsOutlined,
   CloudServerOutlined,
   ClusterOutlined,
   CodeOutlined,
@@ -19,12 +20,10 @@ import {
   ImportOutlined,
   LogoutOutlined,
   MailOutlined,
-  MoonOutlined,
   SafetyOutlined,
   SearchOutlined,
   RobotOutlined,
   SettingOutlined,
-  SunOutlined,
   SwapOutlined,
   TelegramFilled,
   WechatOutlined,
@@ -32,8 +31,6 @@ import {
 } from '@ant-design/icons';
 import { HttpUtil } from '@/utils';
 import { formatPanelVersion } from '@/lib/panel-version';
-import { PALETTE_IDS, PALETTE_NAMES } from '@/lib/theme-palettes';
-import { ACCENT_CHOICES, useTheme } from '@/hooks/useTheme';
 import { useAllSettings } from '@/api/queries/useAllSettings';
 import { useCommandPalette } from '@/components/command-palette/useCommandPalette';
 import './AppSidebar.css';
@@ -47,28 +44,6 @@ export default function AppSidebar() {
   const { isMobile } = useMediaQuery();
   const { open: mobileOpen, setOpen: setMobileOpen } = useMobileNavigation();
 
-  const { isDark, toggleTheme, palette, setPalette, accent, setAccent, glass, setGlass, followSystem, setFollowSystem } = useTheme();
-  const themeMenu: MenuProps = {
-    selectedKeys: [palette],
-    items: [
-      { key: 'mode', label: t('menu.theme'), onClick: toggleTheme },
-      { key: 'system-mode', label: `${followSystem ? '✓ ' : ''}${t('menu.theme')} · Auto`, onClick: () => setFollowSystem(!followSystem) },
-      { type: 'divider' },
-      ...PALETTE_IDS.map((id) => ({
-        key: id,
-        label: PALETTE_NAMES[id],
-        onClick: () => setPalette(id),
-      })),
-      { type: 'divider' },
-      { key: 'accent-group', type: 'group', label: 'Accent colors', children: Object.entries(ACCENT_CHOICES).map(([id,color]) => ({
-        key: `accent-${id}`,
-        label: <span style={{display:'inline-flex',alignItems:'center',gap:8}}><span style={{width:12,height:12,borderRadius:12,background:color,display:'inline-block',border:'1px solid var(--border)'}}/>{id[0].toUpperCase()+id.slice(1)}{accent === id ? ' ✓' : ''}</span>,
-        onClick: () => setAccent(id as keyof typeof ACCENT_CHOICES),
-      })) },
-      { type: 'divider' },
-      { key: 'glassy-mode', label: `Glassy style ${glass ? '✓' : ''}`, onClick: () => setGlass(!glass) },
-    ],
-  };
   const { open: openSearch } = useCommandPalette();
   const navigate = useNavigate();
   const { pathname, hash } = useLocation();
@@ -103,6 +78,11 @@ export default function AppSidebar() {
         key: '/settings#general',
         icon: <SettingOutlined aria-hidden />,
         label: t('pages.settings.panelSettings'),
+      },
+      {
+        key: '/settings#appearance',
+        icon: <BgColorsOutlined aria-hidden />,
+        label: t('menu.appearance'),
       },
       {
         key: '/settings#security',
@@ -149,11 +129,11 @@ export default function AppSidebar() {
         label: t('pages.settings.subBalancers.menu'),
       });
     }
-    children.push({
-      key: '/api-docs',
-      icon: <ApiOutlined aria-hidden />,
-      label: t('menu.apiDocs'),
-    });
+    children.push(
+      { key: '/logs', icon: <FileTextOutlined aria-hidden />, label: t('menu.logs') },
+      { key: '/assistant', icon: <RobotOutlined aria-hidden />, label: t('menu.assistant') },
+      { key: '/api-docs', icon: <ApiOutlined aria-hidden />, label: t('menu.apiDocs') },
+    );
     return children;
   }, [t, showSubFormats, showSubBalancers]);
 
@@ -193,29 +173,12 @@ export default function AppSidebar() {
       active: ['/connections', '/inbounds', '/clients'].includes(pathname),
     },
     {
-      key: '/groups',
-      title: t('menu.groups'),
-      icon: <ApartmentOutlined aria-hidden />,
-      active: pathname === '/groups',
-    },
-    {
-      key: '/logs',
-      title: t('menu.logs'),
-      icon: <FileTextOutlined aria-hidden />,
-      active: pathname === '/logs',
-    },
-    {
-      key: '/assistant',
-      title: t('menu.assistant', { defaultValue: 'AI Assistant' }),
-      icon: <RobotOutlined aria-hidden />,
-      active: pathname === '/assistant',
-    },
-    {
       key: 'network',
       title: t('menu.network'),
       icon: <SwapOutlined aria-hidden />,
-      active: ['/nodes', '/hosts', '/outbound', '/routing', '/clean-ip', '/dns-tunnel', '/tunnels'].includes(pathname),
+      active: ['/groups', '/nodes', '/hosts', '/outbound', '/routing', '/clean-ip', '/dns-tunnel', '/tunnels'].includes(pathname),
       children: [
+        { key: '/groups', icon: <ApartmentOutlined aria-hidden />, label: t('menu.groups') },
         { key: '/nodes', icon: <ClusterOutlined aria-hidden />, label: t('menu.nodes') },
         { key: '/hosts', icon: <GlobalOutlined aria-hidden />, label: t('menu.hosts') },
         { key: '/clean-ip', icon: <SearchOutlined aria-hidden />, label: 'Clean IP' },
@@ -237,7 +200,7 @@ export default function AppSidebar() {
     key: 'settings',
     title: t('menu.settings'),
     icon: <SettingOutlined aria-hidden />,
-    active: ['/settings', '/api-docs'].includes(pathname),
+    active: ['/settings', '/logs', '/assistant', '/api-docs'].includes(pathname),
     children: settingsChildren,
   };
   const selected =
@@ -318,12 +281,6 @@ export default function AppSidebar() {
               <SearchOutlined aria-hidden />
               {t('commandPalette.title')}
             </button>
-            <Dropdown menu={themeMenu} trigger={['click']}>
-              <button type="button">
-                {isDark ? <MoonOutlined aria-hidden /> : <SunOutlined aria-hidden />}
-                {t('menu.theme')}
-              </button>
-            </Dropdown>
             <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
               <GithubOutlined aria-hidden />
               GitHub
@@ -363,18 +320,6 @@ export default function AppSidebar() {
                 <SearchOutlined aria-hidden />
               </button>
             </Tooltip>
-            <Dropdown menu={themeMenu} trigger={['click']} placement="topRight">
-              <Tooltip title={t('menu.theme')} placement="right">
-                <button
-                  id="theme-cycle"
-                  type="button"
-                  className="rail-button"
-                  aria-label={t('menu.theme')}
-                >
-                  {isDark ? <MoonOutlined aria-hidden /> : <SunOutlined aria-hidden />}
-                </button>
-              </Tooltip>
-            </Dropdown>
             <Tooltip
               title={'GitHub ' + formatPanelVersion(window.X_UI_CUR_VER || '')}
               placement="right"

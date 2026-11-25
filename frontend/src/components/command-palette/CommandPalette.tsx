@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ConfigProvider, Tag, Tooltip, message } from 'antd';
 import {
   ApartmentOutlined,
+  BgColorsOutlined,
   CheckCircleFilled,
   ClockCircleOutlined,
   CloseCircleFilled,
@@ -20,13 +21,11 @@ import {
   ImportOutlined,
   LoadingOutlined,
   MailOutlined,
-  MoonOutlined,
   PlusOutlined,
   ReloadOutlined,
   SafetyOutlined,
   SearchOutlined,
   SettingOutlined,
-  SunOutlined,
   SwapOutlined,
   TelegramFilled,
   ToolOutlined,
@@ -97,7 +96,7 @@ export default function CommandPalette() {
   const { t } = useTranslation();
   const [messageApi, messageContextHolder] = message.useMessage();
   const navigate = useNavigate();
-  const { isDark, isUltra, toggleTheme, antdThemeConfig } = useTheme();
+  const { isDark, isUltra, antdThemeConfig } = useTheme();
   const { isOpen, close } = useCommandPalette();
   const { allSetting } = useAllSettings();
   const { data: inbounds = [] } = useInboundOptions();
@@ -269,11 +268,6 @@ export default function CommandPalette() {
     }
   }, [close, messageApi, t]);
 
-  const cycleTheme = useCallback(() => {
-    toggleTheme();
-    close();
-  }, [toggleTheme, close]);
-
   const trimmedQuery = query.trim();
   const isDebouncing = isOpen && trimmedQuery.length > 0 && trimmedQuery !== debouncedQuery;
   const isClientSearching =
@@ -415,6 +409,13 @@ export default function CommandPalette() {
       });
 
     const settingsSubSections = [
+      {
+        path: '/settings#appearance',
+        title: `${t('menu.settings')} · ${t('menu.appearance')}`,
+        subtitle: t('menu.appearance'),
+        keywords: ['theme', 'palette', 'light', 'dark', 'accent', 'оформление', 'темы'],
+        icon: <BgColorsOutlined aria-hidden />,
+      },
       {
         path: '/settings#general',
         title: `${t('menu.settings')} · ${t('pages.settings.panelSettings')}`,
@@ -579,15 +580,6 @@ export default function CommandPalette() {
         action: restartXray,
       },
       {
-        id: 'act-cycle-theme',
-        category: 'actions',
-        title: t('menu.theme'),
-        subtitle: isDark ? 'Dark' : 'Light',
-        keywords: ['theme', 'light', 'dark', 'ultra'],
-        icon: isDark ? <SunOutlined aria-hidden /> : <MoonOutlined aria-hidden />,
-        action: cycleTheme,
-      },
-      {
         id: 'act-add-inbound',
         category: 'actions',
         title: t('pages.inbounds.addInbound'),
@@ -620,14 +612,12 @@ export default function CommandPalette() {
     query,
     clientSearch,
     inbounds,
-    isDark,
     allSetting.subURI,
     t,
     close,
     navigate,
     copySubscription,
     restartXray,
-    cycleTheme,
   ]);
 
   const clampedActiveIndex = Math.min(activeIndex, Math.max(0, items.length - 1));

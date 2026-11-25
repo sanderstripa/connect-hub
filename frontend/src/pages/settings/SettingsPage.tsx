@@ -23,6 +23,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useAllSettings } from '@/api/queries/useAllSettings';
 import { AllSettingSchema } from '@/schemas/setting';
 import AppSidebar from '@/layouts/AppSidebar';
+import AppearanceTab from './AppearanceTab';
 import GeneralTab from './GeneralTab';
 import SecurityTab from './SecurityTab';
 import TelegramTab from './TelegramTab';
@@ -41,6 +42,7 @@ interface ApiMsg {
 
 const tabSlugs = [
   'general',
+  'appearance',
   'security',
   'telegram',
   'email',
@@ -255,71 +257,75 @@ export default function SettingsPage() {
 
         <Layout className="content-shell">
           <Layout.Content id="content-layout" className="content-area">
-            <Spin
-              aria-live="off"
-              spinning={spinning || !fetched}
-              delay={200}
-              description={t('loading')}
-              size="large"
-            >
-              {!fetched ? (
-                <div className="loading-spacer" />
-              ) : (
-                <>
-                  {confAlerts.length > 0 && alertVisible && (
-                    <Alert
-                      type="error"
-                      showIcon
-                      closable={{ onClose: () => setAlertVisible(false) }}
-                      className="conf-alert"
-                      title={t('pages.settings.securityWarnings')}
-                      description={
-                        <>
-                          <b>{t('pages.settings.panelExposed')}</b>
-                          <ul>
-                            {confAlerts.map((msg, i) => (
-                              <li key={i}>{msg}</li>
-                            ))}
-                          </ul>
-                        </>
-                      }
-                    />
-                  )}
+            {activeSlug === 'appearance' ? (
+              <AppearanceTab />
+            ) : (
+              <Spin
+                aria-live="off"
+                spinning={spinning || !fetched}
+                delay={200}
+                description={t('loading')}
+                size="large"
+              >
+                {!fetched ? (
+                  <div className="loading-spacer" />
+                ) : (
+                  <>
+                    {confAlerts.length > 0 && alertVisible && (
+                      <Alert
+                        type="error"
+                        showIcon
+                        closable={{ onClose: () => setAlertVisible(false) }}
+                        className="conf-alert"
+                        title={t('pages.settings.securityWarnings')}
+                        description={
+                          <>
+                            <b>{t('pages.settings.panelExposed')}</b>
+                            <ul>
+                              {confAlerts.map((msg, i) => (
+                                <li key={i}>{msg}</li>
+                              ))}
+                            </ul>
+                          </>
+                        }
+                      />
+                    )}
 
-                  <Row gutter={[isMobile ? 8 : 16, isMobile ? 0 : 12]}>
-                    <Col span={24}>
-                      <Card hoverable>
-                        <Row className="header-row">
-                          <Col xs={24} sm={10} className="header-actions">
-                            <Space>
-                              <Button type="primary" disabled={saveDisabled} onClick={onSave}>
-                                {t('pages.settings.save')}
-                              </Button>
-                              <Button
-                                type="primary"
-                                danger
-                                disabled={!saveDisabled}
-                                onClick={restartPanel}
-                              >
-                                {t('pages.settings.restartPanel')}
-                              </Button>
-                            </Space>
-                          </Col>
-                          <Col xs={24} sm={14} className="header-info">
-                            <FloatButton.BackTop target={scrollTarget} visibilityHeight={200} />
-                            <Alert type="warning" showIcon title={t('pages.settings.infoDesc')} />
-                          </Col>
-                        </Row>
-                      </Card>
-                    </Col>
+                    <Row gutter={[isMobile ? 8 : 16, isMobile ? 0 : 12]}>
+                      <Col span={24}>
+                        <Card hoverable>
+                          <Row className="header-row">
+                            <Col xs={24} sm={10} className="header-actions">
+                              <Space>
+                                <Button type="primary" disabled={saveDisabled} onClick={onSave}>
+                                  {t('pages.settings.save')}
+                                </Button>
+                                <Button
+                                  type="primary"
+                                  danger
+                                  disabled={!saveDisabled}
+                                  onClick={restartPanel}
+                                >
+                                  {t('pages.settings.restartPanel')}
+                                </Button>
+                              </Space>
+                            </Col>
+                            <Col xs={24} sm={14} className="header-info">
+                              <FloatButton.BackTop target={scrollTarget} visibilityHeight={200} />
+                              <Alert type="warning" showIcon title={t('pages.settings.infoDesc')} />
+                            </Col>
+                          </Row>
+                        </Card>
+                      </Col>
 
-                    <Col span={24}>
-                      <Card hoverable>{categoryBody}</Card>
-                    </Col>
-                  </Row>
-                </>
-              )}
-            </Spin>
+                      <Col span={24}>
+                        <Card hoverable>{categoryBody}</Card>
+                      </Col>
+                    </Row>
+                  </>
+                )}
+              </Spin>
+            )}
           </Layout.Content>
         </Layout>
       </Layout>

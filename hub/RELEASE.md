@@ -1,3 +1,11 @@
+Connect Hub 0.9.1 — Key creation compatibility and navigation
+
+- Use the browser's secure random bytes to generate key UUIDs when its native UUID API is unavailable.
+- Move Groups under Network and Logs and AI Assistant under Settings.
+- Add a dedicated Appearance entry under Settings for color mode, palettes, accent colors, and the glass effect. Appearance preferences are stored in the browser.
+
+Upgrade from v0.9.0 using the existing in-place update flow.
+
 Connect Hub 0.9.0 — Upstream integrations and compatibility
 
 In-place upgrade from 0.8.9. The existing Windows installer, native Sudoku, WatTunnel, Clean IP, DNS tunnels, REALITY Watch, Xray configuration, subscriptions, clients, access keys and deployment methods remain supported.

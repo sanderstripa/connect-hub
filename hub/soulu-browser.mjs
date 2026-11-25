@@ -131,7 +131,7 @@ try{
   await rail.hover();await page.waitForTimeout(250);assert.equal(Math.round((await rail.boundingBox()).width),56);
   assert.equal(await page.locator('.rail-brand').count(),0);
   assert.equal(await page.locator('.app-brand').textContent(),'Connect. Hub');
-  const menuLabels={'/nodes':'Nodes','/hosts':'Hosts','/outbound':'Outbounds','/routing':'Routing','/settings#general':'General','/settings#security':'Authentication','/settings#telegram':'Telegram Bot','/settings#email':'Email','/settings#discord':'Discord Bot','/settings#subscription':'Subscription','/api-docs':'API Docs','/xray#basic':'Basics','/xray#balancer':'Balancers','/xray#dns':'DNS','/xray#advanced':'Advanced'};
+  const menuLabels={'/groups':'Groups','/logs':'Logs','/assistant':'AI Assistant','/settings#appearance':'Appearance','/nodes':'Nodes','/hosts':'Hosts','/outbound':'Outbounds','/routing':'Routing','/settings#general':'General','/settings#security':'Authentication','/settings#telegram':'Telegram Bot','/settings#email':'Email','/settings#discord':'Discord Bot','/settings#subscription':'Subscription','/api-docs':'API Docs','/xray#basic':'Basics','/xray#balancer':'Balancers','/xray#dns':'DNS','/xray#advanced':'Advanced'};
   assert.equal(await rail.getByRole('button',{name:'Infrastructure',exact:true}).count(),0);
   const footer=rail.locator('.rail-utilities');
   assert.equal(await footer.locator('button').first().getAttribute('aria-label'),'Settings');
@@ -139,8 +139,8 @@ try{
   const searchBox=await footer.getByRole('button',{name:/Command Palette/}).boundingBox();
   assert.ok(settingsBox.y < searchBox.y);
   const groups=[
-   ['Network',['/nodes','/hosts','/outbound','/routing']],
-   ['Settings',['/settings#general','/settings#security','/settings#telegram','/settings#email','/settings#discord','/settings#subscription','/api-docs']],
+   ['Network',['/groups','/nodes','/hosts','/outbound','/routing']],
+   ['Settings',['/logs','/assistant','/settings#appearance','/settings#general','/settings#security','/settings#telegram','/settings#email','/settings#discord','/settings#subscription','/api-docs']],
    ['Xray Configs',['/xray#basic','/xray#balancer','/xray#dns','/xray#advanced']],
   ];
   for(const [name,routes] of groups){
@@ -158,23 +158,32 @@ try{
   await trigger.click();await page.keyboard.press('Escape');assert.equal(await trigger.getAttribute('aria-expanded'),'false');
   await trigger.click();await trigger.click();assert.equal(await trigger.getAttribute('aria-expanded'),'false');
   await trigger.click();await page.locator('.connections-intro').click();assert.equal(await trigger.getAttribute('aria-expanded'),'false');
-  await page.getByRole('button',{name:'Theme',exact:true}).click();await page.getByRole('menuitem',{name:'Theme',exact:true}).click();await page.waitForFunction(d=>document.body.classList.contains('dark')===!d,dark);
-  assert.equal(await page.evaluate(()=>localStorage.getItem('dark-mode')),String(!dark));await page.getByRole('button',{name:'Theme',exact:true}).click();await page.getByRole('menuitem',{name:'Theme',exact:true}).click();
+  assert.equal(await rail.getByRole('button',{name:/^(Groups|Logs|AI Assistant|Theme)$/}).count(),0);
+  await trigger.click();
+  await page.getByRole('menuitem',{name:'Appearance',exact:true}).click();
+  await page.waitForURL('**/settings#appearance');
+  await page.getByText(dark?'Light':'Dark',{exact:true}).click();
+  await page.waitForFunction(d=>document.body.classList.contains('dark')===!d,dark);
+  assert.equal(await page.evaluate(()=>localStorage.getItem('dark-mode')),String(!dark));
+  await page.getByText(dark?'Dark':'Light',{exact:true}).click();
   await page.waitForFunction(d=>document.body.classList.contains('dark')===d,dark);
+  async function choosePalette(id){
+   await page.locator('#theme-palette').click();
+   await page.locator('.ant-select-dropdown:visible .ant-select-item-option')
+    .filter({hasText:PALETTE_NAMES[id]}).click();
+  }
   for(const id of PALETTE_IDS){
-   await page.getByRole('button',{name:'Theme',exact:true}).click();
-   await page.getByRole('menuitem',{name:PALETTE_NAMES[id],exact:true}).click();
+   await choosePalette(id);
    await page.waitForFunction(id=>document.documentElement.dataset.palette===id,id);
    assert.equal(await page.evaluate(()=>localStorage.getItem('connect-hub-palette')),id);
    assert.equal(await page.evaluate(()=>document.documentElement.style.getPropertyValue('--app-bg').trim().toUpperCase()),themeTokens(id,dark).bg.toUpperCase());
-   await page.reload();await page.locator('#connection-keys').waitFor();
+   await page.reload();await page.locator('#theme-palette').waitFor();
    assert.equal(await page.locator('html').getAttribute('data-palette'),id);
    assert.equal(await page.locator('html').getAttribute('data-mode'),dark?'dark':'light');
    await page.screenshot({path:path.join(cfg.output,`soulu-palette-${id}-${dark?'dark':'light'}.png`)});
   }
-  await page.getByRole('button',{name:'Theme',exact:true}).click();
-  await page.getByRole('menuitem',{name:'Soulu',exact:true}).click();
-  await page.keyboard.press('Control+k');const search=page.locator('.command-palette-input');await search.waitFor();assert.equal(await page.getByText('Appearance',{exact:true}).count(),0);await search.fill('Authentication');await search.press('Enter');await page.waitForURL('**/settings#security');
+  await choosePalette('soulu');
+  await page.keyboard.press('Control+k');const search=page.locator('.command-palette-input');await search.waitFor();await search.fill('Authentication');await search.press('Enter');await page.waitForURL('**/settings#security');
   await page.getByRole('button',{name:/Command Palette/}).click();await page.locator('.command-palette-input').waitFor();await page.keyboard.press('Escape');await page.locator('.command-palette-input').waitFor({state:'detached'});
   await page.goto(cfg.url+'panel/connections');
   for(const width of [1024,768,390]){

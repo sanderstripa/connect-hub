@@ -71,7 +71,7 @@ test('keeps all navigation groups and footer actions and opens the existing sear
     expect(screen.getByRole('button', { name })).not.toBeNull();
   expect(
     view.container.querySelector('.rail-utilities')?.querySelectorAll('.rail-button').length,
-  ).toBe(5);
+  ).toBe(4);
   fireEvent.click(screen.getByRole('button', { name: /Command Palette/ }));
   expect(commandPaletteStore.getSnapshot()).toBe(true);
 });
@@ -109,8 +109,8 @@ test('mobile menu opens from the header, retains nested routes, and closes after
     fireEvent.click(trigger);
     await screen.findByRole('dialog');
     fireEvent.click(screen.getByText('Settings', { selector: '.ant-menu-title-content' }));
-    fireEvent.click(await screen.findByRole('menuitem', { name: /API Docs/ }));
-    await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/api-docs'));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Appearance' }));
+    await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/settings#appearance'));
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
     fireEvent.click(trigger);
     await waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('true'));

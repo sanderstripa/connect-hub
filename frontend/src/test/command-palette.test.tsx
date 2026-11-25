@@ -315,7 +315,7 @@ describe('CommandPalette component', () => {
     expect(commandPaletteStore.getSnapshot()).toBe(true);
   });
 
-  it('renders a single theme action item without duplicates', () => {
+  it('finds the Appearance settings when searching for themes', () => {
     renderPalette();
     act(() => {
       commandPaletteStore.open();
@@ -324,7 +324,6 @@ describe('CommandPalette component', () => {
     const input = screen.getByPlaceholderText(/Type a command or search/i);
     fireEvent.change(input, { target: { value: 'theme' } });
 
-    const themeItems = screen.getAllByText(/Theme/i);
-    expect(themeItems.length).toBe(1);
+    expect(screen.getByText('Settings · Appearance')).not.toBeNull();
   });
 });
