@@ -1,3 +1,14 @@
+Connect Hub 0.9.2 — More connection and subscription controls
+
+- Manage multiple WireGuard devices per client and export per-device configs, QR codes and subscription URLs.
+- Import AmneziaWG outbounds from supported VPN profiles and subscriptions. Configure a separate XHTTP download endpoint.
+- Append external links in bulk, view per-client live traffic from remote nodes, and warn about missing Dialer Proxy outbounds.
+- Switch QR formats on the subscription page and optionally return an explanatory config when HWID access is rejected.
+- Configure public IP refresh and IPv4/IPv6 overrides. Choose a custom or random web base path from the server menu.
+- Enable MCP from Settings → Security → API Token. The MCP endpoint is off by default and retains the panel’s admin-token requirements.
+
+Update from v0.9.1 with the existing in-place updater.
+
 Connect Hub 0.9.1 — Key creation compatibility and navigation
 
 - Create device keys from the Windows app with an optional device name and automatically choose a free port when no port is specified. Show failed operations next to the create button.

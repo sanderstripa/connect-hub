@@ -1,7 +1,9 @@
 import InfinityIcon from '@/components/ui/InfinityIcon';
 import DetailSurface from '@/components/layout/DetailSurface';
 import { CLIENT_GROUPS_UI_ENABLED } from '@/lib/client-groups-ui';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import ClientWireguardDevices from './ClientWireguardDevices';
+import { useClientWireguardDevices } from '@/hooks/useClientWireguardDevices';
 import { useTranslation } from 'react-i18next';
 import { Button, Divider, Modal, Popover, Tag, Tooltip, message } from 'antd';
 import {
@@ -24,8 +26,7 @@ import { QrPanel } from '@/pages/inbounds/qr';
 import ClientHwidListModal from '@/components/clients/ClientHwidList';
 import ConfigBlock from '@/components/clients/ConfigBlock';
 import {
-  buildWireguardClientConfig,
-  buildWireguardVkTurnLink,
+  buildWireguardDeviceConfigs,
   findWireguardInbounds,
   isWireguardClient,
 } from './wireguardConfig';
@@ -199,22 +200,20 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
     () => findWireguardInbounds(client, inboundsById),
     [client, inboundsById],
   );
+  const wireguardDevices = useClientWireguardDevices(client?.email, open && wgInbounds.length > 0);
   const wgConfigs = useMemo(() => {
     if (!client || !isWireguardClient(client)) return [];
-    const host = window.location.hostname;
-    const publicHost = subSettings?.publicHost ?? '';
-    return wgInbounds
-      .flatMap((ib) => {
-        const address = tunnelAllowedIPs?.[ib.id] ?? '';
-        return tunnelConfigEndpoints(ib, hosts, host, publicHost).map((ep) => ({
-          inbound: ib,
-          endpoint: tunnelEndpointLabel(ep),
-          text: buildWireguardClientConfig(client, ib, host, publicHost, address, ep),
-          vkLink: buildWireguardVkTurnLink(client, ib, host, publicHost, address, ep),
-        }));
-      })
-      .filter((c) => !!c.text);
-  }, [client, wgInbounds, tunnelAllowedIPs, subSettings?.publicHost, hosts]);
+    return buildWireguardDeviceConfigs(
+      client,
+      wgInbounds,
+      wireguardDevices.data,
+      tunnelAllowedIPs,
+      hosts,
+      window.location.hostname,
+      subSettings?.publicHost ?? '',
+      true,
+    );
+  }, [client, wgInbounds, wireguardDevices.data, tunnelAllowedIPs, subSettings?.publicHost, hosts]);
 
   const awgInbounds = useMemo(
     () => findAmneziaWGInbounds(client, inboundsById),
@@ -223,7 +222,7 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
   const awgConfigs = useMemo(() => {
     if (!client || !isAmneziaWGClient(client)) return [];
     const host = window.location.hostname;
-    const publicHost = subSettings?.publicHost ?? '';
+    const publicHost = subSettings.publicHost ?? '';
     return awgInbounds
       .flatMap((ib) => {
         const address = tunnelAllowedIPs?.[ib.id] ?? '';
@@ -234,7 +233,7 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
         }));
       })
       .filter((c) => !!c.text);
-  }, [client, awgInbounds, tunnelAllowedIPs, subSettings?.publicHost, hosts]);
+  }, [client, awgInbounds, tunnelAllowedIPs, subSettings.publicHost, hosts]);
 
   async function copyValue(text: string) {
     if (!text) return;
@@ -805,37 +804,28 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
               </>
             )}
 
-            {wgConfigs.length > 0 && client && (
+            {wgInbounds.length > 0 && client && (
               <>
-                <Divider>{t('pages.clients.wireguardConfig')}</Divider>
-                {wgConfigs.map(({ inbound, endpoint, text, vkLink }) => {
-                  const meta = formatTunnelConfigMeta(
-                    inbound,
-                    client.email,
-                    wgConfigs.length,
-                    endpoint,
-                  );
-                  return (
-                    <Fragment key={`wg-${inbound.id}-${endpoint}`}>
-                      <ConfigBlock
-                        label={meta.label || t('pages.clients.config')}
-                        text={text}
-                        fileName={meta.fileName}
-                        qrRemark={meta.qrRemark}
-                        tagColor="cyan"
-                      />
-                      {vkLink && (
-                        <ConfigBlock
-                          label={t('pages.xray.wireguard.vkTurnProfile')}
-                          text={vkLink}
-                          fileName={meta.fileName.replace(/\.conf$/, '-vk.txt')}
-                          qrRemark={meta.qrRemark}
-                          tagColor="blue"
-                        />
-                      )}
-                    </Fragment>
-                  );
-                })}
+              <ClientWireguardDevices
+                state={wireguardDevices}
+                subLink={subLink}
+                clientEmail={client.email}
+                configs={wgConfigs}
+              />
+
+              {wgConfigs.filter(({ vkLink, enabled }) => enabled && vkLink).map(({ inbound, deviceId, endpoint, vkLink }) => {
+                const meta = formatTunnelConfigMeta(inbound, client.email, wgConfigs.length, endpoint);
+                return (
+                  <ConfigBlock
+                    key={`wg-vk-${inbound.id}-${deviceId}-${endpoint}`}
+                    label={t('pages.xray.wireguard.vkTurnProfile')}
+                    text={vkLink}
+                    fileName={meta.fileName.replace(/\.conf$/, `-${deviceId}-vk.txt`)}
+                    qrRemark={meta.qrRemark}
+                    tagColor="blue"
+                  />
+                );
+              })}
               </>
             )}
 

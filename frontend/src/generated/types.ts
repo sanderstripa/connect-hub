@@ -52,6 +52,7 @@ export interface AllSetting {
   ldapUserAttr: string;
   ldapUserFilter: string;
   ldapVlessField: string;
+  mcpEnable: boolean;
   networkTrafficInterface: string;
   networkTrafficMode: string;
   nodeDownThreshold: number;
@@ -60,6 +61,10 @@ export interface AllSetting {
   outboundDownThreshold: number;
   pageSize: number;
   panelOutbound: string;
+  publicIpRefreshMinutes: number;
+  publicIpv4Override: string;
+  publicIpv6Detect: boolean;
+  publicIpv6Override: string;
   realityScanCandidates: string;
   remarkTemplate: string;
   restartXrayOnClientDisable: boolean;
@@ -118,6 +123,7 @@ export interface AllSetting {
   subHappTunType: string;
   subHideSettings: boolean;
   subHostSortMode: string;
+  subHwidRejectWithConfig: boolean;
   subIncyAnnounceUrl: string;
   subIncyAppAutoDetect: boolean;
   subIncyBannerBgColor: string;
@@ -262,6 +268,7 @@ export interface AllSettingView {
   ldapUserAttr: string;
   ldapUserFilter: string;
   ldapVlessField: string;
+  mcpEnable: boolean;
   networkTrafficInterface: string;
   networkTrafficMode: string;
   nodeDownThreshold: number;
@@ -270,6 +277,10 @@ export interface AllSettingView {
   outboundDownThreshold: number;
   pageSize: number;
   panelOutbound: string;
+  publicIpRefreshMinutes: number;
+  publicIpv4Override: string;
+  publicIpv6Detect: boolean;
+  publicIpv6Override: string;
   realityScanCandidates: string;
   remarkTemplate: string;
   restartXrayOnClientDisable: boolean;
@@ -328,6 +339,7 @@ export interface AllSettingView {
   subHappTunType: string;
   subHideSettings: boolean;
   subHostSortMode: string;
+  subHwidRejectWithConfig: boolean;
   subIncyAnnounceUrl: string;
   subIncyAppAutoDetect: boolean;
   subIncyBannerBgColor: string;
@@ -451,6 +463,23 @@ export interface ApiTokenView {
 export interface Blocker {
   code: BlockerCode;
   detail?: string;
+}
+
+export interface BulkAdjustReport {
+  email: string;
+  reason: string;
+}
+
+export interface BulkAdjustResult {
+  adjusted: number;
+  externalLinks?: BulkExternalLinksResult | null;
+  skipped?: BulkAdjustReport[];
+}
+
+export interface BulkExternalLinksResult {
+  added: number;
+  errors: number;
+  skipped: number;
 }
 
 export interface Capabilities {
@@ -604,6 +633,8 @@ export interface Client {
   trafficReset?: string;
   trafficResetDay?: number;
   updated_at?: number;
+  wgDeviceLimit?: number;
+  wireguardDevices?: WireguardDevice[];
 }
 
 export interface ClientChangeLog {
@@ -677,6 +708,8 @@ export interface ClientRecord {
   trafficResetDay: number;
   updatedAt: number;
   uuid: string;
+  wgDeviceLimit: number;
+  wireguardDevices: WireguardDevice[];
 }
 
 export interface ClientRenewalPreview {
@@ -827,6 +860,15 @@ export interface DnsTunnelProfile {
   key: string;
   method: number;
   name: string;
+}
+
+export interface ExternalLinkInput {
+  enable?: boolean | null;
+  expiryTime?: number;
+  kind?: string;
+  namePrefix?: string;
+  remark?: string;
+  value: string;
 }
 
 export interface FallbackParentInfo {
@@ -1646,5 +1688,15 @@ export interface User {
   id: number;
   password: string;
   username: string;
+}
+
+export interface WireguardDevice {
+  allowedIPs: string[];
+  enable: boolean;
+  id: string;
+  name: string;
+  preSharedKey?: string;
+  privateKey: string;
+  publicKey: string;
 }
 

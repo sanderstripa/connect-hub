@@ -162,6 +162,9 @@ export const SCHEMAS: Record<string, unknown> = {
       "ldapVlessField": {
         "type": "string"
       },
+      "mcpEnable": {
+        "type": "boolean"
+      },
       "networkTrafficInterface": {
         "example": "eth0",
         "type": "string"
@@ -197,6 +200,21 @@ export const SCHEMAS: Record<string, unknown> = {
         "type": "integer"
       },
       "panelOutbound": {
+        "type": "string"
+      },
+      "publicIpRefreshMinutes": {
+        "description": "0 stops refreshing the detected public IP after the first success.",
+        "maximum": 10080,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "publicIpv4Override": {
+        "type": "string"
+      },
+      "publicIpv6Detect": {
+        "type": "boolean"
+      },
+      "publicIpv6Override": {
         "type": "string"
       },
       "realityScanCandidates": {
@@ -382,6 +400,9 @@ export const SCHEMAS: Record<string, unknown> = {
       "subHostSortMode": {
         "example": "inbound-first",
         "type": "string"
+      },
+      "subHwidRejectWithConfig": {
+        "type": "boolean"
       },
       "subIncyAnnounceUrl": {
         "type": "string"
@@ -720,6 +741,7 @@ export const SCHEMAS: Record<string, unknown> = {
       "ldapUserAttr",
       "ldapUserFilter",
       "ldapVlessField",
+      "mcpEnable",
       "networkTrafficInterface",
       "networkTrafficMode",
       "nodeDownThreshold",
@@ -728,6 +750,10 @@ export const SCHEMAS: Record<string, unknown> = {
       "outboundDownThreshold",
       "pageSize",
       "panelOutbound",
+      "publicIpRefreshMinutes",
+      "publicIpv4Override",
+      "publicIpv6Detect",
+      "publicIpv6Override",
       "realityScanCandidates",
       "remarkTemplate",
       "restartXrayOnClientDisable",
@@ -786,6 +812,7 @@ export const SCHEMAS: Record<string, unknown> = {
       "subHappTunType",
       "subHideSettings",
       "subHostSortMode",
+      "subHwidRejectWithConfig",
       "subIncyAnnounceUrl",
       "subIncyAppAutoDetect",
       "subIncyBannerBgColor",
@@ -1041,6 +1068,9 @@ export const SCHEMAS: Record<string, unknown> = {
       "ldapVlessField": {
         "type": "string"
       },
+      "mcpEnable": {
+        "type": "boolean"
+      },
       "networkTrafficInterface": {
         "example": "eth0",
         "type": "string"
@@ -1076,6 +1106,21 @@ export const SCHEMAS: Record<string, unknown> = {
         "type": "integer"
       },
       "panelOutbound": {
+        "type": "string"
+      },
+      "publicIpRefreshMinutes": {
+        "description": "0 stops refreshing the detected public IP after the first success.",
+        "maximum": 10080,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "publicIpv4Override": {
+        "type": "string"
+      },
+      "publicIpv6Detect": {
+        "type": "boolean"
+      },
+      "publicIpv6Override": {
         "type": "string"
       },
       "realityScanCandidates": {
@@ -1261,6 +1306,9 @@ export const SCHEMAS: Record<string, unknown> = {
       "subHostSortMode": {
         "example": "inbound-first",
         "type": "string"
+      },
+      "subHwidRejectWithConfig": {
+        "type": "boolean"
       },
       "subIncyAnnounceUrl": {
         "type": "string"
@@ -1609,6 +1657,7 @@ export const SCHEMAS: Record<string, unknown> = {
       "ldapUserAttr",
       "ldapUserFilter",
       "ldapVlessField",
+      "mcpEnable",
       "networkTrafficInterface",
       "networkTrafficMode",
       "nodeDownThreshold",
@@ -1617,6 +1666,10 @@ export const SCHEMAS: Record<string, unknown> = {
       "outboundDownThreshold",
       "pageSize",
       "panelOutbound",
+      "publicIpRefreshMinutes",
+      "publicIpv4Override",
+      "publicIpv6Detect",
+      "publicIpv6Override",
       "realityScanCandidates",
       "remarkTemplate",
       "restartXrayOnClientDisable",
@@ -1675,6 +1728,7 @@ export const SCHEMAS: Record<string, unknown> = {
       "subHappTunType",
       "subHideSettings",
       "subHostSortMode",
+      "subHwidRejectWithConfig",
       "subIncyAnnounceUrl",
       "subIncyAppAutoDetect",
       "subIncyBannerBgColor",
@@ -1895,6 +1949,73 @@ export const SCHEMAS: Record<string, unknown> = {
     },
     "required": [
       "code"
+    ],
+    "type": "object"
+  },
+  "BulkAdjustReport": {
+    "properties": {
+      "email": {
+        "example": "carol",
+        "type": "string"
+      },
+      "reason": {
+        "example": "client not found",
+        "type": "string"
+      }
+    },
+    "required": [
+      "email",
+      "reason"
+    ],
+    "type": "object"
+  },
+  "BulkAdjustResult": {
+    "description": "BulkAdjustResult reports changed clients and per-client skip reasons.\nExternalLinks contains row counts only for append requests.",
+    "properties": {
+      "adjusted": {
+        "example": 2,
+        "type": "integer"
+      },
+      "externalLinks": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BulkExternalLinksResult"
+          }
+        ],
+        "nullable": true
+      },
+      "skipped": {
+        "example": [],
+        "items": {
+          "$ref": "#/components/schemas/BulkAdjustReport"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "adjusted"
+    ],
+    "type": "object"
+  },
+  "BulkExternalLinksResult": {
+    "properties": {
+      "added": {
+        "example": 4,
+        "type": "integer"
+      },
+      "errors": {
+        "example": 0,
+        "type": "integer"
+      },
+      "skipped": {
+        "example": 0,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "added",
+      "errors",
+      "skipped"
     ],
     "type": "object"
   },
@@ -2604,6 +2725,15 @@ export const SCHEMAS: Record<string, unknown> = {
         "description": "Last update timestamp",
         "format": "int64",
         "type": "integer"
+      },
+      "wgDeviceLimit": {
+        "type": "integer"
+      },
+      "wireguardDevices": {
+        "items": {
+          "$ref": "#/components/schemas/WireguardDevice"
+        },
+        "type": "array"
       }
     },
     "required": [
@@ -2905,6 +3035,15 @@ export const SCHEMAS: Record<string, unknown> = {
       },
       "uuid": {
         "type": "string"
+      },
+      "wgDeviceLimit": {
+        "type": "integer"
+      },
+      "wireguardDevices": {
+        "items": {
+          "$ref": "#/components/schemas/WireguardDevice"
+        },
+        "type": "array"
       }
     },
     "required": [
@@ -2940,7 +3079,9 @@ export const SCHEMAS: Record<string, unknown> = {
       "trafficReset",
       "trafficResetDay",
       "updatedAt",
-      "uuid"
+      "uuid",
+      "wgDeviceLimit",
+      "wireguardDevices"
     ],
     "type": "object"
   },
@@ -3645,6 +3786,40 @@ export const SCHEMAS: Record<string, unknown> = {
       "key",
       "method",
       "name"
+    ],
+    "type": "object"
+  },
+  "ExternalLinkInput": {
+    "description": "ExternalLinkInput is one row from the client form's Links tab.",
+    "properties": {
+      "enable": {
+        "example": true,
+        "nullable": true,
+        "type": "boolean"
+      },
+      "expiryTime": {
+        "example": 0,
+        "format": "int64",
+        "type": "integer"
+      },
+      "kind": {
+        "example": "link",
+        "type": "string"
+      },
+      "namePrefix": {
+        "type": "string"
+      },
+      "remark": {
+        "example": "Backup",
+        "type": "string"
+      },
+      "value": {
+        "example": "vless://uuid@example.com:443",
+        "type": "string"
+      }
+    },
+    "required": [
+      "value"
     ],
     "type": "object"
   },
@@ -7275,6 +7450,44 @@ export const SCHEMAS: Record<string, unknown> = {
       "id",
       "password",
       "username"
+    ],
+    "type": "object"
+  },
+  "WireguardDevice": {
+    "description": "WireguardDevice is an additional peer sharing its client's quota and lifecycle.\nThe original client credentials remain the primary device for compatibility.",
+    "properties": {
+      "allowedIPs": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "enable": {
+        "type": "boolean"
+      },
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "preSharedKey": {
+        "type": "string"
+      },
+      "privateKey": {
+        "type": "string"
+      },
+      "publicKey": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "allowedIPs",
+      "enable",
+      "id",
+      "name",
+      "privateKey",
+      "publicKey"
     ],
     "type": "object"
   }

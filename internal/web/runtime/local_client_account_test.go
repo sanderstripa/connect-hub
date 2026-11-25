@@ -39,6 +39,10 @@ func (c *clientAccountCore) AlterInbound(_ context.Context, request *command.Alt
 	return &command.AlterInboundResponse{}, nil
 }
 
+func (c *clientAccountCore) GetInboundUsers(context.Context, *command.GetInboundUserRequest) (*command.GetInboundUserResponse, error) {
+	return &command.GetInboundUserResponse{}, nil
+}
+
 func TestLocalClientOperationsPreserveProtocolAccounts(t *testing.T) {
 	const id = "11111111-2222-4333-8444-555555555555"
 	key := base64.StdEncoding.EncodeToString([]byte("01234567890123456789012345678901"))

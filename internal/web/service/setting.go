@@ -76,6 +76,10 @@ var defaultValueMap = map[string]string{
 	"nodeMtlsClientCAPem":         "",
 	"webBasePath":                 normalizeBasePath(getEnv("XUI_INIT_WEB_BASE_PATH", "/")),
 	"sessionMaxAge":               "360",
+	"publicIpRefreshMinutes":      "5",
+	"publicIpv6Detect":            "true",
+	"publicIpv4Override":          "",
+	"publicIpv6Override":          "",
 	"trustedProxyCIDRs":           DefaultTrustedProxyCIDRs,
 	"realityScanCandidates":       DefaultRealityScanCandidatesCSV,
 	"realityWatch":                "{}",
@@ -87,6 +91,8 @@ var defaultValueMap = map[string]string{
 	"dnsTunnelProfiles":           "[]",
 	"subShowIdentityOnAllLinks":   "false",
 	"subInfoNodeEnable":           "false",
+	"subHwidRejectWithConfig":     "false",
+	"mcpEnable":                   "false",
 	"subHostSortMode":             "hosts-first",
 	"subCalendarExpireInclusive":  "false",
 	"subExpiredTemplate":          DefaultSubExpiredTemplate,
@@ -807,6 +813,22 @@ func (s *SettingService) GetTrafficDiff() (int, error) {
 	return s.getInt("trafficDiff")
 }
 
+func (s *SettingService) GetPublicIpRefreshMinutes() (int, error) {
+	return s.getInt("publicIpRefreshMinutes")
+}
+
+func (s *SettingService) GetPublicIpv6Detect() (bool, error) {
+	return s.getBool("publicIpv6Detect")
+}
+
+func (s *SettingService) GetPublicIpv4Override() (string, error) {
+	return s.getString("publicIpv4Override")
+}
+
+func (s *SettingService) GetPublicIpv6Override() (string, error) {
+	return s.getString("publicIpv6Override")
+}
+
 func (s *SettingService) GetSessionMaxAge() (int, error) {
 	return s.getInt("sessionMaxAge")
 }
@@ -835,6 +857,14 @@ func (s *SettingService) GetSubShowIdentityOnAllLinks() (bool, error) {
 
 func (s *SettingService) GetSubInfoNodeEnable() (bool, error) {
 	return s.getBool("subInfoNodeEnable")
+}
+
+func (s *SettingService) GetSubHwidRejectWithConfig() (bool, error) {
+	return s.getBool("subHwidRejectWithConfig")
+}
+
+func (s *SettingService) GetMcpEnable() (bool, error) {
+	return s.getBool("mcpEnable")
 }
 
 func (s *SettingService) GetSubHostSortMode() (string, error) {

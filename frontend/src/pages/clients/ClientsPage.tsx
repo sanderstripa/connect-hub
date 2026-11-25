@@ -2034,7 +2034,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
             open={bulkAdjustOpen}
             count={selectedRowKeys.length}
             onOpenChange={setBulkAdjustOpen}
-            onSubmit={async (addDays, addBytes, flow, limitHwid, adTag) => {
+            onSubmit={async (addDays, addBytes, flow, limitHwid, adTag, externalLinks) => {
               const msg = await bulkAdjust(
                 [...selectedRowKeys],
                 addDays,
@@ -2042,6 +2042,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                 flow,
                 limitHwid,
                 adTag,
+                externalLinks,
               );
               if (msg?.success) {
                 setSelectedRowKeys([]);

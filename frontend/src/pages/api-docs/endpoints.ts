@@ -1801,6 +1801,96 @@ export const sections: readonly Section[] = [
         response: '{\n  "success": true\n}',
       },
       {
+        method: 'GET',
+        path: '/panel/api/clients/wireguardDevices',
+        summary: 'List WireGuard devices and their per-inbound addresses.',
+        description:
+          'The original credentials remain the primary device. Additional devices share their parent client email, traffic quota, expiry and enable state. Keep each device configuration on one device. Device-specific subscriptions use the existing subscription URL with the wgDevice query parameter set to the device ID.',
+        params: [{ name: 'email', in: 'query', type: 'string', desc: 'Client email.' }],
+        response:
+          '{\n  "success": true,\n  "obj": {\n    "limit": 5,\n    "inbounds": [\n      {\n        "inboundId": 3,\n        "devices": [\n          {\n            "id": "primary",\n            "name": "",\n            "enable": true,\n            "privateKey": "...",\n            "publicKey": "...",\n            "allowedIPs": [\n              "10.0.0.2/32"\n            ]\n          },\n          {\n            "id": "e3550bd1-0ba0-48b2-8a91-e57263a23d9d",\n            "name": "Phone",\n            "enable": true,\n            "privateKey": "...",\n            "publicKey": "...",\n            "allowedIPs": [\n              "10.0.0.3/32"\n            ]\n          }\n        ]\n      }\n    ]\n  }\n}',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/clients/wireguardDevices',
+        summary: 'Create a WireGuard device on every attached WireGuard inbound.',
+        description:
+          'Keys are generated once and each inbound allocates an available tunnel address. All inbounds commit together. The default limit is 5 devices including primary.',
+        params: [
+          { name: 'email', in: 'query', type: 'string', desc: 'Client email.' },
+          {
+            name: 'name',
+            in: 'body (json)',
+            type: 'string',
+            desc: 'Device name with 1 to 64 characters on one line.',
+          },
+        ],
+        body: '{\n  "name": "Phone"\n}',
+        response:
+          '{\n  "success": true,\n  "obj": {\n    "limit": 5,\n    "inbounds": [\n      {\n        "inboundId": 3,\n        "devices": [\n          {\n            "id": "primary",\n            "name": "",\n            "enable": true,\n            "privateKey": "...",\n            "publicKey": "...",\n            "allowedIPs": [\n              "10.0.0.2/32"\n            ]\n          },\n          {\n            "id": "e3550bd1-0ba0-48b2-8a91-e57263a23d9d",\n            "name": "Phone",\n            "enable": true,\n            "privateKey": "...",\n            "publicKey": "...",\n            "allowedIPs": [\n              "10.0.0.3/32"\n            ]\n          }\n        ]\n      }\n    ]\n  }\n}',
+      },
+      {
+        method: 'PUT',
+        path: '/panel/api/clients/wireguardDevices/limit',
+        summary: 'Set the maximum number of WireGuard devices.',
+        description:
+          'The limit includes primary and disabled devices. Choose 1 to 32. Values below the current device count are rejected.',
+        params: [
+          { name: 'email', in: 'query', type: 'string', desc: 'Client email.' },
+          {
+            name: 'limit',
+            in: 'body (json)',
+            type: 'integer',
+            desc: 'Maximum device count including primary.',
+            defaultValue: 5,
+          },
+        ],
+        body: '{\n  "limit": 5\n}',
+        response:
+          '{\n  "success": true,\n  "obj": {\n    "limit": 5,\n    "inbounds": [\n      {\n        "inboundId": 3,\n        "devices": [\n          {\n            "id": "primary",\n            "name": "",\n            "enable": true,\n            "privateKey": "...",\n            "publicKey": "...",\n            "allowedIPs": [\n              "10.0.0.2/32"\n            ]\n          },\n          {\n            "id": "e3550bd1-0ba0-48b2-8a91-e57263a23d9d",\n            "name": "Phone",\n            "enable": true,\n            "privateKey": "...",\n            "publicKey": "...",\n            "allowedIPs": [\n              "10.0.0.3/32"\n            ]\n          }\n        ]\n      }\n    ]\n  }\n}',
+      },
+      {
+        method: 'PATCH',
+        path: '/panel/api/clients/wireguardDevices/:deviceId',
+        summary: 'Rename or enable a WireGuard device.',
+        description:
+          'The primary device is managed through the parent client. Disabled additional devices retain their reserved addresses.',
+        params: [
+          { name: 'email', in: 'query', type: 'string', desc: 'Client email.' },
+          { name: 'deviceId', in: 'path', type: 'string', desc: 'Additional device UUID.' },
+          {
+            name: 'name',
+            in: 'body (json)',
+            type: 'string',
+            optional: true,
+            desc: 'New device name.',
+          },
+          {
+            name: 'enable',
+            in: 'body (json)',
+            type: 'boolean',
+            optional: true,
+            desc: 'Whether the device can connect.',
+          },
+        ],
+        body: '{\n  "name": "Work phone",\n  "enable": true\n}',
+        response:
+          '{\n  "success": true,\n  "obj": {\n    "limit": 5,\n    "inbounds": [\n      {\n        "inboundId": 3,\n        "devices": [\n          {\n            "id": "primary",\n            "name": "",\n            "enable": true,\n            "privateKey": "...",\n            "publicKey": "...",\n            "allowedIPs": [\n              "10.0.0.2/32"\n            ]\n          },\n          {\n            "id": "e3550bd1-0ba0-48b2-8a91-e57263a23d9d",\n            "name": "Phone",\n            "enable": true,\n            "privateKey": "...",\n            "publicKey": "...",\n            "allowedIPs": [\n              "10.0.0.3/32"\n            ]\n          }\n        ]\n      }\n    ]\n  }\n}',
+      },
+      {
+        method: 'DELETE',
+        path: '/panel/api/clients/wireguardDevices/:deviceId',
+        summary: 'Delete an additional WireGuard device and release its address.',
+        description:
+          'The device is removed from every attached WireGuard inbound. Its previously downloaded configuration loses access after the configuration is applied.',
+        params: [
+          { name: 'email', in: 'query', type: 'string', desc: 'Client email.' },
+          { name: 'deviceId', in: 'path', type: 'string', desc: 'Additional device UUID.' },
+        ],
+        response:
+          '{\n  "success": true,\n  "obj": {\n    "limit": 5,\n    "inbounds": [\n      {\n        "inboundId": 3,\n        "devices": [\n          {\n            "id": "primary",\n            "name": "",\n            "enable": true,\n            "privateKey": "...",\n            "publicKey": "...",\n            "allowedIPs": [\n              "10.0.0.2/32"\n            ]\n          },\n          {\n            "id": "e3550bd1-0ba0-48b2-8a91-e57263a23d9d",\n            "name": "Phone",\n            "enable": true,\n            "privateKey": "...",\n            "publicKey": "...",\n            "allowedIPs": [\n              "10.0.0.3/32"\n            ]\n          }\n        ]\n      }\n    ]\n  }\n}',
+      },
+      {
         method: 'POST',
         path: '/panel/api/clients/resetAllTraffics',
         summary:
@@ -1842,10 +1932,48 @@ export const sections: readonly Section[] = [
         method: 'POST',
         path: '/panel/api/clients/bulkAdjust',
         summary:
-          'Shift expiry and/or traffic quota for many clients in one call. addDays/addBytes may be negative. Clients with unlimited expiry (expiryTime=0) or unlimited traffic (totalGB=0) are skipped for the corresponding field — bulk extend never converts unlimited to limited. A client that was auto-disabled solely because it was depleted (expired or over quota) is automatically re-enabled — locally and on its node — when the adjustment lifts it out of depletion; a manually-disabled or still-depleted client is left disabled. The optional flow directive sets the XTLS flow on every client: "none" clears it, "xtls-rprx-vision"/"xtls-rprx-vision-udp443" set it where the inbound supports it (omit or "" to leave it unchanged). The optional limitHwid sets maximum registered devices (0 = unlimited). The optional adTag sets MTProto Telegram sponsor channel ("none" clears). Returns the adjusted count and per-email skip reasons.',
-        body: '{\n  "emails": ["alice", "bob"],\n  "addDays": 30,\n  "addBytes": 53687091200,\n  "flow": "xtls-rprx-vision",\n  "limitHwid": 2,\n  "adTag": "0123456789abcdef0123456789abcdef"\n}',
-        response:
-          '{\n  "success": true,\n  "obj": {\n    "adjusted": 2,\n    "skipped": [\n      { "email": "carol", "reason": "unlimited expiry" }\n    ]\n  }\n}',
+          'Shift expiry and/or traffic quota for many clients in one call. addDays/addBytes may be negative. Clients with unlimited expiry (expiryTime=0) or unlimited traffic (totalGB=0) are skipped for the corresponding field — bulk extend never converts unlimited to limited. A client that was auto-disabled solely because it was depleted (expired or over quota) is automatically re-enabled — locally and on its node — when the adjustment lifts it out of depletion; a manually-disabled or still-depleted client is left disabled. The optional flow directive sets the XTLS flow on every client: "none" clears it, "xtls-rprx-vision"/"xtls-rprx-vision-udp443" set it where the inbound supports it (omit or "" to leave it unchanged). The optional limitHwid sets maximum registered devices (0 = unlimited). The optional adTag sets MTProto Telegram sponsor channel ("none" clears). Alternatively, send externalLinks to append external share links and http(s) subscriptions to each selected client in one transaction. This mode cannot be combined with other adjustments. Existing entries, metadata, and ordering are preserved. Duplicates match (kind, value) per client, including repeated input rows; the first entry wins. Missing clients are not written and appear in skipped. externalLinks.added counts inserted rows, externalLinks.skipped counts duplicate rows across found clients, externalLinks.errors counts missing clients, and adjusted counts clients receiving at least one new row. Validation or database failure aborts the whole append without writes. Repeating an append is idempotent and does not restart Xray.',
+        requestSchema: {
+          type: 'object',
+          required: ['emails'],
+          properties: {
+            emails: { type: 'array', items: { type: 'string' }, minItems: 1 },
+            addDays: { type: 'integer' },
+            addBytes: { type: 'integer' },
+            flow: { type: 'string' },
+            limitHwid: { type: 'integer', minimum: 0 },
+            adTag: { type: 'string' },
+            externalLinks: {
+              type: 'array',
+              minItems: 1,
+              items: { $ref: '#/components/schemas/ExternalLinkInput' },
+            },
+          },
+        },
+        body: JSON.stringify(
+          {
+            emails: ['alice', 'bob'],
+            externalLinks: [
+              {
+                kind: 'link',
+                value: 'vless://uuid@example.com:443',
+                remark: 'Backup',
+                enable: true,
+                expiryTime: 0,
+              },
+              {
+                kind: 'subscription',
+                value: 'https://provider.example/sub',
+                namePrefix: '[provider] ',
+                enable: true,
+                expiryTime: 0,
+              },
+            ],
+          },
+          null,
+          2,
+        ),
+        responseSchema: 'BulkAdjustResult',
       },
       {
         method: 'POST',
@@ -2683,7 +2811,7 @@ export const sections: readonly Section[] = [
         method: 'POST',
         path: '/panel/api/mcp',
         summary:
-          'Stateless streamable-HTTP MCP endpoint (JSON-RPC 2.0). Exposes panel tools for inbounds, clients, server, Xray, nodes, hosts and settings; each tool call runs the matching /panel/api route with the caller’s credentials.',
+          'Stateless streamable-HTTP MCP endpoint (JSON-RPC 2.0). Exposes panel tools for inbounds, clients, server, Xray, nodes, hosts and settings; each tool call runs the matching /panel/api route with the caller’s credentials. Off by default: answers 404 until the MCP server is enabled under Settings → Security → API Token.',
         params: [
           {
             name: 'toolsets',

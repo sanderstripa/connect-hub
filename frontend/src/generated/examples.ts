@@ -49,6 +49,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "ldapUserAttr": "",
     "ldapUserFilter": "",
     "ldapVlessField": "",
+    "mcpEnable": false,
     "networkTrafficInterface": "eth0",
     "networkTrafficMode": "legacy",
     "nodeDownThreshold": 1,
@@ -57,6 +58,10 @@ export const EXAMPLES: Record<string, unknown> = {
     "outboundDownThreshold": 1,
     "pageSize": 0,
     "panelOutbound": "",
+    "publicIpRefreshMinutes": 0,
+    "publicIpv4Override": "",
+    "publicIpv6Detect": false,
+    "publicIpv6Override": "",
     "realityScanCandidates": "",
     "remarkTemplate": "",
     "restartXrayOnClientDisable": false,
@@ -115,6 +120,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "subHappTunType": "",
     "subHideSettings": false,
     "subHostSortMode": "inbound-first",
+    "subHwidRejectWithConfig": false,
     "subIncyAnnounceUrl": "",
     "subIncyAppAutoDetect": false,
     "subIncyBannerBgColor": "",
@@ -258,6 +264,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "ldapUserAttr": "",
     "ldapUserFilter": "",
     "ldapVlessField": "",
+    "mcpEnable": false,
     "networkTrafficInterface": "eth0",
     "networkTrafficMode": "legacy",
     "nodeDownThreshold": 1,
@@ -266,6 +273,10 @@ export const EXAMPLES: Record<string, unknown> = {
     "outboundDownThreshold": 1,
     "pageSize": 0,
     "panelOutbound": "",
+    "publicIpRefreshMinutes": 0,
+    "publicIpv4Override": "",
+    "publicIpv6Detect": false,
+    "publicIpv6Override": "",
     "realityScanCandidates": "",
     "remarkTemplate": "",
     "restartXrayOnClientDisable": false,
@@ -324,6 +335,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "subHappTunType": "",
     "subHideSettings": false,
     "subHostSortMode": "inbound-first",
+    "subHwidRejectWithConfig": false,
     "subIncyAnnounceUrl": "",
     "subIncyAppAutoDetect": false,
     "subIncyBannerBgColor": "",
@@ -458,6 +470,20 @@ export const EXAMPLES: Record<string, unknown> = {
   "Blocker": {
     "code": "tools",
     "detail": "awg"
+  },
+  "BulkAdjustReport": {
+    "email": "carol",
+    "reason": "client not found"
+  },
+  "BulkAdjustResult": {
+    "adjusted": 2,
+    "externalLinks": null,
+    "skipped": []
+  },
+  "BulkExternalLinksResult": {
+    "added": 4,
+    "errors": 0,
+    "skipped": 0
   },
   "Capabilities": {
     "arch": "amd64",
@@ -642,7 +668,21 @@ export const EXAMPLES: Record<string, unknown> = {
     "totalGB": 0,
     "trafficReset": "never",
     "trafficResetDay": 1,
-    "updated_at": 0
+    "updated_at": 0,
+    "wgDeviceLimit": 0,
+    "wireguardDevices": [
+      {
+        "allowedIPs": [
+          ""
+        ],
+        "enable": false,
+        "id": "",
+        "name": "",
+        "preSharedKey": "",
+        "privateKey": "",
+        "publicKey": ""
+      }
+    ]
   },
   "ClientChangeLog": {
     "at": 1735689600000,
@@ -754,7 +794,21 @@ export const EXAMPLES: Record<string, unknown> = {
     "trafficReset": "",
     "trafficResetDay": 0,
     "updatedAt": 0,
-    "uuid": ""
+    "uuid": "",
+    "wgDeviceLimit": 0,
+    "wireguardDevices": [
+      {
+        "allowedIPs": [
+          ""
+        ],
+        "enable": false,
+        "id": "",
+        "name": "",
+        "preSharedKey": "",
+        "privateKey": "",
+        "publicKey": ""
+      }
+    ]
   },
   "ClientRenewalPreview": {
     "canRenew": true,
@@ -952,6 +1006,14 @@ export const EXAMPLES: Record<string, unknown> = {
     "key": "93d3404c6701dc9dea2d1ff3282ab88b",
     "method": 1,
     "name": "Iran"
+  },
+  "ExternalLinkInput": {
+    "enable": true,
+    "expiryTime": 0,
+    "kind": "link",
+    "namePrefix": "",
+    "remark": "Backup",
+    "value": "vless://uuid@example.com:443"
   },
   "FallbackParentInfo": {
     "masterId": 0,
@@ -2032,5 +2094,16 @@ export const EXAMPLES: Record<string, unknown> = {
     "id": 0,
     "password": "",
     "username": ""
+  },
+  "WireguardDevice": {
+    "allowedIPs": [
+      ""
+    ],
+    "enable": false,
+    "id": "",
+    "name": "",
+    "preSharedKey": "",
+    "privateKey": "",
+    "publicKey": ""
   }
 };

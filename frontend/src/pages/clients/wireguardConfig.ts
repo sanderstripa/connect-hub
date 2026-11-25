@@ -1,3 +1,4 @@
+import { tunnelConfigEndpoints, tunnelEndpointLabel } from './tunnelEndpoints';
 import type { HostEndpoint } from '@/lib/hosts/host-link';
 import { formatInboundLabel } from '@/lib/inbounds/label';
 import { buildVkTurnConnectionLink } from '@/lib/xray/vk-turn-link';
@@ -77,5 +78,65 @@ export function buildWireguardVkTurnLink(
       hostEndpoint?.dest ||
       resolveShareHost(inbound, inbound.nodeAddress ?? '', preferPublicHost(host, publicHost)),
     dnsServers: inbound.wgDns,
+  });
+}
+
+export function buildWireguardDeviceConfigs(
+  client: ClientRecord,
+  inbounds: InboundOption[],
+  devices: import('@/schemas/client').WireguardDevices | undefined,
+  addresses: Record<number, string> | undefined,
+  hosts: import('@/schemas/api/host').HostRecord[],
+  host: string,
+  publicHost: string,
+  includeDisabled = false,
+) {
+  return inbounds.flatMap((inbound) => {
+    const entries = devices?.inbounds.find((entry) => entry.inboundId === inbound.id)?.devices;
+    const identities = entries
+      ? entries
+          .filter((device) => includeDisabled || device.enable)
+          .map((device) => ({
+            id: device.id,
+            name: device.name,
+            enabled: device.enable,
+            client: {
+              ...client,
+              privateKey: device.privateKey,
+              publicKey: device.publicKey,
+              preSharedKey: device.preSharedKey,
+              allowedIPs: device.allowedIPs.join(', '),
+            },
+            address: device.allowedIPs.join(', '),
+          }))
+      : [
+          {
+            id: 'primary',
+            name: '',
+            enabled: client.enable !== false,
+            client,
+            address: addresses?.[inbound.id] ?? '',
+          },
+        ];
+    return identities.flatMap((device) =>
+      tunnelConfigEndpoints(inbound, hosts, host, publicHost).map((endpoint) => ({
+        inbound,
+        deviceId: device.id,
+        deviceName: device.name,
+        enabled: device.enabled,
+        endpoint: [device.name, tunnelEndpointLabel(endpoint)].filter(Boolean).join(' - '),
+        vkLink: buildWireguardVkTurnLink(
+          device.client, inbound, host, publicHost, device.address, endpoint,
+        ),
+        text: buildWireguardClientConfig(
+          device.client,
+          inbound,
+          host,
+          publicHost,
+          device.address,
+          endpoint,
+        ),
+      })),
+    );
   });
 }

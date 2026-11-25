@@ -1,4 +1,5 @@
 import DetailSurface from '@/components/layout/DetailSurface';
+import { useClientWireguardDevices } from '@/hooks/useClientWireguardDevices';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -13,8 +14,7 @@ import { QrPanel } from '@/pages/inbounds/qr';
 import type { ClientRecord, InboundOption } from '@/hooks/useClients';
 import { formatTunnelConfigMeta } from '@/lib/inbounds/label';
 import {
-  buildWireguardClientConfig,
-  buildWireguardVkTurnLink,
+  buildWireguardDeviceConfigs,
   findWireguardInbounds,
   isWireguardClient,
 } from './wireguardConfig';
@@ -336,22 +336,20 @@ function ClientQrModalContent({
     () => findWireguardInbounds(client, inboundsById),
     [client, inboundsById],
   );
+  const wireguardDevices = useClientWireguardDevices(client?.email, open && wgInbounds.length > 0);
   const wgConfigs = useMemo(() => {
     if (!client || !isWireguardClient(client)) return [];
-    const host = window.location.hostname;
-    const publicHost = subSettings.publicHost ?? '';
-    return wgInbounds
-      .flatMap((ib) => {
-        const address = tunnelAllowedIPs?.[ib.id] ?? '';
-        return tunnelConfigEndpoints(ib, hosts, host, publicHost).map((ep) => ({
-          inbound: ib,
-          endpoint: tunnelEndpointLabel(ep),
-          text: buildWireguardClientConfig(client, ib, host, publicHost, address, ep),
-          vkLink: buildWireguardVkTurnLink(client, ib, host, publicHost, address, ep),
-        }));
-      })
-      .filter((c) => !!c.text);
-  }, [client, wgInbounds, tunnelAllowedIPs, subSettings.publicHost, hosts]);
+    return buildWireguardDeviceConfigs(
+      client,
+      wgInbounds,
+      wireguardDevices.data,
+      tunnelAllowedIPs,
+      hosts,
+      window.location.hostname,
+      subSettings.publicHost ?? '',
+      true,
+    );
+  }, [client, wgInbounds, wireguardDevices.data, tunnelAllowedIPs, subSettings.publicHost, hosts]);
 
   const awgInbounds = useMemo(
     () => findAmneziaWGInbounds(client, inboundsById),
@@ -479,7 +477,8 @@ function ClientQrModalContent({
         ),
       });
     });
-    wgConfigs.forEach(({ inbound, endpoint, text, vkLink }) => {
+    wgConfigs.forEach(({ inbound, deviceId, endpoint, text, vkLink, enabled }) => {
+      if (!enabled) return;
       const meta = formatTunnelConfigMeta(inbound, client?.email, wgConfigs.length, endpoint);
       const label = (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -490,13 +489,23 @@ function ClientQrModalContent({
         </span>
       );
       out.push({
-        key: `wg-config-${inbound.id}-${endpoint}`,
+        key: `wg-config-${inbound.id}-${deviceId}-${endpoint}`,
         label,
-        children: <QrPanel value={text} remark={meta.qrRemark} downloadName={meta.fileName} />,
+        children: (
+          <QrPanel
+            value={text}
+            remark={meta.qrRemark}
+            downloadName={
+              deviceId === 'primary'
+                ? meta.fileName
+                : meta.fileName.replace(/\.conf$/, `-${deviceId}.conf`)
+            }
+          />
+        ),
       });
       if (vkLink) {
         out.push({
-          key: `wg-vk-${inbound.id}-${endpoint}`,
+          key: `wg-vk-${inbound.id}-${deviceId}-${endpoint}`,
           label: (
             <span>
               <Tag color="blue">VK</Tag>

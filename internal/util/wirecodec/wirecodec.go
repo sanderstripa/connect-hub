@@ -28,9 +28,12 @@ const (
 	CapAmneziaWGKernel = "awg-kernel"
 	// CapPreserveClientTraffic marks a node that supports inbound-only scheduled resets.
 	CapPreserveClientTraffic = "preserve-client-traffic"
+	// CapWireguardDevices marks a node that serves a WireGuard client's extra devices;
+	// an older node ignores them and keeps only the client's first peer.
+	CapWireguardDevices = "wg-devices"
 	// NodeCaps is the full CapsHeader value this build advertises.
 	CapAWGPing = "awg-ping4"
-	NodeCaps   = CapZstd + "," + CapAmneziaWGKernel + "," + CapAWGPing + "," + CapPreserveClientTraffic
+	NodeCaps   = CapZstd + "," + CapAmneziaWGKernel + "," + CapAWGPing + "," + CapPreserveClientTraffic + "," + CapWireguardDevices
 
 	// maxDecodeBytes bounds in-memory decompression to defuse a zstd bomb from
 	// an (authenticated) node-API caller.

@@ -360,18 +360,19 @@ func (s *InboundService) adjustTraffics(tx *gorm.DB, dbClientTraffics []*xray.Cl
 // peers fail it without publicKey/allowedIPs, and a failed add restarts Xray.
 func coreUserFromClient(c *model.Client, cipher string) map[string]any {
 	return map[string]any{
-		"email":        c.Email,
-		"id":           c.ID,
-		"auth":         c.Auth,
-		"security":     c.Security,
-		"flow":         c.Flow,
-		"password":     c.Password,
-		"cipher":       cipher,
-		"publicKey":    c.PublicKey,
-		"allowedIPs":   c.AllowedIPs,
-		"preSharedKey": c.PreSharedKey,
-		"keepAlive":    keepAliveStr(c.KeepAliveSeconds()),
-		"reverse":      c.Reverse,
+		"email":            c.Email,
+		"id":               c.ID,
+		"auth":             c.Auth,
+		"security":         c.Security,
+		"flow":             c.Flow,
+		"password":         c.Password,
+		"cipher":           cipher,
+		"publicKey":        c.PublicKey,
+		"allowedIPs":       c.AllowedIPs,
+		"preSharedKey":     c.PreSharedKey,
+		"keepAlive":        keepAliveStr(c.KeepAliveSeconds()),
+		"reverse":          c.Reverse,
+		"wireguardDevices": c.WireguardDevices,
 	}
 }
 
@@ -847,22 +848,9 @@ func (s *InboundService) resetClientTrafficLocked(id int, clientEmail string) (b
 			}
 			cipher, _ = oldSettings["method"].(string)
 		}
-		clientMap := map[string]any{
-			"email":       entry.Email,
-			"id":          entry.ID,
-			"auth":        entry.Auth,
-			"security":    entry.Security,
-			"flow":        entry.Flow,
-			"password":    entry.Password,
-			"cipher":      cipher,
-			"reverse":     entry.Reverse,
-			// Peer credentials must survive runtime re-add on quota reset;
-			// KeepAliveValue is stored as a string, never a numeric JSON value.
-			"publicKey":   entry.PublicKey,
-			"preSharedKey": entry.PreSharedKey,
-			"allowedIPs":  entry.AllowedIPs,
-			"keepAlive":   entry.KeepAliveText(),
-		}
+		clientMap := coreUserFromClient(entry, cipher)
+		// KeepAliveValue includes the AmneziaWG range syntax in this path.
+		clientMap["keepAlive"] = entry.KeepAliveText()
 		if inbound.NodeID != nil {
 			reenableNodeID = inbound.NodeID
 		} else {

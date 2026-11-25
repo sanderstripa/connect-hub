@@ -35,7 +35,7 @@ type nodeClientClaims struct {
 
 // nodeKeptSharedKeys stay as the node reported them: per-link values, and the lifecycle
 // the merge already settles against the master's traffic row.
-var nodeKeptSharedKeys = []string{"flow", "privateKey", "publicKey", "allowedIPs", "preSharedKey", "keepAlive", "enable", "expiryTime"}
+var nodeKeptSharedKeys = []string{"flow", "privateKey", "publicKey", "allowedIPs", "preSharedKey", "keepAlive", "wireguardDevices", "enable", "expiryTime"}
 
 type clientLinkScope struct{ here, elsewhere bool }
 
@@ -296,7 +296,7 @@ func sharedRecordWouldChange(rec *model.ClientRecord, reported *model.Client) bo
 	incoming.CreatedAt = 0
 	merged := *rec
 	applyClientRecordMerge(&merged, incoming)
-	keepLinkOwnedFields(&merged, rec, false)
+	keepLinkOwnedFields(&merged, rec, false, false)
 	return !reflect.DeepEqual(merged, *rec)
 }
 
