@@ -16,8 +16,8 @@ function selection(input){
  const name=String(input.name||'').trim();if(!name||name.length>80||/[\x00-\x1f\x7f]/.test(name))fail('INVALID_OPTIONS');
  const email=String(input.email||'').trim();if(email.length>80||/[\s\x00-\x1f\x7f]/.test(email))fail('INVALID_OPTIONS');
  const xhttpProfile=input.xhttpProfile||'basic';if(!['basic','recommended','manual'].includes(xhttpProfile))fail('INVALID_OPTIONS');
- const host=hostName(input.host),port=Number(input.port||443),sni=hostName(input.sni||'www.cloudflare.com');
- if(!Number.isInteger(port)||port<1||port+input.protocols.length-1>65535||isIP(sni))fail('INVALID_OPTIONS');
+ const host=hostName(input.host),port=input.port===null?null:Number(input.port||443),sni=hostName(input.sni||'www.cloudflare.com');
+ if((port!==null&&(!Number.isInteger(port)||port<1||port+input.protocols.length-1>65535))||isIP(sni))fail('INVALID_OPTIONS');
  return {protocols:input.protocols,name,email,xhttpProfile,host,port,sni};
 }
 function preset(kind,selected,port,keys){

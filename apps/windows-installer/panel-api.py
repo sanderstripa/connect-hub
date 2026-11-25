@@ -51,6 +51,20 @@ class Panel:
         action = request.get('action')
         if action == 'list':
             return self.request('panel/api/inbounds/list')
+        if action == 'availablePort':
+            count = request.get('count')
+            if not isinstance(count, int) or not 1 <= count <= 5:
+                raise PanelError('INVALID_CONNECTION')
+            rows = self.request('panel/api/inbounds/list')
+            configured = {row['port'] for row in rows if not row.get('nodeId')}
+            for first in (443, *range(8443, 8493)):
+                ports = range(first, first + count)
+                if any(port in configured for port in ports):
+                    continue
+                if all(self.port_available(port) for port in ports):
+                    return first
+            raise PanelError('NO_AVAILABLE_PORT')
+
         if action == 'profiles':
             return self.request('panel/hub/api/sudoku-profiles', request['profiles'])
         if action == 'keys':
@@ -85,12 +99,18 @@ class Panel:
             raise PanelError('INVALID_CONNECTION')
         # Include unrelated services in the collision check. The panel repeats
         # its own checks on insertion, so a stale list never overwrites a row.
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as check:
-            try:
-                check.bind(('0.0.0.0', port))
-            except OSError as exc:
-                raise PanelError('PORT_IN_USE') from exc
+        if not self.port_available(port):
+            raise PanelError('PORT_IN_USE')
         return self.request('panel/api/inbounds/add', inbound)
+
+    @staticmethod
+    def port_available(port):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp:
+                tcp.bind(('0.0.0.0', port))
+            return True
+        except OSError:
+            return False
 
 
 def main():

@@ -14,6 +14,7 @@ async function fixture(){
      try{
       const req=JSON.parse(body);let value;
       if(req.action==='list')value=inbounds;
+      else if(req.action==='availablePort')value=8443;
       else if(req.action==='profiles')value=Object.fromEntries(req.profiles.map(p=>[p.inboundId+':'+p.clientId,{path:'sudoku-import/fixture/signed.yaml',config:'proxies: []'}]));
       else if(req.action==='details')value=inbounds.find(x=>x.id===req.id);
       else if(req.action==='update'){const i=inbounds.findIndex(x=>x.id===req.id);inbounds[i]={...req.inbound,id:req.id};value=inbounds[i];}

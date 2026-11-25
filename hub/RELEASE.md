@@ -1,5 +1,6 @@
 Connect Hub 0.9.1 — Key creation compatibility and navigation
 
+- Create device keys from the Windows app with an optional device name and automatically choose a free port when no port is specified. Show failed operations next to the create button.
 - Use the browser's secure random bytes to generate key UUIDs when its native UUID API is unavailable.
 - Move Groups under Network and Logs and AI Assistant under Settings.
 - Add a dedicated Appearance entry under Settings for color mode, palettes, accent colors, and the glass effect. Appearance preferences are stored in the browser.

@@ -183,6 +183,9 @@ CH_ACCESS`));
  }
  async createConnections(input){
   const selected=selection(input),outcomes=[];
+  const requestedPort=input.advanced?.changes?.port??selected.port;
+  const firstPort=requestedPort??await this.panelRequest({action:'availablePort',count:selected.protocols.length});
+  if(!Number.isInteger(firstPort)||firstPort<1||firstPort+selected.protocols.length-1>65535)throw failure('INVALID_OPTIONS');
   const existing=selected.email?await this.panelRequest({action:'list'}):[];
   for(let i=0;i<selected.protocols.length;i++){
    const kind=selected.protocols[i];
@@ -191,9 +194,9 @@ CH_ACCESS`));
     if(selected.email&&existing.some(ib=>{try{return (typeof ib.settings==='string'?JSON.parse(ib.settings):ib.settings).clients?.some(c=>c.email===email);}catch{return false;}}))throw failure('KEY_NAME_IN_USE');
     const keys=['vless','xhttp'].includes(kind)?await this.panelRequest({action:'keys'}):null;
     const advanced=structuredClone(input.advanced||{});
-    const first=advanced.changes?.port??selected.port;
-    if(advanced.changes?.port!==undefined)advanced.changes.port=first+i;
-    let base=preset(kind,selected,first+i,keys);
+    const port=firstPort+i;
+    if(advanced.changes?.port!==undefined)advanced.changes.port=port;
+    let base=preset(kind,selected,port,keys);
     if(kind==='xhttp'&&selected.xhttpProfile==='recommended'){
      const enc=await this.panelRequest({action:'generate',kind:'vless'});
      const pair=enc.auths?.find(p=>String(p.decryption).startsWith('mlkem768x25519plus.native.')&&String(p.encryption).startsWith('mlkem768x25519plus.native.'));
@@ -203,7 +206,7 @@ CH_ACCESS`));
     const inbound=applyAdvanced(base,advanced);
     await this.panelRequest({action:'create',inbound});
     outcomes.push({protocol:kind,ok:true,port:inbound.port});
-   }catch(error){outcomes.push({protocol:kind,ok:false,error:error.code||'PANEL_REQUEST_FAILED',port:selected.port+i});}
+   }catch(error){outcomes.push({protocol:kind,ok:false,error:error.code||'PANEL_REQUEST_FAILED',port:firstPort+i});}
   }
   // Always reread canonical, server-generated client secrets. No second key store.
   return {outcomes,rows:await this.connections()};

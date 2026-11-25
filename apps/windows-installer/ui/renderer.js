@@ -34,11 +34,34 @@ function profileVisibility(){
 }
 Object.assign(strings.en,{shadowrocketInfo:'Direct YAML subscription, as in Sudoku UI. Add its URL as a subscription in Shadowrocket. The panel must be reachable; HTTPS needs a trusted certificate.',profileUnavailable:'Update the panel to generate the additional import link.'});
 Object.assign(strings.ru,{shadowrocketInfo:'Прямая подписка YAML, как в Sudoku UI. Добавьте URL как подписку в Shadowrocket. Панель должна быть доступна; для HTTPS нужен доверенный сертификат.',profileUnavailable:'Обновите панель для получения дополнительной ссылки импорта.'});
+Object.assign(strings.en,{
+ deviceName:'Device / connection name (optional)',
+ defaultDeviceName:'Device',
+ portsInfo:'Leave blank to select free consecutive TCP ports on the server. Set a port to use it explicitly.',
+ autoPort:'Automatic',
+ NO_AVAILABLE_PORT:'No free port was found. Enter an available port in Connection settings.',
+ MLKEM_UNAVAILABLE:'The panel could not generate ML-KEM keys. Update the panel or choose the Basic profile.',
+ KEY_NAME_IN_USE:'That key name is already in use. Choose a different name.',
+});
+Object.assign(strings.ru,{
+ deviceName:'Название устройства / подключения (необязательно)',
+ defaultDeviceName:'Устройство',
+ portsInfo:'Оставьте поле пустым, чтобы подобрать свободные порты TCP на сервере, или укажите начальный порт вручную.',
+ autoPort:'Автоматически',
+ NO_AVAILABLE_PORT:'Свободный порт не найден. Укажите доступный порт в параметрах подключения.',
+ MLKEM_UNAVAILABLE:'Панель не смогла сгенерировать ключи ML-KEM. Обновите панель или выберите профиль «Базовый».',
+ KEY_NAME_IN_USE:'Это имя ключа уже занято. Введите другое имя.',
+});
+function showCreateError(text){
+ $('create-feedback').textContent=text;
+ $('create-feedback').hidden=false;
+ $('create-feedback').scrollIntoView({block:'nearest'});
+}
 let editor=null,currentEdit=null;
 let language='en',info=null,activeStep=1,pollTimer=null,clockTimer=null,started=0,stage='preparing',installing=false;
 const t=key=>strings[language][key]||strings[language].OPERATION_FAILED;
 async function api(method,...args){const response=await window.installer[method](...args);if(!response.ok){const error=new Error(response.error);error.code=response.error;throw error;}return response.value;}
-function localize(){swapAdvice();if(editor)editor.localize();document.documentElement.lang=language;document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});$('ru').classList.toggle('selected',language==='ru');$('en').classList.toggle('selected',language==='en');if(info)$('install').textContent=t(info.installed?'update':'install');$('stage-text').textContent=t(stage);if(typeof rows!=='undefined')renderConnections();api('language',language).catch(()=>{});}
+function localize(){swapAdvice();if(editor)editor.localize();document.documentElement.lang=language;$('first-port').placeholder=t('autoPort');document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});$('ru').classList.toggle('selected',language==='ru');$('en').classList.toggle('selected',language==='en');if(info)$('install').textContent=t(info.installed?'update':'install');$('stage-text').textContent=t(stage);if(typeof rows!=='undefined')renderConnections();api('language',language).catch(()=>{});}
 function show(section,step){for(const id of ['connection','configuration','progress','result','connections','create-connection'])$(id).hidden=id!==section;document.querySelector('main').scrollTop=0;activeStep=step;document.querySelectorAll('#steps li').forEach(el=>{const n=Number(el.dataset.step);el.classList.toggle('active',n===step);el.classList.toggle('complete',n<step);});$('error').hidden=true;}
 function errorMessage(error){$('error').textContent=t(error.code||'OPERATION_FAILED');$('error').hidden=false;}
 function stopPolling(){clearTimeout(pollTimer);clearInterval(clockTimer);pollTimer=null;clockTimer=null;}
@@ -96,7 +119,7 @@ async function loadConnections(){
 }
 $('manage-connections').addEventListener('click',loadConnections);
 $('refresh-connections').addEventListener('click',loadConnections);
-$('new-connection').addEventListener('click',async()=>{if(connectionWorking)return;await editor.ready;currentEdit=null;editor.reset(null);$('key-name').value='';$('advanced-mode').closest('label').hidden=false;$('quick-settings').hidden=false;$('advanced-mode').checked=false;$('advanced-editor').hidden=true;document.querySelector('.protocols').hidden=false;$('create-submit').textContent=t('createKeys');$('public-host').value=info?.host||$('host').value;show('create-connection',5);profileVisibility();});
+$('new-connection').addEventListener('click',async()=>{if(connectionWorking)return;await editor.ready;currentEdit=null;editor.reset(null);$('key-name').value='';$('first-port').value='';$('create-feedback').hidden=true;$('advanced-mode').closest('label').hidden=false;$('quick-settings').hidden=false;$('advanced-mode').checked=false;$('advanced-editor').hidden=true;document.querySelector('.protocols').hidden=false;$('create-submit').textContent=t('createKeys');$('public-host').value=info?.host||$('host').value;show('create-connection',5);profileVisibility();});
 $('cancel-create').addEventListener('click',()=>{if(!connectionWorking)show('connections',5);});
 $('hub-settings').addEventListener('click',()=>show('configuration',2));
 $('hub-access').addEventListener('click',async()=>{try{await result(await api('access'));}catch(error){errorMessage(error);}});
@@ -106,8 +129,8 @@ $('create-form').addEventListener('submit',async event=>{
  event.preventDefault();if(connectionWorking)return;
  const protocols=Array.from(document.querySelectorAll('input[name=protocol]:checked'),el=>el.value);
  await editor.ready;
- if(!protocols.length){errorMessage({code:'INVALID_OPTIONS'});return;}
- connectionsBusy(true);$('create-submit').textContent=t('creating');$('error').hidden=true;
+ if(!currentEdit&&!protocols.length){showCreateError(t('INVALID_OPTIONS'));return;}
+ connectionsBusy(true);$('create-submit').textContent=t('creating');$('error').hidden=true;$('create-feedback').hidden=true;
  try{
   let advanced;try{advanced=$('advanced-mode').checked?editor.read():{};}catch{throw {code:'INVALID_ADVANCED'};}
   if(currentEdit){
@@ -117,10 +140,14 @@ $('create-form').addEventListener('submit',async event=>{
    if($('public-host').value!==(currentEdit.shareAddr||info?.host||$('host').value)){advanced.changes.shareAddr=$('public-host').value;advanced.changes.shareAddrStrategy='custom';}
    rows=await api('updateConnection',{id:currentEdit.id,advanced});currentEdit=null;show('connections',5);renderConnections();$('connection-status').textContent=t('runtimeInfo');return;
   }
-  const result=await api('createConnections',{advanced,email:$('key-name').value,xhttpProfile:xhttpProfile(),name:$('device-name').value,host:$('public-host').value,port:Number($('first-port').value),sni:$('target-sni').value,protocols});
+  const port=$('first-port').value;
+  const name=$('device-name').value.trim()||t('defaultDeviceName');
+  const result=await api('createConnections',{advanced,email:$('key-name').value,xhttpProfile:xhttpProfile(),name,host:$('public-host').value,port:port===''?null:Number(port),sni:$('target-sni').value,protocols});
+  const summary=result.outcomes.map(o=>o.protocol.toUpperCase()+' · '+o.port+' — '+t(o.ok?'created':o.error)).join('\n');
+  if(!result.outcomes.some(o=>o.ok)){showCreateError(summary||t('PANEL_REQUEST_FAILED'));return;}
   rows=result.rows;show('connections',5);renderConnections();
-  $('connection-status').textContent=result.outcomes.map(o=>o.protocol.toUpperCase()+' · '+o.port+' — '+t(o.ok?'created':o.error)).join('\n')+'\n\n'+(result.outcomes.some(o=>!o.ok)?t('partialInfo')+'\n':'')+t('runtimeInfo');
- }catch(error){errorMessage(error);}finally{connectionsBusy(false);$('create-submit').textContent=t('createKeys');}
+  $('connection-status').textContent=summary+'\n\n'+(result.outcomes.some(o=>!o.ok)?t('partialInfo')+'\n':'')+t('runtimeInfo');
+ }catch(error){showCreateError(t(error.code||'OPERATION_FAILED'));}finally{connectionsBusy(false);$('create-submit').textContent=t(currentEdit?'saveChanges':'createKeys');}
 });
 
 api('rememberedServer').then(value=>{if(value){$('host').value=value.host;$('port').value=value.port;$('username').value=value.username;}}).catch(()=>{});
@@ -131,7 +158,7 @@ $('advanced-mode').addEventListener('change',()=>{$('advanced-editor').hidden=!$
 async function editConnection(id){
  if(connectionWorking)return;connectionsBusy(true);
  try{
-  const value=await api('connectionDetails',id);await editor.ready;currentEdit=value;editor.reset(value);
+  const value=await api('connectionDetails',id);await editor.ready;currentEdit=value;editor.reset(value);$('create-feedback').hidden=true;
   $('advanced-mode').closest('label').hidden=false;$('quick-settings').hidden=true;$('device-name').value=value.remark;$('public-host').value=value.shareAddr||info?.host||$('host').value;$('first-port').value=value.port;
   $('advanced-mode').checked=true;$('advanced-editor').hidden=false;document.querySelector('.protocols').hidden=true;$('create-submit').textContent=t('saveChanges');show('create-connection',5);
  }catch(error){errorMessage(error);}finally{connectionsBusy(false);}

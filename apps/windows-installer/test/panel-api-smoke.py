@@ -26,6 +26,12 @@ with tempfile.TemporaryDirectory(prefix='connect-desktop-proof-',dir=pkg.parent)
    else:raise AssertionError('isolated panel failed to start')
    assert panel.run({'action':'list'})==[]
    keys=panel.run({'action':'keys'});assert keys['privateKey'] and keys['publicKey']
+   with socket.socket() as auto_port_blocker:
+    try: auto_port_blocker.bind(('0.0.0.0', 443))
+    except OSError: pass  # Already unavailable, including unprivileged runners.
+    automatic_port=panel.run({'action':'availablePort','count':5})
+    assert 8443 <= automatic_port < 8493, automatic_port
+   print('PASS: blank port selection skips occupied TCP 443 and finds a free block',flush=True)
    # Reserve a contiguous port range for the actual native listeners.
    first=31000
    while True:
