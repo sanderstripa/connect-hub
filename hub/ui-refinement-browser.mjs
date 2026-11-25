@@ -70,16 +70,13 @@ try {
    if(language==='en-US'&&!dark){await logs.getByRole('checkbox',{name:i.autoUpdate,exact:true}).check();const before=logReads;await page.waitForTimeout(5300);assert.ok(logReads>before);await logs.getByRole('checkbox',{name:i.autoUpdate,exact:true}).uncheck();}
    await logs.locator('.ant-modal-close').click();
    await page.locator('.ov-panel-version,.ov-update-tag').click();const update=page.getByRole('dialog');await update.waitFor();assert.equal(await update.getByRole('switch').count(),0);await shot(language+'-update-'+dark);await update.locator('.ant-modal-close').click();
-   // Connect Hub uses a compact vertical rail: flat Connections, Groups and
-   // Assistant buttons plus an on-demand Network dropdown. Check the actual
-   // selected state rather than looking for the removed legacy .sider-nav.
-   for(const [route,label] of [['connections',m.connections],['groups',m.groups],['assistant',m.assistant]]){
+   for(const [route,label] of [['connections',m.connections],['assistant',m.settings],['logs',m.settings]]){
     await page.goto(cfg.url+'panel/'+route);
-    const item=page.locator('.rail-nav').getByRole('button',{name:label,exact:true});
+    const item=page.locator('.ant-sidebar').getByRole('button',{name:label,exact:true});
     await item.waitFor({state:'visible'});
     assert.ok(await item.evaluate(el=>el.classList.contains('is-active')),route+' was not selected');
    }
-   for(const [route,label] of [['nodes',m.nodes],['hosts',m.hosts],['outbound',m.outbounds],['routing',m.routing]]){
+   for(const [route,label] of [['groups',m.groups],['nodes',m.nodes],['hosts',m.hosts],['outbound',m.outbounds],['routing',m.routing]]){
     await page.goto(cfg.url+'panel/'+route);
     const network=page.locator('.rail-nav').getByRole('button',{name:m.network,exact:true});
     await network.waitFor({state:'visible'});
@@ -92,11 +89,11 @@ try {
    }
    await shot(language+'-navigation-'+dark);
    await page.goto(cfg.url+'panel/groups');
-   await page.locator('.rail-nav').getByRole('button',{name:m.groups,exact:true}).waitFor();
+   await page.locator('.rail-nav').getByRole('button',{name:m.network,exact:true}).waitFor();
    await page.goto(cfg.url+'panel/nodes');
    await page.goBack();
    await page.waitForURL('**/panel/groups');
-   assert.ok(await page.locator('.rail-nav').getByRole('button',{name:m.groups,exact:true}).evaluate(el=>el.classList.contains('is-active')));
+   assert.ok(await page.locator('.rail-nav').getByRole('button',{name:m.network,exact:true}).evaluate(el=>el.classList.contains('is-active')));
    await page.goForward();
    await page.waitForURL('**/panel/nodes');
    assert.ok(await page.locator('.rail-nav').getByRole('button',{name:m.network,exact:true}).evaluate(el=>el.classList.contains('is-active')));
