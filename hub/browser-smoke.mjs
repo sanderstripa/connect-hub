@@ -1,7 +1,7 @@
 import { chromium } from '../frontend/node_modules/playwright/index.mjs';
 import { checkBrand, checkDensity } from './brand-browser-check.mjs';
 let input='';for await(const chunk of process.stdin)input+=chunk;
-const cfg=JSON.parse(input),browser=await chromium.launch({headless:true});
+const cfg=JSON.parse(input),browser=await chromium.launch({headless:true,executablePath:process.env.CONNECT_HUB_CHROMIUM || undefined});
 try {
  const page=await browser.newPage({locale:'en-US',viewport:{width:1440,height:1000}});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -68,8 +68,8 @@ try {
   await page.getByText(dark ? /^(Dark|Тёмная)$/ : /^(Light|Светлая)$/, {exact:true}).click();
   await page.waitForFunction(d=>document.body.classList.contains('dark')===d,dark);
   for(const route of ['connections','groups','nodes','hosts','outbound','routing','settings','xray','api-docs']){
-   await page.goto(cfg.url+'panel/'+route);await page.locator('.ant-sidebar').waitFor();await page.keyboard.press('Escape');await page.waitForTimeout(400);
-   if(await page.locator('.sider-nav').getByText('Connect. Hub',{exact:true}).count())throw Error('Connect Hub menu must remain hidden');
+   await page.goto(cfg.url+'panel/'+route);await page.locator('.desktop-navigation').waitFor();await page.keyboard.press('Escape');await page.waitForTimeout(400);
+   if(await page.locator('.desktop-navigation').getByText('Connect. Hub',{exact:true}).count())throw Error('Connect Hub menu must remain hidden');
    await checkDensity(page,cfg.output,route+'-'+(dark?'dark':'light'));
   }
  }

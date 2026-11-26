@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { chromium } from '../frontend/node_modules/playwright/index.mjs';
 let raw='';for await(const chunk of process.stdin)raw+=chunk;
-const cfg=JSON.parse(raw),browser=await chromium.launch({headless:true});
+const cfg=JSON.parse(raw),browser=await chromium.launch({headless:true,executablePath:process.env.CONNECT_HUB_CHROMIUM || undefined});
 const english=JSON.parse(fs.readFileSync(new URL('../internal/web/translation/en-US.json',import.meta.url),'utf8'));
 const russian=JSON.parse(fs.readFileSync(new URL('../internal/web/translation/ru-RU.json',import.meta.url),'utf8'));
 const errors=[],dangerous=[],report=[];
@@ -72,31 +72,31 @@ try {
    await page.locator('.ov-panel-version,.ov-update-tag').click();const update=page.getByRole('dialog');await update.waitFor();assert.equal(await update.getByRole('switch').count(),0);await shot(language+'-update-'+dark);await update.locator('.ant-modal-close').click();
    for(const [route,label] of [['connections',m.connections],['assistant',m.settings],['logs',m.settings]]){
     await page.goto(cfg.url+'panel/'+route);
-    const item=page.locator('.ant-sidebar').getByRole('button',{name:label,exact:true});
+    const item=page.locator('.app-header').getByRole('link',{name:label,exact:true});
     await item.waitFor({state:'visible'});
-    assert.ok(await item.evaluate(el=>el.classList.contains('is-active')),route+' was not selected');
+    assert.ok(await item.evaluate(el=>el.getAttribute('aria-current')==='page'),route+' was not selected');
    }
    for(const [route,label] of [['groups',m.groups],['nodes',m.nodes],['hosts',m.hosts],['outbound',m.outbounds],['routing',m.routing]]){
     await page.goto(cfg.url+'panel/'+route);
-    const network=page.locator('.rail-nav').getByRole('button',{name:m.network,exact:true});
+    const network=page.locator('.desktop-navigation').getByRole('button',{name:m.network,exact:true});
     await network.waitFor({state:'visible'});
-    assert.ok(await network.evaluate(el=>el.classList.contains('is-active')),'Network not selected on '+route);
+    assert.ok(await network.evaluate(el=>el.getAttribute('aria-current')==='page'),'Network not selected on '+route);
     await network.click();
-    const item=page.locator('.rail-submenu:visible').getByRole('menuitem',{name:label,exact:false}).last();
+    const item=page.locator('.network-menu:visible').getByRole('menuitem',{name:label,exact:false}).last();
     await item.waitFor({state:'visible'});
     assert.ok(await item.evaluate(el=>el.classList.contains('ant-dropdown-menu-item-selected') || el.classList.contains('ant-menu-item-selected') || el.getAttribute('aria-selected') === 'true'),'Network item not selected: '+route+' ('+(await item.getAttribute('class'))+')');
     await page.keyboard.press('Escape');
    }
    await shot(language+'-navigation-'+dark);
    await page.goto(cfg.url+'panel/groups');
-   await page.locator('.rail-nav').getByRole('button',{name:m.network,exact:true}).waitFor();
+   await page.locator('.desktop-navigation').getByRole('button',{name:m.network,exact:true}).waitFor();
    await page.goto(cfg.url+'panel/nodes');
    await page.goBack();
    await page.waitForURL('**/panel/groups');
-   assert.ok(await page.locator('.rail-nav').getByRole('button',{name:m.network,exact:true}).evaluate(el=>el.classList.contains('is-active')));
+   assert.ok(await page.locator('.desktop-navigation').getByRole('button',{name:m.network,exact:true}).evaluate(el=>el.getAttribute('aria-current')==='page'));
    await page.goForward();
    await page.waitForURL('**/panel/nodes');
-   assert.ok(await page.locator('.rail-nav').getByRole('button',{name:m.network,exact:true}).evaluate(el=>el.classList.contains('is-active')));
+   assert.ok(await page.locator('.desktop-navigation').getByRole('button',{name:m.network,exact:true}).evaluate(el=>el.getAttribute('aria-current')==='page'));
    await page.keyboard.press('Control+k');await page.locator('.command-palette-modal').waitFor({state:'visible'});await page.keyboard.press('Escape');
    await page.goto(cfg.url+'panel/');for(const width of widths){await page.setViewportSize({width,height:1000});await more.waitFor({state:'visible'});const r=await more.boundingBox();assert.ok(r.x>=0&&r.x+r.width<=width);await more.click();await page.getByText(i.maintenance,{exact:true}).waitFor({state:'visible'});await page.keyboard.press('Escape');}
    await page.getByRole('button',{name:m.navigation,exact:true}).click();const drawer=page.getByRole('dialog');await drawer.waitFor();await shot(language+'-mobile-open-'+dark);await drawer.locator('.ant-menu-submenu-title').filter({hasText:m.network}).click();await drawer.getByRole('menuitem',{name:m.nodes,exact:false}).waitFor({state:'visible'});await shot(language+'-mobile-menu-'+dark);await drawer.getByRole('button',{name:strings.close,exact:true}).click();
