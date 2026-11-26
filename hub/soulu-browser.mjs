@@ -121,6 +121,10 @@ try{
  }
  await context.clearCookies({name:'lang'});
  await page.goto(cfg.url+'panel/connections');
+ await page.locator('.header-utilities').getByRole('button',{name:'Logout'}).click();
+ await page.locator('input[autocomplete=username]').waitFor();
+ await page.goto(cfg.url+'panel/connections');
+ await page.locator('input[autocomplete=username]').waitFor();
  async function brandCheck(){
   const brand=page.getByRole('link',{name:'Connect. Hub',exact:true});
   assert.equal(await brand.count(),1);await brand.waitFor();
@@ -153,7 +157,10 @@ try{
    const items=menu.getByRole('menuitem');
    await items.first().waitFor();
    assert.equal(await items.count(),8);
-   if(index===0) await page.screenshot({path:path.join(cfg.output,'navigation-network-'+(dark?'dark':'light')+'.png')});
+   if(index===0){
+    await menu.evaluate(async el=>{await Promise.all(el.getAnimations({subtree:true}).map(animation=>animation.finished.catch(()=>{})));});
+    await page.screenshot({path:path.join(cfg.output,'navigation-network-'+(dark?'dark':'light')+'.png')});
+   }
    const bounds=await menu.boundingBox(),vp=page.viewportSize();
    assert.ok(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=vp.width+1&&bounds.y+bounds.height<=vp.height+1);
    await items.nth(index).click();
@@ -166,6 +173,7 @@ try{
   await network.focus();
   await page.keyboard.press('ArrowDown');
   await menu.waitFor();
+  await page.waitForFunction(()=>document.activeElement?.getAttribute('role')==='menu');
   await page.keyboard.press('Escape');
   await menu.waitFor({state:'hidden'});
   assert.equal(await network.evaluate(el=>el===document.activeElement),true);

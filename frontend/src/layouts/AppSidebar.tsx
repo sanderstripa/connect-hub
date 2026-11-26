@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Drawer, Dropdown, Menu, Tooltip } from 'antd';
@@ -55,13 +55,29 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
   const showSubFormats = !!(allSetting.subJsonEnable || allSetting.subClashEnable);
   const showSubBalancers = !!allSetting.subJsonEnable;
   const [networkOpen, setNetworkOpen] = useState(false);
+  const networkTrigger = useRef<HTMLButtonElement>(null);
+  const focusNetworkMenu = useCallback((popup: HTMLDivElement | null) => {
+    if (!popup) return;
+    requestAnimationFrame(() => {
+      if (networkTrigger.current?.getAttribute('aria-expanded') === 'true') {
+        popup.querySelector<HTMLElement>('[role="menu"]')?.focus({ preventScroll: true });
+      }
+    });
+  }, []);
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      if ((event.ctrlKey || event.metaKey) && event.code === 'KeyK') setNetworkOpen(false);
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        setNetworkOpen(false);
+        networkTrigger.current?.focus();
+      } else if ((event.ctrlKey || event.metaKey) && event.code === 'KeyK') {
+        setNetworkOpen(false);
+      }
     }
     if (!networkOpen) return;
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
   }, [networkOpen]);
   const openLink = useCallback(
     (key: string) => {
@@ -246,7 +262,7 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
             </Link>
           ))}
           <Dropdown
-            autoFocus
+            popupRender={(menu) => <div ref={focusNetworkMenu}>{menu}</div>}
             destroyOnHidden
             trigger={['click']}
             placement="bottomLeft"
@@ -262,6 +278,7 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
             <button
               type="button"
               className="header-control"
+              ref={networkTrigger}
               aria-label={network.title}
               aria-current={network.active ? 'page' : undefined}
               aria-haspopup="menu"
