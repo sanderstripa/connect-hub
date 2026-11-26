@@ -46,7 +46,7 @@ try{
   for(const route of ['','connections','inbounds','clients','settings#appearance']){
    await page.goto(cfg.url+'panel/'+route);await page.locator('.desktop-navigation').waitFor();await brandCheck();await check(route.split('#')[0]||'dashboard',dark);
    if(route===''){
-    assert.equal(await page.getByRole('link',{name:'Dashboard',exact:true}).count(),1);
+    assert.equal(await page.getByRole('link',{name:'Overview',exact:true}).count(),1);
     const monitor=await page.evaluate(async url=>(await(await fetch(url+'panel/hub/api/sudoku/monitor')).json()),cfg.url);
     assert.equal(monitor.success,true);assert.equal(monitor.obj.state,'running');assert.equal(monitor.obj.version,'core-v0.7.1');
     await page.getByRole('button',{name:'Sudoku updates',exact:true}).click();
@@ -153,20 +153,22 @@ try{
    await network.hover();
    assert.equal(await network.getAttribute('aria-expanded'),'false');
    await network.click();
+   await page.waitForFunction(()=>document.querySelector('.desktop-navigation [aria-haspopup="menu"]')?.getAttribute('aria-expanded')==='true');
    await menu.waitFor();
+   await menu.evaluate(async el=>{
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    await Promise.all(el.getAnimations({subtree:true}).map(animation=>animation.finished.catch(()=>{})));
+   });
+   await page.waitForFunction(()=>document.querySelectorAll('.network-menu:not(.ant-dropdown-hidden) [role="menuitem"]').length===8);
    const items=menu.getByRole('menuitem');
-   await items.first().waitFor();
-   assert.equal(await items.count(),8);
-   if(index===0){
-    await menu.evaluate(async el=>{await Promise.all(el.getAnimations({subtree:true}).map(animation=>animation.finished.catch(()=>{})));});
-    await page.screenshot({path:path.join(cfg.output,'navigation-network-'+(dark?'dark':'light')+'.png')});
-   }
+   if(index===0) await page.screenshot({path:path.join(cfg.output,'navigation-network-'+(dark?'dark':'light')+'.png')});
    const bounds=await menu.boundingBox(),vp=page.viewportSize();
    assert.ok(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=vp.width+1&&bounds.y+bounds.height<=vp.height+1);
    await items.nth(index).click();
    await page.waitForURL('**/panel/'+route);
    await brandCheck();
    await menu.waitFor({state:'hidden'});
+   assert.equal(await network.getAttribute('aria-expanded'),'false');
    assert.equal(await network.getAttribute('aria-current'),'page');
   }
   await page.goto(cfg.url+'panel/connections');

@@ -250,15 +250,11 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
               key={item.key}
               to={item.key}
               className="header-control"
-              aria-label={
-                item.key === '/' ? t('menu.overview', { defaultValue: item.title }) : item.title
-              }
+              aria-label={item.key === '/' ? t('pages.logs.tabs.overview') : item.title}
               aria-current={item.active ? 'page' : undefined}
             >
               {item.icon}
-              <span>
-                {item.key === '/' ? t('menu.overview', { defaultValue: item.title }) : item.title}
-              </span>
+              <span>{item.key === '/' ? t('pages.logs.tabs.overview') : item.title}</span>
             </Link>
           ))}
           <Dropdown
@@ -452,7 +448,7 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
           </section>
         ))}
         <section>
-          <h3>{t('menu.networkCores', { defaultValue: t('menu.xray') })}</h3>
+          <h3>{t('menu.xray')}</h3>
           {['/xray#basic', '/xray#balancer', '/xray#dns', '/xray#advanced'].map(settingsLink)}
         </section>
       </div>
