@@ -121,7 +121,7 @@ try{
  }
  await context.clearCookies({name:'lang'});
  await page.goto(cfg.url+'panel/connections');
- await page.locator('.header-utilities').getByRole('button',{name:'Logout'}).click();
+ await page.locator('.header-utilities').getByRole('button',{name:'Log Out'}).click();
  await page.locator('input[autocomplete=username]').waitFor();
  await page.goto(cfg.url+'panel/connections');
  await page.locator('input[autocomplete=username]').waitFor();
