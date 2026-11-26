@@ -33,7 +33,7 @@ export default function AboutTab() {
   }
 
   return (
-    <Spin spinning={busy.busy} description={busy.tip}>
+    <Spin aria-live="off" spinning={busy.busy} description={busy.tip}>
       <Card title="Connect. Hub">
         <Space orientation="vertical" align="start">
           <span>

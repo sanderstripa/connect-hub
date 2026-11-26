@@ -48,6 +48,7 @@ test('opens all eight Network sections and closes on Escape or selection', async
   const network = screen.getByRole('button', { name: 'Network' });
   fireEvent.mouseEnter(network);
   expect(network.getAttribute('aria-expanded')).toBe('false');
+  network.focus();
   fireEvent.keyDown(network, { key: 'ArrowDown' });
   expect(await screen.findAllByRole('menuitem')).toHaveLength(8);
   expect(network.getAttribute('aria-expanded')).toBe('true');

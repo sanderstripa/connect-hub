@@ -151,6 +151,7 @@ try{
    await network.click();
    await menu.waitFor();
    const items=menu.getByRole('menuitem');
+   await items.first().waitFor();
    assert.equal(await items.count(),8);
    if(index===0) await page.screenshot({path:path.join(cfg.output,'navigation-network-'+(dark?'dark':'light')+'.png')});
    const bounds=await menu.boundingBox(),vp=page.viewportSize();
