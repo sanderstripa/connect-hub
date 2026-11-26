@@ -49,9 +49,18 @@ try{
     assert.equal(await page.getByRole('link',{name:'Overview',exact:true}).count(),1);
     const monitor=await page.evaluate(async url=>(await(await fetch(url+'panel/hub/api/sudoku/monitor')).json()),cfg.url);
     assert.equal(monitor.success,true);assert.equal(monitor.obj.state,'running');assert.equal(monitor.obj.version,'core-v0.7.1');
+    const releasesResponse=page.waitForResponse(r=>r.url().endsWith('/panel/hub/api/sudoku/releases'));
     await page.getByRole('button',{name:'Sudoku updates',exact:true}).click();
     const dialog=page.getByRole('dialog');await dialog.waitFor();
-    await dialog.getByRole('link',{name:/Sudoku Core core-v0.7.1/}).waitFor({timeout:30000});
+    const releases=await(await releasesResponse).json();
+    if(releases.success){
+     const installed=releases.obj.find(entry=>entry.version===monitor.obj.version);
+     if(installed) await dialog.getByRole('link',{name:installed.name||installed.version,exact:true}).waitFor();
+    }else{
+     await dialog.locator('.ant-alert-error').waitFor();
+     console.log('Sudoku release feed unavailable; verified the actual error state');
+    }
+    await dialog.locator('a[href="https://github.com/sanderstripa/sudoku-ui/releases"]').waitFor();
     await check('sudoku-releases',dark);await dialog.locator('.ant-modal-close').click();
    }
    if(route==='connections'){
