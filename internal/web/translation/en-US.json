@@ -132,6 +132,7 @@
     "hosts": "Hosts",
     "settings": "Settings",
     "xray": "Xray Configs",
+    "networkCores": "Network cores",
     "routing": "Routing",
     "outbounds": "Outbounds",
     "apiDocs": "API Docs",

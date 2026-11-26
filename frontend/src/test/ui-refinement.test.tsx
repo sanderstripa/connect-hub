@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import { expect, test, vi } from 'vitest';
-import AppSidebar from '@/layouts/AppSidebar';
+import AppHeader from '@/layouts/AppHeader';
 import OverviewActionBar from '@/pages/index/OverviewActionBar';
 import PanelUpdateModal from '@/pages/index/PanelUpdateModal';
 import { Status } from '@/models/status';
@@ -13,13 +13,13 @@ vi.mock('@/api/queries/useAllSettings', () => ({ useAllSettings: () => ({ allSet
 test('Connections replaces separate Inbounds and Clients navigation', async () => {
   localStorage.setItem('sidebar-pinned', 'true');
   function Location() { return <output data-testid="current-route">{useLocation().pathname}</output>; }
-  const view = renderWithProviders(<MemoryRouter initialEntries={['/']}><AppSidebar /><Location /></MemoryRouter>);
+  const view = renderWithProviders(<MemoryRouter initialEntries={['/']}><AppHeader /><Location /></MemoryRouter>);
   await act(async () => {});
-  const item = screen.getByRole('button', { name: 'Connections' });
-  expect(screen.queryByRole('button', { name: 'Inbounds' })).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Clients' })).toBeNull();
+  const item = screen.getByRole('link', { name: 'Connections' });
+  expect(screen.queryByRole('link', { name: 'Inbounds' })).toBeNull();
+  expect(screen.queryByRole('link', { name: 'Clients' })).toBeNull();
   expect(item.getAttribute('aria-haspopup')).toBeNull();
-  expect(view.container.querySelector('.compact-rail')).not.toBeNull();
+  expect(view.container.querySelector('.desktop-navigation')).not.toBeNull();
   fireEvent.click(item);
   await waitFor(() => expect(screen.getByTestId('current-route').textContent).toBe('/connections'));
   expect(screen.queryByRole('menuitem', { name: /Groups|Client List/ })).toBeNull();
@@ -29,7 +29,7 @@ test('Connections replaces separate Inbounds and Clients navigation', async () =
 test('keeps route groups compact and closed until clicked, then closes after choosing a child', async () => {
   localStorage.setItem('sidebar-pinned', 'true');
   function Location() { return <output data-testid="group-route">{useLocation().pathname}</output>; }
-  const view = renderWithProviders(<MemoryRouter initialEntries={['/hosts']}><AppSidebar /><Location /></MemoryRouter>);
+  const view = renderWithProviders(<MemoryRouter initialEntries={['/hosts']}><AppHeader /><Location /></MemoryRouter>);
   await act(async () => {});
   const group = screen.getByRole('button', { name: 'Network' });
   expect(group.getAttribute('aria-current')).toBe('page');

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Real browser against a freshly built local panel; no personal data or VPS."""
-import hashlib,json,os,pathlib,secrets,socket,subprocess,tempfile,time,urllib.request
+import hashlib,json,os,pathlib,secrets,socket,sqlite3,subprocess,tempfile,time,urllib.request
 root=pathlib.Path(__file__).resolve().parent.parent
 package=root/'dist/connect-hub'
 def port():
@@ -13,6 +13,12 @@ with tempfile.TemporaryDirectory(prefix='hub-browser-')as raw:
  binary=package/'connect-hub';panel_port=port();password=secrets.token_hex(24);base=f'http://127.0.0.1:{panel_port}/browser-test/'
  with (state/'panel.log').open('w')as log:
   subprocess.run([str(binary),'setting','-username','browser','-password',password,'-port',str(panel_port),'-listenIP','127.0.0.1','-webBasePath','/browser-test/','-parallelTest'],env=env,stdout=log,stderr=log,check=True)
+  # Use documentation-only addresses and keep the browser fixture off public IP discovery services.
+  database, = (state/'db').glob('*.db')
+  with sqlite3.connect(database) as db:
+   for key,value in [('publicIpv4Override','192.0.2.10'),('publicIpv6Override','2001:db8::10'),('publicIpv6Detect','false')]:
+    db.execute('DELETE FROM settings WHERE key = ?', (key,))
+    db.execute('INSERT INTO settings (key, value) VALUES (?, ?)', (key, value))
   process=subprocess.Popen([str(binary)],cwd=state,env=env,stdout=log,stderr=log)
   try:
    for _ in range(120):

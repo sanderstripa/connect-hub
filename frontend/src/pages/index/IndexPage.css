@@ -625,3 +625,10 @@
 .ov-panel-state .ov-state-version { font-size: inherit; color: var(--ov-label); }
 .ov-panel-state .ov-state-version:hover,
 .ov-panel-state .ov-state-version:focus-visible { color: var(--ant-color-primary); }
+
+@media (min-width: 2000px) {
+  .ov-page {
+    max-inline-size: 2048px;
+    margin-inline: auto;
+  }
+}

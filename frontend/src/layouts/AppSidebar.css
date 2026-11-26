@@ -1,33 +1,134 @@
-.ant-sidebar{flex:0 0 56px;width:56px;min-width:56px;position:relative;z-index:210}
-.compact-rail{position:sticky;top:0;height:100dvh;display:flex;flex-direction:column;align-items:center;background:var(--bg-card);border-right:1px solid var(--border);overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
-.rail-nav{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0;flex:1}
-.rail-button{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:40px;height:40px;padding:0;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--text-secondary);cursor:pointer;text-decoration:none;transition:background .15s,color .15s}
-.rail-button .anticon{font-size:18px;line-height:1}
-.rail-button:hover,.rail-button[aria-expanded=true]{background:color-mix(in srgb,var(--accent) 8%,var(--bg-card));color:var(--text-primary)}
-.rail-button:active{background:color-mix(in srgb,var(--accent) 15%,var(--bg-card))}
-.rail-button.is-active{color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--bg-card))}
-.rail-button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-.rail-utilities{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--border);width:100%;align-items:center}
-.rail-submenu{max-width:calc(100vw - 68px)}
-.rail-submenu .ant-dropdown-menu{max-height:calc(100dvh - 24px);overflow-y:auto;min-width:min(220px,calc(100vw - 68px));background:var(--surface-raised);border:1px solid var(--border)}
-.rail-submenu .ant-dropdown-menu-item{white-space:normal;overflow-wrap:anywhere;font-size:13px}
-@media(max-width:575px){.rail-nav{gap:4px}.rail-submenu .ant-dropdown-menu{min-width:min(200px,calc(100vw - 68px))}}
-@media(max-height:500px){.rail-nav{gap:0;padding:2px 0}.rail-button{height:34px}.rail-utilities{gap:0;padding:2px 0}}
-/* Ant Layout previously inferred this from Layout.Sider; the semantic rail
-   keeps the same horizontal shell explicitly, including mobile widths. */
-.ant-layout:has(>.ant-sidebar){flex-direction:row}
-.ant-layout:has(>.ant-sidebar)>.content-shell{min-width:0;flex:1}
-@media(max-width:575px){
-  .ant-layout:has(>.ant-sidebar)>.content-shell .section-page-title{padding-inline-start:0;padding-inline-end:0}
+.desktop-navigation,
+.header-utilities {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.desktop-navigation {
+  margin-inline: auto;
+}
+
+.header-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-block-size: 36px;
+  padding-inline: 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.header-control .anticon { font-size: 16px; }
+.header-control .header-chevron { font-size: 10px; }
+
+.header-control:hover,
+.header-control[aria-expanded=true] {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.header-control[aria-current=page],
+.settings-navigation a[aria-current=page] {
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-card));
+  color: var(--accent);
+}
+
+.header-control:focus-visible,
+.settings-navigation a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.network-menu .ant-dropdown-menu {
+  min-inline-size: 200px;
+  max-inline-size: calc(100vw - 24px);
+  max-block-size: calc(100dvh - var(--app-header-height, 56px) - 12px);
+  overflow-y: auto;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+}
+
+.network-menu .ant-dropdown-menu-item {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.panel-app > .ant-layout:has(> .settings-navigation) {
+  flex-direction: row;
+}
+
+.settings-navigation {
+  flex: 0 0 clamp(176px, 18vw, 256px);
+  min-inline-size: 0;
+  padding-block-start: var(--app-header-height);
+  border-inline-end: 1px solid var(--border);
+  background: var(--connect-bg);
+}
+
+.settings-navigation-inner {
+  position: sticky;
+  inset-block-start: var(--app-header-height);
+  max-block-size: calc(100dvh - var(--app-header-height));
+  overflow-y: auto;
+  padding: 24px 12px;
+}
+
+.settings-navigation h2,
+.settings-navigation h3,
+.settings-navigation h4 {
+  padding-inline: 10px;
+  overflow-wrap: anywhere;
+}
+
+.settings-navigation h2 { margin: 0 0 12px; font-size: 18px; }
+.settings-navigation h3 {
+  margin: 16px 0 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.settings-navigation h4 {
+  margin: 0 0 4px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.settings-navigation a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.settings-navigation a:hover { background: var(--bg-card); }
+
+@media (min-width: 769px) {
+  .app-header { gap: 12px; border-block-end: 1px solid var(--border); }
+}
+
+@media (769px <= width <= 1150px) {
+  .app-header { padding-inline: 14px; }
+  .header-control { padding-inline: 7px; }
+  .header-settings-label { display: none; }
+}
+
+@media (769px <= width <= 900px) {
+  .desktop-navigation .header-control > span:not(.anticon) { display: none; }
 }
 
 .mobile-navigation-drawer .ant-drawer-content-wrapper { border-radius: 0 24px 24px 0; overflow: hidden; }
-.mobile-navigation-drawer .ant-drawer-header { padding: 24px 18px; }
-.mobile-navigation-drawer .ant-drawer-body { padding: 8px 12px 24px; }
-.mobile-navigation-drawer .ant-menu { background: transparent; border-inline-end: 0 !important; }
-.mobile-navigation-drawer .ant-menu-item,
-.mobile-navigation-drawer .ant-menu-submenu-title { min-height: 44px; height: auto; line-height: 44px; margin-block: 4px; border-radius: 12px; }
-.mobile-nav-utilities { display: grid; gap: 4px; border-top: 1px solid var(--border); margin: 20px 8px 0; padding-top: 16px; }
-.mobile-nav-utilities button, .mobile-nav-utilities a { display: flex; align-items: center; gap: 14px; min-height: 44px; border: 0; border-radius: 10px; padding: 8px 12px; color: var(--text-primary); background: transparent; font: inherit; text-align: start; cursor: pointer; }
-.mobile-nav-utilities :is(button,a):hover { background: var(--ant-color-fill-tertiary); }
-.mobile-nav-utilities .anticon { font-size: 18px; color: var(--text-secondary); }

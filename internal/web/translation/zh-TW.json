@@ -131,6 +131,7 @@
     "nodes": "節點",
     "settings": "面板設定",
     "xray": "Xray 設定",
+    "networkCores": "網路核心",
     "routing": "路由",
     "outbounds": "出站",
     "apiDocs": "API 文件",

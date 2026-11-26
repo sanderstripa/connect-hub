@@ -131,6 +131,7 @@
     "nodes": "Nút",
     "settings": "Cài đặt bảng điều khiển",
     "xray": "Cấu hình Xray",
+    "networkCores": "Lõi mạng",
     "routing": "Định tuyến",
     "outbounds": "Outbound",
     "apiDocs": "Tài liệu API",
