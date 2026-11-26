@@ -106,3 +106,11 @@
   .connection-detail-surface .info-table.block tr { display: grid; grid-template-columns: 140px minmax(0, 1fr); }
   .connections-pane .connection-detail-surface .info-table.block td:first-child { width: auto; white-space: normal; }
 }
+
+@media (min-width: 1201px) {
+  .connections-workspace {
+    grid-template-columns: clamp(250px, 19vw, 320px) minmax(0, 1fr);
+    gap: 24px;
+  }
+  .inbound-card-list { gap: 12px; }
+}

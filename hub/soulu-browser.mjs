@@ -14,7 +14,7 @@ try{
   fs.writeFileSync(viewer,"const {app,BrowserWindow}=require('electron');app.whenReady().then(()=>{global.w=new BrowserWindow({width:1440,height:1000,show:false,webPreferences:{offscreen:true}});global.w.loadURL('about:blank');});");
   desktop=await _electron.launch({executablePath:require('electron'),args:[viewer,'--no-sandbox','--ozone-platform=headless']});
   context=desktop.context();
- }else{browser=await chromium.launch({headless:true});context=await browser.newContext({viewport:{width:1440,height:1000},locale:'en-US'});}
+ }else{browser=await chromium.launch({headless:true,executablePath:process.env.CONNECT_HUB_CHROMIUM || undefined});context=await browser.newContext({viewport:{width:1440,height:1000},locale:'en-US'});}
  const page=desktop?await desktop.firstWindow():await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.setViewportSize({width:1440,height:1000});await page.goto(cfg.url);await page.screenshot({path:path.join(cfg.output,'soulu-initial.png')});await page.locator('input[autocomplete=username]').waitFor();
  for(const dark of [false,true]){
@@ -44,9 +44,9 @@ try{
  for(const dark of [false,true]){
   await page.evaluate(d=>localStorage.setItem('dark-mode',String(d)),dark);
   for(const route of ['','connections','inbounds','clients','settings#appearance']){
-   await page.goto(cfg.url+'panel/'+route);await page.locator('.ant-sidebar').waitFor();await brandCheck();await check(route.split('#')[0]||'dashboard',dark);
+   await page.goto(cfg.url+'panel/'+route);await page.locator('.desktop-navigation').waitFor();await brandCheck();await check(route.split('#')[0]||'dashboard',dark);
    if(route===''){
-    assert.equal(await page.getByRole('button',{name:'Dashboard',exact:true}).count(),1);
+    assert.equal(await page.getByRole('link',{name:'Dashboard',exact:true}).count(),1);
     const monitor=await page.evaluate(async url=>(await(await fetch(url+'panel/hub/api/sudoku/monitor')).json()),cfg.url);
     assert.equal(monitor.success,true);assert.equal(monitor.obj.state,'running');assert.equal(monitor.obj.version,'core-v0.7.1');
     await page.getByRole('button',{name:'Sudoku updates',exact:true}).click();
@@ -58,7 +58,7 @@ try{
     await navigation(dark);
     await page.locator('#connection-keys').waitFor();
     assert.equal(await page.getByRole('button',{name:'All keys',exact:true}).count(),0);assert.equal(await page.getByPlaceholder('Find inbound').count(),0);
-    assert.equal(await page.locator('.rail-utilities .global-search-trigger').count(),1);assert.equal(await page.locator('.ant-sidebar').count(),1);assert.ok(await page.locator('#connection-inbounds').boundingBox());
+    assert.equal(await page.locator('.header-utilities .global-search-trigger').count(),1);assert.equal(await page.locator('.ant-sidebar').count(),0);assert.ok(await page.locator('#connection-inbounds').boundingBox());
 
     await page.locator('.inbound-card').filter({hasText:'Other inbound'}).click();
     await page.locator('#connection-keys .ant-table-row').filter({hasText:'other-phone'}).waitFor();
@@ -106,6 +106,21 @@ try{
    }
   }
  }
+ // The full set of language packs must fit the header, including RTL.
+ for(const locale of ['ar-EG','en-US','es-ES','fa-IR','id-ID','ja-JP','pt-BR','ru-RU','sk-SK','tr-TR','uk-UA','vi-VN','zh-CN','zh-TW']){
+  await context.addCookies([{name:'lang',value:locale,url:cfg.url}]);
+  await page.setViewportSize({width:1280,height:720});
+  await page.goto(cfg.url+'panel/connections');
+  await page.waitForFunction(lang=>document.documentElement.lang===lang,locale);
+  await page.locator('.desktop-navigation').waitFor();
+  const bounds=await page.locator('.app-header .header-control').evaluateAll(controls=>controls.map(el=>{
+   const {left,right}=el.getBoundingClientRect();return {left,right};
+  }));
+  assert.equal(bounds.length,7);
+  assert.ok(bounds.every(({left,right})=>left>=0&&right<=1281),'Header overflow in '+locale);
+ }
+ await context.clearCookies({name:'lang'});
+ await page.goto(cfg.url+'panel/connections');
  async function brandCheck(){
   const brand=page.getByRole('link',{name:'Connect. Hub',exact:true});
   assert.equal(await brand.count(),1);await brand.waitFor();
@@ -122,46 +137,56 @@ try{
    const content=shell.querySelector('.content-area').getBoundingClientRect();
    return {header:{x:header.x,y:header.y,width:header.width,height:header.height},content:{y:content.y},scrollY:window.scrollY,width:window.innerWidth};
   });
-  assert.ok(metrics.header.x >= (metrics.width <= 768 ? 0 : 55) && metrics.header.x+metrics.header.width<=metrics.width+1);
+  assert.ok(metrics.header.x >= 0 && metrics.header.x+metrics.header.width<=metrics.width+1);
   assert.ok(metrics.content.y+metrics.scrollY>=metrics.header.height-1,'Header must not cover initial page content: '+JSON.stringify(metrics));
  }
  async function navigation(dark){
-  const rail=page.locator('.ant-sidebar');
-  assert.equal(Math.round((await rail.boundingBox()).width),56);
-  await rail.hover();await page.waitForTimeout(250);assert.equal(Math.round((await rail.boundingBox()).width),56);
-  assert.equal(await page.locator('.rail-brand').count(),0);
-  assert.equal(await page.locator('.app-brand').textContent(),'Connect. Hub');
-  const menuLabels={'/groups':'Groups','/logs':'Logs','/assistant':'AI Assistant','/settings#appearance':'Appearance','/nodes':'Nodes','/hosts':'Hosts','/outbound':'Outbounds','/routing':'Routing','/settings#general':'General','/settings#security':'Authentication','/settings#telegram':'Telegram Bot','/settings#email':'Email','/settings#discord':'Discord Bot','/settings#subscription':'Subscription','/api-docs':'API Docs','/xray#basic':'Basics','/xray#balancer':'Balancers','/xray#dns':'DNS','/xray#advanced':'Advanced'};
-  assert.equal(await rail.getByRole('button',{name:'Infrastructure',exact:true}).count(),0);
-  const footer=rail.locator('.rail-utilities');
-  assert.equal(await footer.locator('button').first().getAttribute('aria-label'),'Settings');
-  const settingsBox=await footer.getByRole('button',{name:'Settings',exact:true}).boundingBox();
-  const searchBox=await footer.getByRole('button',{name:/Command Palette/}).boundingBox();
-  assert.ok(settingsBox.y < searchBox.y);
-  const groups=[
-   ['Network',['/groups','/nodes','/hosts','/outbound','/routing']],
-   ['Settings',['/logs','/assistant','/settings#appearance','/settings#general','/settings#security','/settings#telegram','/settings#email','/settings#discord','/settings#subscription','/api-docs']],
-   ['Xray Configs',['/xray#basic','/xray#balancer','/xray#dns','/xray#advanced']],
-  ];
-  for(const [name,routes] of groups){
-   for(let i=0;i<routes.length;i++){
-    const trigger=rail.getByRole('button',{name,exact:true});await trigger.hover();assert.equal(await trigger.getAttribute('aria-expanded'),'false');
-    await trigger.click();const menu=page.locator('.rail-submenu:visible');await menu.waitFor();
-    await menu.evaluate(async el=>{await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));await Promise.all(el.getAnimations({subtree:true}).map(animation=>animation.finished.catch(()=>{})));});
-    assert.notEqual(await menu.locator('.ant-dropdown-menu').evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(0, 0, 0, 0)');
-    const bounds=await menu.boundingBox(),vp=page.viewportSize();assert.ok(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=vp.width+1&&bounds.y+bounds.height<=vp.height+1);
-    await menu.getByRole('menuitem',{name:menuLabels[routes[i]],exact:true}).click();try{await page.waitForURL(cfg.url+'panel'+routes[i]);await brandCheck();}catch(error){throw new Error('Expected '+routes[i]+' but got '+page.url(),{cause:error});}await page.locator('.rail-submenu:visible').waitFor({state:'hidden'});
-   }
+  const headerNav=page.locator('.desktop-navigation');
+  const network=headerNav.getByRole('button',{name:'Network',exact:true});
+  const menu=page.locator('.network-menu:visible');
+  const networkLinks=['groups','nodes','hosts','clean-ip','dns-tunnel','tunnels','outbound','routing'];
+  for(const [index,route] of networkLinks.entries()){
+   await network.hover();
+   assert.equal(await network.getAttribute('aria-expanded'),'false');
+   await network.click();
+   await menu.waitFor();
+   const items=menu.getByRole('menuitem');
+   assert.equal(await items.count(),8);
+   if(index===0) await page.screenshot({path:path.join(cfg.output,'navigation-network-'+(dark?'dark':'light')+'.png')});
+   const bounds=await menu.boundingBox(),vp=page.viewportSize();
+   assert.ok(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=vp.width+1&&bounds.y+bounds.height<=vp.height+1);
+   await items.nth(index).click();
+   await page.waitForURL('**/panel/'+route);
+   await brandCheck();
+   await menu.waitFor({state:'hidden'});
+   assert.equal(await network.getAttribute('aria-current'),'page');
   }
   await page.goto(cfg.url+'panel/connections');
-  const trigger=rail.getByRole('button',{name:'Settings',exact:true});
-  await trigger.click();await page.keyboard.press('Escape');assert.equal(await trigger.getAttribute('aria-expanded'),'false');
-  await trigger.click();await trigger.click();assert.equal(await trigger.getAttribute('aria-expanded'),'false');
-  await trigger.click();await page.locator('.connections-intro').click();assert.equal(await trigger.getAttribute('aria-expanded'),'false');
-  assert.equal(await rail.getByRole('button',{name:/^(Groups|Logs|AI Assistant|Theme)$/}).count(),0);
-  await trigger.click();
-  await page.getByRole('menuitem',{name:'Appearance',exact:true}).click();
-  await page.waitForURL('**/settings#appearance');
+  await network.focus();
+  await page.keyboard.press('ArrowDown');
+  await menu.waitFor();
+  await page.keyboard.press('Escape');
+  await menu.waitFor({state:'hidden'});
+  assert.equal(await network.evaluate(el=>el===document.activeElement),true);
+  await network.click();
+  await page.locator('.connections-intro').click();
+  await menu.waitFor({state:'hidden'});
+  const settings=page.locator('.header-utilities').getByRole('link',{name:'Settings',exact:true});
+  await settings.click();
+  const settingsNav=page.locator('.settings-navigation');
+  for(const [name,route] of [
+   ['Authentication','settings#security'],['Telegram Bot','settings#telegram'],
+   ['Email','settings#email'],['Discord Bot','settings#discord'],['WeChat notifications','settings#wechat'],
+   ['Subscription','settings#subscription'],['Logs','logs'],['AI Assistant','assistant'],
+   ['API Docs','api-docs'],['Update Panel','settings#about'],['Basics','xray#basic'],['Balancers','xray#balancer'],
+   ['DNS','xray#dns'],['Advanced','xray#advanced'],['Appearance','settings#appearance'],
+  ]){
+   await settingsNav.getByRole('link',{name,exact:true}).click();
+   await page.waitForURL('**/panel/'+route);
+   await brandCheck();
+   assert.equal(await settings.getAttribute('aria-current'),'page');
+  }
+  await page.screenshot({path:path.join(cfg.output,'navigation-settings-'+(dark?'dark':'light')+'.png')});
   await page.getByText(dark?'Light':'Dark',{exact:true}).click();
   await page.waitForFunction(d=>document.body.classList.contains('dark')===!d,dark);
   assert.equal(await page.evaluate(()=>localStorage.getItem('dark-mode')),String(!dark));
@@ -186,15 +211,14 @@ try{
   await page.keyboard.press('Control+k');const search=page.locator('.command-palette-input');await search.waitFor();await search.fill('Authentication');await search.press('Enter');await page.waitForURL('**/settings#security');
   await page.getByRole('button',{name:/Command Palette/}).click();await page.locator('.command-palette-input').waitFor();await page.keyboard.press('Escape');await page.locator('.command-palette-input').waitFor({state:'detached'});
   await page.goto(cfg.url+'panel/connections');
-  for(const width of [1024,768,390]){
-   await page.setViewportSize({width,height:800});await page.locator('.inbound-card').first().waitFor();
+  for(const [width,height] of [[1280,720],[1366,768],[1920,1080],[2560,1440],[3840,2160],[1024,800],[768,800],[390,800]]){
+   await page.setViewportSize({width,height});await page.locator('.inbound-card').first().waitFor();
    await page.screenshot({path:path.join(cfg.output,'navigation-current.png'),fullPage:true});
-   const ib=await page.locator('#connection-inbounds').boundingBox();
    if(width > 768) {
-    const rb=await rail.boundingBox();assert.equal(Math.round(rb.width),56);assert.ok(ib.x>=rb.x+rb.width);
-    await trigger.click();await page.locator('.rail-submenu:visible').waitFor();await page.keyboard.press('Escape');
+    assert.equal(await headerNav.isVisible(),true);
+    await network.click();await menu.waitFor();await page.keyboard.press('Escape');
    } else {
-    assert.equal(await rail.count(),0);
+    assert.equal(await headerNav.count(),0);
     const hamburger=page.getByRole('button',{name:'Navigation',exact:true});
     await hamburger.click();const drawer=page.getByRole('dialog');await drawer.waitFor();
     await page.locator('.mobile-navigation-drawer .ant-drawer-content-wrapper').evaluate(async el=>{await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));await Promise.all(el.getAnimations({subtree:true}).map(a=>a.finished.catch(()=>{})));});
@@ -240,7 +264,7 @@ try{
   const wrong=await page.locator('input,button,h1,h2,.ant-modal-title').evaluateAll(els=>els.filter(el=>el.getBoundingClientRect().width>0&&!getComputedStyle(el).fontFamily.includes('Onest')).length);assert.equal(wrong,0);
   await page.screenshot({path:path.join(cfg.output,'soulu-'+name+'-'+(dark?'dark':'light')+'.png'),fullPage:true});
  }
- console.log('PASS: desktop 56px rail, mobile drawer navigation/Escape, stacked monitoring tiles, horizontal inbound selection with scoped clients; both themes at 390/768/1024px');
+ console.log('PASS: desktop horizontal header, mobile drawer navigation/Escape, stacked monitoring tiles, horizontal inbound selection with scoped clients; both themes at 390/768/1024px');
  console.log('PASS: inbound cards, scoped clients, inline details/back, scoped key creation and unchanged original keys');
  console.log('PASS: saved Sudoku client → real web QR modal → JSON/CSRF request → Shadowrocket QR and anonymous profile fetch; original key unchanged');
  assert.deepEqual(errors,[]);console.log('PASS: real panel login, dashboard, inbounds, clients, settings and dialogs in both Soulu themes; old palettes migrated; local Onest loaded');

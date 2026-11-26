@@ -9,6 +9,8 @@ on:
       - 'hub/**'
       - 'internal/config/version'
       - '.github/workflows/desktop-release.yml'
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -105,6 +107,7 @@ jobs:
             dist/mobile-*.png
             dist/navigation-*.png
   publish:
+    if: github.ref == 'refs/heads/main'
     needs: [windows, panel-api]
     runs-on: ubuntu-24.04
     permissions:
@@ -132,7 +135,7 @@ jobs:
             echo 'A release already exists for this installer version; refusing to replace published binaries.'
             exit 1
           fi
-          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version} — compatibility and upstream integration" --notes-file release-notes.md --latest=true
+          gh release create "$tag" release-assets/Connect-Hub-Setup.exe release-assets/connect-hub-linux-amd64.tar.gz release-assets/SHA256SUMS --target "$GITHUB_SHA" --title "Connect Hub ${version}" --notes-file release-notes.md --latest=true
   public-install:
     needs: publish
     runs-on: ubuntu-24.04

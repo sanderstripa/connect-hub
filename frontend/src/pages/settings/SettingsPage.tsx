@@ -23,6 +23,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useAllSettings } from '@/api/queries/useAllSettings';
 import { AllSettingSchema } from '@/schemas/setting';
 import AppSidebar from '@/layouts/AppSidebar';
+import AboutTab from './AboutTab';
 import AppearanceTab from './AppearanceTab';
 import GeneralTab from './GeneralTab';
 import SecurityTab from './SecurityTab';
@@ -43,6 +44,7 @@ interface ApiMsg {
 const tabSlugs = [
   'general',
   'appearance',
+  'about',
   'security',
   'telegram',
   'email',
@@ -259,6 +261,8 @@ export default function SettingsPage() {
           <Layout.Content id="content-layout" className="content-area">
             {activeSlug === 'appearance' ? (
               <AppearanceTab />
+            ) : activeSlug === 'about' ? (
+              <AboutTab />
             ) : (
               <Spin
                 aria-live="off"

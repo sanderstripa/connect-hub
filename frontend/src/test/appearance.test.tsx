@@ -19,8 +19,9 @@ it('moves theme controls to Settings and keeps selections local', async () => {
   );
   expect(document.documentElement.dataset.palette).toBe('soulu');
   expect(screen.queryByRole('button', { name: 'Theme' })).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
-  expect(await screen.findByRole('menuitem', { name: 'Appearance' })).not.toBeNull();
+  expect(screen.getByRole('link', { name: 'Appearance' }).getAttribute('aria-current')).toBe(
+    'page',
+  );
   fireEvent.click(screen.getByRole('radio', { name: 'Dark' }));
   expect(localStorage.getItem('dark-mode')).toBe('true');
   chooseSelectOption('theme-palette', 'Warm Sand & Navy');

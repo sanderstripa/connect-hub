@@ -21,6 +21,7 @@ function Location() {
 async function renderSidebar() {
   const view = renderWithProviders(
     <MemoryRouter>
+      <AppHeader />
       <AppSidebar />
       <Location />
     </MemoryRouter>,
@@ -29,51 +30,49 @@ async function renderSidebar() {
   return view;
 }
 
-test('keeps the icon rail compact on hover and ignores the old pin preference', async () => {
-  localStorage.setItem('sidebar-pinned', 'true');
+test('keeps primary desktop navigation and utilities in the shared header', async () => {
   const view = await renderSidebar();
-  const rail = view.container.querySelector('.ant-sidebar')!;
-  expect(screen.queryByRole('link', { name: 'Connect Hub' })).toBeNull();
-  expect(view.container.querySelector('.rail-brand')).toBeNull();
-  fireEvent.mouseEnter(rail);
-  expect(screen.queryByRole('button', { name: 'Pin sidebar' })).toBeNull();
-  expect(view.container.querySelector('.sidebar-command-trigger')).toBeNull();
-  expect(view.container.querySelector('.compact-rail')).not.toBeNull();
-  expect(screen.getByRole('button', { name: /Command Palette/ }).className).toContain(
-    'global-search-trigger',
-  );
-});
-
-test('opens nested navigation only by click, closes on Escape and repeat click, and navigates to a child', async () => {
-  await renderSidebar();
-  const settings = screen.getByRole('button', { name: 'Settings' });
-  fireEvent.mouseEnter(settings);
-  expect(settings.getAttribute('aria-expanded')).toBe('false');
-  fireEvent.click(settings);
-  await screen.findByRole('menuitem', { name: /API Docs/ });
-  expect(settings.getAttribute('aria-expanded')).toBe('true');
-  fireEvent.keyDown(window, { key: 'Escape' });
-  expect(settings.getAttribute('aria-expanded')).toBe('false');
-  fireEvent.click(settings);
-  expect(settings.getAttribute('aria-expanded')).toBe('true');
-  fireEvent.click(settings);
-  expect(settings.getAttribute('aria-expanded')).toBe('false');
-  fireEvent.click(settings);
-  fireEvent.click(await screen.findByRole('menuitem', { name: /API Docs/ }));
-  await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/api-docs'));
-  expect(settings.getAttribute('aria-expanded')).toBe('false');
-  expect(settings.getAttribute('aria-current')).toBe('page');
-});
-
-test('keeps all navigation groups and footer actions and opens the existing search store', async () => {
-  const view = await renderSidebar();
-  for (const name of ['Network', 'Settings', 'Xray Configs'])
-    expect(screen.getByRole('button', { name })).not.toBeNull();
-  expect(
-    view.container.querySelector('.rail-utilities')?.querySelectorAll('.rail-button').length,
-  ).toBe(4);
+  const header = view.container.querySelector('.app-header')!;
+  expect(header.querySelector('.desktop-navigation')).not.toBeNull();
+  expect(screen.getByRole('link', { name: 'Connect. Hub' })).not.toBeNull();
+  expect(screen.getByRole('link', { name: 'Connections' })).not.toBeNull();
+  expect(screen.getByRole('button', { name: 'Network' })).not.toBeNull();
+  expect(screen.queryByRole('button', { name: 'Xray Configs' })).toBeNull();
+  expect(view.container.querySelector('.ant-sidebar')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: /Command Palette/ }));
   expect(commandPaletteStore.getSnapshot()).toBe(true);
+});
+
+test('opens all eight Network sections and closes on Escape or selection', async () => {
+  await renderSidebar();
+  const network = screen.getByRole('button', { name: 'Network' });
+  fireEvent.mouseEnter(network);
+  expect(network.getAttribute('aria-expanded')).toBe('false');
+  fireEvent.keyDown(network, { key: 'ArrowDown' });
+  expect(await screen.findAllByRole('menuitem')).toHaveLength(8);
+  expect(network.getAttribute('aria-expanded')).toBe('true');
+  fireEvent.keyDown(window, { key: 'Escape', keyCode: 27 });
+  expect(network.getAttribute('aria-expanded')).toBe('false');
+  expect(document.activeElement).toBe(network);
+  fireEvent.click(network);
+  fireEvent.click(await screen.findByRole('menuitem', { name: 'Hosts' }));
+  await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/hosts'));
+  expect(network.getAttribute('aria-expanded')).toBe('false');
+  expect(network.getAttribute('aria-current')).toBe('page');
+});
+
+test('opens Settings directly and keeps Xray and Logs in its internal navigation', async () => {
+  const view = await renderSidebar();
+  const settings = screen.getByRole('link', { name: 'Settings' });
+  fireEvent.click(settings);
+  expect(screen.getByTestId('location').textContent).toBe('/settings');
+  const settingsNav = view.container.querySelector('.settings-navigation')!;
+  expect(settingsNav.querySelector('[aria-current="page"]')?.textContent).toBe('General');
+  fireEvent.click(screen.getByRole('link', { name: 'DNS' }));
+  expect(screen.getByTestId('location').textContent).toBe('/xray#dns');
+  expect(settings.getAttribute('aria-current')).toBe('page');
+  fireEvent.click(screen.getByRole('link', { name: 'Logs' }));
+  expect(screen.getByTestId('location').textContent).toBe('/logs');
 });
 
 test('mobile menu opens from the header, retains nested routes, and closes after navigation', async () => {
@@ -110,7 +109,9 @@ test('mobile menu opens from the header, retains nested routes, and closes after
     await screen.findByRole('dialog');
     fireEvent.click(screen.getByText('Settings', { selector: '.ant-menu-title-content' }));
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Appearance' }));
-    await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/settings#appearance'));
+    await waitFor(() =>
+      expect(screen.getByTestId('location').textContent).toBe('/settings#appearance'),
+    );
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
     fireEvent.click(trigger);
     await waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('true'));
