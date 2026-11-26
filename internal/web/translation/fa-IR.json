@@ -131,6 +131,7 @@
     "nodes": "نودها",
     "settings": "تنظیمات پنل",
     "xray": "پیکربندی Xray",
+    "networkCores": "هسته‌های شبکه",
     "routing": "مسیریابی",
     "outbounds": "خروجی‌ها",
     "apiDocs": "مستندات API",

@@ -448,7 +448,8 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
           </section>
         ))}
         <section>
-          <h3>{t('menu.xray')}</h3>
+          <h3>{t('menu.networkCores')}</h3>
+          <h4>Xray</h4>
           {['/xray#basic', '/xray#balancer', '/xray#dns', '/xray#advanced'].map(settingsLink)}
         </section>
       </div>

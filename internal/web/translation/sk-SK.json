@@ -131,6 +131,7 @@
     "hosts": "Adresy serverov",
     "settings": "Nastavenia panelu",
     "xray": "Nastavenia Xray",
+    "networkCores": "Sieťové jadrá",
     "routing": "Smerovanie",
     "outbounds": "Výstupy",
     "apiDocs": "Dokumentácia API",

@@ -131,6 +131,7 @@
     "nodes": "Узлы",
     "settings": "Настройки",
     "xray": "Конфигурации Xray",
+    "networkCores": "Сетевые ядра",
     "routing": "Маршрутизация",
     "outbounds": "Исходящие",
     "apiDocs": "Документация API",

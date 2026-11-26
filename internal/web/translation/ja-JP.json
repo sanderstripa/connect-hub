@@ -131,6 +131,7 @@
     "nodes": "ノード",
     "settings": "パネル設定",
     "xray": "Xray 設定",
+    "networkCores": "ネットワークコア",
     "routing": "ルーティング",
     "outbounds": "アウトバウンド",
     "apiDocs": "API ドキュメント",

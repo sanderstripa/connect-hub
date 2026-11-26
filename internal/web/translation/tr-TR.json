@@ -131,6 +131,7 @@
     "nodes": "Düğümler",
     "settings": "Panel Ayarları",
     "xray": "Xray Yapılandırmaları",
+    "networkCores": "Ağ çekirdekleri",
     "routing": "Yönlendirme",
     "outbounds": "Giden Bağlantılar",
     "apiDocs": "API Belgeleri",

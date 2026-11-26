@@ -246,7 +246,14 @@ try{
     const b=await drawer.boundingBox();assert.ok(b.x>=0&&b.x+b.width<=width+1);
     await page.screenshot({path:path.join(cfg.output,'mobile-menu-'+width+'-'+(dark?'dark':'light')+'.png')});
     await drawer.getByText('Settings',{exact:true}).click();
-    await drawer.getByRole('menuitem',{name:'API Docs',exact:true}).click();await page.waitForURL('**/api-docs');
+    const apiDocs=drawer.getByRole('menuitem',{name:'API Docs',exact:true});
+    await apiDocs.waitFor();
+    await drawer.evaluate(async el=>{
+     await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+     await Promise.all(el.getAnimations({subtree:true}).map(animation=>animation.finished.catch(()=>{})));
+    });
+    await Promise.all([page.waitForURL('**/api-docs'),apiDocs.click()]);
+
     await page.getByRole('dialog').waitFor({state:'hidden'});
     await hamburger.click();await page.getByRole('dialog').waitFor();await page.keyboard.press('Escape');
     await page.getByRole('dialog').waitFor({state:'hidden'});

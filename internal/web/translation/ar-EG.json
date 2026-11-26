@@ -131,6 +131,7 @@
     "nodes": "النودز",
     "settings": "إعدادات اللوحة",
     "xray": "إعدادات Xray",
+    "networkCores": "محركات الشبكة",
     "routing": "التوجيه",
     "outbounds": "الصادرات",
     "apiDocs": "توثيق API",

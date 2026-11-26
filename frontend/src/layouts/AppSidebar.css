@@ -83,7 +83,8 @@
 }
 
 .settings-navigation h2,
-.settings-navigation h3 {
+.settings-navigation h3,
+.settings-navigation h4 {
   padding-inline: 10px;
   overflow-wrap: anywhere;
 }
@@ -93,6 +94,13 @@
   margin: 16px 0 4px;
   color: var(--text-secondary);
   font-size: 12px;
+  font-weight: 600;
+}
+
+.settings-navigation h4 {
+  margin: 0 0 4px;
+  color: var(--text-primary);
+  font-size: 13px;
   font-weight: 600;
 }
 

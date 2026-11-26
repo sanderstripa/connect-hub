@@ -131,6 +131,7 @@
     "nodes": "Nodos",
     "settings": "Ajustes del panel",
     "xray": "Configuración Xray",
+    "networkCores": "Núcleos de red",
     "routing": "Enrutamiento",
     "outbounds": "Salidas",
     "apiDocs": "Documentación de la API",
