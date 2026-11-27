@@ -23,7 +23,6 @@ function ContainerMetricsPreview({ unavailable = false }: { unavailable?: boolea
           label="SWAP"
           available={status.metricAvailable('swap')}
           percent={status.swap.percent}
-          statusColor={status.swap.color}
           detail="18.46 MiB / 512 MiB"
           footLeft="Container"
           footRight="2 vCPU"

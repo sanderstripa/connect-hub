@@ -23,12 +23,7 @@ export default function AppHeader() {
         <MenuOutlined aria-hidden />
       </button>
       <Link className="app-brand" to="/">
-        <img
-          className="desktop-brand-icon"
-          src={`${window.X_UI_BASE_PATH || '/'}icons/connect-hub.svg`}
-          alt=""
-        />
-        Connect. Hub
+        Connect.Hub
       </Link>
       <ConfigProvider theme={antdThemeConfig}>
         <AppSidebar header />

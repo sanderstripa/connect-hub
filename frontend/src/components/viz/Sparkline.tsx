@@ -40,6 +40,7 @@ interface SparklineProps {
   height?: number;
   stroke?: string;
   strokeWidth?: number;
+  showPoints?: boolean;
   maxPoints?: number;
   showGrid?: boolean;
   fillOpacity?: number;
@@ -131,8 +132,13 @@ function dprOf(u: uPlot): number {
 }
 
 export default function Sparkline(props: SparklineProps) {
-  const {palette,colors}=useChartTheme();
-  const themedProps=palette!=='classic'?{...props,stroke:colors.chartPrimary,stroke2:colors.chartSecondary,stroke3:colors.chartThird,referenceLines:props.referenceLines?.map((line,i)=>({...line,color:i===0?colors.chartSecondary:colors.chartPrimary}))}:props;
+  const { colors } = useChartTheme();
+  const themedProps = {
+    ...props,
+    stroke: props.stroke ?? colors.chartPrimary,
+    stroke2: props.stroke2 ?? colors.chartSecondary,
+    stroke3: props.stroke3 ?? colors.chartThird,
+  };
   const {
     data,
     data2 = [],
@@ -146,6 +152,7 @@ export default function Sparkline(props: SparklineProps) {
     labels = [],
     height = 80,
     strokeWidth = 2,
+    showPoints = false,
     maxPoints = 120,
     showGrid = true,
     fillOpacity = 0.22,
@@ -258,6 +265,7 @@ export default function Sparkline(props: SparklineProps) {
     stroke2,
     stroke3,
     strokeWidth,
+    showPoints,
     fillOpacity,
     markerRadius,
     showGrid,
@@ -328,7 +336,7 @@ export default function Sparkline(props: SparklineProps) {
         return grad;
       },
       paths: uPlot.paths.spline?.(),
-      points: { show: false },
+      points: { show: cfgRef.current.showPoints, size: 3, width: 0 },
       spanGaps: true,
     });
 
@@ -596,7 +604,6 @@ export default function Sparkline(props: SparklineProps) {
   return (
     <div
       className={onPointClick ? 'sparkline-container is-clickable' : 'sparkline-container'}
-      data-chart-palette={palette}
       data-chart-stroke={stroke}
       role={ariaSummary ? 'img' : undefined}
       aria-label={ariaSummary || undefined}

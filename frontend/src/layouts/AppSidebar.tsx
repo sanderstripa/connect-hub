@@ -5,7 +5,6 @@ import { Drawer, Dropdown, Menu, Tooltip } from 'antd';
 import {
   ApiOutlined,
   ApartmentOutlined,
-  BgColorsOutlined,
   CloudServerOutlined,
   ClusterOutlined,
   CodeOutlined,
@@ -93,11 +92,6 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
         key: '/settings#general',
         icon: <SettingOutlined aria-hidden />,
         label: t('pages.settings.panelSettings'),
-      },
-      {
-        key: '/settings#appearance',
-        icon: <BgColorsOutlined aria-hidden />,
-        label: t('menu.appearance'),
       },
       {
         key: '/settings#security',
@@ -241,7 +235,6 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
   }
 
   if (header) {
-    if (isMobile) return null;
     return (
       <>
         <nav className="desktop-navigation" aria-label={t('menu.navigation')}>
@@ -392,7 +385,7 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
   if (!settingsActive) return null;
 
   const sectionKeys = [
-    ['/settings#general', '/settings#appearance', '/settings#security'],
+    ['/settings#general', '/settings#security'],
     ['/settings#telegram', '/settings#email', '/settings#discord', '/settings#wechat'],
     [
       '/settings#subscription',

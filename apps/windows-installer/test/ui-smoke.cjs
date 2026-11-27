@@ -9,26 +9,9 @@ const {fixture}=require('./ssh-fixture.cjs');
   await app.evaluate(({dialog,clipboard,shell,app})=>{global.wizardTest={copies:[],opened:[],qr:[]};dialog.showMessageBox=async()=>({response:1});clipboard.writeText=text=>global.wizardTest.copies.push(text);shell.openExternal=async url=>{global.wizardTest.opened.push(url);};const require=process.getBuiltinModule('module').createRequire(app.getAppPath()+'/main.cjs');const QR=require('qrcode');const original=QR.toDataURL;QR.toDataURL=(value,...rest)=>{global.wizardTest.qr.push(value);return original(value,...rest);};});
   const page=await app.firstWindow();await page.locator('#host').waitFor();await page.locator('#ru').click();await page.evaluate(()=>document.fonts.ready);
   assert.equal(await page.evaluate(()=>typeof window.require),'undefined');
-  assert.equal(await page.locator('body').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(8, 9, 11)');
-  await page.screenshot({path:path.join(output,'windows-welcome-dark.png')});await page.locator('#theme').click();await page.screenshot({path:path.join(output,'windows-welcome-light.png')});
-  assert.equal(await page.locator('body').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(246, 246, 248)');
-  const primary=await page.locator('#connect').evaluate(e=>({color:getComputedStyle(e).color,weight:getComputedStyle(e).fontWeight}));assert.equal(primary.color,'rgb(255, 255, 255)');assert.equal(primary.weight,'500');
-  for(const id of ['warm-sand','forest','rose','lavender','warm-taupe']){
-   await page.locator('#palette').selectOption(id);
-   for(const mode of ['light','dark']){
-    if(await page.locator('body').getAttribute('data-theme')!==mode)await page.locator('#theme').click();
-    await page.waitForFunction(({id,mode})=>localStorage.getItem('connect-hub-palette')===id&&localStorage.getItem('dark-mode')===String(mode==='dark'),{id,mode});
-    const before=await page.locator('body').evaluate(e=>getComputedStyle(e).backgroundColor);
-    await page.reload();await page.locator('#host').waitFor();
-    assert.equal(await page.locator('#palette').inputValue(),id);
-    assert.equal(await page.locator('body').getAttribute('data-theme'),mode);
-    assert.equal(await page.locator('body').evaluate(e=>getComputedStyle(e).backgroundColor),before);
-    const label=await page.locator('#connect').evaluate(e=>({actual:getComputedStyle(e).color,expected:getComputedStyle(document.body).getPropertyValue('--inverse').trim()}));
-    assert.equal(label.actual,label.expected==='#FFFFFF'?'rgb(255, 255, 255)':'rgb(0, 0, 0)');
-    await page.screenshot({path:path.join(output,`windows-${id}-${mode}.png`)});
-   }
-  }
-  await page.locator('#palette').selectOption('soulu');await page.locator('#theme').click();await page.locator('#ru').click();
+  assert.equal(await page.locator('body').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(220, 222, 228)');
+  assert.equal(await page.locator('#theme, #palette').count(),0);
+  await page.screenshot({path:path.join(output,'windows-welcome.png')});
   await page.locator('#host').fill(server.host);await page.locator('#port').fill(String(server.port));await page.locator('#username').fill(server.username);await page.locator('#ssh-password').fill(server.password);await page.locator('#connect').click();
   await page.locator('#configuration').waitFor({state:'visible'});assert.match(await page.locator('#hardware').innerText(),/Debian GNU\/Linux 13/);assert.match(await page.locator('#swap-recommendation').innerText(),/2 ГБ/);assert.equal(await page.locator('#swap').inputValue(),'0');await page.locator('#apply-swap').click();assert.equal(await page.locator('#swap').inputValue(),'2');await page.locator('#swap').fill('0');assert.equal(await page.locator('#ssh-password').inputValue(),'');
   await page.screenshot({path:path.join(output,'windows-options-light.png')});await page.locator('#install').click();await page.locator('#result').waitFor({state:'visible'});await page.locator('#qr').waitFor();
@@ -37,7 +20,7 @@ const {fixture}=require('./ssh-fixture.cjs');
   const before=await app.evaluate(()=>global.wizardTest);assert.deepEqual(before.copies,[]);assert.deepEqual(before.qr,[server.result.url]);assert.ok(!before.qr[0].includes(server.result.password));
   await page.locator('[data-copy="url"]').click();await page.locator('#open-panel').click();
   const after=await app.evaluate(()=>global.wizardTest);assert.deepEqual(after.copies,[server.result.url]);assert.deepEqual(after.opened,[server.result.url]);
-  await page.screenshot({path:path.join(output,'windows-result-light.png')});await page.locator('#theme').click();await page.screenshot({path:path.join(output,'windows-result-dark.png')});
+  await page.screenshot({path:path.join(output,'windows-result.png')});
   assert.ok(!server.sources[0].includes(server.password));
   await page.locator('#manage-connections').click();await page.locator('#connection-status').filter({hasText:'Конфигурация'}).waitFor();
   await page.locator('#new-connection').click();assert.equal(await page.locator('#device-name').inputValue(),'');await page.locator('#key-name').fill('Alex-iPhone');assert.equal(await page.locator('input[value="xhttp"]').isChecked(),true);await page.locator('#first-port').fill('28443');
@@ -49,7 +32,7 @@ const {fixture}=require('./ssh-fixture.cjs');
   await page.locator('.connection-card').first().getByRole('button',{name:'QR-код',exact:true}).click();await page.locator('.key-qr').waitFor();
   const sudokuCard=page.locator('.connection-card').filter({hasText:'SUDOKU'});assert.ok((await sudokuCard.locator('.shadowrocket-key').inputValue()).startsWith('https://'));await sudokuCard.getByRole('button',{name:'QR-код',exact:true}).nth(1).click();await sudokuCard.locator('.shadowrocket-qr').waitFor();
   const keyActions=await app.evaluate(()=>global.wizardTest);assert.equal(keyActions.copies.at(-1),links[0]);assert.ok(keyActions.qr.includes(links[0]));assert.ok(keyActions.qr.at(-1).startsWith('https://'));
-  await page.screenshot({path:path.join(output,'windows-connections-dark.png')});await page.locator('#theme').click();await page.screenshot({path:path.join(output,'windows-connections-light.png')});
+  await page.screenshot({path:path.join(output,'windows-connections.png')});
   await page.locator('#hub-settings').click();await page.locator('#back').click();await page.locator('#ssh-password').fill(server.password);await page.locator('#connect').click();
   await page.locator('.connection-card').nth(4).waitFor();assert.deepEqual(await page.locator('.connection-card>input.standard-key').evaluateAll(els=>els.map(el=>el.value)),links);
   await page.locator('.connection-card').filter({hasText:'XHTTP'}).first().getByRole('button',{name:'Изменить',exact:true}).click();
@@ -92,6 +75,6 @@ const {fixture}=require('./ssh-fixture.cjs');
   console.log('PASS: native destructive confirmation, cancel without remote mutation, confirmed removal, cleared credentials, fresh install after reconnect');
   console.log('PASS: structured advanced editor, saved XHTTP/Reality/sniffing and unchanged client identity');
   console.log('PASS: five connection presets, canonical links, private-key QR, clipboard and same keys after reconnect');
-  console.log('PASS: Electron window, RU/EN, two local Onest themes, encrypted SSH, setup options, masked credentials, address-only QR and explicit clipboard/browser actions');
+  console.log('PASS: Electron window, RU/EN, local Onest font, encrypted SSH, setup options, masked credentials, address-only QR and explicit clipboard/browser actions');
  }finally{if(app)await app.close();await server.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

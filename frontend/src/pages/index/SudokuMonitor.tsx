@@ -71,16 +71,7 @@ export default function SudokuMonitor() {
         data-state={state?.state}
         title={t(`pages.index.${stateKey}`)}
       >
-        <span
-          className="ov-state-dot"
-          style={{
-            color:
-              state?.state === 'running'
-                ? 'var(--connection-active, #087F5B)'
-                : 'var(--text-secondary)',
-          }}
-        />
-        <span>Sudoku</span>
+        <span aria-label={`Sudoku: ${t(`pages.index.${stateKey}`)}`}>Sudoku</span>
         <button
           type="button"
           className="ov-state-version"

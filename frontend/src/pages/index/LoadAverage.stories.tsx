@@ -44,7 +44,6 @@ function LoadAveragePreview({
             icon={<DashboardOutlined aria-hidden />}
             label="CPU"
             percent={72}
-            statusColor="#1677ff"
             detail={`4 Cores / ${logicalPro} Threads`}
             footLeft="Avg 52%"
             footRight="Peak 89%"

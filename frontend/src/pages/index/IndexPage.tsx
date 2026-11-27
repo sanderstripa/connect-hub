@@ -26,6 +26,7 @@ import { setMessageInstance } from '@/utils/messageBus';
 import OverviewActionBar from './OverviewActionBar';
 import VitalTile from './VitalTile';
 import LoadAverage from './LoadAverage';
+import ActiveKeysCard from './ActiveKeysCard';
 import ThroughputCard from './ThroughputCard';
 import SystemStrip from './SystemStrip';
 import { mean, peak, useOverviewHistory } from './useOverviewHistory';
@@ -242,7 +243,6 @@ export default function IndexPage() {
                       available={status.metricAvailable('cpu')}
                       extraContent={<LoadAverage status={status} />}
                       percent={status.cpu.percent}
-                      statusColor={status.cpu.color}
                       detail={
                         status.resourceScope === 'container'
                           ? `${status.logicalPro} vCPU`
@@ -265,7 +265,6 @@ export default function IndexPage() {
                       icon={<DatabaseOutlined aria-hidden />}
                       label={t('pages.index.memory')}
                       percent={status.mem.percent}
-                      statusColor={status.mem.color}
                       detail={`${SizeFormatter.sizeFormat(status.mem.current)} / ${SizeFormatter.sizeFormat(status.mem.total)}`}
                       footLeft={metricFoot(
                         t('pages.index.avg'),
@@ -285,7 +284,6 @@ export default function IndexPage() {
                       label={t('pages.index.swap')}
                       available={status.metricAvailable('swap')}
                       percent={status.swap.percent}
-                      statusColor={status.swap.color}
                       detail={`${SizeFormatter.sizeFormat(status.swap.current)} / ${SizeFormatter.sizeFormat(status.swap.total)}`}
                       footLeft={metricFoot(
                         t('pages.index.avg'),
@@ -304,7 +302,6 @@ export default function IndexPage() {
                       icon={<HddOutlined aria-hidden />}
                       label={t('pages.index.storage')}
                       percent={status.disk.percent}
-                      statusColor={status.disk.color}
                       detail={`${SizeFormatter.sizeFormat(status.disk.current)} / ${SizeFormatter.sizeFormat(totalDisk)}`}
                       footLeft={isMobile ? `${t('pages.index.avg')} ${mean(history.series.diskUsage).toFixed(1)}%` : `${t('pages.index.free')} ${SizeFormatter.sizeFormat(freeDisk)}`}
                       footRight={isMobile ? `${t('pages.index.peak')} ${peak(history.series.diskUsage).toFixed(1)}%` : `${t('pages.index.avg')} ${mean(history.series.diskUsage).toFixed(1)}%`}
@@ -325,7 +322,7 @@ export default function IndexPage() {
                       range={historyRange}
                       onRangeChange={setHistoryRange}
                     />
-
+                    <ActiveKeysCard />
                   </div>
 
                   <SystemStrip

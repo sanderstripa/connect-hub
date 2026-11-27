@@ -24,7 +24,6 @@ import { useAllSettings } from '@/api/queries/useAllSettings';
 import { AllSettingSchema } from '@/schemas/setting';
 import AppSidebar from '@/layouts/AppSidebar';
 import AboutTab from './AboutTab';
-import AppearanceTab from './AppearanceTab';
 import GeneralTab from './GeneralTab';
 import SecurityTab from './SecurityTab';
 import TelegramTab from './TelegramTab';
@@ -43,7 +42,6 @@ interface ApiMsg {
 
 const tabSlugs = [
   'general',
-  'appearance',
   'about',
   'security',
   'telegram',
@@ -259,9 +257,7 @@ export default function SettingsPage() {
 
         <Layout className="content-shell">
           <Layout.Content id="content-layout" className="content-area">
-            {activeSlug === 'appearance' ? (
-              <AppearanceTab />
-            ) : activeSlug === 'about' ? (
+            {activeSlug === 'about' ? (
               <AboutTab />
             ) : (
               <Spin

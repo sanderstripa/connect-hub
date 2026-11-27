@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import {PALETTE_IDS,PALETTE_NAMES,themeTokens} from '../frontend/src/lib/theme-palettes.ts';
+import {DEFAULT_PALETTE, themeTokens} from '../frontend/src/lib/theme-palettes.ts';
 import {createRequire} from 'node:module';
 import {chromium,_electron} from '../frontend/node_modules/playwright/index.mjs';
 let input='';for await(const chunk of process.stdin)input+=chunk;const cfg=JSON.parse(input);
@@ -17,10 +17,13 @@ try{
  }else{browser=await chromium.launch({headless:true,executablePath:process.env.CONNECT_HUB_CHROMIUM || undefined});context=await browser.newContext({viewport:{width:1440,height:1000},locale:'en-US'});}
  const page=desktop?await desktop.firstWindow():await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.setViewportSize({width:1440,height:1000});await page.goto(cfg.url);await page.screenshot({path:path.join(cfg.output,'soulu-initial.png')});await page.locator('input[autocomplete=username]').waitFor();
- for(const dark of [false,true]){
-  await page.evaluate(dark=>{localStorage.setItem('dark-mode',String(dark));localStorage.setItem('connect-hub-palette','midnight-steel');},dark);await page.reload();await page.locator('.login-card').waitFor();
-  await check('login',dark);
- }
+ await page.evaluate(()=>{
+  localStorage.setItem('dark-mode','true');
+  localStorage.setItem('connect-hub-palette','midnight-steel');
+ });
+ await page.reload();
+ await page.locator('.login-card').waitFor();
+ await check('login');
  await page.locator('input[autocomplete=username]').fill(cfg.user);await page.locator('input[autocomplete=current-password]').fill(cfg.password);await page.locator('button[type=submit]').click();await page.waitForURL('**/panel/');
  // Seed once, then reopen the saved client from the real Clients table. Do not
  // call the export endpoint directly: this exercises QrPanel's actual HTTP serializer.
@@ -41,12 +44,18 @@ try{
  await page.evaluate(async({url,inbound})=>{const token=(await(await fetch(url+'csrf-token')).json()).obj;const msg=await(await fetch(url+'panel/api/inbounds/add',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':token},body:JSON.stringify(inbound)})).json();if(!msg.success)throw new Error('Second inbound fixture failed');},{url:cfg.url,inbound:otherInbound});
 
 
- for(const dark of [false,true]){
-  await page.evaluate(d=>localStorage.setItem('dark-mode',String(d)),dark);
-  for(const route of ['','connections','inbounds','clients','settings#appearance']){
-   await page.goto(cfg.url+'panel/'+route);await page.locator('.desktop-navigation').waitFor();await brandCheck();await check(route.split('#')[0]||'dashboard',dark);
+ {
+  for(const route of ['','connections','inbounds','clients','settings#general']){
+   await page.goto(cfg.url+'panel/'+route);await page.locator('.desktop-navigation').waitFor();await brandCheck();await check(route.split('#')[0]||'dashboard');
    if(route===''){
     assert.equal(await page.getByRole('link',{name:'Overview',exact:true}).count(),1);
+    const keys = page.locator('.ov-active-keys');
+    await keys.getByRole('heading', {name:/Active keys/}).waitFor();
+    await keys.locator('.ov-keys-count').waitFor();
+    assert.equal(await page.locator('.ov-state-dot').count(),0);
+    const [traffic,keyCard] = await page.locator('.ov-mid > .ant-card').evaluateAll(cards=>cards.map(card=>card.getBoundingClientRect().width));
+    assert.ok(Math.abs(traffic-keyCard)<2,'Dashboard traffic and keys must share the row equally');
+
     const monitor=await page.evaluate(async url=>(await(await fetch(url+'panel/hub/api/sudoku/monitor')).json()),cfg.url);
     assert.equal(monitor.success,true);assert.equal(monitor.obj.state,'running');assert.equal(monitor.obj.version,'core-v0.7.1');
     const releasesResponse=page.waitForResponse(r=>r.url().endsWith('/panel/hub/api/sudoku/releases'));
@@ -61,10 +70,10 @@ try{
      console.log('Sudoku release feed unavailable; verified the actual error state');
     }
     await dialog.locator('a[href="https://github.com/sanderstripa/sudoku-ui/releases"]').waitFor();
-    await check('sudoku-releases',dark);await dialog.locator('.ant-modal-close').click();
+    await check('sudoku-releases');await dialog.locator('.ant-modal-close').click();
    }
    if(route==='connections'){
-    await navigation(dark);
+    await navigation();
     await page.locator('#connection-keys').waitFor();
     assert.equal(await page.getByRole('button',{name:'All keys',exact:true}).count(),0);assert.equal(await page.getByPlaceholder('Find inbound').count(),0);
     assert.equal(await page.locator('.header-utilities .global-search-trigger').count(),1);assert.equal(await page.locator('.ant-sidebar').count(),0);assert.ok(await page.locator('#connection-inbounds').boundingBox());
@@ -90,7 +99,7 @@ try{
     await page.getByRole('button',{name:'Copy profile URL',exact:true}).waitFor();
     assert.equal(await page.locator('.connection-detail-surface').locator('.ant-alert-warning').count(),0);
     assert.ok(await page.locator('.connection-detail-surface').locator('.qr-code svg').count());
-    await check('sudoku-qr',dark);
+    await check('sudoku-qr');
     const profiles=(await response.json()).obj,profile=profiles[saved.id+':'+saved.client.id];
     assert.ok(profile.path.startsWith('sudoku-import/'));assert.ok(profile.path.endsWith('.yaml'));assert.match(profile.config,/proxy-groups:/);assert.match(profile.config,/MATCH,PROXY/);assert.ok(!profile.path.includes(saved.client.sudokuKey));
     const imported=await fetch(new URL(profile.path,cfg.url));assert.equal(imported.status,200);assert.equal(await imported.text(),profile.config);
@@ -100,7 +109,7 @@ try{
 
 
 
-    if(!dark){
+    {
       await page.getByRole('button',{name:'Create key',exact:true}).click();
       await page.locator('.connection-detail-surface input[id$="-email"]').fill('Created-in-selected');
       const creating=page.waitForResponse(response=>response.url().endsWith('/panel/api/clients/add'));
@@ -110,8 +119,8 @@ try{
       await page.locator('.inbound-card').filter({hasText:'Other inbound'}).click();await page.locator('#connection-keys .ant-table-row').filter({hasText:'other-phone'}).waitFor();assert.equal(await page.getByRole('button',{name:'Created-in-selected',exact:true}).isVisible(),false);
       await page.locator('.inbound-card').filter({hasText:'Sweden Sudoku'}).click();await row.waitFor();
     }
-    await check('connections-workspace',dark);
-    await page.getByRole('button',{name:'Create inbound',exact:true}).click();await page.getByRole('dialog').waitFor();await check('inbound-dialog',dark);await page.getByRole('dialog').locator('.ant-modal-close').click();
+    await check('connections-workspace');
+    await page.getByRole('button',{name:'Create inbound',exact:true}).click();await page.getByRole('dialog').waitFor();await check('inbound-dialog');await page.getByRole('dialog').locator('.ant-modal-close').click();
    }
   }
  }
@@ -135,7 +144,7 @@ try{
  await page.goto(cfg.url+'panel/connections');
  await page.locator('input[autocomplete=username]').waitFor();
  async function brandCheck(){
-  const brand=page.getByRole('link',{name:'Connect. Hub',exact:true});
+  const brand=page.getByRole('link',{name:'Connect.Hub',exact:true});
   assert.equal(await brand.count(),1);await brand.waitFor();
   assert.equal(await page.locator('.ant-sidebar a').filter({hasText:'C.'}).count(),0);
   await page.locator('.panel-app > .ant-layout:visible > .content-shell > .content-area:visible').first().waitFor();
@@ -153,7 +162,7 @@ try{
   assert.ok(metrics.header.x >= 0 && metrics.header.x+metrics.header.width<=metrics.width+1);
   assert.ok(metrics.content.y+metrics.scrollY>=metrics.header.height-1,'Header must not cover initial page content: '+JSON.stringify(metrics));
  }
- async function navigation(dark){
+ async function navigation(){
   const headerNav=page.locator('.desktop-navigation');
   const network=headerNav.getByRole('button',{name:'Network',exact:true});
   const menu=page.locator('.network-menu:visible');
@@ -170,7 +179,7 @@ try{
    });
    await page.waitForFunction(()=>document.querySelectorAll('.network-menu:not(.ant-dropdown-hidden) [role="menuitem"]').length===8);
    const items=menu.getByRole('menuitem');
-   if(index===0) await page.screenshot({path:path.join(cfg.output,'navigation-network-'+(dark?'dark':'light')+'.png')});
+   if(index===0) await page.screenshot({path:path.join(cfg.output,'navigation-network-'+'concept-3'+'.png')});
    const bounds=await menu.boundingBox(),vp=page.viewportSize();
    assert.ok(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=vp.width+1&&bounds.y+bounds.height<=vp.height+1);
    await items.nth(index).click();
@@ -199,37 +208,23 @@ try{
    ['Email','settings#email'],['Discord Bot','settings#discord'],['WeChat notifications','settings#wechat'],
    ['Subscription','settings#subscription'],['Logs','logs'],['AI Assistant','assistant'],
    ['API Docs','api-docs'],['Update Panel','settings#about'],['Basics','xray#basic'],['Balancers','xray#balancer'],
-   ['DNS','xray#dns'],['Advanced','xray#advanced'],['Appearance','settings#appearance'],
+   ['DNS','xray#dns'],['Advanced','xray#advanced'],
   ]){
    await settingsNav.getByRole('link',{name,exact:true}).click();
    await page.waitForURL('**/panel/'+route);
    await brandCheck();
    assert.equal(await settings.getAttribute('aria-current'),'page');
   }
-  await page.screenshot({path:path.join(cfg.output,'navigation-settings-'+(dark?'dark':'light')+'.png')});
-  await page.getByText(dark?'Light':'Dark',{exact:true}).click();
-  await page.waitForFunction(d=>document.body.classList.contains('dark')===!d,dark);
-  assert.equal(await page.evaluate(()=>localStorage.getItem('dark-mode')),String(!dark));
-  await page.getByText(dark?'Dark':'Light',{exact:true}).click();
-  await page.waitForFunction(d=>document.body.classList.contains('dark')===d,dark);
-  async function choosePalette(id){
-   await page.locator('#theme-palette').click();
-   await page.locator('.ant-select-dropdown:visible .ant-select-item-option')
-    .filter({hasText:PALETTE_NAMES[id]}).click();
-  }
-  for(const id of PALETTE_IDS){
-   await choosePalette(id);
-   await page.waitForFunction(id=>document.documentElement.dataset.palette===id,id);
-   assert.equal(await page.evaluate(()=>localStorage.getItem('connect-hub-palette')),id);
-   assert.equal(await page.evaluate(()=>document.documentElement.style.getPropertyValue('--app-bg').trim().toUpperCase()),themeTokens(id,dark).bg.toUpperCase());
-   await page.reload();await page.locator('#theme-palette').waitFor();
-   assert.equal(await page.locator('html').getAttribute('data-palette'),id);
-   assert.equal(await page.locator('html').getAttribute('data-mode'),dark?'dark':'light');
-   await page.screenshot({path:path.join(cfg.output,`soulu-palette-${id}-${dark?'dark':'light'}.png`)});
-  }
-  await choosePalette('soulu');
+  await page.screenshot({path:path.join(cfg.output,'navigation-settings-'+'concept-3'+'.png')});
   await page.keyboard.press('Control+k');const search=page.locator('.command-palette-input');await search.waitFor();await search.fill('Authentication');await search.press('Enter');await page.waitForURL('**/settings#security');
-  await page.getByRole('button',{name:/Command Palette/}).click();await page.locator('.command-palette-input').waitFor();await page.keyboard.press('Escape');await page.locator('.command-palette-input').waitFor({state:'detached'});
+  await page.getByRole('button',{name:/Command Palette/}).click();await page.locator('.command-palette-input').waitFor();
+  await page.waitForFunction(()=>{
+   const header=document.querySelector('.app-header')?.getBoundingClientRect();
+   const search=document.querySelector('.command-palette-modal')?.getBoundingClientRect();
+   return header && search && search.top>=header.bottom && search.top<header.bottom+20;
+  });
+  await page.screenshot({path:path.join(cfg.output,'navigation-search.png')});
+  await page.keyboard.press('Escape');await page.locator('.command-palette-input').waitFor({state:'detached'});
   await page.goto(cfg.url+'panel/connections');
   for(const [width,height] of [[1280,720],[1366,768],[1920,1080],[2560,1440],[3840,2160],[1024,800],[768,800],[390,800]]){
    await page.setViewportSize({width,height});await page.locator('.inbound-card').first().waitFor();
@@ -238,13 +233,13 @@ try{
     assert.equal(await headerNav.isVisible(),true);
     await network.click();await menu.waitFor();await page.keyboard.press('Escape');
    } else {
-    assert.equal(await headerNav.count(),0);
+    assert.equal(await headerNav.isVisible(),true);
     const hamburger=page.getByRole('button',{name:'Navigation',exact:true});
     await hamburger.click();const drawer=page.getByRole('dialog');await drawer.waitFor();
     await page.locator('.mobile-navigation-drawer .ant-drawer-content-wrapper').evaluate(async el=>{await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));await Promise.all(el.getAnimations({subtree:true}).map(a=>a.finished.catch(()=>{})));});
     await page.waitForFunction(()=>{const r=document.querySelector('[role="dialog"]')?.getBoundingClientRect();return r && r.x>=0;});
     const b=await drawer.boundingBox();assert.ok(b.x>=0&&b.x+b.width<=width+1);
-    await page.screenshot({path:path.join(cfg.output,'mobile-menu-'+width+'-'+(dark?'dark':'light')+'.png')});
+    await page.screenshot({path:path.join(cfg.output,'mobile-menu-'+width+'-'+'concept-3'+'.png')});
     await drawer.getByText('Settings',{exact:true}).click();
     const apiDocs=drawer.getByRole('menuitem',{name:'API Docs',exact:true});
     await apiDocs.waitFor();
@@ -267,32 +262,33 @@ try{
     await page.locator('.client-card').filter({hasText:'iPhoneSudoku'}).waitFor();
     await page.goto(cfg.url+'panel/');await page.locator('.ov-tile').first().waitFor();
     const tiles=await page.locator('.ov-tile').evaluateAll(els=>els.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};}));
-    assert.equal(tiles.length,4);assert.ok(tiles.every((r,i)=>r.x>=0&&r.x+r.width<=width+1&&(!i||r.y>=tiles[i-1].y+tiles[i-1].height)));
-    await page.screenshot({path:path.join(cfg.output,'mobile-monitoring-'+width+'-'+(dark?'dark':'light')+'.png'),fullPage:true});
+    assert.equal(tiles.length,4);assert.ok(tiles.every(r=>r.x>=0&&r.x+r.width<=width+1));
+    await page.screenshot({path:path.join(cfg.output,'mobile-monitoring-'+width+'-'+'concept-3'+'.png'),fullPage:true});
     await page.goto(cfg.url+'panel/connections');await page.locator('#connection-keys').waitFor();
    }
    await brandCheck();
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Navigation must not cause page-wide overflow at '+width);
    const pane=await page.locator('#connection-keys').boundingBox();assert.ok(pane.x+pane.width<=width+1,'Work pane clipped at '+width);
-   await page.screenshot({path:path.join(cfg.output,'navigation-'+width+'-'+(dark?'dark':'light')+'.png'),fullPage:true});
+   await page.screenshot({path:path.join(cfg.output,'navigation-'+width+'-'+'concept-3'+'.png'),fullPage:true});
   }
   await page.setViewportSize({width:1440,height:1000});
   const header=await page.locator('.app-header').elementHandle();
-  await page.getByRole('link',{name:'Connect. Hub',exact:true}).click();
+  await page.getByRole('link',{name:'Connect.Hub',exact:true}).click();
   await page.waitForURL(url=>url.pathname.replace(/\/$/,'')===new URL(cfg.url+'panel/').pathname.replace(/\/$/,''));
   await page.locator('.ov-bar').waitFor();
   assert.ok(await header.evaluate(el=>el.isConnected),'Shared header must persist across navigation');
   await page.goto(cfg.url+'panel/connections');
  }
- async function check(name,dark){
-  await page.evaluate(async()=>{await document.fonts.load('400 14px Onest','Настройки Connect Hub');await document.fonts.ready;});await page.waitForTimeout(300);
-  assert.equal(await page.evaluate(()=>document.documentElement.dataset.palette),'soulu');
-  const style=await page.locator('body').evaluate(el=>({font:getComputedStyle(el).fontFamily,bg:getComputedStyle(el).backgroundColor}));assert.match(style.font,/Onest/);assert.equal(style.bg,dark?'rgb(8, 9, 11)':'rgb(246, 246, 248)');
-  const wrong=await page.locator('input,button,h1,h2,.ant-modal-title').evaluateAll(els=>els.filter(el=>el.getBoundingClientRect().width>0&&!getComputedStyle(el).fontFamily.includes('Onest')).length);assert.equal(wrong,0);
-  await page.screenshot({path:path.join(cfg.output,'soulu-'+name+'-'+(dark?'dark':'light')+'.png'),fullPage:true});
+ async function check(name){
+  await page.evaluate(()=>document.fonts.ready);
+  assert.equal(await page.locator('html').getAttribute('data-palette'),DEFAULT_PALETTE);
+  assert.equal(await page.locator('html').getAttribute('data-mode'),'light');
+  const bg = await page.locator('html').evaluate(el=>el.style.getPropertyValue('--app-bg').trim());
+  assert.equal(bg,themeTokens().bg);
+  await page.screenshot({path:path.join(cfg.output,'concept-3-'+name+'.png'),fullPage:true});
  }
- console.log('PASS: desktop horizontal header, mobile drawer navigation/Escape, stacked monitoring tiles, horizontal inbound selection with scoped clients; both themes at 390/768/1024px');
+ console.log('PASS: desktop horizontal header, mobile drawer navigation/Escape, responsive monitoring tiles and horizontal inbound selection with scoped clients');
  console.log('PASS: inbound cards, scoped clients, inline details/back, scoped key creation and unchanged original keys');
  console.log('PASS: saved Sudoku client → real web QR modal → JSON/CSRF request → Shadowrocket QR and anonymous profile fetch; original key unchanged');
- assert.deepEqual(errors,[]);console.log('PASS: real panel login, dashboard, inbounds, clients, settings and dialogs in both Soulu themes; old palettes migrated; local Onest loaded');
+ assert.deepEqual(errors,[]);console.log('PASS: real panel login, dashboard, inbounds, clients, settings and dialogs with concept 3.0 and saved legacy appearance preferences');
 }finally{if(desktop)await desktop.close();if(browser)await browser.close();}

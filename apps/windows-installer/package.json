@@ -1,6 +1,6 @@
 {
   "name": "connect-hub-installer",
-  "version": "0.9.3",
+  "version": "1.0.0",
   "private": true,
   "description": "Connect. Hub server installation wizard",
   "author": "Sander Stripa and Connect Hub contributors",
@@ -31,7 +31,6 @@
     },
     "files": [
       "main.cjs",
-      "appearance.cjs",
       "preload.cjs",
       "backend.cjs",
       "remote-job.sh",
