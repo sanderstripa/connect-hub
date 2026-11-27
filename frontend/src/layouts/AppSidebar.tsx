@@ -318,7 +318,11 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
           onPointerMove={moveDrag}
           onPointerUp={(event) => finishDrag(event)}
           onPointerCancel={(event) => finishDrag(event, true)}
-          onLostPointerCapture={(event) => finishDrag(event, true)}
+          onLostPointerCapture={(event) => {
+            // A touch starts with implicit capture on the link. Transferring
+            // capture to the navigation emits a separate loss on that link.
+            if (event.target === event.currentTarget) finishDrag(event, true);
+          }}
           onPointerLeave={(event) => {
             if (!drag.current?.horizontal) finishDrag(event, true);
           }}
