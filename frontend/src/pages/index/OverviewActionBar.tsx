@@ -206,7 +206,7 @@ export default function OverviewActionBar({
           </Tooltip>
         ) : null}
 
-        <SudokuMonitor />
+        <SudokuMonitor compact={isMobile} />
 
         <span className="ov-state ov-panel-state">
           <span>{t('pages.index.panel')}</span>

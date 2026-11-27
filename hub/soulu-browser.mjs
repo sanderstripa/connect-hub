@@ -246,6 +246,29 @@ try{
     assert.match(page.url(),/connections$/);
     await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x-active.width,y,{steps:8});await page.mouse.up();
     await page.waitForURL(url=>url.pathname.replace(/\/$/,'')===new URL(cfg.url+'panel/').pathname.replace(/\/$/,''));
+    if(width===390) {
+     await page.locator('.ov-versions').waitFor();
+     const touch=await page.context().newCDPSession(page);
+     async function swipe(dx,dy) {
+      const b=await headerNav.locator('[aria-current="page"]').boundingBox();
+      const start={x:b.x+b.width/2,y:b.y+b.height/2};
+      await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[start]});
+      for(let step=1;step<=8;step++) {
+       await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:start.x+dx*step/8,y:start.y+dy*step/8}]});
+      }
+      await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+     }
+     try {
+      await touch.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
+      await swipe(0,-65);
+      assert.match(new URL(page.url()).pathname,/\/panel\/?$/);
+      await swipe(105,0);
+      await page.waitForURL('**/connections');
+     } finally {
+      await touch.send('Emulation.setTouchEmulationEnabled',{enabled:false});
+      await touch.detach();
+     }
+    }
     await page.getByRole('link',{name:'Settings',exact:true}).click();
     await page.waitForURL('**/settings');
     await hamburger.click();const drawer=page.getByRole('dialog');await drawer.waitFor();
@@ -283,6 +306,8 @@ try{
     await dots.click();assert.equal(await dots.locator('input').isChecked(),true);
     const tiles=await page.locator('.ov-tile').evaluateAll(els=>els.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};}));
     assert.equal(tiles.length,4);assert.ok(tiles.every(r=>r.x>=0&&r.x+r.width<=width+1));
+    await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+    await page.waitForFunction(()=>window.scrollY===0);
     await page.screenshot({path:path.join(cfg.output,'mobile-monitoring-'+width+'-'+'concept-3'+'.png'),fullPage:true});
     await page.goto(cfg.url+'panel/connections');await page.locator('#connection-keys').waitFor();
    }
