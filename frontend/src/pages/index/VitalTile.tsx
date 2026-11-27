@@ -88,6 +88,7 @@ export default function VitalTile({
           strokeWidth={1.5}
           fillOpacity={0.3}
           showGrid={false}
+          showPoints={data.length <= 120}
           showMarker={false}
           valueMax={peak(data) > 0 ? null : 100}
           stroke={statusColor}

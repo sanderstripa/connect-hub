@@ -132,10 +132,14 @@ function buildQS(p: ClientQueryParams): string {
   return sp.toString();
 }
 
-async function fetchClientPage(params: ClientQueryParams): Promise<ClientPageResponse> {
+export async function fetchClientPage(
+  params: ClientQueryParams,
+  signal?: AbortSignal,
+): Promise<ClientPageResponse> {
   const qs = buildQS(params);
   const msg = await HttpUtil.get(`/panel/api/clients/list/paged?${qs}`, undefined, {
     silent: true,
+    signal,
   });
   if (!msg?.success || !msg.obj) throw new Error(msg?.msg || 'Failed to fetch clients');
   const validated = parseMsg(msg, ClientPageResponseSchema, 'clients/list/paged', { strict: true });

@@ -75,3 +75,74 @@
 @media (max-width: 768px) {
   .desktop-brand-icon { display: none; }
 }
+
+.panel-app {
+  max-inline-size: 1700px;
+  margin-inline: auto;
+  --app-header-height: 94px;
+  --hub-header-inset: 24px;
+}
+.panel-app .app-header {
+  inset: 18px max(var(--hub-header-inset), calc((100% - 1652px) / 2)) auto;
+  height: 58px;
+  padding: 8px 16px;
+  border-radius: 21px;
+  background: linear-gradient(145deg, #f1f1f4, #e3e4e9);
+  box-shadow: 0 5px 12px -5px #42465030, inset 0 1px 0 #fff;
+}
+.panel-app .app-brand {
+  font-size: 25px;
+  letter-spacing: -1.65px;
+}
+.panel-app .desktop-navigation {
+  padding: 3px;
+  border: 1px solid #ffffff90;
+  border-radius: 13px;
+  background: linear-gradient(#d9dbe0, #e3e4e8);
+  box-shadow: inset 0 1px 4px #36374019;
+}
+.panel-app .header-control { border-radius: 10px; }
+.panel-app .header-utilities .header-control:not([aria-current=page]) {
+  background: var(--hub-light);
+  box-shadow: var(--hub-control-shadow);
+}
+.panel-app > .ant-layout { min-width: 0; }
+.panel-app > .ant-layout > .content-shell > .content-area {
+  min-inline-size: 0;
+  padding: 0 var(--hub-header-inset) 24px;
+}
+@media (max-width: 768px) {
+  .panel-app { --app-header-height: 79px; --hub-header-inset: 10px; }
+  .panel-app .app-header { inset-block-start: 10px; }
+}
+@media (max-width: 768px) {
+  .panel-app { --app-header-height: 119px; }
+  .panel-app .app-header {
+    height: auto;
+    min-height: 98px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 6px;
+    padding: 7px 8px;
+  }
+  .panel-app .app-brand { font-size: clamp(16px, 4.4vw, 22px); letter-spacing: -.06em; }
+  .panel-app .mobile-menu-trigger { width: 30px; height: 32px; }
+  .panel-app .header-utilities { justify-self: end; gap: 3px; }
+  .panel-app .header-utilities .header-control { min-block-size: 32px; padding-inline: 7px; }
+  .panel-app .header-settings-label,
+  .panel-app .header-utilities > a[aria-label='GitHub'] { display: none; }
+  .panel-app .desktop-navigation {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: center;
+    width: 100%;
+  }
+  .panel-app .desktop-navigation .header-control {
+    min-inline-size: 0;
+    padding-inline: 7px;
+    gap: 5px;
+    font-size: 12px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}

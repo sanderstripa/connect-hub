@@ -177,8 +177,7 @@ export default function OverviewActionBar({
 
   const statePill = (
     <span className="ov-state" data-state={status.xray.state} title={stateText}>
-      <span className="ov-state-dot" style={{ color: status.xray.color }} />
-      <span>{'Xray'}</span>
+      <span aria-label={`Xray: ${stateText}`}>Xray</span>
       {hasVersion && (
         <Tooltip title={t('pages.index.xraySwitch')}>
           <button type="button" className="ov-state-version" onClick={onOpenVersionSwitch}>

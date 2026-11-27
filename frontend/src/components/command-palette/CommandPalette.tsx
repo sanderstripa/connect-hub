@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { ConfigProvider, Tag, Tooltip, message } from 'antd';
 import {
   ApartmentOutlined,
-  BgColorsOutlined,
   CheckCircleFilled,
   ClockCircleOutlined,
   CloseCircleFilled,
@@ -409,13 +408,6 @@ export default function CommandPalette() {
       });
 
     const settingsSubSections = [
-      {
-        path: '/settings#appearance',
-        title: `${t('menu.settings')} · ${t('menu.appearance')}`,
-        subtitle: t('menu.appearance'),
-        keywords: ['theme', 'palette', 'light', 'dark', 'accent', 'оформление', 'темы'],
-        icon: <BgColorsOutlined aria-hidden />,
-      },
       {
         path: '/settings#general',
         title: `${t('menu.settings')} · ${t('pages.settings.panelSettings')}`,

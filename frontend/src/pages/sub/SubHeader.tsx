@@ -2,15 +2,11 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Menu, Popover, Space } from 'antd';
 import {
-  MoonFilled,
-  MoonOutlined,
-  SunOutlined,
   TranslationOutlined,
   WifiOutlined,
 } from '@ant-design/icons';
 
 import { LanguageManager } from '@/utils';
-import { pauseAnimationsUntilLeave, useTheme } from '@/hooks/useTheme';
 
 interface SubHeaderProps {
   title: string;
@@ -22,21 +18,6 @@ interface SubHeaderProps {
 
 export default function SubHeader({ title, sId, email, lang, onLangChange }: SubHeaderProps) {
   const { t } = useTranslation();
-  const { isDark, isUltra, toggleTheme, toggleUltra } = useTheme();
-
-  const cycleTheme = () => {
-    pauseAnimationsUntilLeave('sub-theme-cycle');
-    if (!isDark) {
-      toggleTheme();
-      if (isUltra) toggleUltra();
-    } else if (!isUltra) {
-      toggleUltra();
-    } else {
-      toggleUltra();
-      toggleTheme();
-    }
-  };
-
   const langMenuItems = useMemo(
     () =>
       (LanguageManager.supportedLanguages as { value: string; name: string; icon: string }[]).map(
@@ -53,13 +34,6 @@ export default function SubHeader({ title, sId, email, lang, onLangChange }: Sub
     [],
   );
 
-  const themeIcon = !isDark ? (
-    <SunOutlined aria-hidden />
-  ) : !isUltra ? (
-    <MoonOutlined aria-hidden />
-  ) : (
-    <MoonFilled aria-hidden />
-  );
   const initial = Array.from(title)[0]?.toUpperCase();
 
   return (
@@ -78,18 +52,7 @@ export default function SubHeader({ title, sId, email, lang, onLangChange }: Sub
         </div>
       </div>
       <div className="sub-toolbar">
-        <Button
-          id="sub-theme-cycle"
-          shape="circle"
-          size="large"
-          className="toolbar-btn"
-          aria-label={t('menu.theme')}
-          title={t('menu.theme')}
-          icon={themeIcon}
-          onClick={cycleTheme}
-        />
         <Popover
-          rootClassName={isDark ? 'dark' : 'light'}
           placement="bottomRight"
           trigger="click"
           styles={{ content: { padding: 4 } }}

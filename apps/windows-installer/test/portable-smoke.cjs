@@ -20,14 +20,14 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   assert.equal(await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(8, 9, 11)');
   const font=await page.locator('h1:visible').evaluate(el=>getComputedStyle(el).fontFamily);assert.match(font,/Onest/);
   const output=path.resolve('../../dist/desktop-evidence');fs.mkdirSync(output,{recursive:true});await page.screenshot({path:path.join(output,'portable-exe-welcome.png')});
-  await page.locator('#theme').click();assert.equal(await page.locator('body').getAttribute('data-theme'),'light');
+  assert.equal(await page.locator('body').getAttribute('data-theme'),'light');
   assert.equal(await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(246, 246, 248)');
   const primary=await page.locator('#connect').evaluate(el=>({color:getComputedStyle(el).color,weight:getComputedStyle(el).fontWeight}));assert.equal(primary.color,'rgb(255, 255, 255)');assert.equal(primary.weight,'500');
   await page.screenshot({path:path.join(output,'portable-exe-welcome-light.png')});
   const build=await page.evaluate(()=>window.installer.version());assert.equal(build.ok,true);assert.equal(build.value.version,require('../package.json').version);
   if(process.env.CONNECT_HUB_EXPECTED_REVISION){assert.equal(build.value.revision,process.env.CONNECT_HUB_EXPECTED_REVISION);assert.equal(build.value.dirty,false);}
   await page.evaluate(()=>window.installer.close()).catch(error=>{if(!/closed/i.test(error.message))throw error;});for(let n=0;n<60&&!closed;n++)await delay(250);
-  console.log('PASS: actual downloadable portable EXE extracts, launches its own isolated Windows window, loads local Onest, switches language/theme and closes');
+  console.log('PASS: actual downloadable portable EXE extracts, launches its own isolated Windows window, loads local Onest, switches language and closes');
  }finally{
   if(browser)await browser.close().catch(()=>{});
   if(!closed&&child.pid){const cleanup=spawn('taskkill',['/PID',String(child.pid),'/T','/F'],{windowsHide:true,stdio:'ignore'});await new Promise(resolve=>cleanup.on('close',resolve));}

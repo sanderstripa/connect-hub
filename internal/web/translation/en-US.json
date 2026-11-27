@@ -455,6 +455,8 @@
       "connectionCount": "Connection Stats",
       "ipAddresses": "IP Addresses",
       "toggleIpVisibility": "Toggle visibility of the IP",
+      "activeKeys": "Active keys",
+      "activeKeysError": "Could not load active keys",
       "overallSpeed": "Overall Speed",
       "upload": "Upload",
       "download": "Download",

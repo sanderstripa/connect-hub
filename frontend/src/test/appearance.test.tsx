@@ -1,33 +1,24 @@
-import { fireEvent, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { expect, it, vi } from 'vitest';
 import AppSidebar from '@/layouts/AppSidebar';
-import AppearanceTab from '@/pages/settings/AppearanceTab';
-import { PALETTE_KEY } from '@/lib/theme-palettes';
-import { chooseSelectOption, renderWithProviders } from './test-utils';
+import { DEFAULT_PALETTE, PALETTE_KEY } from '@/lib/theme-palettes';
+import { renderWithProviders } from './test-utils';
 
 vi.mock('@/api/queries/useAllSettings', () => ({ useAllSettings: () => ({ allSetting: {} }) }));
 
-it('moves theme controls to Settings and keeps selections local', async () => {
+it('uses the approved appearance with legacy browser preferences', () => {
   localStorage.setItem(PALETTE_KEY, 'graphite-sage');
-  localStorage.setItem('dark-mode', 'false');
-  const view = renderWithProviders(
+  localStorage.setItem('dark-mode', 'true');
+  renderWithProviders(
     <MemoryRouter initialEntries={['/settings#appearance']}>
       <AppSidebar />
-      <AppearanceTab />
     </MemoryRouter>,
   );
-  expect(document.documentElement.dataset.palette).toBe('soulu');
+  expect(document.documentElement.dataset.palette).toBe(DEFAULT_PALETTE);
+  expect(document.documentElement.dataset.mode).toBe('light');
   expect(screen.queryByRole('button', { name: 'Theme' })).toBeNull();
-  expect(screen.getByRole('link', { name: 'Appearance' }).getAttribute('aria-current')).toBe(
-    'page',
-  );
-  fireEvent.click(screen.getByRole('radio', { name: 'Dark' }));
-  expect(localStorage.getItem('dark-mode')).toBe('true');
-  chooseSelectOption('theme-palette', 'Warm Sand & Navy');
-  expect(localStorage.getItem(PALETTE_KEY)).toBe('warm-sand');
-  view.unmount();
-  renderWithProviders(<AppearanceTab />);
-  expect(document.documentElement.dataset.mode).toBe('dark');
-  expect(document.documentElement.dataset.palette).toBe('warm-sand');
+  expect(screen.queryByRole('link', { name: 'Appearance' })).toBeNull();
+  localStorage.removeItem(PALETTE_KEY);
+  localStorage.removeItem('dark-mode');
 });

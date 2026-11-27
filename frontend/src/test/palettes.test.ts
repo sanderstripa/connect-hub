@@ -1,50 +1,18 @@
-import { describe, it, expect } from 'vitest';
-import {
-  PALETTE_IDS,
-  parsePalette,
-  themeTokens,
-  themeVariables,
-  themeCSS,
-  contrast,
-} from '@/lib/theme-palettes';
-describe('Soulu visual contract', () => {
-  it('migrates saved palettes without losing light/dark support', () => {
-    expect(PALETTE_IDS).toEqual(['soulu', 'warm-sand', 'forest', 'rose', 'lavender', 'warm-taupe']);
-    for (const id of PALETTE_IDS) expect(parsePalette(id)).toBe(id);
-    for (const value of [null, undefined, 'classic', 'midnight-steel', 'graphite-sage', 'garbage'])
-      expect(parsePalette(value)).toBe('soulu');
+import { expect, it } from 'vitest';
+import { contrast, DEFAULT_PALETTE, parsePalette, themeCSS, themeTokens } from '@/lib/theme-palettes';
+
+it('ignores saved legacy appearance options and uses concept 3.0 colors', () => {
+  expect(parsePalette('forest')).toBe(DEFAULT_PALETTE);
+  expect(themeTokens('forest', true)).toEqual(themeTokens());
+  expect(themeTokens()).toMatchObject({
+    bg: '#DCDEE4', surface: '#F3F3F6', text: '#17181B', accent: '#252629',
   });
-  it('uses supplied neutral surfaces, blue actions and green VPN states', () => {
-    expect(themeTokens('soulu', false)).toMatchObject({
-      bg: '#F6F6F8',
-      surface: '#F8F8FA',
-      text: '#292A2E',
-      secondary: '#797B81',
-      accent: '#0671FF',
-      success: '#087F5B',
-    });
-    expect(themeTokens('soulu', true)).toMatchObject({
-      bg: '#08090B',
-      surface: '#111215',
-      text: '#EEEEEF',
-      secondary: '#96979D',
-      accent: '#0671FF',
-      success: '#57D6A3',
-    });
-    for (const dark of [false, true]) {
-      expect(themeVariables('soulu', dark)['accent-foreground']).toBe('#FFFFFF');
-      expect(themeCSS()).toContain(`data-mode="${dark ? 'dark' : 'light'}"`);
-    }
-  });
+  expect(themeCSS()).toContain(`data-palette="${DEFAULT_PALETTE}"`);
 });
 
-it('keeps text and action labels readable in all supplied palettes and modes', () => {
-  for (const id of PALETTE_IDS)
-    for (const dark of [false, true]) {
-      const t = themeTokens(id, dark);
-      expect(contrast(t.bg, t.text)).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(t.surface, t.text)).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(t.button, t.foreground)).toBeGreaterThanOrEqual(id === 'soulu' ? 4 : 4.5);
-      expect(themeCSS()).toContain(`data-palette="${id}"`);
-    }
+it('keeps text and button labels readable', () => {
+  const { bg, text, surface, button, foreground } = themeTokens();
+  expect(contrast(bg, text)).toBeGreaterThanOrEqual(4.5);
+  expect(contrast(surface, text)).toBeGreaterThanOrEqual(4.5);
+  expect(contrast(button, foreground)).toBeGreaterThanOrEqual(4.5);
 });

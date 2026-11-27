@@ -315,7 +315,7 @@ describe('CommandPalette component', () => {
     expect(commandPaletteStore.getSnapshot()).toBe(true);
   });
 
-  it('finds the Appearance settings when searching for themes', () => {
+  it('omits removed appearance options from search', () => {
     renderPalette();
     act(() => {
       commandPaletteStore.open();
@@ -324,6 +324,6 @@ describe('CommandPalette component', () => {
     const input = screen.getByPlaceholderText(/Type a command or search/i);
     fireEvent.change(input, { target: { value: 'theme' } });
 
-    expect(screen.getByText('Settings · Appearance')).not.toBeNull();
+    expect(screen.queryByText('Settings · Appearance')).toBeNull();
   });
 });

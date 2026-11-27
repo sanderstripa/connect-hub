@@ -114,3 +114,29 @@
   }
   .inbound-card-list { gap: 12px; }
 }
+
+.connections-workspace .inbound-card {
+  border-radius: var(--hub-radius);
+  transition: box-shadow .16s, transform .16s, background .16s;
+}
+.connections-workspace .inbound-card:not(.is-selected) {
+  border-color: #f0f0f3;
+  background: repeating-linear-gradient(135deg, #fff0 0 5px, #85899716 5px 6px),
+    linear-gradient(140deg, #e7e8ec, #dddfe4);
+  box-shadow: inset 0 1px 0 #fff8;
+}
+.connections-workspace .inbound-card.is-selected {
+  border-color: #353638;
+  background: var(--hub-card);
+  box-shadow: 0 0 0 2px var(--hub-lime), 0 0 12px #d5f65d70, 0 8px 12px #272a3320;
+}
+.connections-workspace .inbound-card-list { padding: 4px; }
+.connections-workspace .inbound-browser > .ant-btn-default { border-style: dashed; }
+.connections-workspace .connections-pane-header h2 { overflow-wrap: anywhere; }
+@media (min-width: 769px) {
+  .connections-workspace {
+    grid-template-columns: clamp(220px, 19vw, 265px) minmax(0, 1fr);
+    gap: 20px;
+  }
+  .connections-workspace .inbound-card-list { display: flex; }
+}

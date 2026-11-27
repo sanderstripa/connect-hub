@@ -90,7 +90,7 @@ jobs:
         run: python3 apps/windows-installer/test/panel-api-smoke.py "$PWD/dist/connect-hub-linux-amd64.tar.gz"
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
-      - name: Real panel Soulu light/dark, Onest and palette migration
+      - name: Real panel concept 3.0, navigation and adaptive layout
         run: python3 hub/soulu-smoke.py
       - uses: actions/upload-artifact@v6
         with:
@@ -101,9 +101,9 @@ jobs:
       - uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: soulu-panel-evidence
+          name: concept-3-panel-evidence
           path: |
-            dist/soulu-*.png
+            dist/concept-3-*.png
             dist/mobile-*.png
             dist/navigation-*.png
   publish:

@@ -15,9 +15,6 @@ import {
 import {
   KeyOutlined,
   LockOutlined,
-  MoonFilled,
-  MoonOutlined,
-  SunOutlined,
   TranslationOutlined,
   UserOutlined,
 } from '@ant-design/icons';
@@ -26,7 +23,7 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { HttpUtil, LanguageManager } from '@/utils';
 import { FormField, rhfZodValidate } from '@/components/form/rhf';
 import { setMessageInstance } from '@/utils/messageBus';
-import { pauseAnimationsUntilLeave, useTheme } from '@/hooks/useTheme';
+import { useTheme } from '@/hooks/useTheme';
 import { LoginFormSchema, TwoFactorCodeSchema, type LoginFormValues } from '@/schemas/login';
 import './LoginPage.css';
 
@@ -36,7 +33,7 @@ const basePath = window.X_UI_BASE_PATH || '';
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const { isDark, isUltra, toggleTheme, antdThemeConfig } = useTheme();
+  const { isDark, isUltra, antdThemeConfig } = useTheme();
   const [messageApi, messageContextHolder] = message.useMessage();
 
   useEffect(() => {
@@ -79,10 +76,7 @@ export default function LoginPage() {
     LanguageManager.setLanguage(next);
   }, []);
 
-  const cycleTheme = useCallback(() => {
-    pauseAnimationsUntilLeave('login-theme-cycle');
-    toggleTheme();
-  }, [toggleTheme]);
+
 
   const pageClass = useMemo(() => {
     const classes = ['login-app'];
@@ -107,30 +101,12 @@ export default function LoginPage() {
     [],
   );
 
-  const themeIcon = !isDark ? (
-    <SunOutlined aria-hidden />
-  ) : !isUltra ? (
-    <MoonOutlined aria-hidden />
-  ) : (
-    <MoonFilled aria-hidden />
-  );
-
   return (
     <ConfigProvider theme={antdThemeConfig}>
       {messageContextHolder}
       <Layout className={pageClass}>
         <Layout.Content className="login-content">
           <div className="login-toolbar">
-            <Button
-              id="login-theme-cycle"
-              shape="circle"
-              size="large"
-              className="toolbar-btn"
-              aria-label={t('menu.theme')}
-              title={t('menu.theme')}
-              icon={themeIcon}
-              onClick={cycleTheme}
-            />
             <Popover
               rootClassName={isDark ? 'dark' : 'light'}
               placement="bottomRight"
@@ -165,7 +141,7 @@ export default function LoginPage() {
             ) : (
               <div className="login-card">
                 <div className="brand">
-                  <span className="brand-name">Connect. Hub</span>
+                  <span className="brand-name">Connect.Hub</span>
                   <span className="brand-accent" aria-hidden="true" />
                 </div>
                 <FormProvider {...methods}>

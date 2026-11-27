@@ -649,3 +649,17 @@ body .command-palette-footer { padding: 8px 12px; font-size: 11px; color: var(--
 .command-palette-backdrop.light{background:rgba(0,0,0,.06)}
 .command-palette-modal{width:520px;max-width:100%;max-height:calc(100dvh - 32px)}
 @media(max-width:575px){.command-palette-backdrop{padding-right:12px;padding-left:64px}.command-palette-header{padding:12px}.command-palette-footer{flex-wrap:wrap}}
+
+.panel-app .command-palette-backdrop {
+  justify-content: flex-end;
+  padding: var(--app-header-height) max(12px, calc((100% - 1652px) / 2)) 0 12px;
+  background: transparent;
+  backdrop-filter: none;
+}
+.panel-app .command-palette-modal {
+  width: 480px;
+  max-height: min(72vh, calc(100dvh - var(--app-header-height) - 12px));
+  border-radius: var(--hub-radius);
+  background: var(--hub-card);
+  box-shadow: var(--hub-shadow);
+}

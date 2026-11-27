@@ -7,6 +7,8 @@ import { HttpUtil, Msg } from '@/utils';
 import IndexPage from '@/pages/index/IndexPage';
 
 const feed = vi.hoisted(() => ({ status: null as Status | null }));
+vi.mock('@/pages/index/ActiveKeysCard', () => ({ default: () => null }));
+
 vi.mock('uplot', () => ({
   default: class {
     static paths = { spline: () => undefined };
