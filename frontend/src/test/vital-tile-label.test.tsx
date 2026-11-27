@@ -14,7 +14,6 @@ describe('VitalTile', () => {
         icon={null}
         label="CPU"
         percent={47.2}
-        statusColor="#000"
         detail="4 / 8T"
         footLeft="Avg 40%"
         footRight="Peak 90%"
@@ -31,7 +30,6 @@ describe('VitalTile', () => {
         icon={null}
         label="Swap"
         percent={25}
-        statusColor="#000"
         detail="1 / 4 GB"
         footLeft={
           <>
