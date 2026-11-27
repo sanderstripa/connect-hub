@@ -12,7 +12,7 @@ type Release = {
   published: string;
   prerelease: boolean;
 };
-export default function SudokuMonitor() {
+export default function SudokuMonitor({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation();
   const [state, setState] = useState<State>();
   const [open, setOpen] = useState(false);
@@ -64,6 +64,7 @@ export default function SudokuMonitor() {
         : state
           ? 'xrayStatusStop'
           : 'xrayStatusUnknown';
+  const version = state?.version?.replace(compact ? /^core-v?/ : /^core-/, '');
   return (
     <>
       <span
@@ -82,7 +83,7 @@ export default function SudokuMonitor() {
           }}
           aria-label={t('pages.index.sudokuUpdates')}
         >
-          {state?.version?.replace('core-', '') || t('pages.index.xrayStatusUnknown')}
+          {version || t('pages.index.xrayStatusUnknown')}
         </button>
       </span>
       <Modal

@@ -93,7 +93,9 @@ export interface ClientSpeedEntry {
   down: number;
 }
 
-type ClientSpeedSource = 'xray' | 'tuic' | 'node';
+type SudokuSpeedSample = { email: string; up: number; down: number; intervalMs: number };
+
+type ClientSpeedSource = 'xray' | 'tuic' | 'node' | 'sudoku';
 
 type ClientStatRow = ClientTraffic & { email?: string };
 
@@ -307,6 +309,7 @@ export function useClients(options: UseClientsOptions = {}) {
   const clientSpeedSourceVersions = useRef<Record<ClientSpeedSource, number>>({
     xray: 0,
     tuic: 0,
+    sudoku: 0,
     node: 0,
   });
   const clientSpeed = useMemo(() => {
@@ -764,21 +767,20 @@ export function useClients(options: UseClientsOptions = {}) {
       const p = payload as {
         onlineClients?: string[];
         clientTraffics?: { email: string; up: number; down: number }[];
+        sudokuClientTraffics?: SudokuSpeedSample[];
         clientTrafficSource?: ClientSpeedSource;
         clientTrafficIntervalMs?: number;
       };
       if (Array.isArray(p.onlineClients)) {
         queryClient.setQueryData(keys.clients.onlines(), p.onlineClients);
       }
-      if (Array.isArray(p.clientTraffics)) {
-        // Xray reports a row per client whether or not it moved a byte, so most of
-        // this map used to be zeros. A missing entry and a zero entry render
-        // identically (isActiveSpeed treats both as inactive), so the zeros are
-        // dropped and an unchanged result returns the previous object — which lets
-        // React bail out of the update instead of re-rendering the table.
+      const sudokuSample = Array.isArray(p.sudokuClientTraffics);
+      const rows = sudokuSample ? p.sudokuClientTraffics : p.clientTraffics;
+      if (Array.isArray(rows)) {
         const next: Record<string, ClientSpeedEntry> = {};
-        const source: ClientSpeedSource =
-          p.clientTrafficSource === 'tuic' || p.clientTrafficSource === 'node'
+        const source: ClientSpeedSource = sudokuSample
+          ? 'sudoku'
+          : p.clientTrafficSource === 'tuic' || p.clientTrafficSource === 'node'
             ? p.clientTrafficSource
             : 'xray';
         const sampleIntervalMs =
@@ -787,16 +789,18 @@ export function useClients(options: UseClientsOptions = {}) {
           p.clientTrafficIntervalMs > 0
             ? p.clientTrafficIntervalMs
             : TRAFFIC_POLL_INTERVAL_S * 1000;
-        const sampleIntervalSeconds = sampleIntervalMs / 1000;
-        for (const ct of p.clientTraffics) {
+        for (const ct of rows) {
           if (!ct || !ct.email) continue;
           const up = ct.up || 0;
           const down = ct.down || 0;
-          if (up === 0 && down === 0) continue;
+          if (source !== 'sudoku' && up === 0 && down === 0) continue;
+          const intervalMs = 'intervalMs' in ct ? Number(ct.intervalMs) : sampleIntervalMs;
+          if (!Number.isFinite(intervalMs) || intervalMs <= 0) continue;
+          const intervalSeconds = intervalMs / 1000;
           const current = next[ct.email] ?? { up: 0, down: 0 };
           next[ct.email] = {
-            up: current.up + up / sampleIntervalSeconds,
-            down: current.down + down / sampleIntervalSeconds,
+            up: current.up + up / intervalSeconds,
+            down: current.down + down / intervalSeconds,
           };
         }
         setClientSpeedBySource((prev) =>

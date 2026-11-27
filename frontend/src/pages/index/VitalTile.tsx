@@ -84,12 +84,12 @@ export default function VitalTile({
           data={data}
           height={extraContent ? 27 : isMobile ? 39 : 61}
           strokeWidth={1.5}
-          fillOpacity={0.1}
+          fillOpacity={0}
+          presentation="dots"
           showGrid={false}
-          showPoints={data.length <= 120}
           showMarker={false}
           valueMax={peak(data) > 0 ? null : 100}
-          stroke={token.colorPrimary}
+          stroke="#26272a"
           referenceLines={referenceLines}
           yFormatter={(v) => `${v.toFixed(0)}%`}
           name1={label}

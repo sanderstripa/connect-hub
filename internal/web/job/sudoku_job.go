@@ -2,16 +2,30 @@
 package job
 
 import (
+	"sync"
+	"time"
+
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/sudoku"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/service"
+	"github.com/mhsanaei/3x-ui/v3/internal/web/websocket"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 )
 
-type SudokuJob struct{ inboundService service.InboundService }
+const SudokuPollInterval = 5 * time.Second
+
+type SudokuJob struct {
+	inboundService service.InboundService
+	runMu          sync.Mutex
+}
 
 func NewSudokuJob() *SudokuJob { return new(SudokuJob) }
 func (j *SudokuJob) Run() {
+	if !j.runMu.TryLock() {
+		return
+	}
+	defer j.runMu.Unlock()
+
 	desired, err := j.inboundService.DesiredSudokuInstances()
 	if err != nil {
 		logger.Warning("Sudoku: desired inbounds:", err)
@@ -21,7 +35,7 @@ func (j *SudokuJob) Run() {
 	if err = manager.Reconcile(desired); err != nil {
 		logger.Warning("Sudoku: reconcile:", err)
 	}
-	deltas, online := manager.CollectTraffic()
+	deltas, online, samples := manager.CollectTraffic()
 	clients := []*xray.ClientTraffic{}
 	byTag := map[string]*xray.Traffic{}
 	for _, d := range deltas {
@@ -46,4 +60,8 @@ func (j *SudokuJob) Run() {
 		tags = append(tags, inst.Tag)
 	}
 	j.inboundService.RefreshLocalOnlineClients(online, tags)
+	websocket.BroadcastTraffic(map[string]any{
+		"sudokuClientTraffics":    samples,
+		"clientTrafficIntervalMs": SudokuPollInterval.Milliseconds(),
+	})
 }

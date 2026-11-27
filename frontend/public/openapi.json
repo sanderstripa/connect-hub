@@ -24113,6 +24113,36 @@
                     "$ref": "#/components/schemas/ClientTraffic"
                   }
                 },
+                "sudokuClientTraffics": {
+                  "type": "array",
+                  "description": "Live samples for active Sudoku keys. An empty array clears the previous snapshot.",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "email",
+                      "up",
+                      "down",
+                      "intervalMs"
+                    ],
+                    "properties": {
+                      "email": {
+                        "type": "string"
+                      },
+                      "up": {
+                        "type": "integer",
+                        "format": "int64"
+                      },
+                      "down": {
+                        "type": "integer",
+                        "format": "int64"
+                      },
+                      "intervalMs": {
+                        "type": "integer",
+                        "format": "int64"
+                      }
+                    }
+                  }
+                },
                 "clientTrafficSource": {
                   "type": "string",
                   "enum": [
@@ -24179,6 +24209,12 @@
                 {
                   "required": [
                     "nodeTraffics"
+                  ]
+                },
+                {
+                  "required": [
+                    "sudokuClientTraffics",
+                    "clientTrafficIntervalMs"
                   ]
                 },
                 {

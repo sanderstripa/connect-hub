@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Card, theme } from 'antd';
-import { ArrowDownOutlined, ArrowUpOutlined } from '@ant-design/icons';
+import { Alert, Card, Segmented } from 'antd';
+import { ArrowDownOutlined, ArrowUpOutlined, DotChartOutlined, LineChartOutlined } from '@ant-design/icons';
 
 import { SizeFormatter } from '@/utils';
 import { Sparkline } from '@/components/viz';
@@ -30,18 +30,12 @@ export default function ThroughputCard({
   onRangeChange = () => undefined,
 }: ThroughputCardProps) {
   const { t } = useTranslation();
-  const { token } = theme.useToken();
-  const accent = token.colorPrimary;
-  const downColor = token.colorTextTertiary;
+  const [presentation, setPresentation] = useState<'dots' | 'line'>('dots');
+  const dotsLabel = t('pages.index.trafficDots', 'Dot chart');
+  const lineLabel = t('pages.index.trafficLine', 'Line chart');
+  const accent = '#26272a';
+  const downColor = '#858892';
   const available = status.metricAvailable('netTraffic');
-
-  const referenceLines = useMemo(
-    () => [
-      { y: status.netIO.down, color: downColor, dash: '2 4' },
-      { y: status.netIO.up, color: accent, dash: '2 4' },
-    ],
-    [status.netIO.up, status.netIO.down, accent, downColor],
-  );
 
   return (
     <Card hoverable styles={{ body: { padding: 0 } }}>
@@ -83,8 +77,16 @@ export default function ThroughputCard({
         </div>
       </div>
 
-      <div className="ov-range-toolbar">
+      <div className="ov-range-toolbar ov-traffic-controls">
         <OverviewRangeSelect value={range} onChange={onRangeChange} />
+        <Segmented
+          value={presentation}
+          onChange={setPresentation}
+          options={[
+            { value: 'dots', icon: <DotChartOutlined aria-label={dotsLabel} />, title: dotsLabel },
+            { value: 'line', icon: <LineChartOutlined aria-label={lineLabel} />, title: lineLabel },
+          ]}
+        />
       </div>
       <div className="ov-wide-chart">
         <Sparkline
@@ -93,7 +95,11 @@ export default function ThroughputCard({
           labels={labels}
           height={isMobile ? 140 : 157}
           strokeWidth={1.75}
-          fillOpacity={0.24}
+          fillOpacity={0}
+          presentation={presentation}
+          latestLabel={t('pages.index.trafficNow', 'Now').toLocaleUpperCase()}
+          rightPadding={12}
+          showAxes
           showTooltip
           showLegend={false}
           valueMax={null}
@@ -102,7 +108,6 @@ export default function ThroughputCard({
           name1={t('pages.index.upload')}
           name2={t('pages.index.download')}
           yFormatter={SizeFormatter.speedFormat}
-          referenceLines={referenceLines}
         />
       </div>
 

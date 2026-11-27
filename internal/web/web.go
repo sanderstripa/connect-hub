@@ -356,7 +356,8 @@ func (s *Server) startTask(restartXray bool, loc *time.Location) {
 			logger.Warning("start xray failed:", err)
 		}
 	}
-	go job.NewSudokuJob().Run()
+	sudokuJob := job.NewSudokuJob()
+	go sudokuJob.Run()
 	// Check whether xray is running every second
 	_, _ = s.cron.AddJob(cadenceXrayRunning, job.NewCheckXrayRunningJob())
 
@@ -373,8 +374,8 @@ func (s *Server) startTask(restartXray bool, loc *time.Location) {
 	tunnelJob := job.NewTunnelJob(s.ctx)
 	_, _ = s.cron.AddJob("@every 5s", tunnelJob)
 
-	// Reconcile mtproto (mtg) sidecars and scrape their traffic
-	_, _ = s.cron.AddJob("@every 5s", job.NewSudokuJob())
+	// Reconcile local Sudoku and mtproto sidecars and scrape their traffic.
+	s.cron.Schedule(cron.Every(job.SudokuPollInterval), sudokuJob)
 	mtJob := job.NewMtprotoJob()
 	_, _ = s.cron.AddJob(cadenceMtproto, mtJob)
 	go mtJob.Run()

@@ -32,6 +32,12 @@ type Traffic struct {
 	Tag, Email string
 	Up, Down   int64
 }
+type TrafficSample struct {
+	Email      string `json:"email"`
+	Up         int64  `json:"up"`
+	Down       int64  `json:"down"`
+	IntervalMS int64  `json:"intervalMs"`
+}
 type child struct {
 	cmd         *exec.Cmd
 	done        chan struct{}
@@ -39,6 +45,7 @@ type child struct {
 	instance    Instance
 	dir         string
 	counters    map[string][2]int64
+	sampleTimes map[string]time.Time
 }
 type Manager struct {
 	mu       sync.Mutex
@@ -164,7 +171,7 @@ func (m *Manager) ensure(inst Instance) error {
 	if err = cmd.Start(); err != nil {
 		return err
 	}
-	c := &child{cmd: cmd, done: make(chan struct{}), fingerprint: fingerprint, instance: inst, dir: dir, counters: map[string][2]int64{}}
+	c := &child{cmd: cmd, done: make(chan struct{}), fingerprint: fingerprint, instance: inst, dir: dir, counters: map[string][2]int64{}, sampleTimes: map[string]time.Time{}}
 	for hash, value := range baseline {
 		c.counters[hash] = [2]int64{value.RX, value.TX}
 	}
@@ -187,7 +194,7 @@ func (m *Manager) stop(id int) {
 	if c == nil {
 		return
 	}
-	deltas, _ := collect(c)
+	deltas, _, _ := collect(c)
 	m.pending = append(m.pending, deltas...)
 	_ = c.cmd.Process.Kill()
 	<-c.done
@@ -221,7 +228,7 @@ func (m *Manager) Reconcile(desired []Instance) error {
 	return first
 }
 
-func collect(c *child) ([]Traffic, []string) {
+func collect(c *child) ([]Traffic, []string, []TrafficSample) {
 	transport := &http.Transport{Proxy: nil, DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 		return (&net.Dialer{}).DialContext(ctx, "unix", filepath.Join(c.dir, "sudoku.sock"))
 	}}
@@ -229,7 +236,7 @@ func collect(c *child) ([]Traffic, []string) {
 	client := &http.Client{Transport: transport, Timeout: 2 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return fmt.Errorf("redirect refused") }}
 	response, err := client.Get("http://unix/v1/state")
 	if err != nil {
-		return nil, nil
+		return nil, nil, nil
 	}
 	defer response.Body.Close()
 	var state struct {
@@ -241,14 +248,16 @@ func collect(c *child) ([]Traffic, []string) {
 		} `json:"users"`
 	}
 	if response.StatusCode != 200 || json.NewDecoder(io.LimitReader(response.Body, 4<<20)).Decode(&state) != nil || state.Version != 1 {
-		return nil, nil
+		return nil, nil, nil
 	}
 	byHash := map[string]string{}
 	for _, client := range c.instance.Settings.Clients {
 		h, _ := UserHash(client.SudokuKey)
 		byHash[h] = client.Email
 	}
+	now := time.Now()
 	deltas := []Traffic{}
+	samples := []TrafficSample{}
 	online := []string{}
 	for _, user := range state.Users {
 		email, ok := byHash[user.Hash]
@@ -257,6 +266,12 @@ func collect(c *child) ([]Traffic, []string) {
 		}
 		previous := c.counters[user.Hash]
 		up, down := user.RX-previous[0], user.TX-previous[1]
+		previousTime := c.sampleTimes[user.Hash]
+		c.sampleTimes[user.Hash] = now
+		interval := now.Sub(previousTime).Milliseconds()
+		if !previousTime.IsZero() && interval > 0 && up >= 0 && down >= 0 {
+			samples = append(samples, TrafficSample{Email: email, Up: up, Down: down, IntervalMS: interval})
+		}
 		if up < 0 {
 			up = user.RX
 		}
@@ -271,18 +286,20 @@ func collect(c *child) ([]Traffic, []string) {
 			online = append(online, email)
 		}
 	}
-	return deltas, online
+	return deltas, online, samples
 }
-func (m *Manager) CollectTraffic() ([]Traffic, []string) {
+func (m *Manager) CollectTraffic() ([]Traffic, []string, []TrafficSample) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	deltas := m.pending
 	m.pending = nil
 	online := []string{}
+	samples := []TrafficSample{}
 	for _, c := range m.children {
-		d, o := collect(c)
+		d, o, live := collect(c)
+		samples = append(samples, live...)
 		deltas = append(deltas, d...)
 		online = append(online, o...)
 	}
-	return deltas, online
+	return deltas, online, samples
 }

@@ -235,6 +235,42 @@ try{
    } else {
     assert.equal(await headerNav.isVisible(),true);
     const hamburger=page.getByRole('button',{name:'Navigation',exact:true});
+    assert.equal(await hamburger.count(),0);
+    assert.equal(await page.locator('.header-utilities .header-control:visible').count(),3);
+    const segments=await headerNav.locator('.header-control').evaluateAll(items=>items.map(el=>el.getBoundingClientRect().width));
+    assert.ok(Math.max(...segments)-Math.min(...segments)<1);
+    await network.click();await menu.waitFor();await page.keyboard.press('Escape');
+    const active=await headerNav.locator('[aria-current="page"]').boundingBox();
+    const x=active.x+active.width/2,y=active.y+active.height/2;
+    await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y+60,{steps:5});await page.mouse.up();
+    assert.match(page.url(),/connections$/);
+    await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x-active.width,y,{steps:8});await page.mouse.up();
+    await page.waitForURL(url=>url.pathname.replace(/\/$/,'')===new URL(cfg.url+'panel/').pathname.replace(/\/$/,''));
+    if(width===390) {
+     await page.locator('.ov-versions').waitFor();
+     const touch=await page.context().newCDPSession(page);
+     async function swipe(dx,dy) {
+      const b=await headerNav.locator('[aria-current="page"]').boundingBox();
+      const start={x:b.x+b.width/2,y:b.y+b.height/2};
+      await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[start]});
+      for(let step=1;step<=8;step++) {
+       await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:start.x+dx*step/8,y:start.y+dy*step/8}]});
+      }
+      await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+     }
+     try {
+      await touch.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
+      await swipe(0,-65);
+      assert.match(new URL(page.url()).pathname,/\/panel\/?$/);
+      await swipe(105,0);
+      await page.waitForURL('**/connections');
+     } finally {
+      await touch.send('Emulation.setTouchEmulationEnabled',{enabled:false});
+      await touch.detach();
+     }
+    }
+    await page.getByRole('link',{name:'Settings',exact:true}).click();
+    await page.waitForURL('**/settings');
     await hamburger.click();const drawer=page.getByRole('dialog');await drawer.waitFor();
     await page.locator('.mobile-navigation-drawer .ant-drawer-content-wrapper').evaluate(async el=>{await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));await Promise.all(el.getAnimations({subtree:true}).map(a=>a.finished.catch(()=>{})));});
     await page.waitForFunction(()=>{const r=document.querySelector('[role="dialog"]')?.getBoundingClientRect();return r && r.x>=0;});
@@ -250,6 +286,8 @@ try{
     await Promise.all([page.waitForURL('**/api-docs'),apiDocs.click()]);
 
     await page.getByRole('dialog').waitFor({state:'hidden'});
+    await page.getByRole('link',{name:'Settings',exact:true}).click();
+    await page.waitForURL('**/settings');
     await hamburger.click();await page.getByRole('dialog').waitFor();await page.keyboard.press('Escape');
     await page.getByRole('dialog').waitFor({state:'hidden'});
     await page.goto(cfg.url+'panel/connections');await page.locator('.inbound-card').first().waitFor();
@@ -261,8 +299,15 @@ try{
     await page.locator('.inbound-position').getByRole('button',{name:/^Sweden Sudoku/}).click();
     await page.locator('.client-card').filter({hasText:'iPhoneSudoku'}).waitFor();
     await page.goto(cfg.url+'panel/');await page.locator('.ov-tile').first().waitFor();
+    assert.equal(await page.locator('.mobile-monitoring-title').count(),0);
+    const line=page.locator('.ov-traffic-controls label').filter({has:page.locator('[aria-label="Line chart"]')});
+    const dots=page.locator('.ov-traffic-controls label').filter({has:page.locator('[aria-label="Dot chart"]')});
+    await line.click();assert.equal(await line.locator('input').isChecked(),true);
+    await dots.click();assert.equal(await dots.locator('input').isChecked(),true);
     const tiles=await page.locator('.ov-tile').evaluateAll(els=>els.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};}));
     assert.equal(tiles.length,4);assert.ok(tiles.every(r=>r.x>=0&&r.x+r.width<=width+1));
+    await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+    await page.waitForFunction(()=>window.scrollY===0);
     await page.screenshot({path:path.join(cfg.output,'mobile-monitoring-'+width+'-'+'concept-3'+'.png'),fullPage:true});
     await page.goto(cfg.url+'panel/connections');await page.locator('#connection-keys').waitFor();
    }
@@ -287,7 +332,7 @@ try{
   assert.equal(bg,themeTokens().bg);
   await page.screenshot({path:path.join(cfg.output,'concept-3-'+name+'.png'),fullPage:true});
  }
- console.log('PASS: desktop horizontal header, mobile drawer navigation/Escape, responsive monitoring tiles and horizontal inbound selection with scoped clients');
+ console.log('PASS: desktop horizontal header, mobile navigation gestures and settings drawer, responsive monitoring tiles and graph modes and horizontal inbound selection with scoped clients');
  console.log('PASS: inbound cards, scoped clients, inline details/back, scoped key creation and unchanged original keys');
  console.log('PASS: saved Sudoku client → real web QR modal → JSON/CSRF request → Shadowrocket QR and anonymous profile fetch; original key unchanged');
  assert.deepEqual(errors,[]);console.log('PASS: real panel login, dashboard, inbounds, clients, settings and dialogs with concept 3.0 and saved legacy appearance preferences');
