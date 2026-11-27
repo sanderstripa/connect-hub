@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import AppHeader from '@/layouts/AppHeader';
-import { MobileNavigationContext } from '@/layouts/MobileNavigation';
+import { MobileNavigationContext, MobileSettingsNavigationTrigger } from '@/layouts/MobileNavigation';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, expect, test, vi } from 'vitest';
@@ -76,7 +76,7 @@ test('opens Settings directly and keeps Xray and Logs in its internal navigation
   expect(screen.getByTestId('location').textContent).toBe('/logs');
 });
 
-test('mobile menu opens from the header, retains nested routes, and closes after navigation', async () => {
+test('mobile settings navigation retains nested routes and closes after navigation', async () => {
   const original = window.matchMedia;
   window.matchMedia = ((query: string) => ({
     matches: query.includes('768'),
@@ -88,10 +88,12 @@ test('mobile menu opens from the header, retains nested routes, and closes after
   })) as unknown as typeof window.matchMedia;
   function MobileShell() {
     const [open, setOpen] = useState(false);
+    const { pathname } = useLocation();
     return (
       <MobileNavigationContext.Provider value={{ open, setOpen }}>
         <AppHeader />
         <AppSidebar />
+        {pathname === '/settings' && <MobileSettingsNavigationTrigger />}
         <Location />
       </MobileNavigationContext.Provider>
     );
@@ -104,6 +106,8 @@ test('mobile menu opens from the header, retains nested routes, and closes after
     );
     await act(async () => {});
     expect(view.container.querySelector('.ant-sidebar')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Navigation' })).toBeNull();
+    fireEvent.click(screen.getByRole('link', { name: 'Settings' }));
     const trigger = screen.getByRole('button', { name: 'Navigation' });
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
     fireEvent.click(trigger);

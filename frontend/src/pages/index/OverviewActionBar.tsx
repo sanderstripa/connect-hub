@@ -181,7 +181,7 @@ export default function OverviewActionBar({
       {hasVersion && (
         <Tooltip title={t('pages.index.xraySwitch')}>
           <button type="button" className="ov-state-version" onClick={onOpenVersionSwitch}>
-            {`v${status.xray.version}`}
+            {isMobile ? status.xray.version : `v${status.xray.version}`}
           </button>
         </Tooltip>
       )}
@@ -191,36 +191,38 @@ export default function OverviewActionBar({
   return (
     <div className="ov-bar">
       {modalContextHolder}
-      {status.xray.errorMsg ? (
-        <Tooltip title={<span className="ov-error-detail">{status.xray.errorMsg}</span>}>
-          {statePill}
-        </Tooltip>
-      ) : (
-        statePill
-      )}
+      <div className="ov-versions">
+        {status.xray.errorMsg ? (
+          <Tooltip title={<span className="ov-error-detail">{status.xray.errorMsg}</span>}>
+            {statePill}
+          </Tooltip>
+        ) : (
+          statePill
+        )}
 
-      {status.xray.state === 'running' && status.xray.errorMsg ? (
-        <Tooltip title={<span className="ov-error-detail">{status.xray.errorMsg}</span>}>
-          <Tag color="error">{t('pages.index.xrayStatusError')}</Tag>
-        </Tooltip>
-      ) : null}
+        {status.xray.state === 'running' && status.xray.errorMsg ? (
+          <Tooltip title={<span className="ov-error-detail">{status.xray.errorMsg}</span>}>
+            <Tag color="error">{t('pages.index.xrayStatusError')}</Tag>
+          </Tooltip>
+        ) : null}
 
-      <SudokuMonitor />
+        <SudokuMonitor />
 
-      <span className="ov-state ov-panel-state">
-        <span>{t('pages.index.panel')}</span>
-        <Tooltip
-          title={
-            updateAvailable
-              ? `${t('update')} ${formatPanelVersion(latestVersion)}`
-              : t('pages.index.updatePanel')
-          }
-        >
-          <button type="button" className={`ov-state-version ov-panel-version${updateAvailable ? ' ov-update-tag' : ''}`} onClick={onOpenPanelUpdate}>
-            {formatPanelVersion(panelVersion)}
-          </button>
-        </Tooltip>
-      </span>
+        <span className="ov-state ov-panel-state">
+          <span>{t('pages.index.panel')}</span>
+          <Tooltip
+            title={
+              updateAvailable
+                ? `${t('update')} ${formatPanelVersion(latestVersion)}`
+                : t('pages.index.updatePanel')
+            }
+          >
+            <button type="button" className={`ov-state-version ov-panel-version${updateAvailable ? ' ov-update-tag' : ''}`} onClick={onOpenPanelUpdate}>
+              {isMobile ? panelVersion.replace(/^v(?=\d)/i, '') : formatPanelVersion(panelVersion)}
+            </button>
+          </Tooltip>
+        </span>
+      </div>
 
       <div className="ov-bar-actions">
         {[...actionGroups[0], actionGroups[1][0]].map((action) => (

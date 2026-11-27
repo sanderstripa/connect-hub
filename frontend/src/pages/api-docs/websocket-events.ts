@@ -123,6 +123,15 @@ const trafficPayloadSchema = {
   properties: {
     traffics: { type: 'array', items: { $ref: '#/components/schemas/Traffic' } },
     clientTraffics: { type: 'array', items: { $ref: '#/components/schemas/ClientTraffic' } },
+    sudokuClientTraffics: {
+      type: 'array',
+      description: 'Live samples for active Sudoku keys. An empty array clears the previous snapshot.',
+      items: {
+        type: 'object',
+        required: ['email', 'up', 'down', 'intervalMs'],
+        properties: { email: { type: 'string' }, up: int64, down: int64, intervalMs: int64 },
+      },
+    },
     clientTrafficSource: {
       type: 'string',
       enum: ['xray', 'tuic', 'node'],
@@ -155,6 +164,7 @@ const trafficPayloadSchema = {
       ],
     },
     { required: ['nodeTraffics'] },
+    { required: ['sudokuClientTraffics', 'clientTrafficIntervalMs'] },
     { required: ['clientTraffics', 'clientTrafficSource', 'clientTrafficIntervalMs'] },
   ],
 };

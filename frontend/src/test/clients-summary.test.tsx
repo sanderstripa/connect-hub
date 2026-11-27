@@ -190,6 +190,36 @@ describe('client summary always reflects the server, never a client_stats recomp
     expect(result.current.clientSpeed['shared@example.test']).toEqual({ up: 10, down: 10 });
   });
 
+  it('keeps measured Sudoku zero rates distinct from unavailable samples and preserves Xray', async () => {
+    const result = await loadedHook();
+
+    act(() => {
+      result.current.applyTrafficEvent({
+        clientTraffics: [{ email: 'xray@example.test', up: 50, down: 100 }],
+      });
+      result.current.applyTrafficEvent({
+        clientTrafficIntervalMs: 5_000,
+        sudokuClientTraffics: [
+          { email: 'idle@example.test', up: 0, down: 0, intervalMs: 5_000 },
+          { email: 'sudoku@example.test', up: 400, down: 200, intervalMs: 4_000 },
+        ],
+      });
+    });
+    expect(result.current.clientSpeed).toEqual({
+      'xray@example.test': { up: 10, down: 20 },
+      'idle@example.test': { up: 0, down: 0 },
+      'sudoku@example.test': { up: 100, down: 50 },
+    });
+
+    act(() => {
+      result.current.applyTrafficEvent({
+        clientTrafficIntervalMs: 5_000,
+        sudokuClientTraffics: [],
+      });
+    });
+    expect(result.current.clientSpeed).toEqual({ 'xray@example.test': { up: 10, down: 20 } });
+  });
+
   it('expires stale per-source speeds without clearing the other source', async () => {
     const result = await loadedHook();
     vi.useFakeTimers();

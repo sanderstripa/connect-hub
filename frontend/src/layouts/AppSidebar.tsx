@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties, MouseEvent, PointerEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Drawer, Dropdown, Menu, Tooltip } from 'antd';
@@ -16,7 +17,7 @@ import {
   FileTextOutlined,
   GithubOutlined,
   GlobalOutlined,
-  ImportOutlined,
+  LinkOutlined,
   LogoutOutlined,
   MailOutlined,
   SafetyOutlined,
@@ -25,6 +26,7 @@ import {
   SettingOutlined,
   SwapOutlined,
   TelegramFilled,
+  ThunderboltOutlined,
   WechatOutlined,
   ToolOutlined,
 } from '@ant-design/icons';
@@ -178,13 +180,13 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
     {
       key: '/connections',
       title: t('menu.connections'),
-      icon: <ImportOutlined aria-hidden />,
+      icon: <LinkOutlined aria-hidden />,
       active: ['/connections', '/inbounds', '/clients'].includes(pathname),
     },
     {
       key: 'network',
       title: t('menu.network'),
-      icon: <SwapOutlined aria-hidden />,
+      icon: <ThunderboltOutlined aria-hidden />,
       active: [
         '/groups',
         '/nodes',
@@ -227,6 +229,74 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
     (hash || (pathname === '/settings' ? '#general' : pathname === '/xray' ? '#basic' : ''));
   const network = items[2];
   const settingsActive = settingsItem.active || pathname === '/xray';
+  const activeIndex = items.slice(0, 3).findIndex((item) => item.active);
+  const [dragPosition, setDragPosition] = useState<number | null>(null);
+  const drag = useRef<{
+    pointer: number; x: number; y: number; width: number; direction: number; horizontal: boolean;
+  } | null>(null);
+  const suppressClick = useRef(false);
+
+  function startDrag(event: PointerEvent<HTMLElement>) {
+    if (!event.isPrimary || event.button !== 0) return;
+    suppressClick.current = false;
+    if (activeIndex < 0 || !event.target || !(event.target instanceof Element)) return;
+    const control = event.target.closest<HTMLElement>('.header-control[aria-current="page"]');
+    if (!control) return;
+    drag.current = {
+      pointer: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      width: control.offsetWidth,
+      direction: getComputedStyle(event.currentTarget).direction === 'rtl' ? -1 : 1,
+      horizontal: false,
+    };
+  }
+
+  function moveDrag(event: PointerEvent<HTMLElement>) {
+    const session = drag.current;
+    if (!session || session.pointer !== event.pointerId) return;
+    const dx = event.clientX - session.x;
+    const dy = event.clientY - session.y;
+    if (!session.horizontal) {
+      if (Math.abs(dy) >= 10 && Math.abs(dy) >= Math.abs(dx)) {
+        drag.current = null;
+        suppressClick.current = true;
+        return;
+      }
+      if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.35) return;
+      session.horizontal = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+    setDragPosition(Math.max(0, Math.min(2, activeIndex + dx * session.direction / session.width)));
+  }
+
+  function finishDrag(event: PointerEvent<HTMLElement>, cancelled = false) {
+    const session = drag.current;
+    if (!session || session.pointer !== event.pointerId) return;
+    drag.current = null;
+    setDragPosition(null);
+    if (!session.horizontal) return;
+    suppressClick.current = true;
+    if (cancelled) return;
+    const displacement = (event.clientX - session.x) * session.direction;
+    const offset = Math.abs(displacement) >= 24
+      ? Math.sign(displacement) * Math.max(1, Math.round(Math.abs(displacement) / session.width))
+      : 0;
+    const index = Math.max(0, Math.min(2, activeIndex + offset));
+    if (index === activeIndex) return;
+    if (index === 2) {
+      setNetworkOpen(true);
+      return;
+    }
+    openLink(items[index].key);
+  }
+
+  function preventDragClick(event: MouseEvent) {
+    if (!suppressClick.current || event.detail === 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    suppressClick.current = false;
+  }
 
   function logout() {
     return HttpUtil.post('/logout').then(() => {
@@ -237,11 +307,29 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
   if (header) {
     return (
       <>
-        <nav className="desktop-navigation" aria-label={t('menu.navigation')}>
+        {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Dragging is a pointer shortcut for the accessible links and menu button. */}
+        <nav
+          className="desktop-navigation"
+          aria-label={t('menu.navigation')}
+          data-active={activeIndex >= 0 || networkOpen}
+          data-dragging={dragPosition !== null}
+          style={{ '--nav-position': dragPosition ?? (networkOpen ? 2 : activeIndex) } as CSSProperties}
+          onPointerDown={startDrag}
+          onPointerMove={moveDrag}
+          onPointerUp={(event) => finishDrag(event)}
+          onPointerCancel={(event) => finishDrag(event, true)}
+          onLostPointerCapture={(event) => finishDrag(event, true)}
+          onPointerLeave={(event) => {
+            if (!drag.current?.horizontal) finishDrag(event, true);
+          }}
+          onDragStart={(event) => event.preventDefault()}
+        >
+          <span className="header-nav-indicator" aria-hidden />
           {items.slice(0, 2).map((item) => (
             <Link
               key={item.key}
               to={item.key}
+              onClickCapture={preventDragClick}
               className="header-control"
               aria-label={item.key === '/' ? t('pages.logs.tabs.overview') : item.title}
               aria-current={item.active ? 'page' : undefined}
@@ -270,6 +358,7 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
               ref={networkTrigger}
               aria-label={network.title}
               aria-current={network.active ? 'page' : undefined}
+              onClickCapture={preventDragClick}
               aria-haspopup="menu"
               aria-expanded={networkOpen}
               onKeyDown={(event) => {
@@ -337,7 +426,7 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
     );
   }
 
-  if (isMobile)
+  if (isMobile && settingsActive)
     return (
       <Drawer
         placement="left"
@@ -429,6 +518,8 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
       </Link>
     );
   }
+
+  if (isMobile) return null;
 
   return (
     <nav className="settings-navigation" aria-label={t('menu.settings')}>

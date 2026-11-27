@@ -88,6 +88,10 @@ jobs:
       - run: python3 hub/package.py
       - name: Real native advanced connection creation and editing
         run: python3 apps/windows-installer/test/panel-api-smoke.py "$PWD/dist/connect-hub-linux-amd64.tar.gz"
+      - name: Live per-key Xray and Sudoku traffic
+        run: |
+          python3 -m pip install --target "$RUNNER_TEMP/hub-test-deps" websockets==16.0
+          PYTHONPATH="$RUNNER_TEMP/hub-test-deps" python3 hub/live-client-traffic-smoke.py
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
       - name: Real panel concept 3.0, navigation and adaptive layout
@@ -119,8 +123,8 @@ jobs:
         with:
           name: panel-release-binary
           path: dist
-      - name: Upgrade the published 0.9.3 panel and preserve its data
-        run: python3 hub/upgrade-0.9.3-smoke.py
+      - name: Upgrade the published 1.0.0 panel and preserve its data
+        run: python3 hub/upgrade-1.0.0-smoke.py
   publish:
     if: github.ref == 'refs/heads/main'
     needs: [windows, panel-api, upgrade]

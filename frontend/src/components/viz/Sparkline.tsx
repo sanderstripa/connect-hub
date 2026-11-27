@@ -41,6 +41,7 @@ interface SparklineProps {
   stroke?: string;
   strokeWidth?: number;
   showPoints?: boolean;
+  presentation?: 'smooth' | 'line' | 'dots';
   maxPoints?: number;
   showGrid?: boolean;
   fillOpacity?: number;
@@ -60,6 +61,7 @@ interface SparklineProps {
   extrema?: SparklineExtrema;
   onPointClick?: (index: number) => void;
   rightPadding?: number;
+  latestLabel?: string;
 }
 
 interface ChartPoint {
@@ -153,6 +155,7 @@ export default function Sparkline(props: SparklineProps) {
     height = 80,
     strokeWidth = 2,
     showPoints = false,
+    presentation = 'smooth',
     maxPoints = 120,
     showGrid = true,
     fillOpacity = 0.22,
@@ -172,6 +175,7 @@ export default function Sparkline(props: SparklineProps) {
     extrema,
     onPointClick,
     rightPadding = 8,
+    latestLabel,
   } = themedProps;
 
   const hasSeries2 = data2.length > 0;
@@ -282,6 +286,7 @@ export default function Sparkline(props: SparklineProps) {
     referenceLines,
     extrema,
     onPointClick,
+    latestLabel,
   };
   const cfgRef = useRef(cfg);
   const viewRef = useRef<SparklineView>({ points, yDomain, yTicks, xTickIndexes, extremaPoints });
@@ -335,7 +340,12 @@ export default function Sparkline(props: SparklineProps) {
         grad.addColorStop(1, hexToRgba(color, 0));
         return grad;
       },
-      paths: uPlot.paths.spline?.(),
+      paths:
+        presentation === 'dots'
+          ? () => null
+          : presentation === 'line'
+            ? uPlot.paths.linear?.()
+            : uPlot.paths.spline?.(),
       points: { show: cfgRef.current.showPoints, size: 3, width: 0 },
       spanGaps: true,
     });
@@ -398,6 +408,64 @@ export default function Sparkline(props: SparklineProps) {
       const { ctx, bbox } = u;
       const dpr = dprOf(u);
       const right = bbox.left + bbox.width;
+
+      if (presentation === 'dots' && v.points.length > 0) {
+        const spacing = 6 * dpr;
+        const radius = Math.min(2 * dpr, bbox.width / v.points.length / 5);
+        const baseline = bbox.top + bbox.height - radius;
+        ctx.save();
+        for (let seriesIndex = u.data.length - 1; seriesIndex >= 1; seriesIndex--) {
+          const color = seriesColor(seriesIndex);
+          ctx.fillStyle = seriesIndex === 1 ? color : cssVar(u.root, '--bg-card', '#f2f2f6');
+          ctx.strokeStyle = color;
+          ctx.lineWidth = dpr;
+          u.data[seriesIndex].forEach((value, index) => {
+            if (value == null || !Number.isFinite(value)) return;
+            const offset = seriesIndex === 1 ? -radius : radius;
+            const x = Math.max(bbox.left + radius, Math.min(right - radius,
+              u.valToPos(index, 'x', true) + offset));
+            const top = u.valToPos(value, 'y', true);
+            for (let y = baseline; y >= Math.min(baseline, top); y -= spacing) {
+              ctx.beginPath();
+              ctx.arc(x, y, radius, 0, Math.PI * 2);
+              ctx.fill();
+              if (seriesIndex !== 1) ctx.stroke();
+            }
+          });
+        }
+        ctx.restore();
+      }
+
+      if (p.latestLabel && v.points.length > 0) {
+        const x = right - dpr;
+        const top = bbox.top;
+        const bottom = bbox.top + bbox.height;
+        ctx.save();
+        ctx.strokeStyle = '#55575d';
+        ctx.lineWidth = dpr;
+        ctx.beginPath();
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, bottom);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(x, bottom - 3 * dpr, 3.5 * dpr, 0, Math.PI * 2);
+        ctx.fillStyle = cssVar(u.root, '--hub-lime', '#d5fa4d');
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.font = `600 ${9 * dpr}px ${LABEL_FONT}`;
+        const labelWidth = ctx.measureText(p.latestLabel).width + 13 * dpr;
+        ctx.fillStyle = '#252629';
+        ctx.beginPath();
+        ctx.roundRect(x - labelWidth, top, labelWidth, 16 * dpr, 8 * dpr);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(p.latestLabel, x - labelWidth / 2, top + 8 * dpr);
+        ctx.restore();
+      }
 
       if (p.referenceLines?.length) {
         for (const rl of p.referenceLines) {
@@ -575,7 +643,7 @@ export default function Sparkline(props: SparklineProps) {
       plotRef.current = null;
       tooltipEl = null;
     };
-  }, [hasSeries2, hasSeries3, showAxes, showTooltip, showMarker, height, rightPadding]);
+  }, [hasSeries2, hasSeries3, showAxes, showTooltip, showMarker, height, rightPadding, presentation]);
 
   useEffect(() => {
     plotRef.current?.setData(

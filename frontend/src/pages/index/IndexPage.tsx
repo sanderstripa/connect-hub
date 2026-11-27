@@ -206,7 +206,6 @@ export default function IndexPage() {
                 />
               ) : (
                 <div className="ov-page">
-                  {isMobile && <h1 className="mobile-monitoring-title">{t('menu.dashboard')}</h1>}
                   <OverviewActionBar
                     status={status}
                     isMobile={isMobile}
