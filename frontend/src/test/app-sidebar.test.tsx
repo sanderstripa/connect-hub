@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import AppHeader from '@/layouts/AppHeader';
-import { MobileNavigationContext, MobileSettingsNavigationTrigger } from '@/layouts/MobileNavigation';
+import {
+  MobileNavigationContext,
+  MobileSettingsNavigationTrigger,
+} from '@/layouts/MobileNavigation';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, expect, test, vi } from 'vitest';
@@ -36,30 +39,36 @@ test('keeps primary desktop navigation and utilities in the shared header', asyn
   expect(header.querySelector('.desktop-navigation')).not.toBeNull();
   expect(screen.getByRole('link', { name: 'Connect.Hub' })).not.toBeNull();
   expect(screen.getByRole('link', { name: 'Connections' })).not.toBeNull();
-  expect(screen.getByRole('button', { name: 'Network' })).not.toBeNull();
+  expect(header.querySelectorAll('.desktop-navigation > a')).toHaveLength(2);
   expect(screen.queryByRole('button', { name: 'Xray Configs' })).toBeNull();
   expect(view.container.querySelector('.ant-sidebar')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: /Command Palette/ }));
   expect(commandPaletteStore.getSnapshot()).toBe(true);
 });
 
-test('opens all eight Network sections and closes on Escape or selection', async () => {
-  await renderSidebar();
-  const network = screen.getByRole('button', { name: 'Network' });
-  fireEvent.mouseEnter(network);
-  expect(network.getAttribute('aria-expanded')).toBe('false');
-  network.focus();
-  fireEvent.keyDown(network, { key: 'ArrowDown' });
-  expect(await screen.findAllByRole('menuitem')).toHaveLength(8);
-  expect(network.getAttribute('aria-expanded')).toBe('true');
-  fireEvent.keyDown(window, { key: 'Escape', keyCode: 27 });
-  expect(network.getAttribute('aria-expanded')).toBe('false');
-  expect(document.activeElement).toBe(network);
-  fireEvent.click(network);
-  fireEvent.click(await screen.findByRole('menuitem', { name: 'Hosts' }));
-  await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/hosts'));
-  expect(network.getAttribute('aria-expanded')).toBe('false');
-  expect(network.getAttribute('aria-current')).toBe('page');
+test('keeps all eight Network routes under Settings', async () => {
+  const view = await renderSidebar();
+  fireEvent.click(screen.getByRole('link', { name: 'Settings' }));
+  const network = view.container.querySelector('.settings-network') as HTMLDetailsElement;
+  expect(network.open).toBe(false);
+  fireEvent.click(network.querySelector('summary')!);
+  expect(network.open).toBe(true);
+  const links = Array.from(network.querySelectorAll('a'));
+  expect(links.map((link) => link.getAttribute('href'))).toEqual([
+    '/groups',
+    '/nodes',
+    '/hosts',
+    '/clean-ip',
+    '/dns-tunnel',
+    '/tunnels',
+    '/outbound',
+    '/routing',
+  ]);
+  for (const link of links) {
+    fireEvent.click(link);
+    expect(screen.getByTestId('location').textContent).toBe(link.getAttribute('href'));
+    expect(link.getAttribute('aria-current')).toBe('page');
+  }
 });
 
 test('opens Settings directly and keeps Xray and Logs in its internal navigation', async () => {
@@ -112,7 +121,6 @@ test('mobile settings navigation retains nested routes and closes after navigati
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
     fireEvent.click(trigger);
     await screen.findByRole('dialog');
-    fireEvent.click(screen.getByText('Settings', { selector: '.ant-menu-title-content' }));
     fireEvent.click(await screen.findByRole('menuitem', { name: 'General' }));
     await waitFor(() =>
       expect(screen.getByTestId('location').textContent).toBe('/settings#general'),
@@ -120,8 +128,12 @@ test('mobile settings navigation retains nested routes and closes after navigati
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
     fireEvent.click(trigger);
     await waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('true'));
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(screen.getByText('Network', { selector: '.ant-menu-title-content' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Hosts' }));
+    expect(screen.getByTestId('location').textContent).toBe('/hosts');
+    expect(screen.getByRole('button', { name: 'Navigation' }).getAttribute('aria-expanded')).toBe(
+      'false',
+    );
   } finally {
     window.matchMedia = original;
   }

@@ -39,7 +39,7 @@
 .inbound-position { display: none; }
 @media(max-width:768px) {
   .connections-workspace { display: grid; grid-template-columns: minmax(0,1fr); gap: 14px; min-height: 0; }
-  .connections-intro { margin-bottom: 14px; font-size: 13px; }
+  .connections-intro { display: none; }
   .inbound-browser { position: static; max-height: none; gap: 8px; }
   .inbound-card-list { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(160px, 48%); overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scroll-padding: 2px; scrollbar-width: thin; padding: 2px 2px 7px; }
   .inbound-card { padding: 12px; scroll-snap-align: start; }
@@ -131,7 +131,7 @@
   box-shadow: 0 0 0 2px var(--hub-lime), 0 0 12px #d5f65d70, 0 8px 12px #272a3320;
 }
 .connections-workspace .inbound-card-list { padding: 4px; }
-.connections-workspace .inbound-browser > .ant-btn-default { border-style: dashed; }
+
 .connections-workspace .connections-pane-header h2 { overflow-wrap: anywhere; }
 @media (min-width: 769px) {
   .connections-workspace {
@@ -139,4 +139,11 @@
     gap: 20px;
   }
   .connections-workspace .inbound-card-list { display: flex; }
+}
+
+.connections-pane .card-toolbar .ant-btn-primary.ant-btn-icon-only {
+  inline-size: var(--connect-control);
+  block-size: var(--connect-control);
+  padding: 0;
+  border-radius: 50%;
 }

@@ -95,8 +95,8 @@
 }
 .panel-app .header-control { border-radius: 10px; }
 .panel-app .header-utilities .header-control:not([aria-current=page]) {
-  background: var(--hub-light);
-  box-shadow: var(--hub-control-shadow);
+  background: var(--hub-secondary);
+  box-shadow: none;
 }
 .panel-app > .ant-layout { min-width: 0; }
 .panel-app > .ant-layout > .content-shell > .content-area {
@@ -107,7 +107,7 @@
 .panel-app .desktop-navigation {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0;
   touch-action: pan-y;
   user-select: none;
@@ -124,7 +124,7 @@
   position: absolute;
   z-index: -1;
   inset: var(--nav-inset, 3px) auto var(--nav-inset, 3px) var(--nav-inset, 3px);
-  width: calc((100% - 2 * var(--nav-inset, 3px)) / 3);
+  width: calc((100% - 2 * var(--nav-inset, 3px)) / 2);
   border-radius: 999px;
   background: #252629;
   box-shadow: 0 2px 5px #20212433, inset 0 1px #ffffff26;
@@ -141,14 +141,12 @@
 
 .panel-app .desktop-navigation[data-active='true'] .header-nav-indicator { opacity: 1; }
 .panel-app .desktop-navigation[data-dragging='true'] .header-nav-indicator { transition: none; }
-.panel-app .desktop-navigation:has([aria-expanded='true']) .header-control[aria-expanded='true'],
-.panel-app .desktop-navigation:not(:has([aria-expanded='true'])) .header-control[aria-current='page'] {
+.panel-app .desktop-navigation .header-control[aria-current='page'] {
   color: #fff;
   border-color: transparent;
   background: transparent;
 }
-.panel-app .desktop-navigation:has([aria-expanded='true']) .header-control[aria-expanded='true'] > .anticon,
-.panel-app .desktop-navigation:not(:has([aria-expanded='true'])) .header-control[aria-current='page'] > .anticon {
+.panel-app .desktop-navigation .header-control[aria-current='page'] > .anticon {
   color: var(--hub-lime);
 }
 @media (prefers-reduced-motion: reduce) {
@@ -200,8 +198,7 @@
   }
   .panel-app .header-utilities .header-control .anticon { font-size: 14px; }
   .panel-app .header-settings-label,
-  .panel-app .header-utilities > a[aria-label='GitHub'],
-  .panel-app .desktop-navigation .header-chevron { display: none; }
+  .panel-app .header-utilities > a[aria-label='GitHub'] { display: none; }
   .panel-app .desktop-navigation {
     --nav-inset: 4px;
     grid-column: 1 / -1;

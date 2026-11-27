@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Button, Empty, Space, Tag } from 'antd';
-import { PlusOutlined, SettingOutlined, MoreOutlined } from '@ant-design/icons';
+import { DownOutlined, PlusOutlined, SettingOutlined, MoreOutlined } from '@ant-design/icons';
 import { SizeFormatter } from '@/utils';
 import { readStreamHints, networkLabel } from '@/pages/inbounds/list/helpers';
 import { buildRowActionsMenu } from '@/pages/inbounds/list/RowActions';
@@ -124,8 +124,13 @@ export default function ConnectionsWorkspace({
             ))}
           </div>
         )}
-        <Dropdown menu={{ items: general, onClick: ({ key }) => onGeneral(key as GeneralAction) }}>
-          <Button block>{t('pages.inbounds.generalActions')}</Button>
+        <Dropdown
+          trigger={['click']}
+          menu={{ items: general, onClick: ({ key }) => onGeneral(key as GeneralAction) }}
+        >
+          <Button block icon={<DownOutlined aria-hidden />} iconPlacement="end">
+            {t('pages.inbounds.generalActions')}
+          </Button>
         </Dropdown>
       </aside>
       <section

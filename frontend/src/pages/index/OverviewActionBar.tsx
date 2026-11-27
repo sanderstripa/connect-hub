@@ -217,7 +217,11 @@ export default function OverviewActionBar({
                 : t('pages.index.updatePanel')
             }
           >
-            <button type="button" className={`ov-state-version ov-panel-version${updateAvailable ? ' ov-update-tag' : ''}`} onClick={onOpenPanelUpdate}>
+            <button
+              type="button"
+              className={`ov-state-version ov-panel-version${updateAvailable ? ' ov-update-tag' : ''}`}
+              onClick={onOpenPanelUpdate}
+            >
               {isMobile ? panelVersion.replace(/^v(?=\d)/i, '') : formatPanelVersion(panelVersion)}
             </button>
           </Tooltip>
@@ -236,7 +240,9 @@ export default function OverviewActionBar({
             icon={action.icon}
             aria-label={action.text}
             onClick={action.onClick}
-          ></Button>
+          >
+            {action.text}
+          </Button>
         ))}
         <Dropdown
           trigger={['click']}
@@ -276,7 +282,9 @@ export default function OverviewActionBar({
             onKeyDown={(event) => {
               if (event.key === 'Escape') setMoreOpen(false);
             }}
-          ></Button>
+          >
+            {t('pages.index.more')}
+          </Button>
         </Dropdown>
       </div>
     </div>

@@ -49,6 +49,13 @@ try{
    await page.goto(cfg.url+'panel/'+route);await page.locator('.desktop-navigation').waitFor();await brandCheck();await check(route.split('#')[0]||'dashboard');
    if(route===''){
     assert.equal(await page.getByRole('link',{name:'Overview',exact:true}).count(),1);
+    const controls=page.locator('.ov-bar-actions .ant-btn');
+    assert.equal(await controls.count(),4);
+    for(const control of await controls.all()){
+     assert.ok((await control.innerText()).trim());
+     const style=await control.evaluate(el=>({background:getComputedStyle(el).backgroundImage,shadow:getComputedStyle(el).boxShadow}));
+     assert.deepEqual(style,{background:'none',shadow:'none'});
+    }
     const keys = page.locator('.ov-active-keys');
     await keys.getByRole('heading', {name:/Active keys/}).waitFor();
     await keys.locator('.ov-keys-count').waitFor();
@@ -134,7 +141,7 @@ try{
   const bounds=await page.locator('.app-header .header-control').evaluateAll(controls=>controls.map(el=>{
    const {left,right}=el.getBoundingClientRect();return {left,right};
   }));
-  assert.equal(bounds.length,7);
+  assert.equal(bounds.length,6);
   assert.ok(bounds.every(({left,right})=>left>=0&&right<=1281),'Header overflow in '+locale);
  }
  await context.clearCookies({name:'lang'});
@@ -164,45 +171,23 @@ try{
  }
  async function navigation(){
   const headerNav=page.locator('.desktop-navigation');
-  const network=headerNav.getByRole('button',{name:'Network',exact:true});
-  const menu=page.locator('.network-menu:visible');
-  const networkLinks=['groups','nodes','hosts','clean-ip','dns-tunnel','tunnels','outbound','routing'];
-  for(const [index,route] of networkLinks.entries()){
-   await network.hover();
-   assert.equal(await network.getAttribute('aria-expanded'),'false');
-   await network.click();
-   await page.waitForFunction(()=>document.querySelector('.desktop-navigation [aria-haspopup="menu"]')?.getAttribute('aria-expanded')==='true');
-   await menu.waitFor();
-   await menu.evaluate(async el=>{
-    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-    await Promise.all(el.getAnimations({subtree:true}).map(animation=>animation.finished.catch(()=>{})));
-   });
-   await page.waitForFunction(()=>document.querySelectorAll('.network-menu:not(.ant-dropdown-hidden) [role="menuitem"]').length===8);
-   const items=menu.getByRole('menuitem');
-   if(index===0) await page.screenshot({path:path.join(cfg.output,'navigation-network-'+'concept-3'+'.png')});
-   const bounds=await menu.boundingBox(),vp=page.viewportSize();
-   assert.ok(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=vp.width+1&&bounds.y+bounds.height<=vp.height+1);
-   await items.nth(index).click();
-   await page.waitForURL('**/panel/'+route);
-   await brandCheck();
-   await menu.waitFor({state:'hidden'});
-   assert.equal(await network.getAttribute('aria-expanded'),'false');
-   assert.equal(await network.getAttribute('aria-current'),'page');
-  }
-  await page.goto(cfg.url+'panel/connections');
-  await network.focus();
-  await page.keyboard.press('ArrowDown');
-  await menu.waitFor();
-  await page.waitForFunction(()=>document.activeElement?.getAttribute('role')==='menu');
-  await page.keyboard.press('Escape');
-  await menu.waitFor({state:'hidden'});
-  assert.equal(await network.evaluate(el=>el===document.activeElement),true);
-  await network.click();
-  await page.locator('.connections-intro').click();
-  await menu.waitFor({state:'hidden'});
+  assert.equal(await headerNav.getByRole('link').count(),2);
   const settings=page.locator('.header-utilities').getByRole('link',{name:'Settings',exact:true});
   await settings.click();
   const settingsNav=page.locator('.settings-navigation');
+  const network=settingsNav.locator('.settings-network');
+  await network.locator('summary').click();
+  const networkLinks=['groups','nodes','hosts','clean-ip','dns-tunnel','tunnels','outbound','routing'];
+  assert.equal(await network.getByRole('link').count(),networkLinks.length);
+  await page.screenshot({path:path.join(cfg.output,'navigation-network-concept-3.png')});
+  for(const route of networkLinks){
+   const link=network.locator('a[href$="/'+route+'"]');
+   await link.click();
+   await page.waitForURL('**/panel/'+route);
+   await brandCheck();
+   assert.equal(await network.locator('a[aria-current="page"]').getAttribute('href'),await link.getAttribute('href'));
+   assert.equal(await settings.getAttribute('aria-current'),'page');
+  }
   for(const [name,route] of [
    ['Authentication','settings#security'],['Telegram Bot','settings#telegram'],
    ['Email','settings#email'],['Discord Bot','settings#discord'],['WeChat notifications','settings#wechat'],
@@ -229,17 +214,14 @@ try{
   for(const [width,height] of [[1280,720],[1366,768],[1920,1080],[2560,1440],[3840,2160],[1024,800],[768,800],[390,800]]){
    await page.setViewportSize({width,height});await page.locator('.inbound-card').first().waitFor();
    await page.screenshot({path:path.join(cfg.output,'navigation-current.png'),fullPage:true});
-   if(width > 768) {
-    assert.equal(await headerNav.isVisible(),true);
-    await network.click();await menu.waitFor();await page.keyboard.press('Escape');
-   } else {
-    assert.equal(await headerNav.isVisible(),true);
+   assert.equal(await headerNav.isVisible(),true);
+   if(width <= 768) {
     const hamburger=page.getByRole('button',{name:'Navigation',exact:true});
     assert.equal(await hamburger.count(),0);
     assert.equal(await page.locator('.header-utilities .header-control:visible').count(),3);
     const segments=await headerNav.locator('.header-control').evaluateAll(items=>items.map(el=>el.getBoundingClientRect().width));
+    assert.equal(segments.length,2);
     assert.ok(Math.max(...segments)-Math.min(...segments)<1);
-    await network.click();await menu.waitFor();await page.keyboard.press('Escape');
     const active=await headerNav.locator('[aria-current="page"]').boundingBox();
     const x=active.x+active.width/2,y=active.y+active.height/2;
     await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y+60,{steps:5});await page.mouse.up();
@@ -276,7 +258,12 @@ try{
     await page.waitForFunction(()=>{const r=document.querySelector('[role="dialog"]')?.getBoundingClientRect();return r && r.x>=0;});
     const b=await drawer.boundingBox();assert.ok(b.x>=0&&b.x+b.width<=width+1);
     await page.screenshot({path:path.join(cfg.output,'mobile-menu-'+width+'-'+'concept-3'+'.png')});
-    await drawer.getByText('Settings',{exact:true}).click();
+    await drawer.getByText('Network',{exact:true}).click();
+    const hosts=drawer.getByRole('menuitem',{name:'Hosts',exact:true});
+    await Promise.all([page.waitForURL('**/hosts'),hosts.click()]);
+    await drawer.waitFor({state:'hidden'});
+    await hamburger.click();
+    await drawer.waitFor();
     const apiDocs=drawer.getByRole('menuitem',{name:'API Docs',exact:true});
     await apiDocs.waitFor();
     await drawer.evaluate(async el=>{

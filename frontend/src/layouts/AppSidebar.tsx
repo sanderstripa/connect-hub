@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent, PointerEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Drawer, Dropdown, Menu, Tooltip } from 'antd';
+import { Drawer, Menu, Tooltip } from 'antd';
 import {
   ApiOutlined,
   ApartmentOutlined,
@@ -10,7 +10,7 @@ import {
   ClusterOutlined,
   CodeOutlined,
   DashboardOutlined,
-  DownOutlined,
+  RightOutlined,
   DatabaseOutlined,
   DiscordOutlined,
   ExportOutlined,
@@ -36,7 +36,7 @@ import { useAllSettings } from '@/api/queries/useAllSettings';
 import { useCommandPalette } from '@/components/command-palette/useCommandPalette';
 import './AppSidebar.css';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { useMobileNavigation } from './MobileNavigation';
+import { MobileSettingsNavigationTrigger, useMobileNavigation } from './MobileNavigation';
 
 type NavigationEntry = { key: string; label: React.ReactNode; icon: React.ReactNode };
 const REPO_URL = 'https://github.com/sanderstripa/connect-hub';
@@ -55,34 +55,8 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
   const { allSetting } = useAllSettings();
   const showSubFormats = !!(allSetting.subJsonEnable || allSetting.subClashEnable);
   const showSubBalancers = !!allSetting.subJsonEnable;
-  const [networkOpen, setNetworkOpen] = useState(false);
-  const networkTrigger = useRef<HTMLButtonElement>(null);
-  const focusNetworkMenu = useCallback((popup: HTMLDivElement | null) => {
-    if (!popup) return;
-    requestAnimationFrame(() => {
-      if (networkTrigger.current?.getAttribute('aria-expanded') === 'true') {
-        popup.querySelector<HTMLElement>('[role="menu"]')?.focus({ preventScroll: true });
-      }
-    });
-  }, []);
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        setNetworkOpen(false);
-        networkTrigger.current?.focus();
-      } else if ((event.ctrlKey || event.metaKey) && event.code === 'KeyK') {
-        setNetworkOpen(false);
-      }
-    }
-    if (!networkOpen) return;
-    window.addEventListener('keydown', onKey, true);
-    return () => window.removeEventListener('keydown', onKey, true);
-  }, [networkOpen]);
   const openLink = useCallback(
     (key: string) => {
-      setNetworkOpen(false);
       setMobileOpen(false);
       navigate(key);
     },
@@ -183,56 +157,58 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
       icon: <LinkOutlined aria-hidden />,
       active: ['/connections', '/inbounds', '/clients'].includes(pathname),
     },
-    {
-      key: 'network',
-      title: t('menu.network'),
-      icon: <ThunderboltOutlined aria-hidden />,
-      active: [
-        '/groups',
-        '/nodes',
-        '/hosts',
-        '/outbound',
-        '/routing',
-        '/clean-ip',
-        '/dns-tunnel',
-        '/tunnels',
-        '/node-routing',
-      ].includes(pathname),
-      children: [
-        { key: '/groups', icon: <ApartmentOutlined aria-hidden />, label: t('menu.groups') },
-        { key: '/nodes', icon: <ClusterOutlined aria-hidden />, label: t('menu.nodes') },
-        { key: '/hosts', icon: <GlobalOutlined aria-hidden />, label: t('menu.hosts') },
-        { key: '/clean-ip', icon: <SearchOutlined aria-hidden />, label: 'Clean IP' },
-        { key: '/dns-tunnel', icon: <DatabaseOutlined aria-hidden />, label: 'DNS Tunnel' },
-        { key: '/tunnels', icon: <SwapOutlined aria-hidden />, label: t('menu.tunnels') },
-        { key: '/outbound', icon: <ExportOutlined aria-hidden />, label: t('menu.outbounds') },
-        { key: '/routing', icon: <SwapOutlined aria-hidden />, label: t('menu.routing') },
-      ],
-    },
-    {
-      key: 'xray',
-      title: t('menu.xray'),
-      icon: <ToolOutlined aria-hidden />,
-      active: pathname === '/xray',
-      children: xrayChildren,
-    },
   ];
+  const network = {
+    key: 'network',
+    title: t('menu.network'),
+    icon: <ThunderboltOutlined aria-hidden />,
+    active: [
+      '/groups',
+      '/nodes',
+      '/hosts',
+      '/outbound',
+      '/routing',
+      '/clean-ip',
+      '/dns-tunnel',
+      '/tunnels',
+      '/node-routing',
+    ].includes(pathname),
+    children: [
+      { key: '/groups', icon: <ApartmentOutlined aria-hidden />, label: t('menu.groups') },
+      { key: '/nodes', icon: <ClusterOutlined aria-hidden />, label: t('menu.nodes') },
+      { key: '/hosts', icon: <GlobalOutlined aria-hidden />, label: t('menu.hosts') },
+      { key: '/clean-ip', icon: <SearchOutlined aria-hidden />, label: 'Clean IP' },
+      { key: '/dns-tunnel', icon: <DatabaseOutlined aria-hidden />, label: 'DNS Tunnel' },
+      { key: '/tunnels', icon: <SwapOutlined aria-hidden />, label: t('menu.tunnels') },
+      { key: '/outbound', icon: <ExportOutlined aria-hidden />, label: t('menu.outbounds') },
+      { key: '/routing', icon: <SwapOutlined aria-hidden />, label: t('menu.routing') },
+    ],
+  };
+  const xray = {
+    key: 'xray',
+    title: t('menu.xray'),
+    icon: <ToolOutlined aria-hidden />,
+    active: pathname === '/xray',
+    children: xrayChildren,
+  };
   const settingsItem = {
-    key: 'settings',
     title: t('menu.settings'),
     icon: <SettingOutlined aria-hidden />,
     active: ['/settings', '/logs', '/assistant', '/api-docs'].includes(pathname),
-    children: settingsChildren,
   };
   const selected =
     pathname +
     (hash || (pathname === '/settings' ? '#general' : pathname === '/xray' ? '#basic' : ''));
-  const network = items[2];
-  const settingsActive = settingsItem.active || pathname === '/xray';
-  const activeIndex = items.slice(0, 3).findIndex((item) => item.active);
+  const settingsActive = settingsItem.active || xray.active || network.active;
+  const activeIndex = items.findIndex((item) => item.active);
   const [dragPosition, setDragPosition] = useState<number | null>(null);
   const drag = useRef<{
-    pointer: number; x: number; y: number; width: number; direction: number; horizontal: boolean;
+    pointer: number;
+    x: number;
+    y: number;
+    width: number;
+    direction: number;
+    horizontal: boolean;
   } | null>(null);
   const suppressClick = useRef(false);
 
@@ -267,7 +243,12 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
       session.horizontal = true;
       event.currentTarget.setPointerCapture(event.pointerId);
     }
-    setDragPosition(Math.max(0, Math.min(2, activeIndex + dx * session.direction / session.width)));
+    setDragPosition(
+      Math.max(
+        0,
+        Math.min(items.length - 1, activeIndex + (dx * session.direction) / session.width),
+      ),
+    );
   }
 
   function finishDrag(event: PointerEvent<HTMLElement>, cancelled = false) {
@@ -279,15 +260,12 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
     suppressClick.current = true;
     if (cancelled) return;
     const displacement = (event.clientX - session.x) * session.direction;
-    const offset = Math.abs(displacement) >= 24
-      ? Math.sign(displacement) * Math.max(1, Math.round(Math.abs(displacement) / session.width))
-      : 0;
-    const index = Math.max(0, Math.min(2, activeIndex + offset));
+    const offset =
+      Math.abs(displacement) >= 24
+        ? Math.sign(displacement) * Math.max(1, Math.round(Math.abs(displacement) / session.width))
+        : 0;
+    const index = Math.max(0, Math.min(items.length - 1, activeIndex + offset));
     if (index === activeIndex) return;
-    if (index === 2) {
-      setNetworkOpen(true);
-      return;
-    }
     openLink(items[index].key);
   }
 
@@ -307,13 +285,13 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
   if (header) {
     return (
       <>
-        {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Dragging is a pointer shortcut for the accessible links and menu button. */}
+        {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Dragging is a pointer shortcut for the accessible links. */}
         <nav
           className="desktop-navigation"
           aria-label={t('menu.navigation')}
-          data-active={activeIndex >= 0 || networkOpen}
+          data-active={activeIndex >= 0}
           data-dragging={dragPosition !== null}
-          style={{ '--nav-position': dragPosition ?? (networkOpen ? 2 : activeIndex) } as CSSProperties}
+          style={{ '--nav-position': dragPosition ?? activeIndex } as CSSProperties}
           onPointerDown={startDrag}
           onPointerMove={moveDrag}
           onPointerUp={(event) => finishDrag(event)}
@@ -329,7 +307,7 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
           onDragStart={(event) => event.preventDefault()}
         >
           <span className="header-nav-indicator" aria-hidden />
-          {items.slice(0, 2).map((item) => (
+          {items.map((item) => (
             <Link
               key={item.key}
               to={item.key}
@@ -342,41 +320,6 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
               <span>{item.key === '/' ? t('pages.logs.tabs.overview') : item.title}</span>
             </Link>
           ))}
-          <Dropdown
-            popupRender={(menu) => <div ref={focusNetworkMenu}>{menu}</div>}
-            destroyOnHidden
-            trigger={['click']}
-            placement="bottomLeft"
-            open={networkOpen}
-            onOpenChange={setNetworkOpen}
-            classNames={{ root: 'network-menu' }}
-            menu={{
-              items: network.children,
-              selectedKeys: [pathname],
-              onClick: ({ key }) => openLink(key),
-            }}
-          >
-            <button
-              type="button"
-              className="header-control"
-              ref={networkTrigger}
-              aria-label={network.title}
-              aria-current={network.active ? 'page' : undefined}
-              onClickCapture={preventDragClick}
-              aria-haspopup="menu"
-              aria-expanded={networkOpen}
-              onKeyDown={(event) => {
-                if (event.key === 'ArrowDown') {
-                  event.preventDefault();
-                  setNetworkOpen(true);
-                }
-              }}
-            >
-              {network.icon}
-              <span>{network.title}</span>
-              <DownOutlined className="header-chevron" aria-hidden />
-            </button>
-          </Dropdown>
         </nav>
         <div className="header-utilities">
           <Tooltip title={t('commandPalette.title')} open={isMobile ? false : undefined}>
@@ -385,10 +328,7 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
               className="header-control global-search-trigger"
               aria-label={t('commandPalette.title')}
               aria-keyshortcuts="Control+k Meta+k"
-              onClick={() => {
-                setNetworkOpen(false);
-                openSearch();
-              }}
+              onClick={openSearch}
             >
               <SearchOutlined aria-hidden />
             </button>
@@ -404,7 +344,10 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
               <span className="header-settings-label">{settingsItem.title}</span>
             </Link>
           </Tooltip>
-          <Tooltip title={'GitHub ' + formatPanelVersion(window.X_UI_CUR_VER || '')} open={isMobile ? false : undefined}>
+          <Tooltip
+            title={'GitHub ' + formatPanelVersion(window.X_UI_CUR_VER || '')}
+            open={isMobile ? false : undefined}
+          >
             <a
               className="header-control"
               href={REPO_URL}
@@ -432,48 +375,61 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
 
   if (isMobile && settingsActive)
     return (
-      <Drawer
-        placement="left"
-        open={mobileOpen}
-        onClose={() => setMobileOpen(false)}
-        title="Connect. Hub"
-        size="min(320px, 86vw)"
-        rootClassName="mobile-navigation-drawer"
-      >
-        <nav id="mobile-navigation" aria-label={t('menu.navigation')}>
-          <Menu
-            mode="inline"
-            selectedKeys={[selected, pathname]}
-            items={[...items, settingsItem].map((item) => ({
-              key: item.key,
-              label: item.title,
-              icon: item.icon,
-              children: item.children,
-            }))}
-            onClick={({ key }) => openLink(key)}
-          />
-          <div className="mobile-nav-utilities">
-            <button
-              type="button"
-              onClick={() => {
-                setMobileOpen(false);
-                openSearch();
-              }}
-            >
-              <SearchOutlined aria-hidden />
-              {t('commandPalette.title')}
-            </button>
-            <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
-              <GithubOutlined aria-hidden />
-              GitHub
-            </a>
-            <button type="button" onClick={logout}>
-              <LogoutOutlined aria-hidden />
-              {t('logout')}
-            </button>
+      <>
+        {pathname !== '/settings' && (
+          <div className="settings-subpage-navigation">
+            <MobileSettingsNavigationTrigger />
           </div>
-        </nav>
-      </Drawer>
+        )}
+        <Drawer
+          placement="left"
+          open={mobileOpen}
+          onClose={() => setMobileOpen(false)}
+          title={settingsItem.title}
+          size="min(320px, 86vw)"
+          rootClassName="mobile-navigation-drawer"
+        >
+          <nav id="mobile-navigation" aria-label={t('menu.navigation')}>
+            <Menu
+              mode="inline"
+              selectedKeys={[selected, pathname]}
+              defaultOpenKeys={network.active ? [network.key] : []}
+              items={[
+                settingsChildren[0],
+                {
+                  key: network.key,
+                  label: network.title,
+                  icon: network.icon,
+                  children: network.children,
+                },
+                ...settingsChildren.slice(1),
+                { key: xray.key, label: xray.title, icon: xray.icon, children: xray.children },
+              ]}
+              onClick={({ key }) => openLink(key)}
+            />
+            <div className="mobile-nav-utilities">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  openSearch();
+                }}
+              >
+                <SearchOutlined aria-hidden />
+                {t('commandPalette.title')}
+              </button>
+              <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
+                <GithubOutlined aria-hidden />
+                GitHub
+              </a>
+              <button type="button" onClick={logout}>
+                <LogoutOutlined aria-hidden />
+                {t('logout')}
+              </button>
+            </div>
+          </nav>
+        </Drawer>
+      </>
     );
   if (!settingsActive) return null;
 
@@ -497,7 +453,7 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
     t('pages.index.currentPanelVersion'),
   ];
   const entries: Record<string, { label: React.ReactNode; icon?: React.ReactNode }> = {};
-  for (const item of [...settingsChildren, ...xrayChildren]) {
+  for (const item of [...settingsChildren, ...network.children, ...xrayChildren]) {
     entries[item.key] = item;
   }
   if (showSubBalancers) {
@@ -519,6 +475,9 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
       <Link key={key} to={key} aria-current={selected === key ? 'page' : undefined}>
         {entry.icon}
         <span>{entry.label}</span>
+        {network.children.some((item) => item.key === key) && (
+          <RightOutlined className="settings-nav-chevron" aria-hidden />
+        )}
       </Link>
     );
   }
@@ -529,9 +488,18 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
     <nav className="settings-navigation" aria-label={t('menu.settings')}>
       <div className="settings-navigation-inner">
         <h2>{t('menu.settings')}</h2>
-        {sectionKeys.map((keys, index) => (
+        <section>{sectionKeys[0].map(settingsLink)}</section>
+        <details className="settings-network" open={network.active || undefined}>
+          <summary>
+            {network.icon}
+            <span>{network.title}</span>
+            <RightOutlined className="settings-nav-chevron" aria-hidden />
+          </summary>
+          {network.children.map(({ key }) => settingsLink(key))}
+        </details>
+        {sectionKeys.slice(1).map((keys, index) => (
           <section key={keys[0]}>
-            {index !== 0 && <h3>{labels[index]}</h3>}
+            <h3>{labels[index + 1]}</h3>
             {keys.map(settingsLink)}
           </section>
         ))}

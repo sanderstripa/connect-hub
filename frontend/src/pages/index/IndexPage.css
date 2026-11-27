@@ -125,19 +125,12 @@
 }
 
 .ov-bar-actions {
-  margin-inline-start: auto;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-@media (max-width: 768px) {
-  .ov-bar-actions {
-    margin-inline-start: 0;
-    width: 100%;
-    justify-content: space-between;
-  }
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: 100%;
+  padding: 4px;
+  background: var(--hub-secondary);
+  border-radius: 18px;
 }
 
 .ov-bar-sep {
@@ -606,28 +599,36 @@
   .ov-versions { width: 100%; justify-content: space-between; gap: 2px 8px; }
   .ov-versions .ov-state { min-width: 0; font-size: 12px; padding: 0; gap: 4px; }
   .ov-versions .ov-state-version { color: #666971; }
-  .ov-bar-actions { width: 100%; gap: 7px; margin-top: 4px; justify-content: flex-start; }
-  .ov-bar-actions > .ant-btn { min-height: 34px; }
-  .ov-bar-actions > .ant-btn:last-child { margin-inline-start: auto; }
 }
 
-/* Neutral icon controls share the same surface in both themes. */
 .ov-bar-actions .ov-icon-action.ant-btn {
-  width: 36px;
-  height: 36px;
-  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  height: auto;
+  min-height: 62px;
+  min-width: 0;
+  padding: 5px 2px;
   border: 0;
+  border-radius: 14px;
   box-shadow: none;
   background: transparent;
-  color: var(--ant-color-text);
-  font-size: 17px;
+  color: var(--text-primary);
+  font-size: clamp(10px, 2.9vw, 13px);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.15;
 }
-.ov-bar-actions .ov-icon-action.ant-btn:hover,
-.ov-bar-actions .ov-icon-action.ant-btn:focus-visible {
-  background: color-mix(in srgb, var(--text-primary) 9%, var(--bg-card));
-  color: var(--ant-color-text);
+.ov-bar-actions .ov-icon-action .ant-btn-icon { font-size: 19px; }
+.ov-bar-actions .ov-icon-action.ant-btn:not(:disabled):hover {
+  background: var(--hub-secondary-hover);
 }
-.ov-bar-actions .ov-action-stop.ant-btn:hover,
+.ov-bar-actions .ov-icon-action.ant-btn:not(:disabled):active {
+  background: var(--hub-secondary-pressed);
+}
+.ov-bar-actions .ov-icon-action.ant-btn:disabled { color: var(--ant-color-text-disabled); }
+.ov-bar-actions .ov-action-stop.ant-btn:not(:disabled):hover,
 .ov-bar-actions .ov-action-stop.ant-btn:focus-visible { color: var(--ant-color-error); }
 .ov-bar-actions .ov-action-restart.ant-btn:hover,
 .ov-bar-actions .ov-action-restart.ant-btn:focus-visible { color: var(--ant-color-success); }
@@ -656,16 +657,6 @@
 }
 .ov-vitals .ov-tile-head,
 .ov-vitals .ov-tile-value { padding-inline-end: var(--ov-pad); }
-.ov-bar-actions .ov-icon-action.ant-btn {
-  border-radius: 11px;
-  background: var(--hub-light);
-  box-shadow: var(--hub-control-shadow);
-}
-.ov-bar-actions .ov-icon-action.ant-btn:last-child {
-  box-shadow: none;
-  background: transparent;
-  border: 1px dashed #aeb1ba;
-}
 .ov-mid .ov-kicker,
 .ov-keys-head h2 { font-size: 16px; font-weight: 650; letter-spacing: -.04em; text-transform: none; }
 .ov-keys-head {
@@ -755,12 +746,12 @@ body .ov-page :is(.ant-card, .ant-card-hoverable) {
   gap: 8px;
 }
 .ov-traffic-controls .ant-segmented {
-  background: var(--hub-light);
-  border-radius: var(--hub-control-radius);
-  box-shadow: var(--hub-control-shadow);
+  background: var(--hub-secondary);
+  border-radius: 999px;
+  box-shadow: none;
 }
 .ov-traffic-controls .ant-segmented-item-selected {
-  background: var(--hub-graphite);
+  background: var(--hub-primary);
   color: var(--hub-lime);
 }
 .ov-page :is(.ov-sub, .ov-key-inbounds) { color: var(--text-secondary); }

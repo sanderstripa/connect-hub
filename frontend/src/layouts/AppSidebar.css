@@ -27,7 +27,6 @@
 }
 
 .header-control .anticon { font-size: 16px; }
-.header-control .header-chevron { font-size: 10px; }
 
 .header-control:hover,
 .header-control[aria-expanded=true] {
@@ -43,23 +42,9 @@
 }
 
 .header-control:focus-visible,
-.settings-navigation a:focus-visible {
+.settings-navigation :is(a, summary):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
-}
-
-.network-menu .ant-dropdown-menu {
-  min-inline-size: 200px;
-  max-inline-size: calc(100vw - 24px);
-  max-block-size: calc(100dvh - var(--app-header-height, 56px) - 12px);
-  overflow-y: auto;
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-}
-
-.network-menu .ant-dropdown-menu-item {
-  white-space: normal;
-  overflow-wrap: anywhere;
 }
 
 .panel-app > .ant-layout:has(> .settings-navigation) {
@@ -104,7 +89,7 @@
   font-weight: 600;
 }
 
-.settings-navigation a {
+.settings-navigation :is(a, summary) {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -115,7 +100,23 @@
   overflow-wrap: anywhere;
 }
 
-.settings-navigation a:hover { background: var(--bg-card); }
+.settings-navigation :is(a, summary):hover { background: var(--hub-secondary-hover); }
+.settings-network { margin-block: 8px; border-block: 1px solid var(--border); }
+.settings-network summary { cursor: pointer; font-weight: 600; }
+.settings-network summary::-webkit-details-marker { display: none; }
+.settings-network a { margin-inline-start: 14px; }
+.settings-nav-chevron { margin-inline-start: auto; font-size: 11px; color: var(--text-secondary); }
+.settings-network[open] summary .settings-nav-chevron { transform: rotate(90deg); }
+.panel-app > .ant-layout:has(> .settings-subpage-navigation) { position: relative; }
+.settings-subpage-navigation {
+  position: absolute;
+  inset-block-start: var(--app-header-height);
+  inset-inline-start: var(--hub-header-inset);
+  z-index: 1;
+}
+.panel-app > .ant-layout:has(> .settings-subpage-navigation) > .content-shell {
+  padding-block-start: calc(var(--app-header-height) + 46px);
+}
 
 @media (min-width: 769px) {
   .app-header { gap: 12px; border-block-end: 1px solid var(--border); }
