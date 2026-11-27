@@ -375,7 +375,7 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
           </Dropdown>
         </nav>
         <div className="header-utilities">
-          <Tooltip title={t('commandPalette.title')}>
+          <Tooltip title={t('commandPalette.title')} open={isMobile ? false : undefined}>
             <button
               type="button"
               className="header-control global-search-trigger"
@@ -389,7 +389,7 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
               <SearchOutlined aria-hidden />
             </button>
           </Tooltip>
-          <Tooltip title={settingsItem.title}>
+          <Tooltip title={settingsItem.title} open={isMobile ? false : undefined}>
             <Link
               className="header-control"
               to="/settings"
@@ -400,7 +400,7 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
               <span className="header-settings-label">{settingsItem.title}</span>
             </Link>
           </Tooltip>
-          <Tooltip title={'GitHub ' + formatPanelVersion(window.X_UI_CUR_VER || '')}>
+          <Tooltip title={'GitHub ' + formatPanelVersion(window.X_UI_CUR_VER || '')} open={isMobile ? false : undefined}>
             <a
               className="header-control"
               href={REPO_URL}
@@ -411,7 +411,7 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
               <GithubOutlined aria-hidden />
             </a>
           </Tooltip>
-          <Tooltip title={t('logout')}>
+          <Tooltip title={t('logout')} open={isMobile ? false : undefined}>
             <button
               type="button"
               className="header-control"
