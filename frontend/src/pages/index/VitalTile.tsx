@@ -12,7 +12,6 @@ interface VitalTileProps {
   icon: ReactNode;
   label: string;
   percent: number;
-  statusColor: string;
   detail: string;
   extraContent?: ReactNode;
   footLeft: ReactNode;
@@ -30,7 +29,6 @@ export default function VitalTile({
   icon,
   label,
   percent,
-  statusColor,
   detail,
   extraContent,
   footLeft,
@@ -84,14 +82,14 @@ export default function VitalTile({
       <div className="ov-tile-chart">
         <Sparkline
           data={data}
-          height={isMobile ? 48 : 62}
+          height={extraContent ? 27 : isMobile ? 39 : 61}
           strokeWidth={1.5}
-          fillOpacity={0.3}
+          fillOpacity={0.1}
           showGrid={false}
           showPoints={data.length <= 120}
           showMarker={false}
           valueMax={peak(data) > 0 ? null : 100}
-          stroke={statusColor}
+          stroke={token.colorPrimary}
           referenceLines={referenceLines}
           yFormatter={(v) => `${v.toFixed(0)}%`}
           name1={label}

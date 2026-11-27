@@ -652,7 +652,7 @@ body .command-palette-footer { padding: 8px 12px; font-size: 11px; color: var(--
 
 .panel-app .command-palette-backdrop {
   justify-content: flex-end;
-  padding: var(--app-header-height) max(12px, calc((100% - 1652px) / 2)) 0 12px;
+  padding: var(--hub-search-top) max(12px, calc((100% - 1440px) / 2 + 150px)) 0 12px;
   background: transparent;
   backdrop-filter: none;
 }
@@ -662,4 +662,7 @@ body .command-palette-footer { padding: 8px 12px; font-size: 11px; color: var(--
   border-radius: var(--hub-radius);
   background: var(--hub-card);
   box-shadow: var(--hub-shadow);
+}
+@media (max-width: 768px) {
+  .panel-app .command-palette-backdrop { padding-inline: 12px; }
 }

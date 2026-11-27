@@ -87,7 +87,7 @@ body .login-app .brand-accent,body .login-app.is-dark .brand-accent{background:v
 :root {
   --hub-lime: #d4f65b;
   --hub-shadow: 0 12px 20px -12px #34374155, 0 2px 4px #30333e0d, inset 0 1px 0 #fff;
-  --hub-card: linear-gradient(155deg, #f8f8fa, #ececf1);
+  --hub-card: linear-gradient(148deg, #f8f8fa 0%, #f1f1f4 64%, #ededef 100%);
   --hub-light: linear-gradient(165deg, #fafafc, #e9eaee);
   --hub-graphite: linear-gradient(180deg, #45464a, #252629 35%, #141517);
   --hub-control-shadow: 0 3px 6px #3d3f481d, inset 0 1px 0 #fff;
@@ -167,7 +167,7 @@ body .login-app .brand-name {
   font-size: 26px;
   letter-spacing: .1em;
 }
-body .login-app :is(.ant-input-affix-wrapper, .login-submit) { min-height: 43px; }
+body .login-app :is(.ant-input-affix-wrapper, .login-submit, .submit-row .ant-btn) { min-height: 43px; }
 body .login-app .ant-input-affix-wrapper {
   background: linear-gradient(#e7e8ed, #f1f1f4) !important;
 }

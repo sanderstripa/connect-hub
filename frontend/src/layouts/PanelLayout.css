@@ -81,6 +81,7 @@
   margin-inline: auto;
   --app-header-height: 94px;
   --hub-header-inset: 24px;
+  --hub-search-top: 83px;
 }
 .panel-app .app-header {
   inset: 18px max(var(--hub-header-inset), calc((100% - 1652px) / 2)) auto;
@@ -116,7 +117,7 @@
   .panel-app .app-header { inset-block-start: 10px; }
 }
 @media (max-width: 768px) {
-  .panel-app { --app-header-height: 119px; }
+  .panel-app { --app-header-height: 119px; --hub-search-top: 110px; }
   .panel-app .app-header {
     height: auto;
     min-height: 98px;

@@ -34,7 +34,7 @@ test('keeps primary desktop navigation and utilities in the shared header', asyn
   const view = await renderSidebar();
   const header = view.container.querySelector('.app-header')!;
   expect(header.querySelector('.desktop-navigation')).not.toBeNull();
-  expect(screen.getByRole('link', { name: 'Connect. Hub' })).not.toBeNull();
+  expect(screen.getByRole('link', { name: 'Connect.Hub' })).not.toBeNull();
   expect(screen.getByRole('link', { name: 'Connections' })).not.toBeNull();
   expect(screen.getByRole('button', { name: 'Network' })).not.toBeNull();
   expect(screen.queryByRole('button', { name: 'Xray Configs' })).toBeNull();
@@ -109,9 +109,9 @@ test('mobile menu opens from the header, retains nested routes, and closes after
     fireEvent.click(trigger);
     await screen.findByRole('dialog');
     fireEvent.click(screen.getByText('Settings', { selector: '.ant-menu-title-content' }));
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Appearance' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'General' }));
     await waitFor(() =>
-      expect(screen.getByTestId('location').textContent).toBe('/settings#appearance'),
+      expect(screen.getByTestId('location').textContent).toBe('/settings#general'),
     );
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
     fireEvent.click(trigger);

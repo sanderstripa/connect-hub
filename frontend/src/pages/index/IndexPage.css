@@ -710,7 +710,25 @@
 .ov-page .ov-wide-foot { border-top-style: dashed; }
 .ov-page .ov-strip-value { white-space: normal; }
 .ov-vitals .ov-tile-chart { overflow: hidden; }
-.ov-vitals .ov-range-toolbar { position: static; margin: 6px var(--ov-pad) 0; }
+body .ov-page :is(.ant-card, .ant-card-hoverable) {
+  border-radius: var(--hub-radius);
+  box-shadow: var(--hub-shadow);
+}
+.ov-vitals .ov-tile > .ant-card-body {
+  min-height: 236px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.ov-vitals .ov-tile-chart {
+  margin-block-start: auto;
+  padding: 7px 13px 6px;
+}
+.ov-vitals .ov-tile-value { padding-block-start: 7px; }
+.ov-vitals .ov-range-toolbar { margin: 5px var(--ov-pad) 0; }
+.ov-vitals .ov-range-toolbar .ant-select { --ant-select-control-height: 24px; }
+.ov-vitals .ov-load { padding-block-start: 7px; }
+.ov-vitals .ov-load-values { margin-block-start: 5px; }
 @media (max-width: 650px) {
   .index-page { --ov-pad: 10px; }
   .ov-vitals .ov-tile-head { gap: 5px; }

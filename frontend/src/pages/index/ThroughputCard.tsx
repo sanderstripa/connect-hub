@@ -62,7 +62,7 @@ export default function ThroughputCard({
         <div>
           <div className="ov-kicker">{t('pages.index.overallSpeed')}</div>
           <div className="ov-sub">
-            {`${t('pages.index.throughputSub')} · ${t('pages.index.peak')} ${SizeFormatter.speedFormat(peak(down))}`}
+            {`${t('pages.index.throughputSub')} · ${t('pages.index.peak')} ${available && down.length ? SizeFormatter.speedFormat(peak(down)) : '—'}`}
           </div>
         </div>
         <div className="ov-wide-legend">
@@ -91,7 +91,7 @@ export default function ThroughputCard({
           data={available ? up : []}
           data2={available ? down : []}
           labels={labels}
-          height={isMobile ? 140 : 186}
+          height={isMobile ? 140 : 157}
           strokeWidth={1.75}
           fillOpacity={0.24}
           showTooltip
@@ -124,8 +124,8 @@ export default function ThroughputCard({
         <div>
           <div className="ov-kicker">{t('pages.index.avgWindow')}</div>
           <div className="ov-foot-value">
-            <span className="ov-foot-part">{`↑ ${SizeFormatter.speedFormat(mean(up))}`}</span>{' '}
-            <span className="ov-foot-part">{`↓ ${SizeFormatter.speedFormat(mean(down))}`}</span>
+            <span className="ov-foot-part">{`↑ ${available && up.length ? SizeFormatter.speedFormat(mean(up)) : '—'}`}</span>{' '}
+            <span className="ov-foot-part">{`↓ ${available && down.length ? SizeFormatter.speedFormat(mean(down)) : '—'}`}</span>
           </div>
         </div>
       </div>

@@ -218,9 +218,11 @@ try{
   await page.screenshot({path:path.join(cfg.output,'navigation-settings-'+'concept-3'+'.png')});
   await page.keyboard.press('Control+k');const search=page.locator('.command-palette-input');await search.waitFor();await search.fill('Authentication');await search.press('Enter');await page.waitForURL('**/settings#security');
   await page.getByRole('button',{name:/Command Palette/}).click();await page.locator('.command-palette-input').waitFor();
-  const headerBox=await page.locator('.app-header').boundingBox();
-  const searchBox=await page.locator('.command-palette-modal').boundingBox();
-  assert.ok(searchBox.y>=headerBox.y+headerBox.height&&searchBox.y<headerBox.y+headerBox.height+30);
+  await page.waitForFunction(()=>{
+   const header=document.querySelector('.app-header')?.getBoundingClientRect();
+   const search=document.querySelector('.command-palette-modal')?.getBoundingClientRect();
+   return header && search && search.top>=header.bottom && search.top<header.bottom+20;
+  });
   await page.screenshot({path:path.join(cfg.output,'navigation-search.png')});
   await page.keyboard.press('Escape');await page.locator('.command-palette-input').waitFor({state:'detached'});
   await page.goto(cfg.url+'panel/connections');
