@@ -1982,8 +1982,10 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
             inboundScope={inboundId}
             open={infoOpen}
             client={infoClient}
+            liveClient={infoOpen ? detailRow ?? undefined : undefined}
             inboundsById={inboundsById}
             tunnelAllowedIPs={viewingTunnelAllowedIPs}
+            speed={infoClient ? clientSpeed[infoClient.email] : undefined}
             isOnline={infoClient ? isOnline(infoClient.email) : false}
             subSettings={subSettings}
             hosts={hosts}

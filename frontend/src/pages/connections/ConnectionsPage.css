@@ -81,9 +81,6 @@
 .connections-pane .clients-page { padding: 0; }
 .connections-pane .client-detail-toolbar { padding: 16px 16px 0; margin-bottom: 16px; }
 .connections-pane .connection-detail-surface { padding: 0 16px 16px; }
-.connections-pane .connection-detail-surface .info-table { max-width: 860px; table-layout: fixed; }
-.connections-pane .connection-detail-surface .info-table td { overflow-wrap: anywhere; }
-.connections-pane .connection-detail-surface .info-table td:first-child { width: 150px; }
 @media (min-width: 769px) and (max-width: 1200px) {
   .connections-workspace { grid-template-columns: minmax(0, 1fr); }
   .inbound-browser { position: static; max-height: none; }
@@ -95,15 +92,6 @@
   .connections-pane-header { flex-direction: row; }
   .connections-pane .client-detail-toolbar { padding: 14px 12px 0; }
   .connections-pane .connection-detail-surface { padding: 0 12px 14px; }
-  .connections-pane .connection-detail-surface .info-table td:first-child { width: 112px; white-space: normal; }
-}
-
-.connection-detail-surface { container-type: inline-size; }
-@container (min-width: 850px) {
-  .connection-detail-surface .info-table.block { max-width: none; }
-  .connection-detail-surface .info-table.block tbody { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 20px; }
-  .connection-detail-surface .info-table.block tr { display: grid; grid-template-columns: 140px minmax(0, 1fr); }
-  .connections-pane .connection-detail-surface .info-table.block td:first-child { width: auto; white-space: normal; }
 }
 
 @media (min-width: 1201px) {

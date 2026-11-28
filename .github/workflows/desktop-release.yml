@@ -123,8 +123,8 @@ jobs:
         with:
           name: panel-release-binary
           path: dist
-      - name: Upgrade the published 1.0.2 panel and preserve its data
-        run: python3 hub/upgrade-1.0.2-smoke.py
+      - name: Upgrade the published 1.0.3 panel and preserve its data
+        run: python3 hub/upgrade-1.0.3-smoke.py
   publish:
     if: github.ref == 'refs/heads/main'
     needs: [windows, panel-api, upgrade]

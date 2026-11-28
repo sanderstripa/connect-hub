@@ -168,19 +168,19 @@ export function linkMetaText(parts: LinkParts): string {
   return [parts.remark, parts.port].filter(Boolean).join(':');
 }
 
-export function LinkTags({ parts }: { parts: LinkParts }) {
+export function LinkTags({ parts, neutral = false }: { parts: LinkParts; neutral?: boolean }) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-      <Tag color={PROTOCOL_COLORS[parts.protocol]} style={TAG_STYLE}>
+      <Tag color={neutral ? undefined : PROTOCOL_COLORS[parts.protocol]} style={TAG_STYLE}>
         {parts.protocol}
       </Tag>
       {parts.network && (
-        <Tag color={TRANSPORT_COLOR} style={TAG_STYLE}>
+        <Tag color={neutral ? undefined : TRANSPORT_COLOR} style={TAG_STYLE}>
           {parts.network}
         </Tag>
       )}
       {parts.security && (
-        <Tag color={SECURITY_COLORS[parts.security]} style={TAG_STYLE}>
+        <Tag color={neutral ? undefined : SECURITY_COLORS[parts.security]} style={TAG_STYLE}>
           {parts.security}
         </Tag>
       )}

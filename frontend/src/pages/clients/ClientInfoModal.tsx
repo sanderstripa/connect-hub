@@ -1,11 +1,12 @@
 import InfinityIcon from '@/components/ui/InfinityIcon';
 import DetailSurface from '@/components/layout/DetailSurface';
 import { CLIENT_GROUPS_UI_ENABLED } from '@/lib/client-groups-ui';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import ClientSpeedTag from '@/components/clients/ClientSpeedTag';
 import ClientWireguardDevices from './ClientWireguardDevices';
 import { useClientWireguardDevices } from '@/hooks/useClientWireguardDevices';
 import { useTranslation } from 'react-i18next';
-import { Button, Divider, Modal, Popover, Tag, Tooltip, message } from 'antd';
+import { Button, Modal, Popover, Tag, Tooltip, message } from 'antd';
 import {
   CopyOutlined,
   DownloadOutlined,
@@ -19,7 +20,7 @@ import { formatInboundLabel, formatTunnelConfigMeta } from '@/lib/inbounds/label
 import { normalizeClientIps, type ClientIpInfo } from '@/lib/clients/ip-log';
 import { useDatepicker } from '@/hooks/useDatepicker';
 import { useClientHwids } from '@/hooks/useClientHwids';
-import type { ClientRecord, InboundOption } from '@/hooks/useClients';
+import type { ClientRecord, ClientSpeedEntry, InboundOption } from '@/hooks/useClients';
 import { isPostQuantumLink } from '@/lib/xray/inbound-link';
 import { LinkTags, linkMetaText, parseLinkParts } from '@/lib/xray/link-label';
 import { QrPanel } from '@/pages/inbounds/qr';
@@ -39,22 +40,17 @@ import { tunnelConfigEndpoints, tunnelEndpointLabel } from './tunnelEndpoints';
 import type { HostRecord } from '@/schemas/api/host';
 import './ClientInfoModal.css';
 
-const INBOUND_PROTOCOL_COLORS: Record<string, string> = {
-  vless: 'blue',
-  vmess: 'geekblue',
-  trojan: 'volcano',
-  shadowsocks: 'magenta',
-  hysteria: 'cyan',
-  hysteria2: 'green',
-  wireguard: 'gold',
-  amneziawg: 'yellow',
-  http: 'purple',
-  mixed: 'lime',
-  tunnel: 'orange',
-  tuic: 'orange',
-};
-
-const INBOUND_CHIP_LIMIT = 1;
+function InfoField({ label, children, action }: { label: string; children: ReactNode; action?: ReactNode }) {
+  return (
+    <div className="client-info-field">
+      <dt>{label}</dt>
+      <dd>
+        <span className="client-info-value">{children}</span>
+        {action}
+      </dd>
+    </div>
+  );
+}
 
 interface SubSettings {
   enable: boolean;
@@ -74,6 +70,8 @@ interface ClientInfoModalProps {
   inboundsById: Record<number, InboundOption>;
   tunnelAllowedIPs?: Record<number, string>;
   isOnline: boolean;
+  speed?: ClientSpeedEntry;
+  liveClient?: Pick<ClientRecord, 'enable' | 'traffic'>;
   subSettings?: SubSettings;
   hosts?: HostRecord[];
   onOpenChange: (open: boolean) => void;
@@ -108,6 +106,8 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
   inboundsById,
   tunnelAllowedIPs,
   isOnline,
+  speed,
+  liveClient,
   subSettings = DEFAULT_SUB,
   hosts = NO_HOSTS,
   onOpenChange,
@@ -115,7 +115,7 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
   const { datepicker } = useDatepicker();
   const { t } = useTranslation();
   const expiryLabel = (ts?: number) => {
-    if (!ts) return '∞';
+    if (!ts) return <InfinityIcon />;
     if (ts < 0) {
       const days = Math.round(ts / -86400000);
       return `${t('pages.clients.delayedStart')}: ${days}d`;
@@ -175,7 +175,8 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
     };
   }, [open, client?.subId, client?.email, inboundScope]);
 
-  const traffic = client?.traffic || null;
+  const traffic = liveClient?.traffic ?? client?.traffic;
+  const enabled = liveClient?.enable ?? client?.enable;
   const totalBytes = client?.totalGB || 0;
   const used = (traffic?.up || 0) + (traffic?.down || 0);
   const remaining = useMemo(() => {
@@ -299,10 +300,25 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
     if (clientHwids.length === 0) void loadHwids();
   }
 
+  function copyButton(value: string | undefined, label: string) {
+    if (!value) return null;
+    return (
+      <Tooltip title={t('copy')}>
+        <Button
+          size="small"
+          type="text"
+          icon={<CopyOutlined aria-hidden />}
+          aria-label={`${t('copy')} · ${label}`}
+          onClick={() => void copyValue(value)}
+        />
+      </Tooltip>
+    );
+  }
+
   return (
     <>
       {messageContextHolder}
-      <DetailSurface embedded={embedded}
+      <DetailSurface embedded={embedded} className="client-info-surface"
         open={open}
         title={
           client
@@ -315,493 +331,231 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
       >
         {client && (
           <>
-            <table className="info-table block">
-              <tbody>
-                <tr>
-                  <td>{t('pages.clients.online')}</td>
-                  <td>
-                    {client.enable && isOnline ? (
-                      <Tag className="client-status is-active">{t('pages.clients.online')}</Tag>
-                    ) : (
-                      <Tag className="client-status">{t('pages.clients.offline')}</Tag>
-                    )}
-                    <span className="hint">
-                      {t('lastOnline')}: {dateLabel(traffic?.lastOnline)}
-                      {' · '}
-                      {t('lastSubFetch')}: {dateLabel(traffic?.lastSubFetch)}
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td>{t('status')}</td>
-                  <td>
-                    <Tag className={client.enable ? 'client-status is-active' : 'client-status'}>
-                      {client.enable ? t('enabled') : t('disabled')}
+            <div className="client-info-grid">
+              <section className="client-info-section">
+                <h4>{t('pages.clients.infoOverview')}</h4>
+                <dl>
+                  <InfoField label={t('pages.clients.infoName')}>{client.email || '—'}</InfoField>
+                  <InfoField label={t('pages.clients.infoConnectionState')}>
+                    <Tag className={enabled && isOnline ? 'client-status is-active' : 'client-status'}>
+                      {t(enabled && isOnline ? 'pages.clients.online' : 'pages.clients.offline')}
                     </Tag>
-                  </td>
-                </tr>
-                <tr>
-                  <td>{t('pages.clients.email')}</td>
-                  <td>
-                    {client.email ? (
-                      <Tag color="green">{client.email}</Tag>
-                    ) : (
-                      <Tag color="red">{t('none')}</Tag>
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <td>{t('pages.clients.subId')}</td>
-                  <td>
-                    <Tag className="info-large-tag">{client.subId || '-'}</Tag>
-                    {client.subId && (
-                      <Button
-                        size="small"
-                        type="text"
-                        icon={<CopyOutlined aria-hidden />}
-                        aria-label={t('copy')}
-                        onClick={() => copyValue(client.subId!)}
-                      />
-                    )}
-                  </td>
-                </tr>
-                {client.uuid && (
-                  <tr>
-                    <td>{t('pages.clients.uuid')}</td>
-                    <td>
-                      <Tag className="info-large-tag">{client.uuid}</Tag>
-                      <Button
-                        size="small"
-                        type="text"
-                        icon={<CopyOutlined aria-hidden />}
-                        aria-label={t('copy')}
-                        onClick={() => copyValue(client.uuid!)}
-                      />
-                    </td>
-                  </tr>
-                )}
-                {client.password && (
-                  <tr>
-                    <td>{t('password')}</td>
-                    <td>
-                      <Tag className="info-large-tag">{client.password}</Tag>
-                      <Button
-                        size="small"
-                        type="text"
-                        icon={<CopyOutlined aria-hidden />}
-                        aria-label={t('copy')}
-                        onClick={() => copyValue(client.password!)}
-                      />
-                    </td>
-                  </tr>
-                )}
-                {client.auth && (
-                  <tr>
-                    <td>{t('pages.clients.auth')}</td>
-                    <td>
-                      <Tag className="info-large-tag">{client.auth}</Tag>
-                      <Button
-                        size="small"
-                        type="text"
-                        icon={<CopyOutlined aria-hidden />}
-                        aria-label={t('copy')}
-                        onClick={() => copyValue(client.auth!)}
-                      />
-                    </td>
-                  </tr>
-                )}
-                <tr>
-                  <td>{t('pages.clients.flow')}</td>
-                  <td>
-                    {client.flow ? <Tag>{client.flow}</Tag> : <Tag color="orange">{t('none')}</Tag>}
-                  </td>
-                </tr>
-                <tr>
-                  <td>{t('pages.inbounds.traffic')}</td>
-                  <td>
-                    <Tag>
-                      ↑ {SizeFormatter.sizeFormat(traffic?.up || 0)} / ↓{' '}
-                      {SizeFormatter.sizeFormat(traffic?.down || 0)}
+                  </InfoField>
+                  <InfoField label={t('pages.clients.infoKeyStatus')}>
+                    <Tag className={enabled ? 'client-status is-active' : 'client-status'}>
+                      {t(enabled ? 'enabled' : 'disabled')}
                     </Tag>
-                    <span className="hint">
-                      {SizeFormatter.sizeFormat(used)} /{' '}
-                      {totalBytes > 0 ? SizeFormatter.sizeFormat(totalBytes) : <InfinityIcon />}
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td>{t('remained')}</td>
-                  <td>
-                    {remaining < 0 ? (
-                      <Tag color="purple" className="unlimited-tag"><InfinityIcon /></Tag>
-                    ) : (
-                      <Tag color={remaining > 0 ? '' : 'red'}>
-                        {SizeFormatter.sizeFormat(remaining)}
-                      </Tag>
+                  </InfoField>
+                  <InfoField label={t('lastOnline')}>{dateLabel(traffic?.lastOnline)}</InfoField>
+                  {speed && (
+                    <InfoField label={t('pages.clients.speed')}><ClientSpeedTag speed={speed} /></InfoField>
+                  )}
+                </dl>
+              </section>
+
+              <section className="client-info-section">
+                <h4>{t('pages.clients.infoTrafficLimits')}</h4>
+                <dl>
+                  <InfoField label={t('pages.inbounds.traffic')}>
+                    ↑ {SizeFormatter.sizeFormat(traffic?.up || 0)} / ↓ {SizeFormatter.sizeFormat(traffic?.down || 0)}
+                  </InfoField>
+                  <InfoField label={t('pages.clients.infoUsedTraffic')}>
+                    {SizeFormatter.sizeFormat(used)} / {totalBytes > 0 ? SizeFormatter.sizeFormat(totalBytes) : <InfinityIcon />}
+                  </InfoField>
+                  <InfoField label={t('remained')}>
+                    {remaining < 0 ? <InfinityIcon /> : (
+                      <span className={remaining === 0 ? 'client-info-error' : undefined}>{SizeFormatter.sizeFormat(remaining)}</span>
                     )}
-                  </td>
-                </tr>
-                <tr>
-                  <td>{t('pages.inbounds.expireDate')}</td>
-                  <td>
-                    {!client.expiryTime ? (
-                      <Tag color="purple" className="unlimited-tag"><InfinityIcon /></Tag>
-                    ) : (
-                      <Tag color={client.expiryTime < 0 ? 'blue' : undefined}>
-                        {expiryLabel(client.expiryTime)}
-                      </Tag>
-                    )}
+                  </InfoField>
+                  <InfoField label={t('pages.inbounds.expireDate')}>
+                    {expiryLabel(client.expiryTime)}
                     {(client.expiryTime ?? 0) > 0 && (
-                      <span className="hint">{IntlUtil.formatRelativeTime(client.expiryTime)}</span>
+                      <span className="client-info-hint">{IntlUtil.formatRelativeTime(client.expiryTime!)}</span>
                     )}
-                  </td>
-                </tr>
-                <tr>
-                  <td>{t('pages.clients.ipLimit')}</td>
-                  <td>{!client.limitIp ? <Tag className="unlimited-tag"><InfinityIcon /></Tag> : <Tag>{client.limitIp}</Tag>}</td>
-                </tr>
-                <tr>
-                  <td>{t('pages.inbounds.IPLimitlog')}</td>
-                  <td>
-                    <Button
-                      size="small"
-                      icon={<EyeOutlined aria-hidden />}
-                      aria-label={t('pages.clients.ipLog')}
-                      loading={ipsLoading}
-                      onClick={openIpsModal}
-                    >
-                      {clientIps.length > 0 ? clientIps.length : ''}
-                    </Button>
-                  </td>
-                </tr>
-                {(traffic?.resetMax ?? 0) > 0 && (
-                  <tr>
-                    <td>{t('pages.clients.renewsUsed')}</td>
-                    <td>
-                      <Tag
-                        color={
-                          (traffic?.resetCount ?? 0) >= (traffic?.resetMax ?? 0) ? 'red' : 'blue'
-                        }
-                      >
+                  </InfoField>
+                  <InfoField label={t('pages.clients.ipLimit')}>{client.limitIp || <InfinityIcon />}</InfoField>
+                  <InfoField label={t('pages.clients.limitHwid')}>{client.limitHwid || <InfinityIcon />}</InfoField>
+                  {(traffic?.resetMax ?? 0) > 0 && (
+                    <InfoField label={t('pages.clients.renewsUsed')}>
+                      <span className={(traffic?.resetCount ?? 0) >= (traffic?.resetMax ?? 0) ? 'client-info-error' : undefined}>
                         {traffic?.resetCount ?? 0} / {traffic?.resetMax}
-                      </Tag>
-                    </td>
-                  </tr>
-                )}
-                <tr>
-                  <td>{t('pages.clients.limitHwid')}</td>
-                  <td>{!client.limitHwid ? <Tag className="unlimited-tag"><InfinityIcon /></Tag> : <Tag>{client.limitHwid}</Tag>}</td>
-                </tr>
-                <tr>
-                  <td>{t('pages.clients.hwidLog')}</td>
-                  <td>
-                    <Button
-                      size="small"
-                      icon={<EyeOutlined aria-hidden />}
-                      aria-label={t('pages.clients.hwidLog')}
-                      loading={hwidsLoading}
-                      onClick={openHwidsModal}
-                    >
-                      {clientHwids.length > 0 ? clientHwids.length : ''}
-                    </Button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>{t('pages.inbounds.createdAt')}</td>
-                  <td>
-                    <Tag>{dateLabel(client.createdAt)}</Tag>
-                  </td>
-                </tr>
-                <tr>
-                  <td>{t('pages.inbounds.updatedAt')}</td>
-                  <td>
-                    <Tag>{dateLabel(client.updatedAt)}</Tag>
-                  </td>
-                </tr>
-                {CLIENT_GROUPS_UI_ENABLED && client.group && (
-                  <tr>
-                    <td>{t('pages.clients.group')}</td>
-                    <td>
-                      <Tag color="geekblue">{client.group}</Tag>
-                    </td>
-                  </tr>
-                )}
-                {client.comment && (
-                  <tr>
-                    <td>{t('pages.clients.comment')}</td>
-                    <td>
-                      <Tag className="info-large-tag">{client.comment}</Tag>
-                    </td>
-                  </tr>
-                )}
-                <tr>
-                  <td>{t('pages.clients.attachedInbounds')}</td>
-                  <td>
-                    {(() => {
-                      const ids = client.inboundIds || [];
-                      if (ids.length === 0) return <span className="hint">—</span>;
-                      const visible = ids.slice(0, INBOUND_CHIP_LIMIT);
-                      const overflow = ids.slice(INBOUND_CHIP_LIMIT);
-                      const inboundChip = (id: number) => {
-                        const ib = inboundsById[id];
-                        const proto = (ib?.protocol || '').toLowerCase();
-                        const color = INBOUND_PROTOCOL_COLORS[proto] ?? 'default';
-                        const label = formatInboundLabel(ib?.tag, ib?.remark);
-                        return (
-                          <Tooltip key={id} title={label}>
-                            <Tag color={color}>{label}</Tag>
-                          </Tooltip>
-                        );
-                      };
-                      return (
-                        <div className="chips">
-                          {visible.map((id) => inboundChip(id))}
-                          {overflow.length > 0 && (
-                            <Popover
-                              trigger="click"
-                              placement="bottomRight"
-                              content={
-                                <div className="chips chips-stack">
-                                  {overflow.map((id) => inboundChip(id))}
-                                </div>
-                              }
-                            >
-                              <Tag color="default" className="chip-more">
-                                +{overflow.length} {t('more') !== 'more' ? t('more') : 'more'}
-                              </Tag>
-                            </Popover>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            {showSubscription && subLink && (
-              <>
-                <Divider>{t('subscription.title')}</Divider>
-                <div className="link-row">
-                  <Tag color="green" className="link-row-tag">
-                    SUB
-                  </Tag>
-                  <a
-                    href={subLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="link-row-title link-row-title-anchor"
-                    title={subLink}
-                  >
-                    {client.subId}
-                  </a>
-                  <div className="link-row-actions">
-                    <Tooltip title={t('copy')}>
-                      <Button
-                        size="small"
-                        icon={<CopyOutlined aria-hidden />}
-                        aria-label={t('copy')}
-                        onClick={() => copyValue(subLink)}
-                      />
-                    </Tooltip>
-                    <Tooltip title={t('download')}>
-                      <Button
-                        size="small"
-                        icon={<DownloadOutlined aria-hidden />}
-                        aria-label={t('download')}
-                        loading={downloadingFormat === 'standard'}
-                        disabled={downloadingFormat !== null}
-                        onClick={() => void downloadSubscription(subLink, 'standard')}
-                      />
-                    </Tooltip>
-                    <Popover
-                      trigger="click"
-                      placement="left"
-                      destroyOnHidden
-                      content={
-                        <QrPanel
-                          value={subLink}
-                          remark={`${client.email} — ${t('subscription.title')}`}
-                          size={220}
-                        />
-                      }
-                    >
-                      <Tooltip title={t('pages.clients.qrCode')}>
-                        <Button
-                          size="small"
-                          icon={<QrcodeOutlined aria-hidden />}
-                          aria-label={t('pages.clients.qrCode')}
-                        />
-                      </Tooltip>
-                    </Popover>
-                  </div>
-                </div>
-                {subJsonLink && (
-                  <div className="link-row">
-                    <Tag color="purple" className="link-row-tag">
-                      JSON
-                    </Tag>
-                    <a
-                      href={subJsonLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="link-row-title link-row-title-anchor"
-                      title={subJsonLink}
-                    >
-                      {client.subId}
-                    </a>
-                    <div className="link-row-actions">
-                      <Tooltip title={t('copy')}>
-                        <Button
-                          size="small"
-                          icon={<CopyOutlined aria-hidden />}
-                          aria-label={t('copy')}
-                          onClick={() => copyValue(subJsonLink)}
-                        />
-                      </Tooltip>
-                      <Tooltip title={t('download')}>
-                        <Button
-                          size="small"
-                          icon={<DownloadOutlined aria-hidden />}
-                          aria-label={t('download')}
-                          loading={downloadingFormat === 'json'}
-                          disabled={downloadingFormat !== null}
-                          onClick={() => void downloadSubscription(subJsonLink, 'json')}
-                        />
-                      </Tooltip>
-                      <Popover
-                        trigger="click"
-                        placement="left"
-                        destroyOnHidden
-                        content={
-                          <QrPanel
-                            value={subJsonLink}
-                            remark={`${client.email} — JSON`}
-                            size={220}
-                          />
-                        }
-                      >
-                        <Tooltip title={t('pages.clients.qrCode')}>
-                          <Button
-                            size="small"
-                            icon={<QrcodeOutlined aria-hidden />}
-                            aria-label={t('pages.clients.qrCode')}
-                          />
-                        </Tooltip>
-                      </Popover>
-                    </div>
-                  </div>
-                )}
-                {subClashLink && (
-                  <div className="link-row">
-                    <Tooltip title="Clash / Mihomo">
-                      <Tag color="gold" className="link-row-tag">
-                        CLASH
-                      </Tag>
-                    </Tooltip>
-                    <a
-                      href={subClashLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="link-row-title link-row-title-anchor"
-                      title={subClashLink}
-                    >
-                      {client.subId}
-                    </a>
-                    <div className="link-row-actions">
-                      <Tooltip title={t('copy')}>
-                        <Button
-                          size="small"
-                          icon={<CopyOutlined aria-hidden />}
-                          aria-label={t('copy')}
-                          onClick={() => copyValue(subClashLink)}
-                        />
-                      </Tooltip>
-                      <Tooltip title={t('download')}>
-                        <Button
-                          size="small"
-                          icon={<DownloadOutlined aria-hidden />}
-                          aria-label={t('download')}
-                          loading={downloadingFormat === 'clash'}
-                          disabled={downloadingFormat !== null}
-                          onClick={() => void downloadSubscription(subClashLink, 'clash')}
-                        />
-                      </Tooltip>
-                      <Popover
-                        trigger="click"
-                        placement="left"
-                        destroyOnHidden
-                        content={
-                          <QrPanel
-                            value={subClashLink}
-                            remark={`${client.email} — Clash / Mihomo`}
-                            size={220}
-                          />
-                        }
-                      >
-                        <Tooltip title={t('pages.clients.qrCode')}>
-                          <Button
-                            size="small"
-                            icon={<QrcodeOutlined aria-hidden />}
-                            aria-label={t('pages.clients.qrCode')}
-                          />
-                        </Tooltip>
-                      </Popover>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            {links.length > 0 && (
-              <>
-                <Divider>{t('pages.inbounds.copyLink')}</Divider>
-                {links.map((link, idx) => {
-                  const parts = parseLinkParts(link);
-                  const fallback = `${t('pages.clients.link')} ${idx + 1}`;
-                  const rowTitle = (parts && linkMetaText(parts)) || fallback;
-                  const qrRemark = parts?.remark || rowTitle;
-                  const canQr = !isPostQuantumLink(link);
-                  return (
-                    <div key={idx} className="link-row">
-                      {parts ? (
-                        <LinkTags parts={parts} />
-                      ) : (
-                        <Tag className="link-row-tag">LINK</Tag>
-                      )}
-                      <span className="link-row-title" title={rowTitle}>
-                        {rowTitle}
                       </span>
-                      <div className="link-row-actions">
-                        <Tooltip title={t('copy')}>
-                          <Button
-                            size="small"
-                            icon={<CopyOutlined aria-hidden />}
-                            aria-label={t('copy')}
-                            onClick={() => copyValue(link)}
-                          />
-                        </Tooltip>
-                        {canQr && (
+                    </InfoField>
+                  )}
+                </dl>
+              </section>
+
+              <section className="client-info-section">
+                <h4>{t('pages.clients.infoConnection')}</h4>
+                <dl>
+                  <InfoField label={t('pages.clients.email')}>{client.email || t('none')}</InfoField>
+                  {[
+                    { label: t('pages.clients.subId'), value: client.subId },
+                    { label: t('pages.clients.uuid'), value: client.uuid, optional: true },
+                    { label: t('password'), value: client.password, optional: true },
+                    { label: t('pages.clients.auth'), value: client.auth, optional: true },
+                    { label: t('pages.clients.infoSudokuKey'), value: client.sudokuKey, optional: true },
+                    { label: t('pages.clients.mtprotoSecret'), value: client.secret, optional: true },
+                  ].filter(({ value, optional }) => value || !optional).map(({ label, value }) => (
+                    <InfoField key={label} label={label} action={copyButton(value, label)}>{value || '—'}</InfoField>
+                  ))}
+                  <InfoField label={t('pages.clients.flow')}>{client.flow || t('none')}</InfoField>
+                  {client.security && (
+                    <InfoField label={t('pages.clients.vmessSecurity')}>{client.security}</InfoField>
+                  )}
+                  {client.adTag && (
+                    <InfoField label={t('pages.clients.mtprotoAdTag')}>{client.adTag}</InfoField>
+                  )}
+                  {client.keepAlive !== undefined && (
+                    <InfoField label={t('pages.clients.tunnelKeepAlive')}>{client.keepAlive}</InfoField>
+                  )}
+                  {client.allowedIPs && (
+                    <InfoField label={t('pages.clients.wireguardAllowedIPs')}>{client.allowedIPs}</InfoField>
+                  )}
+                  <InfoField label={t('pages.clients.attachedInbounds')}>
+                    {client.inboundIds?.length ? (
+                      <span className="client-info-chips">
+                        {client.inboundIds.map(id => {
+                          const inbound = inboundsById[id];
+                          return <Tag key={id}>{formatInboundLabel(inbound?.tag, inbound?.remark) || id}</Tag>;
+                        })}
+                      </span>
+                    ) : '—'}
+                  </InfoField>
+                </dl>
+              </section>
+
+              <section className="client-info-section">
+                <h4>{t('pages.clients.infoAdditional')}</h4>
+                <dl>
+                  <InfoField label={t('pages.inbounds.createdAt')}>{dateLabel(client.createdAt)}</InfoField>
+                  <InfoField label={t('pages.inbounds.updatedAt')}>{dateLabel(client.updatedAt)}</InfoField>
+                  <InfoField label={t('lastSubFetch')}>{dateLabel(traffic?.lastSubFetch)}</InfoField>
+                  <InfoField label={t('pages.inbounds.IPLimitlog')}>
+                    <Button size="small" icon={<EyeOutlined aria-hidden />} aria-label={t('pages.clients.ipLog')} loading={ipsLoading} onClick={openIpsModal}>
+                      {clientIps.length || null}
+                    </Button>
+                  </InfoField>
+                  <InfoField label={t('pages.clients.hwidLog')}>
+                    <Button size="small" icon={<EyeOutlined aria-hidden />} aria-label={t('pages.clients.hwidLog')} loading={hwidsLoading} onClick={openHwidsModal}>
+                      {clientHwids.length || null}
+                    </Button>
+                  </InfoField>
+                  {CLIENT_GROUPS_UI_ENABLED && client.group && (
+                    <InfoField label={t('pages.clients.group')}>{client.group}</InfoField>
+                  )}
+                  {client.comment && (
+                    <InfoField label={t('pages.clients.comment')}>{client.comment}</InfoField>
+                  )}
+                </dl>
+              </section>
+            </div>
+
+            {((showSubscription && subLink) || links.length > 0) && (
+              <section className="client-info-section client-info-links">
+                {showSubscription && subLink && (
+                  <>
+                    <h4>{t('subscription.title')}</h4>
+                    {([
+                      { format: 'standard', label: 'SUB', url: subLink, title: t('subscription.title') },
+                      { format: 'json', label: 'JSON', url: subJsonLink, title: 'JSON' },
+                      { format: 'clash', label: 'CLASH', url: subClashLink, title: 'Clash / Mihomo' },
+                    ] as const).filter(({ url }) => url).map(({ format, label, url, title }) => (
+                      <div key={format} className="link-row">
+                        <Tag className="link-row-tag" title={title}>{label}</Tag>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="link-row-title link-row-title-anchor"
+                          title={url}
+                        >
+                          {client.subId}
+                        </a>
+                        <div className="link-row-actions">
+                          <Tooltip title={t('copy')}>
+                            <Button size="small" icon={<CopyOutlined aria-hidden />} aria-label={t('copy')} onClick={() => void copyValue(url)} />
+                          </Tooltip>
+                          <Tooltip title={t('download')}>
+                            <Button
+                              size="small"
+                              icon={<DownloadOutlined aria-hidden />}
+                              aria-label={t('download')}
+                              loading={downloadingFormat === format}
+                              disabled={downloadingFormat !== null}
+                              onClick={() => void downloadSubscription(url, format)}
+                            />
+                          </Tooltip>
                           <Popover
                             trigger="click"
                             placement="left"
                             destroyOnHidden
-                            content={<QrPanel value={link} remark={qrRemark} size={220} />}
+                            content={<QrPanel value={url} remark={`${client.email} — ${title}`} size={220} />}
                           >
                             <Tooltip title={t('pages.clients.qrCode')}>
-                              <Button
-                                size="small"
-                                icon={<QrcodeOutlined aria-hidden />}
-                                aria-label={t('pages.clients.qrCode')}
-                              />
+                              <Button size="small" icon={<QrcodeOutlined aria-hidden />} aria-label={t('pages.clients.qrCode')} />
                             </Tooltip>
                           </Popover>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </>
+                    ))}
+                  </>
+                )}
+
+                {links.length > 0 && (
+                  <>
+                    <h4>{t('pages.inbounds.copyLink')}</h4>
+                    {links.map((link, idx) => {
+                      const parts = parseLinkParts(link);
+                      const fallback = `${t('pages.clients.link')} ${idx + 1}`;
+                      const rowTitle = (parts && linkMetaText(parts)) || fallback;
+                      const qrRemark = parts?.remark || rowTitle;
+                      const canQr = !isPostQuantumLink(link);
+                      return (
+                        <div key={idx} className="link-row">
+                          <div className="client-info-link-description">
+                            {parts ? (
+                              <LinkTags parts={parts} neutral />
+                            ) : (
+                              <Tag className="link-row-tag">LINK</Tag>
+                            )}
+                            <span className="link-row-title" title={rowTitle}>
+                              {rowTitle}
+                            </span>
+                          </div>
+                          <div className="link-row-actions">
+                            <Tooltip title={t('copy')}>
+                              <Button
+                                size="small"
+                                icon={<CopyOutlined aria-hidden />}
+                                aria-label={t('copy')}
+                                onClick={() => copyValue(link)}
+                              />
+                            </Tooltip>
+                            {canQr && (
+                              <Popover
+                                trigger="click"
+                                placement="left"
+                                destroyOnHidden
+                                content={<QrPanel value={link} remark={qrRemark} size={220} />}
+                              >
+                                <Tooltip title={t('pages.clients.qrCode')}>
+                                  <Button
+                                    size="small"
+                                    icon={<QrcodeOutlined aria-hidden />}
+                                    aria-label={t('pages.clients.qrCode')}
+                                  />
+                                </Tooltip>
+                              </Popover>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+
+              </section>
             )}
 
             {wgInbounds.length > 0 && client && (
@@ -822,7 +576,7 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
                     text={vkLink}
                     fileName={meta.fileName.replace(/\.conf$/, `-${deviceId}-vk.txt`)}
                     qrRemark={meta.qrRemark}
-                    tagColor="blue"
+                    tagColor="default"
                   />
                 );
               })}
@@ -831,7 +585,7 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
 
             {awgConfigs.length > 0 && client && (
               <>
-                <Divider>{t('pages.clients.amneziaWgConfig')}</Divider>
+                <h4>{t('pages.clients.amneziaWgConfig')}</h4>
                 {awgConfigs.map(({ inbound, endpoint, text }) => {
                   const meta = formatTunnelConfigMeta(
                     inbound,
@@ -846,7 +600,7 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
                       text={text}
                       fileName={meta.fileName}
                       qrRemark={meta.qrRemark}
-                      tagColor="purple"
+                      tagColor="default"
                     />
                   );
                 })}

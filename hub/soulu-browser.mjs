@@ -40,7 +40,7 @@ try{
   const settings=typeof row.settings==='string'?JSON.parse(row.settings):row.settings;
   return {id:row.id,client:settings.clients[0]};
  },{url:cfg.url,inbound});
- const otherInbound=preset('sudoku',selection({name:'Other inbound',email:'other-phone',host:'203.0.113.10',port:cfg.standardPort,protocols:['sudoku']}),cfg.standardPort);otherInbound.listen='127.0.0.1';
+ const otherInbound=preset('shadowsocks',selection({name:'Other inbound',email:'other-phone',host:'203.0.113.10',port:cfg.standardPort,protocols:['shadowsocks']}),cfg.standardPort);otherInbound.listen='127.0.0.1';
  await page.evaluate(async({url,inbound})=>{const token=(await(await fetch(url+'csrf-token')).json()).obj;const msg=await(await fetch(url+'panel/api/inbounds/add',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':token},body:JSON.stringify(inbound)})).json();if(!msg.success)throw new Error('Second inbound fixture failed');},{url:cfg.url,inbound:otherInbound});
 
 
@@ -87,13 +87,31 @@ try{
     assert.equal(await page.locator('.header-utilities .global-search-trigger').count(),1);assert.equal(await page.locator('.ant-sidebar').count(),0);assert.ok(await page.locator('#connection-inbounds').boundingBox());
 
     await page.locator('.inbound-card').filter({hasText:'Other inbound'}).click();
-    await page.locator('#connection-keys .ant-table-row').filter({hasText:'other-phone'}).waitFor();
+    const other = page.locator('#connection-keys .ant-table-row').filter({hasText:'other-phone'});
+    await other.locator('.client-open').click();
+    const otherInfo = page.locator('.client-info-surface');
+    const passwordField = otherInfo.locator('.client-info-field').filter({has: otherInfo.getByText('Password',{exact:true})});
+    const copyPassword = passwordField.getByRole('button',{name:/^Copy/});
+    await copyPassword.waitFor();
+    await context.grantPermissions(['clipboard-read','clipboard-write']);
+    await copyPassword.click();
+    const password = JSON.parse(otherInbound.settings).clients[0].password;
+    assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),password);
+    const directLink = otherInfo.locator('.link-row').filter({hasText:'Shadowsocks'}).first();
+    await directLink.getByRole('button',{name:'QR Code',exact:true}).click();
+    await page.locator('.ant-popover .qr-code svg:visible').waitFor();
+    await page.keyboard.press('Escape');
+    await page.getByRole('button',{name:'Back to keys',exact:true}).click();
     assert.equal(await page.locator('#connection-keys .ant-table-row').filter({hasText:'iPhoneSudoku'}).isVisible(),false);
     await page.locator('.inbound-card').filter({hasText:'Sweden Sudoku'}).click();
     const row=page.locator('#connection-keys .ant-table-row').filter({hasText:'iPhoneSudoku'});await row.waitFor();
     assert.equal(await page.locator('#connection-keys .ant-table-row').filter({hasText:'other-phone'}).isVisible(),false);
-    await row.locator('.client-open').click();await page.locator('.connection-detail-surface .info-table').first().waitFor();assert.equal(await page.getByRole('dialog').count(),0);
+    await row.locator('.client-open').click();await page.locator('.client-info-surface .client-info-section').first().waitFor();assert.equal(await page.getByRole('dialog').count(),0);
     const back = page.getByRole('button',{name:'Back to keys',exact:true});
+    const info = page.locator('.client-info-surface');
+    for (const heading of ['Overview','Traffic and limits','Connection details','Additional information']) {
+     await info.getByRole('heading',{name:heading,exact:true}).waitFor();
+    }
     assert.deepEqual(await back.evaluate(el=>({
      background: getComputedStyle(el).backgroundColor,
      shadow: getComputedStyle(el).boxShadow,
@@ -153,7 +171,41 @@ try{
    await safari.getByRole('link',{name:'Connections',exact:true}).click();
    await safari.getByRole('button',{name:'Create inbound',exact:true}).waitFor();
    await safari.setViewportSize({width: 393, height: 600});
+   await safari.locator('.inbound-position').getByRole('button',{name:/^Sweden Sudoku/}).click();
+   const key = safari.locator('.client-card').filter({hasText:'iPhoneSudoku'});
+   await key.waitFor();
    await mobileScrollCheck(safari);
+   const movement = await safari.locator('#connection-keys .filter-bar').evaluate(filter => {
+    const work = document.querySelector('.panel-app > .ant-layout');
+    const card = work.querySelector('.client-card');
+    const header = document.querySelector('.app-header');
+    work.scrollTop = 0;
+    const before = {filter:filter.getBoundingClientRect().top,card:card.getBoundingClientRect().top,header:header.getBoundingClientRect().top};
+    work.scrollTop = before.filter - work.getBoundingClientRect().top + 25;
+    const result = {
+     scroll:work.scrollTop,
+     position:getComputedStyle(filter).position,
+     filterDelta:before.filter-filter.getBoundingClientRect().top,
+     cardDelta:before.card-card.getBoundingClientRect().top,
+     headerDelta:before.header-header.getBoundingClientRect().top,
+     separated:filter.getBoundingClientRect().bottom<=card.getBoundingClientRect().top,
+    };
+    work.scrollTop = 0;
+    return result;
+   });
+   assert.ok(movement.scroll>0 && movement.position==='static' && movement.separated);
+   assert.ok(Math.abs(movement.filterDelta-movement.scroll)<1 && Math.abs(movement.cardDelta-movement.scroll)<1);
+   assert.equal(movement.headerDelta,0);
+   await key.getByRole('button',{name:'Client Information',exact:true}).click();
+   const mobileInfo = safari.locator('.client-info-surface');
+   await mobileInfo.getByRole('heading',{name:'Connection details',exact:true}).waitFor();
+   const copyLayout = await mobileInfo.locator('.client-info-field dd:has(button[aria-label^="Copy"])').first().evaluate(row => {
+    const value = row.querySelector('.client-info-value').getBoundingClientRect();
+    const button = row.querySelector('button').getBoundingClientRect();
+    return button.left>=value.right && button.top<value.bottom;
+   });
+   assert.ok(copyLayout,'Copy remains beside the technical value on mobile');
+   await safari.getByRole('button',{name:'Back to keys',exact:true}).click();
    await safari.screenshot({path:path.join(cfg.output,'mobile-webkit-connections.png')});
   } finally {
    await webkitBrowser.close();
