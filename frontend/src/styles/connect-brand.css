@@ -109,8 +109,9 @@ body.light .settings-page {
   background: transparent !important;
 }
 body {
-  background: radial-gradient(ellipse at 24% 0%, #e6e7eb, transparent 65%),
+  --hub-page-background: radial-gradient(ellipse at 24% 0%, #e6e7eb, transparent 65%),
     linear-gradient(145deg, #dfe1e6, #d5d7dd) fixed;
+  background: var(--hub-page-background);
   font-size: 14px;
   line-height: 1.35;
 }
@@ -250,7 +251,8 @@ body .client-status.is-depleted {
   border-radius: 50%;
   background: var(--text-secondary);
 }
-.client-status-dot.is-active {
+.client-status-dot.is-active { background: var(--hub-primary); }
+.client-status-dot.is-online {
   background: var(--hub-lime);
   box-shadow: 0 0 0 1px var(--hub-primary);
 }

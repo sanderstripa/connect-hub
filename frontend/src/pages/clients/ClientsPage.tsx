@@ -1829,7 +1829,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                             {filteredClients.map((row) => {
                               const bucket = clientBucket(row);
                               const online = row.enable && bucket !== 'depleted' && isOnline(row.email);
-                              const state = online ? 'active' : bucket ?? 'deactive';
+                              const state = online ? 'online' : bucket ?? 'deactive';
                               return (
                                 <div
                                   key={row.email}

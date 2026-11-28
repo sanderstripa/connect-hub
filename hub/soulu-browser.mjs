@@ -194,7 +194,7 @@ try{
      before: before.top, after: after.top, height: after.height, workTop,
      scroll: work.scrollTop, windowScroll: window.scrollY,
      safeAreaOwner: document.elementFromPoint(innerWidth / 2, 20) === panel,
-     safeAreaBackground: getComputedStyle(panel).backgroundColor,
+     safeAreaBackground: getComputedStyle(panel, '::before').backgroundColor,
     };
    } finally {
     work.scrollTop = 0;

@@ -161,6 +161,13 @@
     position: fixed;
     inset: 0;
     overflow: hidden;
+    background: var(--hub-page-background);
+  }
+  .panel-app::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: var(--app-header-height);
     background-color: var(--app-bg);
   }
   .panel-app > .ant-layout {
