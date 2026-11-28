@@ -90,7 +90,7 @@ try{
     const other = page.locator('#connection-keys .ant-table-row').filter({hasText:'other-phone'});
     await other.locator('.client-open').click();
     const otherInfo = page.locator('.client-info-surface');
-    const passwordField = otherInfo.locator('.client-info-field').filter({has: otherInfo.getByText('Password',{exact:true})});
+    const passwordField = otherInfo.locator('.client-info-field').filter({has: page.getByText('Password',{exact:true})});
     const copyPassword = passwordField.getByRole('button',{name:/^Copy/});
     await copyPassword.waitFor();
     await context.grantPermissions(['clipboard-read','clipboard-write']);
