@@ -133,3 +133,43 @@
 }
 
 .mobile-navigation-drawer .ant-drawer-content-wrapper { border-radius: 0 24px 24px 0; overflow: hidden; }
+
+.mobile-navigation-drawer .ant-menu-inline {
+  background: transparent;
+  border-inline-end: 0;
+}
+
+.mobile-nav-utilities {
+  display: grid;
+  gap: 6px;
+  margin-block-start: 12px;
+  padding-block-start: 12px;
+  border-block-start: 1px solid var(--border);
+}
+
+.mobile-nav-utilities :is(button, a) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding-inline: 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--hub-secondary);
+  color: var(--text-primary);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.mobile-nav-utilities :is(button, a):hover { background: var(--hub-secondary-hover); }
+.mobile-nav-utilities :is(button, a):active { background: var(--hub-secondary-pressed); }
+.mobile-nav-utilities :is(button, a):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-nav-utilities :is(button, a) { transition: none; }
+}

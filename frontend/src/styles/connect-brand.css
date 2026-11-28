@@ -133,6 +133,7 @@ body .ant-btn {
   background-image: none;
 }
 body .ant-btn.ant-btn-icon-only { border-radius: 50%; }
+body .ant-btn.ant-btn-dangerous { box-shadow: none; }
 body .ant-btn .ant-btn-icon {
   display: inline-flex;
   align-items: center;

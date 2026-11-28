@@ -750,7 +750,8 @@ body .ov-page :is(.ant-card, .ant-card-hoverable) {
   border-radius: 999px;
   box-shadow: none;
 }
-.ov-traffic-controls .ant-segmented-item-selected {
+.ov-traffic-controls :is(.ant-segmented-item-selected, .ant-segmented-thumb) {
+  box-shadow: none;
   background: var(--hub-primary);
   color: var(--hub-lime);
 }
