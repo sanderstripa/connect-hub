@@ -619,19 +619,6 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
     [expireDiff, trafficDiff],
   );
 
-  function bucketBadgeStatus(bucket: Bucket | null): 'success' | 'warning' | 'error' | 'default' {
-    switch (bucket) {
-      case 'depleted':
-        return 'error';
-      case 'expiring':
-        return 'warning';
-      case 'active':
-        return 'success';
-      default:
-        return 'default';
-    }
-  }
-
   // The list page renders rows the server already sorted, filtered, and
   // paginated. Local filtering is gone — keep the variable name so the rest
   // of the file (table dataSource, mobile cards, select-all) doesn't need
@@ -1118,21 +1105,19 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
           if (bucket === 'depleted')
             return (
               <Tooltip title={lastOnlineTitle}>
-                <Tag color="red">{t('depleted')}</Tag>
+                <Tag className="client-status is-depleted">{t('depleted')}</Tag>
               </Tooltip>
             );
           if (record.enable && isOnline(record.email))
             return (
-              <Tag color="green" className="dot-tag">
-                <span className="online-dot" />
-                {t('pages.clients.online')}
-              </Tag>
+              <Tag className="client-status is-active">{t('pages.clients.online')}</Tag>
             );
-          if (!record.enable) return <Tag>{t('disabled')}</Tag>;
-          if (bucket === 'expiring') return <Tag color="orange">{t('depletingSoon')}</Tag>;
+          if (!record.enable) return <Tag className="client-status">{t('disabled')}</Tag>;
+          if (bucket === 'expiring')
+            return <Tag className="client-status is-expiring">{t('depletingSoon')}</Tag>;
           return (
             <Tooltip title={lastOnlineTitle}>
-              <Tag>{t('pages.clients.offline')}</Tag>
+              <Tag className="client-status">{t('pages.clients.offline')}</Tag>
             </Tooltip>
           );
         },
@@ -1352,7 +1337,7 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
         {!embedded && <AppSidebar />}
 
         {showingDetail && <div className="client-detail-toolbar">
-          <Button icon={<ArrowLeftOutlined aria-hidden />} onClick={backToKeys}>{t('connections.backToKeys')}</Button>
+          <Button type="primary" className="back-to-keys" icon={<ArrowLeftOutlined aria-hidden />} onClick={backToKeys}>{t('connections.backToKeys')}</Button>
           <strong>{detailClient?.email || t('connections.createKey')}</strong>
           {detailClient && <div className="client-detail-actions">
             <Button onClick={() => void onShowInfo(detailClient.email)}>{t('pages.clients.clientInfo')}</Button>
@@ -1843,6 +1828,8 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                             )}
                             {filteredClients.map((row) => {
                               const bucket = clientBucket(row);
+                              const online = row.enable && bucket !== 'depleted' && isOnline(row.email);
+                              const state = online ? 'active' : bucket ?? 'deactive';
                               return (
                                 <div
                                   key={row.email}
@@ -1853,19 +1840,15 @@ export default function ClientsPage({ embedded = false, explorer = false, inboun
                                       checked={selectedRowKeys.includes(row.email)}
                                       onChange={(e) => toggleSelect(row.email, e.target.checked)}
                                     />
-                                    {row.enable && bucket !== 'depleted' && isOnline(row.email) ? (
-                                      <span className="online-dot" style={{ marginInlineEnd: 0 }} />
-                                    ) : (
-                                      <Badge status={bucketBadgeStatus(bucket)} />
-                                    )}
+                                    <span className={`client-status-dot is-${state}`} aria-hidden />
                                     <span className="tag-name">{row.email}</span>
                                     {bucket === 'depleted' && (
-                                      <Tag color="red" className="status-tag">
+                                      <Tag className="status-tag client-status is-depleted">
                                         {t('depleted')}
                                       </Tag>
                                     )}
                                     {bucket === 'expiring' && (
-                                      <Tag color="orange" className="status-tag">
+                                      <Tag className="status-tag client-status is-expiring">
                                         {t('depletingSoon')}
                                       </Tag>
                                     )}

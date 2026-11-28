@@ -17,7 +17,6 @@ export default function ConnectionsPage() {
         <AppSidebar />
         <Layout className="content-shell">
           <Layout.Content id="content-layout" className="content-area">
-            <h1 className="section-page-title">{t('menu.connections')}</h1>
             <p className="connections-intro">{t('connections.intro')}</p>
             <InboundsPage embedded workspace />
           </Layout.Content>

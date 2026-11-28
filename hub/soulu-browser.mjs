@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {DEFAULT_PALETTE, themeTokens} from '../frontend/src/lib/theme-palettes.ts';
 import {createRequire} from 'node:module';
-import {chromium,_electron} from '../frontend/node_modules/playwright/index.mjs';
+import {chromium,webkit,devices,_electron} from '../frontend/node_modules/playwright/index.mjs';
 let input='';for await(const chunk of process.stdin)input+=chunk;const cfg=JSON.parse(input);
 let browser,desktop,context;
 try{
@@ -82,6 +82,7 @@ try{
    if(route==='connections'){
     await navigation();
     await page.locator('#connection-keys').waitFor();
+    assert.equal(await page.getByRole('heading',{name:'Connections',exact:true}).count(),0);
     assert.equal(await page.getByRole('button',{name:'All keys',exact:true}).count(),0);assert.equal(await page.getByPlaceholder('Find inbound').count(),0);
     assert.equal(await page.locator('.header-utilities .global-search-trigger').count(),1);assert.equal(await page.locator('.ant-sidebar').count(),0);assert.ok(await page.locator('#connection-inbounds').boundingBox());
 
@@ -92,7 +93,13 @@ try{
     const row=page.locator('#connection-keys .ant-table-row').filter({hasText:'iPhoneSudoku'});await row.waitFor();
     assert.equal(await page.locator('#connection-keys .ant-table-row').filter({hasText:'other-phone'}).isVisible(),false);
     await row.locator('.client-open').click();await page.locator('.connection-detail-surface .info-table').first().waitFor();assert.equal(await page.getByRole('dialog').count(),0);
-    await page.getByRole('button',{name:'Back to keys',exact:true}).click();await row.waitFor();
+    const back = page.getByRole('button',{name:'Back to keys',exact:true});
+    assert.deepEqual(await back.evaluate(el=>({
+     background: getComputedStyle(el).backgroundColor,
+     shadow: getComputedStyle(el).boxShadow,
+     icon: getComputedStyle(el.querySelector('.anticon')).color,
+    })), {background:'rgb(37, 38, 41)',shadow:'none',icon:'rgb(213, 250, 77)'});
+    await back.click();await row.waitFor();
 
     const profileResponse=page.waitForResponse(response=>response.url().endsWith('/panel/hub/api/sudoku-profiles'));
     await row.getByRole('button',{name:'QR Code',exact:true}).click();
@@ -131,6 +138,27 @@ try{
    }
   }
  }
+ if (process.env.GITHUB_ACTIONS === 'true' || process.env.CONNECT_HUB_TEST_WEBKIT === '1') {
+  const webkitBrowser = await webkit.launch();
+  try {
+   const mobile = await webkitBrowser.newContext({
+    ...devices['iPhone 15'],
+    locale: 'en-US',
+    storageState: await context.storageState(),
+   });
+   const safari = await mobile.newPage();
+   await safari.goto(cfg.url+'panel/');
+   await safari.locator('.ov-tile').first().waitFor();
+   await mobileScrollCheck(safari);
+   await safari.getByRole('link',{name:'Connections',exact:true}).click();
+   await safari.getByRole('button',{name:'Create inbound',exact:true}).waitFor();
+   await safari.setViewportSize({width: 393, height: 600});
+   await mobileScrollCheck(safari);
+   await safari.screenshot({path:path.join(cfg.output,'mobile-webkit-connections.png')});
+  } finally {
+   await webkitBrowser.close();
+  }
+ }
  // The full set of language packs must fit the header, including RTL.
  for(const locale of ['ar-EG','en-US','es-ES','fa-IR','id-ID','ja-JP','pt-BR','ru-RU','sk-SK','tr-TR','uk-UA','vi-VN','zh-CN','zh-TW']){
   await context.addCookies([{name:'lang',value:locale,url:cfg.url}]);
@@ -150,6 +178,38 @@ try{
  await page.locator('input[autocomplete=username]').waitFor();
  await page.goto(cfg.url+'panel/connections');
  await page.locator('input[autocomplete=username]').waitFor();
+ async function mobileScrollCheck(currentPage) {
+  const geometry = await currentPage.evaluate(() => {
+   const panel = document.querySelector('.panel-app');
+   const header = panel.querySelector('.app-header');
+   const work = panel.querySelector(':scope > .ant-layout');
+   // Desktop WebKit emulation has no physical notch. Exercise the same CSS offset with a test inset.
+   panel.style.setProperty('--panel-safe-top', '59px');
+   try {
+    const before = header.getBoundingClientRect();
+    const workTop = work.getBoundingClientRect().top;
+    work.scrollTop = 100;
+    const after = header.getBoundingClientRect();
+    return {
+     before: before.top, after: after.top, height: after.height, workTop,
+     scroll: work.scrollTop, windowScroll: window.scrollY,
+     safeAreaOwner: document.elementFromPoint(innerWidth / 2, 20) === panel,
+     safeAreaBackground: getComputedStyle(panel).backgroundColor,
+    };
+   } finally {
+    work.scrollTop = 0;
+    panel.style.removeProperty('--panel-safe-top');
+   }
+  });
+  assert.equal(geometry.before, 71);
+  assert.equal(geometry.after, geometry.before);
+  assert.equal(geometry.height, 126);
+  assert.equal(geometry.workTop, 206);
+  assert.equal(geometry.windowScroll, 0);
+  assert.ok(geometry.scroll > 0);
+  assert.equal(geometry.safeAreaOwner, true);
+  assert.equal(geometry.safeAreaBackground, 'rgb(220, 222, 228)');
+ }
  async function brandCheck(){
   const brand=page.getByRole('link',{name:'Connect.Hub',exact:true});
   assert.equal(await brand.count(),1);await brand.waitFor();
@@ -158,7 +218,9 @@ try{
   await page.waitForFunction(()=>{
    const header=document.querySelector('.app-header');
    const shell=[...document.querySelectorAll('.panel-app > .ant-layout > .content-shell')].find(el=>el.getBoundingClientRect().height>0);
-   return header&&shell&&parseFloat(getComputedStyle(shell).paddingBlockStart)>=header.getBoundingClientRect().height;
+   return header&&shell&&(matchMedia('(max-width: 768px)').matches
+    ? shell.parentElement.getBoundingClientRect().top >= header.getBoundingClientRect().bottom
+    : parseFloat(getComputedStyle(shell).paddingBlockStart)>=header.getBoundingClientRect().height);
   });
   const metrics=await page.evaluate(()=>{
    const header=document.querySelector('.app-header').getBoundingClientRect();
@@ -167,7 +229,9 @@ try{
    return {header:{x:header.x,y:header.y,width:header.width,height:header.height},content:{y:content.y},scrollY:window.scrollY,width:window.innerWidth};
   });
   assert.ok(metrics.header.x >= 0 && metrics.header.x+metrics.header.width<=metrics.width+1);
-  assert.ok(metrics.content.y+metrics.scrollY>=metrics.header.height-1,'Header must not cover initial page content: '+JSON.stringify(metrics));
+  if (metrics.width > 768) {
+   assert.ok(metrics.content.y+metrics.scrollY>=metrics.header.height-1,'Header must not cover initial page content: '+JSON.stringify(metrics));
+  }
  }
  async function navigation(){
   const headerNav=page.locator('.desktop-navigation');
@@ -293,8 +357,7 @@ try{
     await dots.click();assert.equal(await dots.locator('input').isChecked(),true);
     const tiles=await page.locator('.ov-tile').evaluateAll(els=>els.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};}));
     assert.equal(tiles.length,4);assert.ok(tiles.every(r=>r.x>=0&&r.x+r.width<=width+1));
-    await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
-    await page.waitForFunction(()=>window.scrollY===0);
+    await mobileScrollCheck(page);
     await page.screenshot({path:path.join(cfg.output,'mobile-monitoring-'+width+'-'+'concept-3'+'.png'),fullPage:true});
     await page.goto(cfg.url+'panel/connections');await page.locator('#connection-keys').waitFor();
    }

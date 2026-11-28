@@ -65,7 +65,7 @@ export default function ActiveKeysCard() {
                   <tr key={client.email}>
                     <th scope="row">
                       <div className="ov-key-name" dir="auto">{client.email}</div>
-                      <span className="ov-key-online">{t('online')}</span>
+                      <span className="ov-key-online client-status is-active">{t('online')}</span>
                       <ul className="ov-key-inbounds">
                         {client.inboundIds?.map((id) => {
                           const inbound = inboundById.get(id);

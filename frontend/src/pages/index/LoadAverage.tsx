@@ -1,5 +1,4 @@
-import type { CSSProperties } from 'react';
-import { Tooltip, theme } from 'antd';
+import { Tooltip } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 
@@ -8,7 +7,6 @@ import { loadAppearance } from './load-average';
 
 export default function LoadAverage({ status }: { status: Status }) {
   const { t } = useTranslation();
-  const { token } = theme.useToken();
   const title = t('pages.index.loadAverage');
   const comparable = !status.resourceScope && status.metricAvailable('loadCapacity');
   const windows = [1, 5, 15].map((minutes, index) => {
@@ -39,7 +37,6 @@ export default function LoadAverage({ status }: { status: Status }) {
           role="img"
           aria-label={`${title} (${primary.label}): ${primary.description}`}
           data-severity={primary.severity}
-          style={{ backgroundColor: primary.color ?? token.colorTextSecondary }}
         />
         <Tooltip
           trigger={['hover', 'focus', 'click']}
@@ -66,7 +63,6 @@ export default function LoadAverage({ status }: { status: Status }) {
             key={window.label}
             className="ov-load-reading"
             data-severity={window.severity}
-            style={{ '--load-color': window.color ?? token.colorTextSecondary } as CSSProperties}
           >
             <dt>{window.label}</dt>
             <dd

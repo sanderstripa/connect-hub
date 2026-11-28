@@ -324,7 +324,8 @@ export default function SystemHistoryModal({ open, status, onClose }: SystemHist
             aria-label={t('pages.index.timeRange')}
             value={bucket}
             size="small"
-            className="bucket-select"
+            className="bucket-select ov-range-select"
+            classNames={{ popup: { root: 'ov-range-options' } }}
             onChange={setBucket}
             options={[
               { value: 2, label: '2m' },

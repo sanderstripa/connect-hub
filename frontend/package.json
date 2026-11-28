@@ -1,7 +1,7 @@
 {
   "name": "connect-hub-frontend",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "description": "Connect Hub panel frontend (React 19 + Ant Design 6 + Vite 8).",
   "engines": {

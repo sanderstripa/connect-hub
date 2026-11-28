@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify the packaged 1.0.0 → candidate upgrade on a fresh hosted runner."""
+"""Verify the packaged 1.0.2 → candidate upgrade on a fresh hosted runner."""
 import hashlib
 import http.cookiejar
 import json
@@ -15,9 +15,9 @@ import urllib.parse
 import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-PREVIOUS_SHA256 = '93a6dfb9694a633688c3c8170ae8bfcd82b790ca890c9b87ef590301b425eb7f'
+PREVIOUS_SHA256 = '02035b715980bcb6ae5c6c24e8138b4a0eadfa76d8c87306dd3a3daded001236'
 PREVIOUS_URL = ('https://github.com/sanderstripa/connect-hub/releases/download/'
-                'v1.0.0/connect-hub-linux-amd64.tar.gz')
+                'v1.0.2/connect-hub-linux-amd64.tar.gz')
 ACCESS = '/etc/connect-hub/initial-access.txt'
 BIN = '/opt/connect-hub/current/connect-hub'
 
@@ -69,7 +69,7 @@ def main():
     assert os.environ.get('GITHUB_ACTIONS') == 'true'
     assert os.environ.get('RUNNER_ENVIRONMENT') == 'github-hosted'
     assert not pathlib.Path('/opt/connect-hub').exists(), 'A fresh runner is required'
-    with tempfile.TemporaryDirectory(prefix='connect-hub-100-upgrade-') as directory:
+    with tempfile.TemporaryDirectory(prefix='connect-hub-102-upgrade-') as directory:
         temp = pathlib.Path(directory)
         previous = temp / 'previous.tar.gz'
         req = urllib.request.Request(PREVIOUS_URL, headers={'User-Agent': 'Connect-Hub-upgrade-test'})
@@ -82,7 +82,7 @@ def main():
 
         try:
             install(previous_install, previous, PREVIOUS_SHA256)
-            assert sudo(BIN, '-v').strip() == '1.0.0'
+            assert sudo(BIN, '-v').strip() == '1.0.2'
             before = sudo('cat', ACCESS)
             credentials = dict(line.split('=', 1) for line in before.splitlines())
             api = login(credentials)
@@ -123,7 +123,7 @@ process.stdout.write(JSON.stringify(inbound));
             )
             assert client(after)['sudokuKey'] == saved_key
             assert sudo('find', '/opt/connect-hub/backups', '-name', 'connect-hub.db').strip()
-            print(f'PASS: installed 1.0.0 → {expected} retains login, access settings, inbound and key')
+            print(f'PASS: installed 1.0.2 → {expected} retains login, access settings, inbound and key')
         finally:
             subprocess.run(['sudo', 'systemctl', 'stop', 'connect-hub'], check=False)
 

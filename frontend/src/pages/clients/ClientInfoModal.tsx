@@ -321,9 +321,9 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
                   <td>{t('pages.clients.online')}</td>
                   <td>
                     {client.enable && isOnline ? (
-                      <Tag color="green">{t('pages.clients.online')}</Tag>
+                      <Tag className="client-status is-active">{t('pages.clients.online')}</Tag>
                     ) : (
-                      <Tag>{t('pages.clients.offline')}</Tag>
+                      <Tag className="client-status">{t('pages.clients.offline')}</Tag>
                     )}
                     <span className="hint">
                       {t('lastOnline')}: {dateLabel(traffic?.lastOnline)}
@@ -335,7 +335,7 @@ export default function ClientInfoModal({ embedded = false, inboundScope,
                 <tr>
                   <td>{t('status')}</td>
                   <td>
-                    <Tag color={client.enable ? 'green' : 'default'}>
+                    <Tag className={client.enable ? 'client-status is-active' : 'client-status'}>
                       {client.enable ? t('enabled') : t('disabled')}
                     </Tag>
                   </td>

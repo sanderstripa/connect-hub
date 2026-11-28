@@ -223,3 +223,36 @@ body .connections-pane .ant-table-tbody > tr.ant-table-row > td {
 body .connections-pane .ant-table-tbody > tr.ant-table-row:hover > td { background: #fff; }
 body .connections-pane .ant-table-tbody > tr.ant-table-row > td:first-child { border-radius: 11px 0 0 11px; }
 body .connections-pane .ant-table-tbody > tr.ant-table-row > td:last-child { border-radius: 0 11px 11px 0; }
+
+body :is(.client-speed-tag, .client-status) {
+  background: var(--hub-secondary);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--text-primary);
+  box-shadow: none;
+}
+body .client-status.is-active {
+  background: var(--hub-lime);
+  color: var(--hub-primary);
+}
+body .client-status.is-expiring {
+  background: color-mix(in srgb, var(--status-warning) 10%, var(--surface));
+  color: var(--status-warning);
+}
+body .client-status.is-depleted {
+  background: color-mix(in srgb, var(--status-error) 10%, var(--surface));
+  color: var(--status-error);
+}
+.client-status-dot {
+  display: inline-block;
+  flex: 0 0 7px;
+  block-size: 7px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+}
+.client-status-dot.is-active {
+  background: var(--hub-lime);
+  box-shadow: 0 0 0 1px var(--hub-primary);
+}
+.client-status-dot.is-expiring { background: var(--status-warning); }
+.client-status-dot.is-depleted { background: var(--status-error); }

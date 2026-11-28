@@ -18,8 +18,7 @@ interface ClientSpeedTagProps {
 export function ClientSpeedTag({ speed, tableCell = false }: ClientSpeedTagProps) {
   return (
     <Tag
-      color="blue"
-      className={tableCell ? SPEED_TAG_CLASS_NAME : undefined}
+      className={tableCell ? `client-speed-tag ${SPEED_TAG_CLASS_NAME}` : 'client-speed-tag'}
       style={tableCell ? SPEED_TAG_STYLE : undefined}
     >
       ↑ {SizeFormatter.speedFormat(speed.up)}

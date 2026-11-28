@@ -294,7 +294,15 @@
   gap: 6px;
 }
 
+.ov-load [data-severity] { --load-color: var(--text-secondary); }
+.ov-load [data-severity="healthy"] { --load-color: var(--hub-lime); }
+.ov-load [data-severity="increasing"] { --load-color: var(--text-primary); }
+.ov-load [data-severity="elevated"] { --load-color: var(--ant-color-warning); }
+.ov-load [data-severity="nearCapacity"] { --load-color: var(--status-warning); }
+.ov-load [data-severity="aboveCapacity"] { --load-color: var(--ant-color-error); }
+
 .ov-load-indicator {
+  background-color: var(--load-color);
   inline-size: 6px;
   block-size: 6px;
   border-radius: 50%;
@@ -344,7 +352,7 @@
   font-variant-numeric: tabular-nums;
   direction: ltr;
   unicode-bidi: isolate;
-  color: color-mix(in srgb, var(--load-color) 55%, var(--ant-color-text));
+  color: var(--ant-color-text);
 }
 
 .ov-load-reading[data-severity='unavailable'] dd {
@@ -761,4 +769,23 @@ body .ov-page :is(.ant-card, .ant-card-hoverable) {
 }
 .ov-keys-table tbody tr > :last-child {
   border-radius: 0 var(--hub-control-radius) var(--hub-control-radius) 0;
+}
+
+body .ov-range-select.ant-select {
+  --ant-select-selector-bg: var(--hub-secondary);
+  --ant-select-active-border-color: var(--text-secondary);
+  --ant-select-hover-border-color: var(--text-secondary);
+  background: var(--hub-secondary);
+  border-radius: var(--hub-control-radius);
+  box-shadow: none;
+}
+body .ov-range-options.ant-select-dropdown {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--hub-control-radius);
+  box-shadow: none;
+}
+body .ov-range-options.ant-select-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background: var(--hub-primary) !important;
+  color: #fff !important;
 }

@@ -25,6 +25,7 @@ export default function OverviewRangeSelect({ value, onChange }: OverviewRangeSe
     <Select
       aria-label={t('pages.index.timeRange')}
       className="ov-range-select"
+      classNames={{ popup: { root: 'ov-range-options' } }}
       size="small"
       value={value}
       options={OPTIONS}
