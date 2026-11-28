@@ -297,7 +297,9 @@
 .ov-load [data-severity] { --load-color: var(--text-secondary); }
 .ov-load [data-severity="healthy"] { --load-color: var(--hub-lime); }
 .ov-load [data-severity="increasing"] { --load-color: var(--text-primary); }
-.ov-load [data-severity="elevated"] { --load-color: var(--ant-color-warning); }
+.ov-load [data-severity="elevated"] {
+  --load-color: color-mix(in srgb, var(--status-warning) 55%, var(--hub-primary));
+}
 .ov-load [data-severity="nearCapacity"] { --load-color: var(--status-warning); }
 .ov-load [data-severity="aboveCapacity"] { --load-color: var(--ant-color-error); }
 

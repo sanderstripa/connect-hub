@@ -41,7 +41,7 @@ beforeEach(() => {
   );
 });
 
-it('adds independently colored loads only to CPU and refreshes with the existing status and history', async () => {
+it('exposes each CPU load severity for the palette and refreshes with the existing status and history', async () => {
   const { container, rerender } = render(<IndexPage />, { wrapper: ThemeProvider });
   const title = screen.getByRole('button', { name: 'Load Average' });
   const tile = title.closest('.ov-tile')!;
@@ -53,9 +53,9 @@ it('adds independently colored loads only to CPU and refreshes with the existing
   expect(cpu.getByLabelText('15m: 4.80 — Above capacity').textContent).toBe('4.80');
   expect(
     Array.from(tile.querySelectorAll<HTMLElement>('.ov-load-reading')).map((reading) =>
-      reading.style.getPropertyValue('--load-color'),
+      reading.dataset.severity,
     ),
-  ).toEqual(['#22c55e', '#f97316', '#ef4444']);
+  ).toEqual(['healthy', 'nearCapacity', 'aboveCapacity']);
   expect(
     cpu.getByRole('img', { name: 'Load Average (1m): Healthy' }).getAttribute('data-severity'),
   ).toBe('healthy');
