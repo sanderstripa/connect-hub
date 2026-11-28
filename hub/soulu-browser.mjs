@@ -185,7 +185,7 @@ try{
    await link.click();
    await page.waitForURL('**/panel/'+route);
    await brandCheck();
-   assert.equal(await network.locator('a[aria-current="page"]').getAttribute('href'),await link.getAttribute('href'));
+   await network.locator('a[aria-current="page"][href$="/'+route+'"]').waitFor();
    assert.equal(await settings.getAttribute('aria-current'),'page');
   }
   for(const [name,route] of [
