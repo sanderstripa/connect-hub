@@ -130,9 +130,11 @@ describe('Multi-tunnel Client Modals', () => {
       />,
     );
 
-    expect(screen.getAllByText('DE · Kelsterbach')).toHaveLength(2);
-    expect(screen.getByText('FI · Helsinki')).toBeTruthy();
-    expect(document.querySelectorAll('.config-block')).toHaveLength(2);
+    const configs = Array.from(document.querySelectorAll('.config-block'));
+    expect(configs).toHaveLength(2);
+    expect(configs[0].textContent).toContain('DE · Kelsterbach');
+    expect(configs[1].textContent).toContain('FI · Helsinki');
+    expect(screen.getAllByText('FI · Helsinki')).toHaveLength(2);
   });
 
   it('renders distinct labeled connection rows in ClientInfoModal for multiple WireGuard inbounds', () => {
@@ -147,9 +149,11 @@ describe('Multi-tunnel Client Modals', () => {
       />,
     );
 
-    expect(screen.getAllByText('US · New York')).toHaveLength(2);
-    expect(screen.getByText('EU · Frankfurt')).toBeTruthy();
-    expect(document.querySelectorAll('.link-row')).toHaveLength(2);
+    const rows = Array.from(document.querySelectorAll('.link-row'));
+    expect(rows).toHaveLength(2);
+    expect(rows[0].textContent).toContain('US · New York');
+    expect(rows[1].textContent).toContain('EU · Frankfurt');
+    expect(screen.getAllByText('EU · Frankfurt')).toHaveLength(2);
   });
 
   it('renders single default-labeled ConfigBlock in ClientInfoModal for single inbound', () => {

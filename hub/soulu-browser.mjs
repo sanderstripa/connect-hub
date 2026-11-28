@@ -96,7 +96,7 @@ try{
     await context.grantPermissions(['clipboard-read','clipboard-write']);
     await copyPassword.click();
     const password = JSON.parse(otherInbound.settings).clients[0].password;
-    assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),password);
+    await page.waitForFunction(async value=>await navigator.clipboard.readText()===value,password);
     const directLink = otherInfo.locator('.link-row').filter({hasText:'Shadowsocks'}).first();
     await directLink.getByRole('button',{name:'QR Code',exact:true}).click();
     await page.locator('.ant-popover .qr-code svg:visible').waitFor();
