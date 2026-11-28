@@ -20,6 +20,7 @@ import {
   LinkOutlined,
   LogoutOutlined,
   MailOutlined,
+  BgColorsOutlined,
   SafetyOutlined,
   SearchOutlined,
   RobotOutlined,
@@ -73,6 +74,11 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
         key: '/settings#security',
         icon: <SafetyOutlined aria-hidden />,
         label: t('pages.settings.securitySettings'),
+      },
+      {
+        key: '/settings#appearance',
+        icon: <BgColorsOutlined aria-hidden />,
+        label: t('pages.settings.appearance', { defaultValue: 'Appearance' }),
       },
       {
         key: '/settings#telegram',
@@ -434,7 +440,7 @@ export default function AppSidebar({ header = false }: { header?: boolean }) {
   if (!settingsActive) return null;
 
   const sectionKeys = [
-    ['/settings#general', '/settings#security'],
+    ['/settings#general', '/settings#security', '/settings#appearance'],
     ['/settings#telegram', '/settings#email', '/settings#discord', '/settings#wechat'],
     [
       '/settings#subscription',

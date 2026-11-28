@@ -1,36 +1,45 @@
-import { createContext, useContext, useLayoutEffect } from 'react';
+import { createContext, useContext, useLayoutEffect, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { theme as antdTheme } from 'antd';
 import type { ThemeConfig } from 'antd';
-import { DEFAULT_PALETTE, themeTokens, themeVariables } from '@/lib/theme-palettes';
-import type { PaletteId } from '@/lib/theme-palettes';
+import { DEFAULT_PALETTE, DARK_MEDIA_QUERY, THEME_MODE_KEY, parseThemeMode, themeTokens, themeVariables } from '@/lib/theme-palettes';
+import type { PaletteId, ThemeMode } from '@/lib/theme-palettes';
 import '@/styles/connect-brand.css';
 import '@/styles/connect-density.css';
+import '@/styles/connect-dark.css';
 export const ACCENT_CHOICES = { graphite: '#252629' } as const;
 export type AccentChoice = keyof typeof ACCENT_CHOICES;
 
-function applyDom() {
-  const root = document.documentElement;
-  root.dataset.palette = DEFAULT_PALETTE;
-  root.dataset.mode = 'light';
-  for (const [key, value] of Object.entries(themeVariables(DEFAULT_PALETTE, false))) {
-    root.style.setProperty('--' + key, value);
+function readThemeMode(): ThemeMode {
+  try {
+    return parseThemeMode(localStorage.getItem(THEME_MODE_KEY));
+  } catch {
+    return 'light';
   }
-  document.body.classList.remove('dark');
-  document.body.classList.add('light');
-  root.style.colorScheme = 'light';
 }
 
-applyDom();
+function applyDom(dark: boolean) {
+  const root = document.documentElement;
+  const mode = dark ? 'dark' : 'light';
+  root.dataset.palette = DEFAULT_PALETTE;
+  root.dataset.mode = mode;
+  for (const [key, value] of Object.entries(themeVariables(DEFAULT_PALETTE, dark))) {
+    root.style.setProperty('--' + key, value);
+  }
+  document.body.classList.toggle('dark', dark);
+  document.body.classList.toggle('light', !dark);
+  root.style.colorScheme = mode;
+  document.querySelector('meta[name="theme-color"]')
+    ?.setAttribute('content', themeTokens(DEFAULT_PALETTE, dark).bg);
+}
 
 export function buildAntdThemeConfig(
-  _dark = false,
+  dark = false,
   _legacyUltra = false,
   _palette: PaletteId = DEFAULT_PALETTE,
   _accent?: string,
 ): ThemeConfig {
-  const dark = false;
-  const colors = themeTokens(DEFAULT_PALETTE, false);
+  const colors = themeTokens(DEFAULT_PALETTE, dark);
   const {bg,surface:card,text,secondary:muted,border,accent:primary}=colors;
   const config: ThemeConfig = {
     hashed: false, cssVar: { key: 'xui' }, algorithm: dark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
@@ -78,16 +87,43 @@ export function buildAntdThemeConfig(
     Object.assign(config.components!.Table!, {headerBg:colors.raised,rowHoverBg:colors.subtle,rowSelectedBg:colors.subtle});
   return config;
 }
-const appearance = {
-  isDark: false,
-  isUltra: false,
-  antdThemeConfig: buildAntdThemeConfig(),
-};
-const ThemeContext = createContext<typeof appearance | null>(null);
+const ThemeContext = createContext<{
+  isDark: boolean;
+  isUltra: boolean;
+  mode: ThemeMode;
+  setMode: (mode: ThemeMode) => void;
+  antdThemeConfig: ThemeConfig;
+} | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  useLayoutEffect(applyDom, []);
-  return <ThemeContext.Provider value={appearance}>{children}</ThemeContext.Provider>;
+  const [mode, setMode] = useState(readThemeMode);
+  const media = useMemo(() => window.matchMedia(DARK_MEDIA_QUERY), []);
+  const [systemDark, setSystemDark] = useState(media.matches);
+  const isDark = mode === 'dark' || (mode === 'system' && systemDark);
+  const antdThemeConfig = useMemo(() => buildAntdThemeConfig(isDark), [isDark]);
+
+  useEffect(() => {
+    const onChange = (event: MediaQueryListEvent) => setSystemDark(event.matches);
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
+  }, [media]);
+
+  useLayoutEffect(() => applyDom(isDark), [isDark]);
+
+  function changeMode(next: ThemeMode) {
+    setMode(next);
+    try {
+      localStorage.setItem(THEME_MODE_KEY, next);
+    } catch {
+      // Theme switching still works when browser storage is blocked.
+    }
+  }
+
+  return (
+    <ThemeContext.Provider value={{ isDark, isUltra: false, mode, setMode: changeMode, antdThemeConfig }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {
@@ -97,5 +133,6 @@ export function useTheme() {
 }
 
 export function useChartTheme() {
-  return { palette: DEFAULT_PALETTE, colors: themeTokens(DEFAULT_PALETTE, false) };
+  const { isDark } = useTheme();
+  return { palette: DEFAULT_PALETTE, colors: themeTokens(DEFAULT_PALETTE, isDark) };
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify the packaged 1.0.3 → candidate upgrade on a fresh hosted runner."""
+"""Verify the packaged 1.0.4 → candidate upgrade on a fresh hosted runner."""
 import hashlib
 import http.cookiejar
 import json
@@ -17,7 +17,7 @@ import urllib.request
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PREVIOUS_SHA256 = 'a8cf8f6a6a07c9f57bdb1db4c6f1d11f75673b539255f40da5fc0936fcabce81'
 PREVIOUS_URL = ('https://github.com/sanderstripa/connect-hub/releases/download/'
-                'v1.0.3/connect-hub-linux-amd64.tar.gz')
+                'v1.0.4/connect-hub-linux-amd64.tar.gz')
 ACCESS = '/etc/connect-hub/initial-access.txt'
 BIN = '/opt/connect-hub/current/connect-hub'
 
@@ -82,7 +82,7 @@ def main():
 
         try:
             install(previous_install, previous, PREVIOUS_SHA256)
-            assert sudo(BIN, '-v').strip() == '1.0.3'
+            assert sudo(BIN, '-v').strip() == '1.0.4'
             before = sudo('cat', ACCESS)
             credentials = dict(line.split('=', 1) for line in before.splitlines())
             api = login(credentials)
@@ -123,7 +123,7 @@ process.stdout.write(JSON.stringify(inbound));
             )
             assert client(after)['sudokuKey'] == saved_key
             assert sudo('find', '/opt/connect-hub/backups', '-name', 'connect-hub.db').strip()
-            print(f'PASS: installed 1.0.3 → {expected} retains login, access settings, inbound and key')
+            print(f'PASS: installed 1.0.4 → {expected} retains login, access settings, inbound and key')
         finally:
             subprocess.run(['sudo', 'systemctl', 'stop', 'connect-hub'], check=False)
 

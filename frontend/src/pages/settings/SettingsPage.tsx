@@ -24,6 +24,7 @@ import { useAllSettings } from '@/api/queries/useAllSettings';
 import { AllSettingSchema } from '@/schemas/setting';
 import AppSidebar from '@/layouts/AppSidebar';
 import { MobileSettingsNavigationTrigger } from '@/layouts/MobileNavigation';
+import AppearanceTab from './AppearanceTab';
 import AboutTab from './AboutTab';
 import GeneralTab from './GeneralTab';
 import SecurityTab from './SecurityTab';
@@ -44,6 +45,7 @@ interface ApiMsg {
 const tabSlugs = [
   'general',
   'about',
+  'appearance',
   'security',
   'telegram',
   'email',
@@ -261,6 +263,8 @@ export default function SettingsPage() {
             {isMobile && <MobileSettingsNavigationTrigger />}
             {activeSlug === 'about' ? (
               <AboutTab />
+            ) : activeSlug === 'appearance' ? (
+              <AppearanceTab />
             ) : (
               <Spin
                 aria-live="off"

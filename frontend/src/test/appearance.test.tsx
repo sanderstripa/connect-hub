@@ -18,7 +18,7 @@ it('uses the approved appearance with legacy browser preferences', () => {
   expect(document.documentElement.dataset.palette).toBe(DEFAULT_PALETTE);
   expect(document.documentElement.dataset.mode).toBe('light');
   expect(screen.queryByRole('button', { name: 'Theme' })).toBeNull();
-  expect(screen.queryByRole('link', { name: 'Appearance' })).toBeNull();
+  expect(screen.getByRole('link', { name: 'Appearance' })).toBeVisible();
   localStorage.removeItem(PALETTE_KEY);
   localStorage.removeItem('dark-mode');
 });

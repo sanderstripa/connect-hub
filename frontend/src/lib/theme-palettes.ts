@@ -17,6 +17,31 @@ export function contrast(a: string, b: string): number {
 }
 
 export function themeTokens(_id: PaletteId = DEFAULT_PALETTE, _dark = false) {
+  if (_dark) {
+    return {
+      bg: '#0B0C0E',
+      surface: '#141518',
+      raised: '#191A1E',
+      input: '#25262A',
+      border: '#2D2F34',
+      text: '#F1F2F4',
+      secondary: '#9CA1AA',
+      accent: '#E9EAEE',
+      hover: '#F1F2F4',
+      foreground: '#141518',
+      button: '#E9EAEE',
+      buttonHover: '#F1F2F4',
+      subtle: '#25262A',
+      controlBorder: '#2D2F34',
+      chartPrimary: '#D8FA59',
+      chartSecondary: '#9CA1AA',
+      chartThird: '#E9EAEE',
+      success: '#D8FA59',
+      warning: '#F0BB69',
+      error: '#F68A97',
+      info: '#9CA1AA',
+    };
+  }
   return {
     bg: '#DCDEE4',
     surface: '#F3F3F6',
@@ -60,7 +85,7 @@ export function themeVariables(id: PaletteId, dark: boolean): Record<string, str
     'accent-foreground': t.foreground,
     'button-bg': t.button,
     'button-hover': t.buttonHover,
-    'accent-hover-foreground': contrast(t.hover, '#FFFFFF') >= 4.5 ? '#FFFFFF' : '#000000',
+    'accent-hover-foreground': dark ? t.foreground : '#FFFFFF',
     'control-bg': t.input,
     'control-border': t.controlBorder,
     'control-disabled': t.raised,
@@ -75,7 +100,7 @@ export function themeVariables(id: PaletteId, dark: boolean): Record<string, str
     'status-error': t.error,
     'status-info': t.info,
     'status-disabled': t.secondary,
-    'status-error-foreground': '#FFFFFF',
+    'status-error-foreground': dark ? t.foreground : '#FFFFFF',
     'connect-bg': t.bg,
     'connect-card': t.surface,
     'connect-text': t.text,
@@ -83,9 +108,22 @@ export function themeVariables(id: PaletteId, dark: boolean): Record<string, str
     'connect-border': t.border,
   };
 }
+export const THEME_MODE_KEY = 'connect-hub-theme-mode';
+export const THEME_MODES = ['system', 'light', 'dark'] as const;
+export type ThemeMode = typeof THEME_MODES[number];
+export const DARK_MEDIA_QUERY = '(prefers-color-scheme: dark)';
+
+export function parseThemeMode(value: string | null): ThemeMode {
+  return value === 'system' || value === 'dark' ? value : 'light';
+}
+
 export function themeCSS(): string {
-  const variables = Object.entries(themeVariables(DEFAULT_PALETTE, false))
-    .map(([key, value]) => `--${key}:${value}`)
-    .join(';');
-  return `html[data-palette="${DEFAULT_PALETTE}"]{${variables};background:var(--app-bg);color-scheme:light}`;
+  return [false, true].map((dark) => {
+    const mode = dark ? 'dark' : 'light';
+    const variables = Object.entries(themeVariables(DEFAULT_PALETTE, dark))
+      .map(([key, value]) => `--${key}:${value}`)
+      .join(';');
+    const selector = dark ? 'html[data-mode="dark"]' : 'html';
+    return `${selector}[data-palette="${DEFAULT_PALETTE}"]{${variables};background:var(--app-bg);color-scheme:${mode}}`;
+  }).join('');
 }

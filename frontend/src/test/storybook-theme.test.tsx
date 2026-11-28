@@ -46,11 +46,11 @@ test('preserves unrelated body classes when applying the Storybook theme', () =>
   expect(document.body.classList.contains('light')).toBe(false);
 });
 
-test('panel always applies the approved scheme and preserves unrelated classes', () => {
+test('panel defaults to the light scheme and preserves unrelated classes', () => {
   localStorage.setItem('dark-mode', 'true');
   document.body.className = 'panel-fixture dark';
   render(<ThemeProvider><div>Panel</div></ThemeProvider>);
   expect(document.body.className).toBe('panel-fixture light');
   expect(document.documentElement.style.colorScheme).toBe('light');
-  expect(buildAntdThemeConfig(true)).toEqual(buildAntdThemeConfig(false));
+  expect(buildAntdThemeConfig(true)).not.toEqual(buildAntdThemeConfig(false));
 });

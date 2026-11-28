@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { themeCSS, DEFAULT_PALETTE } from './src/lib/theme-palettes.ts';
+import { themeCSS, themeTokens, DEFAULT_PALETTE, THEME_MODE_KEY, DARK_MEDIA_QUERY } from './src/lib/theme-palettes.ts';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'node:fs';
@@ -206,7 +206,18 @@ const SWAGGER_ONLY_DEPS = [
 
 
 function paletteBootstrapPlugin() {
-  const source = `document.documentElement.dataset.palette = "${DEFAULT_PALETTE}"; document.documentElement.dataset.mode = "light";`;
+  const source = `
+    const root = document.documentElement;
+    let mode;
+    try { mode = localStorage.getItem(${JSON.stringify(THEME_MODE_KEY)}); } catch {}
+    const dark = mode === 'dark' || (mode === 'system' && matchMedia(${JSON.stringify(DARK_MEDIA_QUERY)}).matches);
+    root.dataset.palette = "${DEFAULT_PALETTE}";
+    root.dataset.mode = dark ? 'dark' : 'light';
+    const meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    meta.content = dark ? '${themeTokens(DEFAULT_PALETTE, true).bg}' : '${themeTokens().bg}';
+    document.head.append(meta);
+  `;
   const fileName='assets/palette-bootstrap-'+createHash('sha256').update(source).digest('hex').slice(0,12)+'.js';
   return {name:'connect-palette-first-paint',
     generateBundle(){this.emitFile({type:'asset',fileName,source});},

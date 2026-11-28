@@ -434,6 +434,40 @@ try{
   assert.equal(bg,themeTokens().bg);
   await page.screenshot({path:path.join(cfg.output,'concept-3-'+name+'.png'),fullPage:true});
  }
+ // Exercise the same origin across sign-out, the login entry and sign-in.
+ await page.goto(cfg.url+'panel/settings#appearance');
+ await page.getByRole('radio',{name:'Dark',exact:true}).check();
+ await page.locator('html[data-mode="dark"]').waitFor({state:'attached'});
+ assert.equal(await page.locator('meta[name="theme-color"]').getAttribute('content'), '#0B0C0E');
+ for (const width of [1440,390]) {
+  await page.setViewportSize({width,height:900});
+  for (const route of ['', 'connections', 'settings#appearance', 'logs']) {
+   await page.goto(cfg.url+'panel/'+route);
+   const header = page.locator('.app-header');
+   await header.waitFor();
+   assert.equal(await header.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(25, 26, 30)');
+   assert.equal(await page.locator('html').getAttribute('data-mode'),'dark');
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  }
+ }
+ await page.getByRole('button',{name:'Log Out',exact:true}).click();
+ await page.locator('.login-card').waitFor();
+ assert.equal(await page.locator('html').getAttribute('data-mode'),'dark');
+ assert.equal(await page.locator('.login-card').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(20, 21, 24)');
+ await page.locator('input[autocomplete=username]').fill(cfg.user);
+ await page.locator('input[autocomplete=current-password]').fill(cfg.password);
+ await page.locator('button[type=submit]').click();
+ await page.waitForURL('**/panel/');
+ assert.equal(await page.locator('html').getAttribute('data-mode'),'dark');
+ await page.goto(cfg.url+'panel/settings#appearance');
+ await page.emulateMedia({colorScheme:'light'});
+ await page.getByRole('radio',{name:'System',exact:true}).check();
+ await page.locator('html[data-mode="light"]').waitFor({state:'attached'});
+ await page.emulateMedia({colorScheme:'dark'});
+ await page.locator('html[data-mode="dark"]').waitFor({state:'attached'});
+ await page.getByRole('radio',{name:'Light',exact:true}).check();
+ await page.locator('html[data-mode="light"]').waitFor({state:'attached'});
+ console.log('PASS: dark mode on desktop and mobile, persistence through sign-out, and live system switching');
  console.log('PASS: desktop horizontal header, mobile navigation gestures and settings drawer, responsive monitoring tiles and graph modes and horizontal inbound selection with scoped clients');
  console.log('PASS: inbound cards, scoped clients, inline details/back, scoped key creation and unchanged original keys');
  console.log('PASS: saved Sudoku client → real web QR modal → JSON/CSRF request → Shadowrocket QR and anonymous profile fetch; original key unchanged');

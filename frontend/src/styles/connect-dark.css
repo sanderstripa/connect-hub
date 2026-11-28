@@ -1,0 +1,110 @@
+body.dark {
+  --hub-lime: var(--status-success);
+  --hub-shadow: none;
+  --hub-card: var(--surface);
+  --hub-light: var(--surface-raised);
+  --hub-primary: var(--button-bg);
+  --hub-primary-hover: var(--button-hover);
+  --hub-primary-pressed: #CFD1D7;
+  --hub-secondary: var(--control-bg);
+  --hub-secondary-hover: var(--border);
+  --hub-secondary-pressed: #383A40;
+  --hub-page-background: var(--app-bg);
+  background: var(--app-bg);
+  color: var(--text-primary);
+  scrollbar-color: var(--border-strong) var(--app-bg);
+}
+
+body.dark [class*='-page'] {
+  --control-bg: var(--surface-hover);
+}
+
+body.dark :is(.ant-card, .ant-modal-content, .ant-drawer-content, .ant-notification-notice,
+  .ant-message-notice-content, .ant-dropdown-menu, .ant-select-dropdown, .ant-popover-inner,
+  .ant-picker-panel-container, .connections-pane) {
+  border-color: var(--border);
+}
+
+body.dark .panel-app :is(.app-header, .desktop-navigation),
+body.dark .panel-app .desktop-navigation .header-nav-indicator {
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+body.dark .panel-app .app-header { background: var(--surface-raised); }
+body.dark .panel-app .desktop-navigation { background: var(--hub-secondary); }
+body.dark .panel-app .desktop-navigation .header-nav-indicator { background: var(--hub-primary); }
+body.dark .panel-app .app-brand,
+body.dark .panel-app .header-utilities .header-control:not([aria-current='page']) {
+  color: var(--text-primary);
+}
+body.dark .panel-app .header-utilities .header-control:not([aria-current='page']) {
+  background: var(--hub-secondary);
+}
+
+body.dark .panel-app .header-utilities .header-control:not([aria-current='page']):hover {
+  background: var(--hub-secondary-hover);
+}
+
+body.dark :is(
+  .ant-btn-primary:not(.ant-btn-dangerous):not(:disabled),
+  .header-control[aria-current='page'],
+  .client-detail-toolbar .back-to-keys.ant-btn,
+  .ov-traffic-controls .ant-segmented-item-selected
+),
+body.dark :is(
+  .ant-btn-primary:not(.ant-btn-dangerous):not(:disabled) .ant-btn-icon,
+  .panel-app .desktop-navigation .header-control[aria-current='page'] > .anticon,
+  .header-control[aria-current='page'] .anticon,
+  .back-to-keys .anticon
+) {
+  color: var(--accent-foreground);
+}
+
+body.dark .client-detail-toolbar .back-to-keys.ant-btn:is(:hover, :active) {
+  color: var(--accent-foreground);
+}
+
+body.dark .ov-range-options.ant-select-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  color: var(--accent-foreground) !important;
+}
+
+body.dark :is(.client-status.is-active, .ov-key-status) {
+  color: var(--accent-foreground);
+}
+
+body.dark .client-status-dot.is-active { background: var(--hub-lime); }
+body.dark .ant-switch.ant-switch-checked { background: var(--hub-secondary-pressed); }
+body.dark .ant-table-wrapper .ant-table-thead > tr > th { border-bottom-color: var(--border); }
+body.dark .connections-pane .ant-table-tbody > tr.ant-table-row > td { background: var(--surface-raised); }
+body.dark .connections-pane .ant-table-tbody > tr.ant-table-row:hover > td { background: var(--hub-secondary); }
+
+body.dark .login-app { background: var(--app-bg) !important; }
+body.dark .login-app .login-card {
+  background: var(--surface);
+  box-shadow: none;
+}
+body.dark .login-app .ant-input-affix-wrapper { background: var(--control-bg) !important; }
+body.dark .login-app .brand-accent { background: var(--border) !important; }
+
+body.dark .ov-versions .ov-state-version { color: var(--text-secondary); }
+body.dark .command-palette-modal.dark .command-palette-footer {
+  background: var(--surface-raised);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+body.dark .command-palette-modal.dark .command-palette-kbd {
+  background: var(--hub-secondary);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+body.dark .connections-workspace .inbound-card:not(.is-selected) {
+  background: repeating-linear-gradient(135deg, transparent 0 5px, var(--border) 5px 6px), var(--surface);
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+body.dark .connections-workspace .inbound-card.is-selected {
+  border-color: var(--text-secondary);
+}
