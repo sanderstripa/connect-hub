@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import { expect, test, vi } from 'vitest';
 import AppHeader from '@/layouts/AppHeader';
+import AppSidebar from '@/layouts/AppSidebar';
 import OverviewActionBar from '@/pages/index/OverviewActionBar';
 import PanelUpdateModal from '@/pages/index/PanelUpdateModal';
 import { Status } from '@/models/status';
@@ -26,22 +27,27 @@ test('Connections replaces separate Inbounds and Clients navigation', async () =
   localStorage.clear();
 });
 
-test('keeps route groups compact and closed until clicked, then closes after choosing a child', async () => {
-  localStorage.setItem('sidebar-pinned', 'true');
-  function Location() { return <output data-testid="group-route">{useLocation().pathname}</output>; }
-  const view = renderWithProviders(<MemoryRouter initialEntries={['/hosts']}><AppHeader /><Location /></MemoryRouter>);
+test('selects Settings and opens Network when a network page is loaded directly', async () => {
+  function Location() {
+    return <output data-testid="group-route">{useLocation().pathname}</output>;
+  }
+  const view = renderWithProviders(
+    <MemoryRouter initialEntries={['/hosts']}>
+      <AppHeader />
+      <AppSidebar />
+      <Location />
+    </MemoryRouter>,
+  );
   await act(async () => {});
-  const group = screen.getByRole('button', { name: 'Network' });
-  expect(group.getAttribute('aria-current')).toBe('page');
-  expect(group.getAttribute('aria-expanded')).toBe('false');
-  expect(screen.queryByRole('menuitem', { name: /Nodes/ })).toBeNull();
-  fireEvent.click(group);
-  fireEvent.click(await screen.findByRole('menuitem', { name: /Nodes/ }));
-  await waitFor(() => expect(screen.getByTestId('group-route').textContent).toBe('/nodes'));
-  expect(group.getAttribute('aria-expanded')).toBe('false');
-  expect(screen.getByRole('button', { name: 'Network' })).not.toBeNull();
-  expect(view.container.querySelector('.sidebar-command-kbd')).toBeNull();
-  localStorage.clear();
+  const settings = screen.getByRole('link', { name: 'Settings' });
+  const network = view.container.querySelector('.settings-network') as HTMLDetailsElement;
+  expect(settings.getAttribute('aria-current')).toBe('page');
+  expect(network.open).toBe(true);
+  expect(screen.getByRole('link', { name: 'Hosts' }).getAttribute('aria-current')).toBe('page');
+  const nodes = screen.getByRole('link', { name: 'Nodes' });
+  fireEvent.click(nodes);
+  expect(screen.getByTestId('group-route').textContent).toBe('/nodes');
+  expect(nodes.getAttribute('aria-current')).toBe('page');
 });
 
 test('More groups existing actions, opens no server action by itself and closes with Escape', async () => {

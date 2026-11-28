@@ -76,29 +76,27 @@ try {
     await item.waitFor({state:'visible'});
     assert.ok(await item.evaluate(el=>el.getAttribute('aria-current')==='page'),route+' was not selected');
    }
-   for(const [route,label] of [['groups',m.groups],['nodes',m.nodes],['hosts',m.hosts],['outbound',m.outbounds],['routing',m.routing]]){
+   const network=page.locator('.settings-navigation .settings-network');
+   const activeNetworkLink=route=>network.locator('a[aria-current="page"][href$="/'+route+'"]');
+   for(const route of ['groups','nodes','hosts','outbound','routing']){
     await page.goto(cfg.url+'panel/'+route);
-    const network=page.locator('.desktop-navigation').getByRole('button',{name:m.network,exact:true});
-    await network.waitFor({state:'visible'});
-    assert.ok(await network.evaluate(el=>el.getAttribute('aria-current')==='page'),'Network not selected on '+route);
-    await network.click();
-    const item=page.locator('.network-menu:visible').getByRole('menuitem',{name:label,exact:false}).last();
-    await item.waitFor({state:'visible'});
-    assert.ok(await item.evaluate(el=>el.classList.contains('ant-dropdown-menu-item-selected') || el.classList.contains('ant-menu-item-selected') || el.getAttribute('aria-selected') === 'true'),'Network item not selected: '+route+' ('+(await item.getAttribute('class'))+')');
-    await page.keyboard.press('Escape');
+    await activeNetworkLink(route).waitFor();
+    const settings=page.locator('.header-utilities').getByRole('link',{name:m.settings,exact:true});
+    assert.equal(await settings.getAttribute('aria-current'),'page');
    }
    await shot(language+'-navigation-'+dark);
    await page.goto(cfg.url+'panel/groups');
-   await page.locator('.desktop-navigation').getByRole('button',{name:m.network,exact:true}).waitFor();
+   await activeNetworkLink('groups').waitFor();
    await page.goto(cfg.url+'panel/nodes');
    await page.goBack();
    await page.waitForURL('**/panel/groups');
-   assert.ok(await page.locator('.desktop-navigation').getByRole('button',{name:m.network,exact:true}).evaluate(el=>el.getAttribute('aria-current')==='page'));
+   await activeNetworkLink('groups').waitFor();
    await page.goForward();
    await page.waitForURL('**/panel/nodes');
-   assert.ok(await page.locator('.desktop-navigation').getByRole('button',{name:m.network,exact:true}).evaluate(el=>el.getAttribute('aria-current')==='page'));
+   await activeNetworkLink('nodes').waitFor();
    await page.keyboard.press('Control+k');await page.locator('.command-palette-modal').waitFor({state:'visible'});await page.keyboard.press('Escape');
    await page.goto(cfg.url+'panel/');for(const width of widths){await page.setViewportSize({width,height:1000});await more.waitFor({state:'visible'});const r=await more.boundingBox();assert.ok(r.x>=0&&r.x+r.width<=width);await more.click();await page.getByText(i.maintenance,{exact:true}).waitFor({state:'visible'});await page.keyboard.press('Escape');}
+   await page.goto(cfg.url+'panel/settings');
    await page.getByRole('button',{name:m.navigation,exact:true}).click();const drawer=page.getByRole('dialog');await drawer.waitFor();await shot(language+'-mobile-open-'+dark);await drawer.locator('.ant-menu-submenu-title').filter({hasText:m.network}).click();await drawer.getByRole('menuitem',{name:m.nodes,exact:false}).waitFor({state:'visible'});await shot(language+'-mobile-menu-'+dark);await drawer.getByRole('button',{name:strings.close,exact:true}).click();
    await page.setViewportSize({width:1440,height:1000});await shot(language+'-dashboard-'+dark);
    report.push({language,dark,loginWidths:widths,toolbarWidths:widths,logSelectContrast:ratio,navigation:true,dialogs:true});
